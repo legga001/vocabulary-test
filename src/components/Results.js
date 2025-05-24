@@ -1,12 +1,12 @@
+// src/components/Results.js
 import React from 'react';
+import { questions as staticQuestions } from '../questionsData';
+import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
 
-function Results({ onRestart, userAnswers }) {
-  // Import questions to check answers
-  const questions = [
-    { answer: "buy" }, { answer: "hot" }, { answer: "sad" }, { answer: "hire" },
-    { answer: "significant" }, { answer: "analyze" }, { answer: "consequences" }, 
-    { answer: "impressive" }, { answer: "profound" }, { answer: "remarkable" }
-  ];
+function Results({ onRestart, userAnswers, quizType }) {
+  // Get the correct questions based on quiz type
+  const questions = quizType === 'article' ? getArticleQuestions() : staticQuestions;
+  const articleInfo = quizType === 'article' ? getArticleInfo() : null;
 
   // Calculate score
   const calculateScore = () => {
@@ -63,6 +63,20 @@ function Results({ onRestart, userAnswers }) {
     <div className="results">
       <h2>🎉 Test Complete!</h2>
       
+      {/* Show quiz type */}
+      <div className="quiz-type-indicator">
+        {quizType === 'article' ? (
+          <div className="article-test-indicator">
+            <h3>📰 Article-Based Test</h3>
+            <p>Based on: "{articleInfo?.title}"</p>
+          </div>
+        ) : (
+          <div className="standard-test-indicator">
+            <h3>📚 Standard Vocabulary Test</h3>
+          </div>
+        )}
+      </div>
+      
       <div className="score-display">{score}/10</div>
       
       <div className="level-estimate">
@@ -72,6 +86,13 @@ function Results({ onRestart, userAnswers }) {
       
       <div className="feedback-message">
         {levelInfo.feedback}
+        {quizType === 'article' && (
+          <div className="article-feedback">
+            <br />
+            <strong>Great work!</strong> You've practiced vocabulary from a current BBC article. 
+            This helps you learn words in context and stay up-to-date with contemporary English usage.
+          </div>
+        )}
       </div>
       
       <button className="btn" onClick={onRestart}>

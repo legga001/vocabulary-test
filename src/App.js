@@ -1,3 +1,4 @@
+// src/App.js
 import React, { useState } from 'react';
 import './App.css';
 import LandingPage from './components/LandingPage';
@@ -7,8 +8,10 @@ import Results from './components/Results';
 function App() {
   const [currentScreen, setCurrentScreen] = useState('landing');
   const [quizResults, setQuizResults] = useState(null);
+  const [quizType, setQuizType] = useState('static'); // 'static' or 'article'
 
-  const startQuiz = () => {
+  const startQuiz = (type) => {
+    setQuizType(type);
     setCurrentScreen('quiz');
   };
 
@@ -25,8 +28,19 @@ function App() {
   return (
     <div className="App">
       {currentScreen === 'landing' && <LandingPage onStart={startQuiz} />}
-      {currentScreen === 'quiz' && <Quiz onFinish={showResults} />}
-      {currentScreen === 'results' && <Results onRestart={restartQuiz} userAnswers={quizResults} />}
+      {currentScreen === 'quiz' && (
+        <Quiz 
+          onFinish={showResults} 
+          quizType={quizType}
+        />
+      )}
+      {currentScreen === 'results' && (
+        <Results 
+          onRestart={restartQuiz} 
+          userAnswers={quizResults}
+          quizType={quizType}
+        />
+      )}
     </div>
   );
 }

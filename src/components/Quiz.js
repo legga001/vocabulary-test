@@ -1,18 +1,61 @@
+// src/components/Quiz.js
 import React, { useState, useEffect } from 'react';
-import { questions, correctMessages } from '../questionsData';
+import { questions as staticQuestions, correctMessages } from '../questionsData';
+import { getArticleQuestions } from '../articleQuestions';
 
-function Quiz({ onFinish }) {
+function Quiz({ onFinish, quizType }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
   const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
   const [feedback, setFeedback] = useState({ show: false, type: '', message: '' });
 
+  // Get questions based on quiz type
+  const questions = quizType === 'article' ? getArticleQuestions() : staticQuestions;
   const question = questions[currentQuestion];
   const progress = ((currentQuestion) / 10) * 100;
 
-  const processedSentence = question.sentence.replace(/([a-z])_([a-z])/, '___');
-  const gapMatch = question.sentence.match(/([a-z])_([a-z])/);
-  const placeholder = gapMatch ? `${gapMatch[1]}_${gapMatch[2]} (${question.answer.length})` : '';
+  // Handle both old format (h_t) and new format (h__t) gaps
+  const processGap = (sentence, answer) => {
+    // Check for new format first (multiple underscores between letters)
+    const newFormatMatch = sentence.match(/([a-zA-Z])_+([a-zA-Z])/);
+    if (newFormatMatch) {
+      // Replace the gap with blanks: h__t becomes h___
+      const gapLength = answer.length;
+      const blanks = '_'.repeat(gapLength);
+      return sentence.replace(/([a-zA-Z])_+([a-zA-Z])/, blanks);
+    }
+    
+    // Fall back to old format (h_t)
+    const oldFormatMatch = sentence.match(/([a-zA-Z])_([a-zA-Z])/);
+    if (oldFormatMatch) {
+      return sentence.replace(/([a-zA-Z])_([a-zA-Z])/, '___');
+    }
+    
+    return sentence;
+  };
+
+  const getPlaceholder = (sentence, answer) => {
+    // For new format, show first letter, underscores, last letter, and length
+    const newFormatMatch = sentence.match(/([a-zA-Z])_+([a-zA-Z])/);
+    if (newFormatMatch) {
+      const firstLetter = newFormatMatch[1];
+      const lastLetter = newFormatMatch[2];
+      const middleLength = answer.length - 2;
+      const middleUnderscores = '_'.repeat(middleLength);
+      return `${firstLetter}${middleUnderscores}${lastLetter} (${answer.length})`;
+    }
+    
+    // Fall back to old format
+    const oldFormatMatch = sentence.match(/([a-zA-Z])_([a-zA-Z])/);
+    if (oldFormatMatch) {
+      return `${oldFormatMatch[1]}_${oldFormatMatch[2]} (${answer.length})`;
+    }
+    
+    return `(${answer.length} letters)`;
+  };
+
+  const processedSentence = processGap(question.sentence, question.answer);
+  const placeholder = getPlaceholder(question.sentence, question.answer);
 
   const checkAnswer = () => {
     const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
@@ -45,7 +88,7 @@ function Quiz({ onFinish }) {
 
   const nextQuestion = () => {
     if (currentQuestion === 9) {
-      onFinish();
+      onFinish(userAnswers);
     } else {
       setCurrentQuestion(currentQuestion + 1);
       setFeedback({ show: false, type: '', message: '' });
@@ -54,6 +97,12 @@ function Quiz({ onFinish }) {
 
   return (
     <div className="quiz">
+      <div className="quiz-header">
+        <div className="quiz-type-badge">
+          {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
+        </div>
+      </div>
+
       <div className="progress-container">
         <div className="progress-bar">
           <div className="progress-fill" style={{width: `${progress}%`}}></div>
@@ -67,6 +116,13 @@ function Quiz({ onFinish }) {
       </div>
 
       <div className="question-text">{processedSentence}</div>
+
+      {/* Show context for article-based questions */}
+      {quizType === 'article' && question.context && (
+        <div className="question-context">
+          <small>📖 {question.context}</small>
+        </div>
+      )}
 
       <div className="input-container">
         <input
