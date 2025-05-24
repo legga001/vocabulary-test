@@ -53,3 +53,261 @@ button:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
 }
+/* Quiz Specific Styles */
+.progress-container {
+  margin-bottom: 30px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #48bb78, #38a169);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  text-align: center;
+  margin-top: 10px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.question-number {
+  font-weight: bold;
+  color: #4c51bf;
+  font-size: 1.1em;
+}
+
+.level-badge {
+  background: #4c51bf;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.question-text {
+  font-size: 1.3em;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  color: #2d3748;
+  text-align: left;
+}
+
+.input-container {
+  margin-bottom: 20px;
+}
+
+.answer-input {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1.1em;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.answer-input:focus {
+  border-color: #4c51bf;
+  box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.1);
+}
+
+.answer-input.correct {
+  border-color: #48bb78;
+  background-color: #f0fff4;
+}
+
+.answer-input.incorrect {
+  border-color: #f56565;
+  background-color: #fff5f5;
+}
+
+.feedback {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.feedback.correct {
+  background: #f0fff4;
+  color: #38a169;
+  border: 1px solid #68d391;
+}
+
+.feedback.incorrect {
+  background: #fffbeb;
+  color: #d69e2e;
+  border: 1px solid #f6e05e;
+}
+
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.nav-btn {
+  background: #4c51bf;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1em;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: #434190;
+}
+
+.nav-btn:disabled {
+  background: #cbd5e0;
+  cursor: not-allowed;
+}
+
+/* Welcome text styles */
+.welcome-text {
+  text-align: center;
+  color: #666;
+  margin-bottom: 30px;
+  font-size: 1.1em;
+  line-height: 1.6;
+}
+
+.btn {
+  background: #48bb78;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: block;
+  margin: 20px auto;
+  min-width: 150px;
+}
+/* Results Page Styles */
+.results {
+  text-align: center;
+}
+
+.results h2 {
+  color: #4c51bf;
+  margin-bottom: 20px;
+  font-size: 1.8em;
+}
+
+.score-display {
+  font-size: 3em;
+  color: #4c51bf;
+  font-weight: bold;
+  margin: 20px 0;
+  text-shadow: 0 2px 4px rgba(76, 81, 191, 0.2);
+}
+
+.level-estimate {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 20px;
+  border-radius: 15px;
+  margin: 20px 0;
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.level-estimate h3 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.level-estimate p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1em;
+  margin: 0;
+}
+
+.feedback-message {
+  color: #666;
+  font-size: 1.1em;
+  line-height: 1.6;
+  margin: 20px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border-left: 4px solid #4c51bf;
+}
+
+/* Animation for score display */
+@keyframes scoreReveal {
+  0% { 
+    transform: scale(0.5); 
+    opacity: 0; 
+  }
+  50% { 
+    transform: scale(1.1); 
+  }
+  100% { 
+    transform: scale(1); 
+    opacity: 1; 
+  }
+}
+
+.score-display {
+  animation: scoreReveal 0.6s ease-out;
+}
+
+/* Animation for level estimate */
+@keyframes slideUp {
+  from { 
+    transform: translateY(30px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+.level-estimate {
+  animation: slideUp 0.8s ease-out 0.3s both;
+}
+
+.feedback-message {
+  animation: slideUp 0.8s ease-out 0.6s both;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .score-display {
+    font-size: 2.5em;
+  }
+  
+  .level-estimate h3 {
+    font-size: 1.3em;
+  }
+  
+  .feedback-message {
+    font-size: 1em;
+    padding: 15px;
+  }
+}

@@ -1,12 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
+import LandingPage from './components/LandingPage';
+import Quiz from './components/Quiz';
+import Results from './components/Results';
 
 function App() {
+  const [currentScreen, setCurrentScreen] = useState('landing');
+  const [quizResults, setQuizResults] = useState(null);
+
+  const startQuiz = () => {
+    setCurrentScreen('quiz');
+  };
+
+  const showResults = (userAnswers) => {
+    setQuizResults(userAnswers);
+    setCurrentScreen('results');
+  };
+
+  const restartQuiz = () => {
+    setQuizResults(null);
+    setCurrentScreen('landing');
+  };
+
   return (
     <div className="App">
-      <h1>🎯 English Vocabulary Test</h1>
-      <p>Coming soon - this will be our Duolingo-style quiz!</p>
-      <button>Start Test</button>
+      {currentScreen === 'landing' && <LandingPage onStart={startQuiz} />}
+      {currentScreen === 'quiz' && <Quiz onFinish={showResults} />}
+      {currentScreen === 'results' && <Results onRestart={restartQuiz} userAnswers={quizResults} />}
     </div>
   );
 }
