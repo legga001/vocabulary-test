@@ -9,11 +9,11 @@ export const readingArticle = {
   
   // Article excerpt for context
   excerpt: `
-Some fishermen in south-west England say an "invasion" of octopus and a local bylaw are "decimating" the Devon shellfish industry. The octopus, usually found in the Mediterranean, are being found in lobster and crab pots off the coastline. Fishers said they were landing between four and six tonnes of them a day. They said open escape holes in pots for juvenile shellfish, enforced by the bylaw, allowed the creatures in and out to eat shellfish, and fishermen wanted to close the gaps.
+Some fishermen in south-west England say an "invasion" of octopus and a local bylaw are "decimating" the Devon shellfish industry. The octopus, usually found in the Mediterranean, are being found in lobster and crab pots off the coastline. fishermen said they were landing between four and six tonnes of them a day. They said open escape holes in pots for juvenile shellfish, enforced by the bylaw, allowed the creatures in and out to eat shellfish, and fishermen wanted to close the gaps.
   `,
   
   questions: [
-    // A2 Level (2 questions) - Very basic vocabulary
+    // A2 Level (2 questions)
     {
       level: "A2",
       sentence: "The fishermen wanted to c__e the gaps in their crab pots.",
@@ -28,7 +28,7 @@ Some fishermen in south-west England say an "invasion" of octopus and a local by
       hint: "These are containers used for catching sea animals.",
       context: "From the paragraph where Brian Tapper talks about his crab traps"
     },
-    // B1 Level (2 questions) - Common intermediate words
+    // B1 Level (2 questions)
     {
       level: "B1",
       sentence: "The octopus are r____g the fishing business for local fishermen.",
@@ -43,7 +43,7 @@ Some fishermen in south-west England say an "invasion" of octopus and a local by
       hint: "This means taking fish or sea animals from the water.",
       context: "From the paragraph about the daily amount of octopus being found"
     },
-    // B2 Level (4 questions) - More advanced but accessible vocabulary
+    // B2 Level (4 questions)
     {
       level: "B2",
       sentence: "Barry Young described the octopus as an i_____n from the Mediterranean.",
@@ -72,7 +72,7 @@ Some fishermen in south-west England say an "invasion" of octopus and a local by
       hint: "This describes something urgent that needs immediate attention.",
       context: "From the paragraph about the fishing authority's quick response"
     },
-    // C1 Level (2 questions) - Advanced but not overly complex
+    // C1 Level (2 questions)
     {
       level: "C1",
       sentence: "The escape holes allow j______e shellfish to get out of the pots safely.",

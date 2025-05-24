@@ -1109,3 +1109,136 @@ body {
     padding: 6px 10px;
   }
 }
+/* ==============================================
+   ANSWER REVIEW SECTION STYLES
+   ============================================== */
+
+.answer-review {
+  margin: 30px 0;
+  text-align: left;
+}
+
+.answer-review h3 {
+  text-align: center;
+  color: #4c51bf;
+  margin-bottom: 20px;
+  font-size: 1.4em;
+}
+
+.answers-list {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.answer-item {
+  background: #fff;
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  margin-bottom: 15px;
+  padding: 15px;
+  transition: all 0.3s ease;
+}
+
+.answer-item.correct {
+  border-color: #48bb78;
+  background: #f0fff4;
+}
+
+.answer-item.incorrect {
+  border-color: #f56565;
+  background: #fff5f5;
+}
+
+.answer-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.answer-emoji {
+  font-size: 1.2em;
+}
+
+.question-number {
+  font-weight: bold;
+  color: #4c51bf;
+  min-width: 30px;
+}
+
+.level-badge {
+  background: #4c51bf;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: bold;
+}
+
+.answer-details {
+  margin-left: 45px;
+}
+
+.correct-answer {
+  color: #2d3748;
+  margin-bottom: 5px;
+}
+
+.user-answer {
+  color: #e53e3e;
+  margin-bottom: 8px;
+  font-size: 0.95em;
+}
+
+.answer-hint {
+  color: #d69e2e;
+  font-size: 0.9em;
+  background: #fffbeb;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #f6e05e;
+}
+
+/* Mobile adjustments for answer review */
+@media (max-width: 768px) {
+  .answer-item {
+    padding: 12px;
+  }
+  
+  .answer-header {
+    gap: 8px;
+  }
+  
+  .answer-details {
+    margin-left: 35px;
+  }
+  
+  .answer-review h3 {
+    font-size: 1.2em;
+  }
+}
+
+@media (max-width: 480px) {
+  .answer-item {
+    padding: 10px;
+  }
+  
+  .answer-header {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  
+  .answer-details {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+  
+  .correct-answer, .user-answer {
+    font-size: 0.9em;
+  }
+  
+  .answer-hint {
+    font-size: 0.85em;
+    padding: 6px 10px;
+  }
+}

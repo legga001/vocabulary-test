@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { correctMessages } from '../questionsData';
+import AnswerReview from './AnswerReview';
 
 function ReadingExercise({ onBack }) {
   const [showQuiz, setShowQuiz] = useState(false);
@@ -95,14 +96,6 @@ function ReadingExercise({ onBack }) {
 
   const nextQuestion = () => {
     if (currentQuestion === 9) {
-      // Calculate final score
-      let score = 0;
-      for (let i = 0; i < 10; i++) {
-        if (userAnswers && userAnswers[i] && 
-            userAnswers[i].toLowerCase().trim() === questions[i].answer.toLowerCase()) {
-          score++;
-        }
-      }
       setShowResults(true);
     } else {
       setCurrentQuestion(currentQuestion + 1);
@@ -154,44 +147,12 @@ function ReadingExercise({ onBack }) {
             <p>Based on: "{articleInfo.title}"</p>
           </div>
 
-          {/* Answer Review Section */}
-          <div className="answer-review">
-            <h3>📝 Your Answers:</h3>
-            <div className="answers-list">
-              {questions.map((q, index) => {
-                const userAnswer = userAnswers[index]?.toLowerCase().trim() || '';
-                const correctAnswer = q.answer.toLowerCase();
-                const isCorrect = userAnswer === correctAnswer;
-                
-                return (
-                  <div key={index} className={`answer-item ${isCorrect ? 'correct' : 'incorrect'}`}>
-                    <div className="answer-header">
-                      <span className="answer-emoji">
-                        {isCorrect ? '✅' : '❌'}
-                      </span>
-                      <span className="question-number">Q{index + 1}</span>
-                      <span className="level-badge">{q.level}</span>
-                    </div>
-                    <div className="answer-details">
-                      <div className="correct-answer">
-                        <strong>Correct answer:</strong> {q.answer}
-                      </div>
-                      {!isCorrect && userAnswer && (
-                        <div className="user-answer">
-                          <strong>Your answer:</strong> {userAnswers[index]}
-                        </div>
-                      )}
-                      {!isCorrect && (
-                        <div className="answer-hint">
-                          <em>💡 {q.hint}</em>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {/* Use the reusable AnswerReview component */}
+          <AnswerReview 
+            questions={questions}
+            userAnswers={userAnswers}
+            title="Your Answers"
+          />
           
           <div className="feedback-message">
             <strong>Well done!</strong> You've practiced vocabulary from a current BBC article about the octopus invasion affecting Devon fishermen. 

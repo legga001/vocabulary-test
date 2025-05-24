@@ -2,6 +2,7 @@
 import React from 'react';
 import { questions as staticQuestions } from '../questionsData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
+import AnswerReview from './AnswerReview';
 
 function Results({ onRestart, userAnswers, quizType }) {
   // Get the correct questions based on quiz type
@@ -83,6 +84,13 @@ function Results({ onRestart, userAnswers, quizType }) {
         <h3>Your Level: {levelInfo.level}</h3>
         <p>{levelInfo.description}</p>
       </div>
+
+      {/* Use the reusable AnswerReview component */}
+      <AnswerReview 
+        questions={questions}
+        userAnswers={userAnswers}
+        title="Your Answers"
+      />
       
       <div className="feedback-message">
         {levelInfo.feedback}
