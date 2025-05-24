@@ -10,9 +10,16 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState('splash');
   const [quizResults, setQuizResults] = useState(null);
   const [quizType, setQuizType] = useState('static');
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const goToLanding = () => {
-    setCurrentScreen('landing');
+    setIsTransitioning(true);
+    
+    // Start transition
+    setTimeout(() => {
+      setCurrentScreen('landing');
+      setIsTransitioning(false);
+    }, 400); // Half of animation duration
   };
 
   const startQuiz = (type) => {
@@ -27,13 +34,23 @@ function App() {
 
   const restartQuiz = () => {
     setQuizResults(null);
-    setCurrentScreen('splash'); // Go back to splash instead of landing
+    setCurrentScreen('splash');
   };
 
   return (
-    <div className="App">
-      {currentScreen === 'splash' && <SplashPage onStartPracticing={goToLanding} />}
-      {currentScreen === 'landing' && <LandingPage onStart={startQuiz} />}
+    <div className={`App ${currentScreen === 'splash' ? 'splash-mode' : ''} ${isTransitioning ? 'transition-loading' : ''}`}>
+      {currentScreen === 'splash' && (
+        <SplashPage 
+          onStartPracticing={goToLanding} 
+          isTransitioning={isTransitioning}
+        />
+      )}
+      {currentScreen === 'landing' && (
+        <LandingPage 
+          onStart={startQuiz}
+          isTransitioning={isTransitioning}
+        />
+      )}
       {currentScreen === 'quiz' && (
         <Quiz 
           onFinish={showResults} 

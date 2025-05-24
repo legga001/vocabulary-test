@@ -23,6 +23,18 @@ body {
   text-align: center;
 }
 
+/* Remove container styling when showing splash page */
+.App.splash-mode {
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  max-width: none;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+}
+
 h1 {
   color: #4c51bf;
   margin-bottom: 30px;
@@ -581,11 +593,17 @@ body {
 
 .splash-page {
   min-height: 100vh;
+  width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
+  margin: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
 }
 
 .splash-content {
@@ -655,6 +673,10 @@ body {
 
 /* Mobile splash styles */
 @media (max-width: 768px) {
+  .splash-page {
+    padding: 15px;
+  }
+  
   .splash-title {
     font-size: 2.8rem;
     margin-bottom: 35px;
@@ -670,9 +692,24 @@ body {
     font-size: 1.1rem;
     min-width: 180px;
   }
+  /* Add to your existing .start-practicing-btn styles */
+.start-practicing-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.start-practicing-btn:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 16px rgba(88, 204, 2, 0.4);
+}
 }
 
 @media (max-width: 480px) {
+  .splash-page {
+    padding: 10px;
+  }
+  
   .splash-title {
     font-size: 2.2rem;
     margin-bottom: 30px;
@@ -692,4 +729,60 @@ body {
     font-size: 1rem;
     min-width: 160px;
   }
+}
+
+/* ==============================================
+   SMOOTH PAGE TRANSITIONS
+   ============================================== */
+
+/* Container for transitions */
+.page-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Fade out animation for splash page */
+.splash-page.fade-out {
+  animation: fadeOutSlide 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Fade in animation for landing page */
+.landing.fade-in {
+  animation: fadeInSlide 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Modern fade out with slide */
+@keyframes fadeOutSlide {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+}
+
+/* Modern fade in with slide */
+@keyframes fadeInSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Smooth transitions for App container changes */
+.App {
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading state for smooth transition */
+.transition-loading {
+  opacity: 0;
+  pointer-events: none;
 }
