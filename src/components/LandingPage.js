@@ -18,8 +18,15 @@ function LandingPage({ onStart }) {
   };
 
   return (
-    <div className="landing">
-      <h1>🎯 English Vocabulary Test</h1>
+  <div className="landing">
+    <div className="logo-container">
+      <img 
+        src="/purple_fox_transparent.png" 
+        alt="Mr. Fox English" 
+        className="app-logo"
+      />
+    </div>
+    <h1>🎯 English Vocabulary Test</h1>
       <div className="welcome-text">
         <p>Test your English vocabulary skills with our interactive quiz!</p>
         <p>Choose from two different quiz types:</p>
