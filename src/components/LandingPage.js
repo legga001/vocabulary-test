@@ -2,7 +2,7 @@
 import React from 'react';
 import { getArticleInfo } from '../articleQuestions';
 
-function LandingPage({ onStart, isTransitioning }) {
+function LandingPage({ onStart, onExercises, isTransitioning }) {
   const articleInfo = getArticleInfo();
 
   const startStaticQuiz = () => {
@@ -26,11 +26,35 @@ function LandingPage({ onStart, isTransitioning }) {
           className="app-logo"
         />
       </div>
-      <h1>🎯 English Vocabulary Test</h1>
+      <h1>🎯 Mr. Fox English</h1>
         <div className="welcome-text">
-          <p>Test your English vocabulary skills with our interactive quiz!</p>
-          <p>Choose from two different quiz types:</p>
+          <p>Choose how you'd like to practice your English skills:</p>
         </div>
+
+        {/* Add Exercise Selection Button */}
+        <div style={{ marginBottom: '30px' }}>
+          <button 
+            className="btn" 
+            onClick={onExercises}
+            style={{ 
+              background: 'linear-gradient(135deg, #667eea, #764ba2)', 
+              fontSize: '1.2em',
+              padding: '18px 40px',
+              marginBottom: '20px'
+            }}
+          >
+            🏋️ Practice Exercises
+          </button>
+          <p style={{ fontSize: '0.9em', color: '#666', marginBottom: '30px' }}>
+            Choose from Reading, Writing, Speaking, or Listening exercises
+          </p>
+        </div>
+
+        <hr style={{ margin: '30px 0', border: 'none', borderTop: '2px solid #e2e8f0' }} />
+
+        <h2 style={{ color: '#4c51bf', marginBottom: '20px', fontSize: '1.5em' }}>
+          📝 Vocabulary Tests
+        </h2>
 
         <div className="quiz-options">
           {/* Static Quiz Option */}
