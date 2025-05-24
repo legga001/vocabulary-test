@@ -1,5 +1,7 @@
 // src/components/AnswerReview.js
 import React from 'react';
+import PronunciationButton from './PronunciationButton';
+import { hasPronunciation } from '../pronunciationData';
 
 function AnswerReview({ questions, userAnswers, title = "Your Answers" }) {
   return (
@@ -22,7 +24,15 @@ function AnswerReview({ questions, userAnswers, title = "Your Answers" }) {
               </div>
               <div className="answer-details">
                 <div className="correct-answer">
-                  <strong>Correct answer:</strong> {q.answer}
+                  <div>
+                    <strong>Correct answer:</strong> {q.answer}
+                  </div>
+                  {hasPronunciation(q.answer) && (
+                    <PronunciationButton 
+                      word={q.answer} 
+                      size="medium"
+                    />
+                  )}
                 </div>
                 {!isCorrect && userAnswer && (
                   <div className="user-answer">

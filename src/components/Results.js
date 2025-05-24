@@ -3,11 +3,14 @@ import React from 'react';
 import { questions as staticQuestions } from '../questionsData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
 import AnswerReview from './AnswerReview';
+import PronunciationButton from './PronunciationButton';
+import { isSpeechSynthesisSupported } from '../utils/pronunciationUtils';
 
 function Results({ onRestart, userAnswers, quizType }) {
   // Get the correct questions based on quiz type
   const questions = quizType === 'article' ? getArticleQuestions() : staticQuestions;
   const articleInfo = quizType === 'article' ? getArticleInfo() : null;
+  const isSpeechSupported = isSpeechSynthesisSupported();
 
   // Calculate score
   const calculateScore = () => {
@@ -84,6 +87,15 @@ function Results({ onRestart, userAnswers, quizType }) {
         <h3>Your Level: {levelInfo.level}</h3>
         <p>{levelInfo.description}</p>
       </div>
+
+      {/* Pronunciation Feature Highlight */}
+      {isSpeechSupported && (
+        <div className="pronunciation-feature-highlight">
+          <div className="feature-icon">🔊</div>
+          <h4>New: Pronunciation Practice!</h4>
+          <p>Click the pronunciation buttons next to each word to hear how they're pronounced. Perfect your speaking skills!</p>
+        </div>
+      )}
 
       {/* Use the reusable AnswerReview component */}
       <AnswerReview 
