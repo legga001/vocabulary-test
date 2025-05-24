@@ -486,18 +486,43 @@ button:hover {
   .btn-secondary, .btn-primary {
     min-width: 200px;
   }
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+  
+    .App {
+    margin: 30px 20px; /* More margin = more gradient visible */
+    padding: 25px;     /* Less padding = smaller white box */
+    max-width: calc(100vw - 60px); /* Smaller max width */
+    min-height: 85vh;  /* Slightly shorter */
+  }
 }
 
-@media (max-width: 480px) {
-  .quiz-option h3 {
-    font-size: 1.1em;
+/* Portrait mobile devices */
+@media (max-width: 480px) and (orientation: portrait) {
+  body {
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+  
+  .App {
+    margin: 40px 15px;  /* Even more margin for smaller screens */
+    padding: 20px;      /* Even less padding */
+    max-width: calc(100vw - 30px);
+    min-height: 80vh;   /* Shorter box */
+    border-radius: 15px; /* Slightly smaller radius */
+  }
+  .quiz-options {
+    gap: 15px; /* Smaller gap between options */
   }
   
   .quiz-option {
-    padding: 15px;
-  }
-  
-  .article-info {
-    padding: 12px;
+    padding: 15px; /* Less padding in quiz boxes */
+    margin: 0;     /* Remove any extra margin */
   }
 }
