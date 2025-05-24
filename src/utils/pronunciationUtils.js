@@ -18,29 +18,45 @@ export const speakWord = (word, rate = 0.8, pitch = 1) => {
     // Set voice properties
     utterance.rate = rate; // Speed (0.1 to 10)
     utterance.pitch = pitch; // Pitch (0 to 2)
-    utterance.volume = 0.8; // Volume (0 to 1)
+    utterance.volume = 0.9; // Volume (0 to 1)
 
-    // Try to use a British English voice if available
+    // Get available voices
     const voices = window.speechSynthesis.getVoices();
-    const britishVoice = voices.find(voice => 
-      voice.lang.includes('en-GB') || 
-      voice.name.toLowerCase().includes('british') ||
-      voice.name.toLowerCase().includes('uk')
-    );
     
-    if (britishVoice) {
-      utterance.voice = britishVoice;
-    } else {
-      // Fallback to any English voice
-      const englishVoice = voices.find(voice => 
-        voice.lang.startsWith('en-')
+    if (voices.length > 0) {
+      // Try to use a British English voice if available
+      const britishVoice = voices.find(voice => 
+        voice.lang.includes('en-GB') || 
+        voice.name.toLowerCase().includes('british') ||
+        voice.name.toLowerCase().includes('uk') ||
+        voice.name.toLowerCase().includes('daniel') ||
+        voice.name.toLowerCase().includes('kate')
       );
-      if (englishVoice) {
-        utterance.voice = englishVoice;
+      
+      if (britishVoice) {
+        utterance.voice = britishVoice;
+        console.log('Using British voice:', britishVoice.name);
+      } else {
+        // Fallback to any English voice
+        const englishVoice = voices.find(voice => 
+          voice.lang.startsWith('en-')
+        );
+        if (englishVoice) {
+          utterance.voice = englishVoice;
+          console.log('Using English voice:', englishVoice.name);
+        }
       }
     }
 
-    // Error handling
+    // Add event listeners for debugging
+    utterance.onstart = () => {
+      console.log('Speech started for:', word);
+    };
+
+    utterance.onend = () => {
+      console.log('Speech ended for:', word);
+    };
+
     utterance.onerror = (event) => {
       console.error('Speech synthesis error:', event.error);
     };

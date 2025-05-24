@@ -21,17 +21,31 @@ function PronunciationButton({ word, size = 'medium', showText = false }) {
   }, []);
 
   const handleSpeak = async () => {
-    if (!isSupported || !voicesLoaded || isPlaying) return;
+    if (!isSupported || isPlaying) return;
 
     setIsPlaying(true);
 
     try {
-      await speakWord(word);
+      // Force reload voices if they're not available
+      if (!voicesLoaded || window.speechSynthesis.getVoices().length === 0) {
+        await loadVoices();
+        setVoicesLoaded(true);
+      }
+
+      const success = speakWord(word);
+      
+      if (!success) {
+        console.warn('Speech synthesis failed, trying again...');
+        // Try again after a short delay
+        setTimeout(() => {
+          speakWord(word);
+        }, 100);
+      }
       
       // Reset playing state after a delay
       setTimeout(() => {
         setIsPlaying(false);
-      }, 1000);
+      }, 1500);
     } catch (error) {
       console.error('Error playing pronunciation:', error);
       setIsPlaying(false);
