@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { questions as staticQuestions, correctMessages } from '../questionsData';
 import { getArticleQuestions } from '../articleQuestions';
 
+// Key for localStorage
+const QUIZ_STATE_KEY = 'mrFoxEnglishQuizState';
+
 function Quiz({ onFinish, quizType }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
@@ -13,6 +16,53 @@ function Quiz({ onFinish, quizType }) {
   const questions = quizType === 'article' ? getArticleQuestions() : staticQuestions;
   const question = questions[currentQuestion];
   const progress = ((currentQuestion) / 10) * 100;
+
+  // Load saved quiz state on component mount
+  useEffect(() => {
+    const savedQuizState = localStorage.getItem(QUIZ_STATE_KEY);
+    if (savedQuizState) {
+      try {
+        const parsedState = JSON.parse(savedQuizState);
+        
+        // Only restore if it's the same quiz type and recent (within 30 minutes)
+        const thirtyMinutes = 30 * 60 * 1000;
+        const now = Date.now();
+        
+        if (parsedState.quizType === quizType && 
+            parsedState.timestamp && 
+            (now - parsedState.timestamp) < thirtyMinutes) {
+          
+          setCurrentQuestion(parsedState.currentQuestion || 0);
+          setUserAnswers(parsedState.userAnswers || new Array(10).fill(''));
+          setCheckedQuestions(parsedState.checkedQuestions || new Array(10).fill(false));
+          console.log('Restored quiz progress from localStorage');
+        } else {
+          // Clear old or different quiz state
+          localStorage.removeItem(QUIZ_STATE_KEY);
+        }
+      } catch (error) {
+        console.error('Error loading saved quiz state:', error);
+        localStorage.removeItem(QUIZ_STATE_KEY);
+      }
+    }
+  }, [quizType]);
+
+  // Save quiz state whenever it changes
+  useEffect(() => {
+    const stateToSave = {
+      quizType,
+      currentQuestion,
+      userAnswers,
+      checkedQuestions,
+      timestamp: Date.now()
+    };
+
+    try {
+      localStorage.setItem(QUIZ_STATE_KEY, JSON.stringify(stateToSave));
+    } catch (error) {
+      console.error('Error saving quiz state:', error);
+    }
+  }, [currentQuestion, userAnswers, checkedQuestions, quizType]);
 
   // Handle both old format (h_t) and new format (h__t) gaps
   const processGap = (sentence, answer) => {
@@ -88,6 +138,8 @@ function Quiz({ onFinish, quizType }) {
 
   const nextQuestion = () => {
     if (currentQuestion === 9) {
+      // Clear quiz state when finishing
+      localStorage.removeItem(QUIZ_STATE_KEY);
       onFinish(userAnswers);
     } else {
       setCurrentQuestion(currentQuestion + 1);

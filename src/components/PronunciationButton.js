@@ -57,58 +57,36 @@ function PronunciationButton({ word, size = 'medium', showText = false }) {
     return null;
   }
 
-  const buttonSizes = {
-    small: {
-      button: 'pronunciation-btn-small',
-      icon: '🔊',
-      iconSize: '0.8em'
-    },
-    medium: {
-      button: 'pronunciation-btn-medium',
-      icon: '🔊',
-      iconSize: '1em'
-    },
-    large: {
-      button: 'pronunciation-btn-large',
-      icon: '🔊',
-      iconSize: '1.2em'
-    }
-  };
-
-  const sizeConfig = buttonSizes[size] || buttonSizes.medium;
+  // Create tooltip content if pronunciation data exists
+  const tooltipContent = pronunciation 
+    ? `${pronunciation.ipa} • ${pronunciation.phonetic}`
+    : `Listen to pronunciation of "${word}"`;
 
   return (
     <div className="pronunciation-container">
       <button
-        className={`pronunciation-btn ${sizeConfig.button} ${isPlaying ? 'playing' : ''}`}
+        className={`pronunciation-btn pronunciation-btn-compact ${isPlaying ? 'playing' : ''}`}
         onClick={handleSpeak}
         disabled={isPlaying}
-        title={`Listen to pronunciation of "${word}"`}
+        title={tooltipContent}
         aria-label={`Play pronunciation of ${word}`}
       >
-        <span 
-          className="pronunciation-icon"
-          style={{ fontSize: sizeConfig.iconSize }}
-        >
-          {isPlaying ? '🎵' : sizeConfig.icon}
+        <span className="pronunciation-icon">
+          {isPlaying ? '🎵' : '🔊'}
         </span>
-        {showText && (
-          <span className="pronunciation-text">
-            {isPlaying ? 'Playing...' : 'Listen'}
-          </span>
+        
+        {/* Hover/focus tooltip */}
+        {pronunciation && (
+          <div className="pronunciation-tooltip">
+            <div className="pronunciation-ipa">
+              {pronunciation.ipa}
+            </div>
+            <div className="pronunciation-phonetic">
+              {pronunciation.phonetic}
+            </div>
+          </div>
         )}
       </button>
-      
-      {pronunciation && (
-        <div className="pronunciation-info">
-          <span className="pronunciation-ipa" title="International Phonetic Alphabet">
-            {pronunciation.ipa}
-          </span>
-          <span className="pronunciation-phonetic" title="Simplified pronunciation">
-            {pronunciation.phonetic}
-          </span>
-        </div>
-      )}
     </div>
   );
 }

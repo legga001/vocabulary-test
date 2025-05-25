@@ -1237,7 +1237,7 @@ body {
     font-size: 0.9em;
   }
   
-  .answer-hint {
+ .answer-hint {
     font-size: 0.85em;
     padding: 6px 10px;
   }
@@ -1250,28 +1250,31 @@ body {
 .pronunciation-container {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
   margin-left: 8px;
 }
 
 .pronunciation-btn {
   background: linear-gradient(135deg, #4c51bf, #667eea);
   border: none;
-  border-radius: 50%;
+  border-radius: 4px;
   color: white;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(76, 81, 191, 0.3);
+  box-shadow: 0 2px 6px rgba(76, 81, 191, 0.25);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  width: 20px;
+  height: 20px;
+  font-size: 0.65em;
+  flex-shrink: 0;
 }
 
 .pronunciation-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(76, 81, 191, 0.4);
+  transform: scale(1.05);
+  box-shadow: 0 3px 8px rgba(76, 81, 191, 0.35);
 }
 
 .pronunciation-btn:active {
@@ -1283,24 +1286,6 @@ body {
   animation: pulse 1s infinite;
 }
 
-.pronunciation-btn-small {
-  width: 24px;
-  height: 24px;
-  font-size: 0.7em;
-}
-
-.pronunciation-btn-medium {
-  width: 32px;
-  height: 32px;
-  font-size: 0.8em;
-}
-
-.pronunciation-btn-large {
-  width: 40px;
-  height: 40px;
-  font-size: 1em;
-}
-
 .pronunciation-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -1309,31 +1294,64 @@ body {
 
 .pronunciation-btn:disabled:hover {
   transform: none;
-  box-shadow: 0 2px 8px rgba(76, 81, 191, 0.3);
+  box-shadow: 0 2px 6px rgba(76, 81, 191, 0.25);
 }
 
 .pronunciation-icon {
   display: inline-block;
   line-height: 1;
+  font-size: 0.8em;
 }
 
-.pronunciation-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+/* Hover tooltip */
+.pronunciation-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  background: #2d3748;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
   font-size: 0.75em;
-  color: #4a5568;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Tooltip arrow */
+.pronunciation-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #2d3748;
+}
+
+/* Show tooltip on hover and focus */
+.pronunciation-btn:hover .pronunciation-tooltip,
+.pronunciation-btn:focus .pronunciation-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-8px);
 }
 
 .pronunciation-ipa {
   font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', monospace;
   font-weight: 600;
-  color: #2d3748;
+  display: block;
+  margin-bottom: 2px;
 }
 
 .pronunciation-phonetic {
   font-style: italic;
-  color: #718096;
+  color: #cbd5e0;
   text-transform: uppercase;
   font-size: 0.9em;
 }
@@ -1341,71 +1359,452 @@ body {
 /* Pulse animation for playing state */
 @keyframes pulse {
   0% {
-    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    box-shadow: 0 3px 8px rgba(72, 187, 120, 0.4);
   }
   50% {
-    box-shadow: 0 4px 20px rgba(72, 187, 120, 0.6);
+    box-shadow: 0 3px 12px rgba(72, 187, 120, 0.6);
   }
   100% {
-    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    box-shadow: 0 3px 8px rgba(72, 187, 120, 0.4);
   }
 }
 
-/* Answer item pronunciation integration */
+/* Integration with answer items */
 .answer-item .pronunciation-container {
-  margin-left: 12px;
-  align-self: flex-start;
-}
-
-.answer-details {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  margin-left: 8px;
 }
 
 .correct-answer {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-/* Mobile adjustments for pronunciation */
+/* Mobile adjustments */
 @media (max-width: 768px) {
-  .pronunciation-container {
-    gap: 6px;
-    margin-left: 6px;
+  .pronunciation-btn {
+    width: 18px;
+    height: 18px;
+    font-size: 0.6em;
   }
   
-  .pronunciation-info {
+  .pronunciation-tooltip {
     font-size: 0.7em;
+    padding: 5px 8px;
+    transform: translateX(-50%) translateY(-2px);
   }
   
-  .pronunciation-btn-medium {
-    width: 28px;
-    height: 28px;
-  }
-  
-  .pronunciation-btn-large {
-    width: 36px;
-    height: 36px;
+  .pronunciation-btn:hover .pronunciation-tooltip,
+  .pronunciation-btn:focus .pronunciation-tooltip {
+    transform: translateX(-50%) translateY(-6px);
   }
 }
 
 @media (max-width: 480px) {
-  .pronunciation-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+  .pronunciation-btn {
+    width: 16px;
+    height: 16px;
+    font-size: 0.55em;
   }
   
-  .pronunciation-info {
+  .pronunciation-tooltip {
     font-size: 0.65em;
-    margin-left: 0;
+    padding: 4px 6px;
+    position: fixed;
+    bottom: auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
   }
   
-  .correct-answer {
+  .pronunciation-tooltip::after {
+    display: none;
+  }
+  
+  /* On mobile, show tooltip on tap/focus */
+  .pronunciation-btn:focus .pronunciation-tooltip,
+  .pronunciation-btn:active .pronunciation-tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+/* Force square pronunciation buttons */
+.pronunciation-btn {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  padding: 0 !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.pronunciation-icon {
+  font-size: 0.65em !important;
+  line-height: 1 !important;
+}
+/* ==============================================
+   PROGRESS PAGE STYLES
+   ============================================== */
+
+.progress-page {
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.progress-overview {
+  margin: 30px 0;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 25px 20px;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-icon {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+}
+
+.stat-value {
+  font-size: 2.2em;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 0.9em;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.progress-insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.insight-card {
+  background: #f8f9fa;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: left;
+}
+
+.insight-card h3 {
+  color: #4c51bf;
+  margin-bottom: 8px;
+  font-size: 1.1em;
+}
+
+.insight-card p {
+  color: #4a5568;
+  margin: 0;
+  font-size: 0.95em;
+}
+
+/* Chart Section */
+.chart-section {
+  background: #fff;
+  border-radius: 15px;
+  padding: 25px;
+  margin: 30px 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.chart-header h3 {
+  color: #4c51bf;
+  margin: 0;
+}
+
+.chart-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.chart-period-btn {
+  background: #e2e8f0;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.chart-period-btn.active,
+.chart-period-btn:hover {
+  background: #4c51bf;
+  color: white;
+}
+
+.simple-chart {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  height: 150px;
+  padding: 20px;
+  border-bottom: 2px solid #e2e8f0;
+  border-left: 2px solid #e2e8f0;
+  margin: 20px 0;
+  gap: 2px;
+}
+
+.chart-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.chart-bar {
+  width: 100%;
+  max-width: 20px;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.chart-bar:hover {
+  opacity: 0.8;
+  transform: scaleY(1.1);
+}
+
+.chart-label {
+  font-size: 0.7em;
+  color: #718096;
+  margin-top: 8px;
+  text-align: center;
+  transform: rotate(-45deg);
+  white-space: nowrap;
+}
+
+.chart-legend {
+  text-align: center;
+  font-size: 0.85em;
+  color: #718096;
+  font-style: italic;
+}
+
+/* Recent Tests */
+.recent-tests {
+  background: #fff;
+  border-radius: 15px;
+  padding: 25px;
+  margin: 30px 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+
+.recent-tests h3 {
+  color: #4c51bf;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.test-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.test-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.test-item:hover {
+  border-color: #4c51bf;
+  transform: translateX(5px);
+}
+
+.test-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.test-type {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 0.95em;
+}
+
+.test-date {
+  font-size: 0.85em;
+  color: #718096;
+}
+
+.test-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.score-circle {
+  width: 50px;
+  height: 50px;
+  border: 3px solid;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.score-level {
+  font-size: 0.75em;
+  color: #718096;
+  text-align: center;
+}
+
+.no-tests {
+  text-align: center;
+  padding: 40px 20px;
+  color: #718096;
+}
+
+/* Progress Actions */
+.progress-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 30px 0;
+}
+
+.btn-danger {
+  background: #e53e3e;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c53030;
+}
+
+.back-btn {
+  margin-top: 20px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .progress-page {
+    padding: 0 15px;
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  
+  .stat-card {
+    padding: 20px 15px;
+  }
+  
+  .stat-icon {
+    font-size: 2em;
+  }
+  
+  .stat-value {
+    font-size: 1.8em;
+  }
+  
+  .progress-insights {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .chart-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .chart-controls {
+    justify-content: center;
+  }
+  
+  .simple-chart {
+    height: 120px;
+    padding: 15px;
+  }
+  
+  .chart-label {
+    font-size: 0.6em;
+  }
+  
+  .test-item {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .test-info {
+    align-items: center;
+  }
+  
+  .progress-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .chart-section,
+  .recent-tests {
+    padding: 20px 15px;
+  }
+  
+  .simple-chart {
+    height: 100px;
+    padding: 10px;
+  }
+  
+  .chart-bar {
+    max-width: 15px;
   }
 }

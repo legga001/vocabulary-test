@@ -29,8 +29,7 @@ function AnswerReview({ questions, userAnswers, title = "Your Answers" }) {
                   </div>
                   {hasPronunciation(q.answer) && (
                     <PronunciationButton 
-                      word={q.answer} 
-                      size="medium"
+                      word={q.answer}
                     />
                   )}
                 </div>

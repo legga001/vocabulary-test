@@ -1,10 +1,11 @@
 // src/components/Results.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { questions as staticQuestions } from '../questionsData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
 import AnswerReview from './AnswerReview';
 import PronunciationButton from './PronunciationButton';
 import { isSpeechSynthesisSupported } from '../utils/pronunciationUtils';
+import { recordTestResult } from '../utils/progressDataManager';
 
 function Results({ onRestart, userAnswers, quizType }) {
   // Get the correct questions based on quiz type
@@ -25,6 +26,22 @@ function Results({ onRestart, userAnswers, quizType }) {
   };
 
   const score = calculateScore();
+
+  // Record the test result when component mounts
+  useEffect(() => {
+    try {
+      recordTestResult({
+        quizType: quizType,
+        score: score,
+        totalQuestions: 10,
+        completedAt: new Date(),
+        userAnswers: userAnswers
+      });
+      console.log('Test result recorded successfully');
+    } catch (error) {
+      console.error('Error recording test result:', error);
+    }
+  }, [quizType, score, userAnswers]);
 
   // Determine level and feedback
   const getLevelInfo = (score) => {

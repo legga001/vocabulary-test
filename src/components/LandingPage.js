@@ -2,7 +2,7 @@
 import React from 'react';
 import { getArticleInfo } from '../articleQuestions';
 
-function LandingPage({ onStart, onExercises, isTransitioning }) {
+function LandingPage({ onStart, onExercises, onProgress, isTransitioning }) {
   const articleInfo = getArticleInfo();
 
   const startStaticQuiz = () => {
@@ -31,8 +31,8 @@ function LandingPage({ onStart, onExercises, isTransitioning }) {
           <p>Choose how you'd like to practice your English skills:</p>
         </div>
 
-        {/* Add Exercise Selection Button */}
-        <div style={{ marginBottom: '30px' }}>
+        {/* Main Navigation Buttons */}
+        <div className="main-navigation">
           <button 
             className="btn" 
             onClick={onExercises}
@@ -40,14 +40,28 @@ function LandingPage({ onStart, onExercises, isTransitioning }) {
               background: 'linear-gradient(135deg, #667eea, #764ba2)', 
               fontSize: '1.2em',
               padding: '18px 40px',
-              marginBottom: '20px'
+              marginBottom: '15px'
             }}
           >
             🏋️ Practice Exercises
           </button>
-          <p style={{ fontSize: '0.9em', color: '#666', marginBottom: '30px' }}>
-            Choose from Reading, Writing, Speaking, or Listening exercises
-          </p>
+          
+          <button 
+            className="btn" 
+            onClick={onProgress}
+            style={{ 
+              background: 'linear-gradient(135deg, #48bb78, #38a169)', 
+              fontSize: '1.2em',
+              padding: '18px 40px',
+              marginBottom: '20px'
+            }}
+          >
+            📊 View Progress
+          </button>
+          
+          <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '30px' }}>
+            <p>Track your learning journey, see daily stats, and monitor improvement!</p>
+          </div>
         </div>
 
         <hr style={{ margin: '30px 0', border: 'none', borderTop: '2px solid #e2e8f0' }} />
