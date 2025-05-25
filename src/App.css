@@ -1019,3 +1019,71 @@ button:hover, .btn:hover {
   position: relative;
   transition: all 0.3s ease;
 }
+/* ==============================================
+   ANIMATION FALLBACK FIX
+   ============================================== */
+
+/* Force visibility if animations fail */
+.landing-title,
+.welcome-text,
+.exercise-card,
+.progress-section,
+.getting-started {
+  opacity: 1 !important;
+}
+
+/* Ensure cards are always visible */
+.exercise-grid .exercise-card {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Reset any stuck animations */
+.progress-section,
+.getting-started {
+  opacity: 1 !important;
+  transform: none !important;
+}
+/* ==============================================
+   2x2 EXERCISE GRID ANIMATION FIX
+   ============================================== */
+
+/* Force exercise grid and cards to be visible immediately */
+.exercise-grid {
+  opacity: 1 !important;
+}
+
+.exercise-grid .exercise-card {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Override any animation delays */
+.exercise-grid.cards-visible .exercise-card {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+/* Fix specific card positions */
+.exercise-card.card-0,
+.exercise-card.card-1,
+.exercise-card.card-2,
+.exercise-card.card-3 {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+/* Ensure grid layout stays intact */
+@media (min-width: 769px) {
+  .exercise-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-rows: repeat(2, 1fr) !important;
+    gap: 25px !important;
+    opacity: 1 !important;
+  }
+}

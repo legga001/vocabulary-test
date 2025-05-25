@@ -11,6 +11,7 @@ import ProgressPage from './components/ProgressPage';
 
 // Key for localStorage
 const APP_STATE_KEY = 'mrFoxEnglishAppState';
+const SESSION_KEY = 'mrFoxEnglishSession';
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('splash');
@@ -18,6 +19,18 @@ function App() {
 
   // Load saved state on component mount
   useEffect(() => {
+    // Check if this is the same browser session
+    const sessionId = sessionStorage.getItem(SESSION_KEY);
+    const currentSession = Date.now().toString();
+    
+    // If no session exists, this is a fresh visit - show splash
+    if (!sessionId) {
+      sessionStorage.setItem(SESSION_KEY, currentSession);
+      setCurrentScreen('splash');
+      return;
+    }
+
+    // If session exists (refresh or navigation within same session), restore state
     const savedState = localStorage.getItem(APP_STATE_KEY);
     if (savedState) {
       try {
@@ -28,18 +41,38 @@ function App() {
         const now = Date.now();
         
         if (parsedState.timestamp && (now - parsedState.timestamp) < oneHour) {
-          setCurrentScreen(parsedState.currentScreen || 'splash');
-          console.log('Restored app state from localStorage');
+          // Skip splash if we have recent state and this is same session
+          setCurrentScreen(parsedState.currentScreen || 'landing');
+          console.log('Restored app state from localStorage (same session)');
         } else {
-          // Clear old state
+          // Clear old state and show splash
           localStorage.removeItem(APP_STATE_KEY);
+          setCurrentScreen('splash');
           console.log('Cleared old app state');
         }
       } catch (error) {
         console.error('Error loading saved state:', error);
         localStorage.removeItem(APP_STATE_KEY);
+        setCurrentScreen('splash');
       }
+    } else {
+      // No saved state, but session exists (user was here but no saved navigation)
+      setCurrentScreen('splash');
     }
+  }, []);
+
+  // Clear session when user closes tab/browser (beforeunload)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // This will trigger on tab close, browser close, or navigation away
+      sessionStorage.removeItem(SESSION_KEY);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, []);
 
   // Save state whenever it changes
@@ -80,6 +113,7 @@ function App() {
   const restartApp = () => {
     // Clear saved state when restarting
     localStorage.removeItem(APP_STATE_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
     setCurrentScreen('splash');
   };
 
