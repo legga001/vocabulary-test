@@ -1014,4 +1014,8 @@ button:hover, .btn:hover {
 .article-selection-card {
   background: #fff;
   border: 2px solid #e2e8f0;
-  border
+  border-radius: 15px;
+  padding: 25px;
+  position: relative;
+  transition: all 0.3s ease;
+}
