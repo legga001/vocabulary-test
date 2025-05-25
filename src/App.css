@@ -2999,3 +2999,38 @@ button:hover, .btn:hover {
     font-size: 0.9em;
   }
 }
+/* SPECIFIC FIX for the example feedback text contrast issue
+   Add this to your App.css file (find the existing .example-feedback styles and replace them) */
+
+.example-feedback {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  /* REMOVED: color: #2d3748; - this was being overridden */
+}
+
+.example-feedback.correct {
+  background: #f0fff4;
+  border: 2px solid #48bb78;
+  color: #2d3748 !important; /* Force dark text */
+}
+
+.example-feedback.incorrect {
+  background: #fffbeb;
+  border: 2px solid #f6e05e;
+  color: #2d3748 !important; /* Force dark text */
+}
+
+.example-feedback .feedback-title {
+  color: #2d3748 !important; /* Force dark text for title */
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.example-feedback .feedback-explanation {
+  color: #4a5568 !important; /* Force dark text for explanation */
+  margin: 10px 0 15px 0;
+  font-size: 1em;
+  line-height: 1.5;
+}
