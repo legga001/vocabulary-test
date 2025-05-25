@@ -1,4 +1,4 @@
-// src/components/ReadingExercise.js
+// src/components/ReadingExercise.js - Complete file with Real/Fake Words integration
 import React, { useState } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
@@ -6,9 +6,10 @@ import { questions as staticQuestions } from '../questionsData';
 import { correctMessages } from '../questionsData';
 import AnswerReview from './AnswerReview';
 import ArticleSelection from './ArticleSelection';
+import RealFakeWordsExercise from './RealFakeWordsExercise';
 
 function ReadingExercise({ onBack }) {
-  const [currentView, setCurrentView] = useState('selection'); // 'selection', 'article-selection', 'octopus-quiz', 'smuggling-quiz', 'standard-quiz'
+  const [currentView, setCurrentView] = useState('selection'); // 'selection', 'article-selection', 'octopus-quiz', 'smuggling-quiz', 'standard-quiz', 'real-fake-words'
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
   const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
@@ -41,6 +42,11 @@ function ReadingExercise({ onBack }) {
     resetQuizState();
   };
 
+  const startWordRecognition = () => {
+    setCurrentView('real-fake-words');
+    resetQuizState();
+  };
+
   const startArticleQuiz = (articleType) => {
     setCurrentView(articleType);
     resetQuizState();
@@ -63,6 +69,11 @@ function ReadingExercise({ onBack }) {
     setCurrentView('article-selection');
     resetQuizState();
   };
+
+  // Show the Real/Fake Words exercise
+  if (currentView === 'real-fake-words') {
+    return <RealFakeWordsExercise onBack={backToSelection} />;
+  }
 
   // Quiz logic (same as before)
   const processGap = (sentence, answer) => {
@@ -192,7 +203,7 @@ function ReadingExercise({ onBack }) {
           />
           
           <div className="feedback-message">
-            <strong>Well done!</strong> You've practiced {isArticleTest ? 'vocabulary from a current BBC article' : 'standard English vocabulary'}. 
+            <strong>Well done!</strong> You've practised {isArticleTest ? 'vocabulary from a current BBC article' : 'standard English vocabulary'}. 
             {isArticleTest && ' This helps you learn words in context from real news stories.'}
           </div>
           
@@ -314,7 +325,7 @@ function ReadingExercise({ onBack }) {
     );
   }
 
-  // Main Selection view (Reading page)
+  // Main Selection view (Reading page) - NOW WITH 3 CARDS
   return (
     <div className="exercise-page">
       <div className="logo-container">
@@ -357,11 +368,25 @@ function ReadingExercise({ onBack }) {
           </div>
           <div className="card-arrow">→</div>
         </div>
+
+        {/* NEW: Real or Fake Words */}
+        <div className="reading-main-card featured-card" onClick={startWordRecognition}>
+          <div className="new-badge">✨ NEW</div>
+          <div className="card-icon">🎯</div>
+          <h3>Real or Fake Words</h3>
+          <p>Quick-fire word recognition challenge with timer</p>
+          <div className="card-details">
+            <span>• 20 questions</span>
+            <span>• 5-second timer</span>
+            <span>• 3-5 mins</span>
+          </div>
+          <div className="card-arrow">→</div>
+        </div>
       </div>
 
       <div className="reading-info">
         <h3>💡 Why Practice Reading Vocabulary?</h3>
-        <p>Building vocabulary through reading helps you understand context, improve comprehension, and learn how words are used naturally in English.</p>
+        <p>Building vocabulary through reading helps you understand context, improve comprehension, and learn how words are used naturally in English. Word recognition exercises train your brain to quickly identify real English words from fake ones.</p>
       </div>
 
       <button className="btn btn-secondary" onClick={onBack}>

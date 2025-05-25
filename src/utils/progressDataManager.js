@@ -59,13 +59,34 @@ const saveProgressData = (data) => {
   }
 };
 
-// Get user's estimated level based on score
-const getScoreLevel = (score) => {
-  if (score <= 2) return 'A1-A2';
-  if (score <= 4) return 'A2-B1';
-  if (score <= 6) return 'B1-B2';
-  if (score <= 8) return 'B2-C1';
+// Get user's estimated level based on score and total questions
+const getScoreLevel = (score, totalQuestions = 10) => {
+  const percentage = (score / totalQuestions) * 100;
+  if (percentage <= 25) return 'A1-A2';
+  if (percentage <= 50) return 'A2-B1';
+  if (percentage <= 70) return 'B1-B2';
+  if (percentage <= 85) return 'B2-C1';
   return 'C1-C2';
+};
+
+// Get display name for quiz types
+const getQuizTypeDisplay = (type) => {
+  switch(type) {
+    case 'realFakeWords': return 'Word Recognition';
+    case 'article': return 'Article-Based';
+    case 'standard': return 'Standard Vocabulary';
+    default: return 'Vocabulary Test';
+  }
+};
+
+// Get icon for quiz types
+const getQuizTypeIcon = (type) => {
+  switch(type) {
+    case 'realFakeWords': return '🎯';
+    case 'article': return '📰';
+    case 'standard': return '📚';
+    default: return '📚';
+  }
 };
 
 // Record a completed test
@@ -81,19 +102,24 @@ export const recordTestResult = (testData) => {
 
   const progressData = getProgressData();
   const today = new Date().toDateString();
-  const level = getScoreLevel(score);
+  const level = getScoreLevel(score, totalQuestions);
 
   // Create test record
   const testRecord = {
     id: Date.now(),
     date: completedAt.toISOString(),
     quizType,
+    quizTypeDisplay: getQuizTypeDisplay(quizType),
+    quizTypeIcon: getQuizTypeIcon(quizType),
     score,
     totalQuestions,
     percentage: Math.round((score / totalQuestions) * 100),
     level,
     timeSpent,
-    userAnswers: userAnswers.map(answer => ({ answer, isCorrect: true })) // Simplified for storage
+    userAnswers: userAnswers.map(answer => ({ 
+      answer: answer.answer || answer.word || '', 
+      isCorrect: answer.correct || false 
+    }))
   };
 
   // Update test history
@@ -119,8 +145,12 @@ export const recordTestResult = (testData) => {
 
   const dailyStat = progressData.dailyStats[today];
   dailyStat.testsCompleted += 1;
-  dailyStat.totalScore += score;
+  
+  // Calculate score out of 10 for consistency in daily averages
+  const normalizedScore = totalQuestions === 20 ? score / 2 : score;
+  dailyStat.totalScore += normalizedScore;
   dailyStat.averageScore = Math.round(dailyStat.totalScore / dailyStat.testsCompleted);
+  
   if (timeSpent) dailyStat.timeSpent += timeSpent;
 
   // Update streak
@@ -184,8 +214,13 @@ export const getProgressStats = () => {
   const progressData = getProgressData();
   const recentTests = progressData.testHistory.slice(0, 10);
   
-  const averageScore = recentTests.length > 0 
-    ? Math.round(recentTests.reduce((sum, test) => sum + test.score, 0) / recentTests.length)
+  // Calculate average score (normalize 20-question tests to 10-point scale)
+  const normalizedScores = recentTests.map(test => 
+    test.totalQuestions === 20 ? test.score / 2 : test.score
+  );
+  
+  const averageScore = normalizedScores.length > 0 
+    ? Math.round(normalizedScores.reduce((sum, score) => sum + score, 0) / normalizedScores.length)
     : 0;
 
   const averagePercentage = recentTests.length > 0
@@ -201,8 +236,15 @@ export const getProgressStats = () => {
   if (recentTests.length >= 10) {
     const recent5 = recentTests.slice(0, 5);
     const older5 = recentTests.slice(5, 10);
-    const recentAvg = recent5.reduce((sum, test) => sum + test.score, 0) / 5;
-    const olderAvg = older5.reduce((sum, test) => sum + test.score, 0) / 5;
+    
+    // Normalize scores for comparison
+    const recentAvg = recent5.reduce((sum, test) => 
+      sum + (test.totalQuestions === 20 ? test.score / 2 : test.score), 0
+    ) / 5;
+    
+    const olderAvg = older5.reduce((sum, test) => 
+      sum + (test.totalQuestions === 20 ? test.score / 2 : test.score), 0
+    ) / 5;
     
     if (recentAvg > olderAvg + 0.5) trend = 'improving';
     else if (recentAvg < olderAvg - 0.5) trend = 'declining';

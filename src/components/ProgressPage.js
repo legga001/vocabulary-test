@@ -72,6 +72,13 @@ function ProgressPage({ onBack }) {
     return '#f56565';
   };
 
+  // Get quiz type display with icon
+  const getQuizTypeDisplay = (test) => {
+    const icon = test.quizTypeIcon || '📚';
+    const display = test.quizTypeDisplay || 'Vocabulary Test';
+    return `${icon} ${display}`;
+  };
+
   if (!stats) return <div>Loading progress...</div>;
 
   return (
@@ -182,10 +189,12 @@ function ProgressPage({ onBack }) {
               <div key={test.id} className="test-item">
                 <div className="test-info">
                   <div className="test-type">
-                    {test.quizType === 'article' ? '📰' : '📚'} 
-                    {test.quizType === 'article' ? 'Article' : 'Standard'} Test
+                    {getQuizTypeDisplay(test)}
                   </div>
                   <div className="test-date">{formatDate(test.date)}</div>
+                  <div className="test-details">
+                    {test.totalQuestions} questions • {test.percentage}% correct
+                  </div>
                 </div>
                 <div className="test-score">
                   <div 
