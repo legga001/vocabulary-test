@@ -9,9 +9,12 @@ import SpeakingExercise from './components/SpeakingExercise';
 import ListeningExercise from './components/ListeningExercise';
 import ProgressPage from './components/ProgressPage';
 
-// Key for localStorage
+// Key for localStorage - only for preserving state during page refresh
 const APP_STATE_KEY = 'mrFoxEnglishAppState';
+// Key for sessionStorage - to detect new sessions
 const SESSION_KEY = 'mrFoxEnglishSession';
+// Key to track if splash was shown in this session
+const SPLASH_SHOWN_KEY = 'mrFoxEnglishSplashShown';
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('splash');
@@ -19,65 +22,56 @@ function App() {
 
   // Load saved state on component mount
   useEffect(() => {
-    // Check if this is the same browser session
-    const sessionId = sessionStorage.getItem(SESSION_KEY);
-    const currentSession = Date.now().toString();
-    
-    // If no session exists, this is a fresh visit - show splash
-    if (!sessionId) {
-      sessionStorage.setItem(SESSION_KEY, currentSession);
-      setCurrentScreen('splash');
-      return;
-    }
-
-    // If session exists (refresh or navigation within same session), restore state
+    // Check for recent saved state first (page refresh scenario)
     const savedState = localStorage.getItem(APP_STATE_KEY);
+    
     if (savedState) {
       try {
         const parsedState = JSON.parse(savedState);
         
-        // Only restore if the saved state is recent (within 1 hour)
-        const oneHour = 60 * 60 * 1000;
+        // Check if the saved state is very recent (within 30 seconds = page refresh)
+        const thirtySeconds = 30 * 1000;
         const now = Date.now();
         
-        if (parsedState.timestamp && (now - parsedState.timestamp) < oneHour) {
-          // Skip splash if we have recent state and this is same session
+        if (parsedState.timestamp && (now - parsedState.timestamp) < thirtySeconds) {
+          // This is likely a page refresh - restore the previous screen
           setCurrentScreen(parsedState.currentScreen || 'landing');
-          console.log('Restored app state from localStorage (same session)');
+          console.log('Page refresh detected - restored to:', parsedState.currentScreen);
+          
+          // Maintain session continuity
+          if (!sessionStorage.getItem(SESSION_KEY)) {
+            sessionStorage.setItem(SESSION_KEY, Date.now().toString());
+          }
+          if (!sessionStorage.getItem(SPLASH_SHOWN_KEY)) {
+            sessionStorage.setItem(SPLASH_SHOWN_KEY, 'true');
+          }
+          return;
         } else {
-          // Clear old state and show splash
+          // Old state - clear it
           localStorage.removeItem(APP_STATE_KEY);
-          setCurrentScreen('splash');
-          console.log('Cleared old app state');
+          console.log('Old state cleared');
         }
       } catch (error) {
         console.error('Error loading saved state:', error);
         localStorage.removeItem(APP_STATE_KEY);
-        setCurrentScreen('splash');
       }
-    } else {
-      // No saved state, but session exists (user was here but no saved navigation)
-      setCurrentScreen('splash');
     }
-  }, []);
-
-  // Clear session when user closes tab/browser (beforeunload)
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      // This will trigger on tab close, browser close, or navigation away
-      sessionStorage.removeItem(SESSION_KEY);
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
     
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
+    // If we get here, this is NOT a page refresh
+    // Check if this is a new session (new tab, browser restart, etc.)
+    const existingSessionId = sessionStorage.getItem(SESSION_KEY);
+    const splashShownThisSession = sessionStorage.getItem(SPLASH_SHOWN_KEY);
+    
+    // Always show splash for new sessions or if splash hasn't been shown
+    const currentSessionId = Date.now().toString();
+    sessionStorage.setItem(SESSION_KEY, currentSessionId);
+    sessionStorage.removeItem(SPLASH_SHOWN_KEY);
+    setCurrentScreen('splash');
+    console.log('New session - showing splash');
   }, []);
 
-  // Save state whenever it changes
+  // Save state whenever it changes (but not for splash or transition states)
   useEffect(() => {
-    // Don't save splash or transition states
     if (currentScreen === 'splash' || isTransitioning) return;
 
     const stateToSave = {
@@ -92,8 +86,36 @@ function App() {
     }
   }, [currentScreen, isTransitioning]);
 
+  // Clear session when user closes tab/browser
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Clear session markers when tab/browser closes
+      sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(SPLASH_SHOWN_KEY);
+    };
+
+    // Also handle when user navigates away
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // User switched tabs or minimized - don't clear session
+        // This allows them to return without seeing splash again
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   const goToLanding = () => {
     setIsTransitioning(true);
+    
+    // Mark that splash has been shown in this session
+    sessionStorage.setItem(SPLASH_SHOWN_KEY, 'true');
     
     // Start transition
     setTimeout(() => {
@@ -111,9 +133,10 @@ function App() {
   };
 
   const restartApp = () => {
-    // Clear saved state when restarting
+    // Clear all saved state when restarting
     localStorage.removeItem(APP_STATE_KEY);
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SPLASH_SHOWN_KEY);
     setCurrentScreen('splash');
   };
 
