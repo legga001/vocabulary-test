@@ -125,4 +125,104 @@ function App() {
   };
 
   const goToProgress = () => {
-    setCurrent
+    setCurrentScreen('progress');
+  };
+
+  const goToExercises = () => {
+    setCurrentScreen('exercises');
+  };
+
+  const goToReading = () => {
+    setCurrentScreen('reading');
+  };
+
+  const goToWriting = () => {
+    setCurrentScreen('writing');
+  };
+
+  const goToSpeaking = () => {
+    setCurrentScreen('speaking');
+  };
+
+  const goToListening = () => {
+    setCurrentScreen('listening');
+  };
+
+  const goBack = () => {
+    setCurrentScreen('landing');
+  };
+
+  const handleSelectExercise = (exerciseType) => {
+    switch(exerciseType) {
+      case 'reading':
+        goToReading();
+        break;
+      case 'writing':
+        goToWriting();
+        break;
+      case 'speaking':
+        goToSpeaking();
+        break;
+      case 'listening':
+        goToListening();
+        break;
+      default:
+        console.warn('Unknown exercise type:', exerciseType);
+    }
+  };
+
+  const renderCurrentScreen = () => {
+    switch(currentScreen) {
+      case 'splash':
+        return (
+          <SplashPage 
+            onStartPracticing={goToLanding}
+            isTransitioning={isTransitioning}
+          />
+        );
+      
+      case 'landing':
+        return (
+          <LandingPage
+            onExercises={goToExercises}
+            onProgress={goToProgress}
+            onSelectExercise={handleSelectExercise}
+            isTransitioning={isTransitioning}
+          />
+        );
+      
+      case 'reading':
+        return <ReadingExercise onBack={goBack} />;
+      
+      case 'writing':
+        return <WritingExercise onBack={goBack} />;
+      
+      case 'speaking':
+        return <SpeakingExercise onBack={goBack} />;
+      
+      case 'listening':
+        return <ListeningExercise onBack={goBack} />;
+      
+      case 'progress':
+        return <ProgressPage onBack={goBack} />;
+      
+      default:
+        return (
+          <LandingPage
+            onExercises={goToExercises}
+            onProgress={goToProgress}
+            onSelectExercise={handleSelectExercise}
+            isTransitioning={false}
+          />
+        );
+    }
+  };
+
+  return (
+    <div className={`App ${currentScreen === 'splash' ? 'splash-mode' : ''}`}>
+      {renderCurrentScreen()}
+    </div>
+  );
+}
+
+export default App;
