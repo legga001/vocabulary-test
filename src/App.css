@@ -2137,12 +2137,16 @@ button:hover, .btn:hover {
 }
 
 .example-description {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 10px;
   padding: 15px;
   margin-bottom: 25px;
   font-size: 1em;
   line-height: 1.5;
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+  font-weight: 600 !important;
 }
 
 .example-word-container {
@@ -3033,4 +3037,151 @@ button:hover, .btn:hover {
   margin: 10px 0 15px 0;
   font-size: 1em;
   line-height: 1.5;
+}
+/* ==============================================
+   MOBILE GRADIENT BORDER FIX
+   Add this CSS to your App.css file
+   ============================================== */
+
+/* Ensure purple gradient border is visible on mobile for all screens except splash */
+@media (max-width: 768px) {
+  .App:not(.splash-mode) {
+    padding: 15px; /* Reduced from 20px to ensure border visibility */
+    margin: 15px; /* Reduced from 10px */
+    max-width: calc(100vw - 30px); /* Ensures 15px border on each side */
+    min-height: calc(100vh - 30px); /* Ensures border visibility top/bottom */
+  }
+  
+  /* Ensure body gradient is always visible */
+  body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+  }
+  
+  /* Override any full-width components on mobile */
+  .exercise-page,
+  .progress-page,
+  .reading-exercise,
+  .real-fake-words {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0 10px; /* Internal padding */
+  }
+}
+
+@media (max-width: 480px) {
+  .App:not(.splash-mode) {
+    padding: 12px; /* ~1cm = ~0.4 inches = ~38px, but 12px gives good visual border */
+    margin: 12px;
+    max-width: calc(100vw - 24px);
+    min-height: calc(100vh - 24px);
+  }
+  
+  /* Ensure the white app container doesn't extend to screen edges */
+  .App:not(.splash-mode) {
+    border-radius: 15px; /* Maintain rounded corners */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Make sure specific exercise components respect the border */
+@media (max-width: 768px) {
+  /* Real/Fake Words Exercise */
+  .real-fake-words {
+    max-width: 100%;
+    padding: 0;
+  }
+  
+  .instructions-container {
+    max-width: 100%;
+    padding: 0 5px; /* Small internal padding */
+  }
+  
+  .word-question-container {
+    margin: 30px 0; /* Reduced margin to fit within border */
+  }
+  
+  /* Reading Exercise Grid */
+  .reading-main-options {
+    gap: 15px; /* Reduced gap for mobile */
+    margin: 30px 0; /* Ensure it fits within borders */
+  }
+  
+  /* Progress Page */
+  .progress-page {
+    padding: 0 5px;
+  }
+  
+  .stat-grid {
+    max-width: 100%;
+    gap: 12px;
+    margin: 20px 0; /* Reduced margins */
+  }
+  
+  /* Quiz Interface */
+  .quiz {
+    padding: 0 5px;
+  }
+  
+  .progress-container {
+    margin-bottom: 20px; /* Reduced margin */
+  }
+  
+  /* Exercise Selection */
+  .exercise-grid {
+    gap: 15px;
+    margin: 30px 0; /* Ensure border visibility */
+  }
+  
+  /* Landing Page */
+  .landing {
+    padding: 0 5px;
+  }
+  
+  .exercise-grid.cards-visible .exercise-card {
+    margin-bottom: 5px; /* Reduce spacing between cards */
+  }
+}
+
+/* Ensure no components break out of the bordered container */
+@media (max-width: 768px) {
+  /* Full-width elements that might break the border */
+  .feedback-card {
+    left: 15px; /* Respect the app border */
+    right: 15px;
+    width: auto;
+  }
+  
+  /* Timer display positioning */
+  .timer-display {
+    margin-bottom: 15px; /* Reduced margin */
+  }
+  
+  /* Results page spacing */
+  .results {
+    padding: 0 5px;
+  }
+  
+  .answer-review {
+    margin: 20px 0; /* Reduced margin */
+  }
+  
+  /* Article selection page */
+  .article-selection-grid {
+    gap: 20px;
+    margin: 25px 0;
+  }
+}
+
+/* Very small screens - ensure minimum 8px border (about 0.3cm) */
+@media (max-width: 360px) {
+  .App:not(.splash-mode) {
+    padding: 8px;
+    margin: 8px;
+    max-width: calc(100vw - 16px);
+    min-height: calc(100vh - 16px);
+  }
 }

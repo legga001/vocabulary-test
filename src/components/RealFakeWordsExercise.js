@@ -40,17 +40,17 @@ const WORD_BANK = {
   fake: [
     // B1 Level fake words (varied phonetic patterns, completely original)
     'blaxter', 'quildon', 'fremic', 'joscal', 'vipthen', 'norgal', 'spendel', 'klytic',
-    'wemble', 'throque', 'plidge', 'zogent', 'frimble', 'quelph', 'snorkel', 'blantic',
-    'crivel', 'dompish', 'flexton', 'gorply', 'hingle', 'jextic', 'krembl', 'lompsy',
-    'mogrel', 'nimbly', 'plogic', 'queltic', 'rimpel', 'splogm', 'twindle', 'vogric',
-    'wimble', 'yextic', 'zogrel', 'bliffin', 'cromble', 'driptic', 'flemble', 'glimp',
-    'hoctic', 'jemble', 'klimpsy', 'lomeric', 'moptic', 'nimble', 'pligon', 'quemble',
-    'rimble', 'slemic', 'trembl', 'voptic', 'wemble', 'yoptic', 'zemble', 'blurgic',
-    'cromble', 'dimptic', 'flemjor', 'gomptic', 'hemble', 'jimptic', 'kremble', 'lomptic',
+    'wemble', 'throque', 'plidge', 'zogent', 'frimble', 'quelph', 'blantic', 'crivel',
+    'dompish', 'flexton', 'gorply', 'hingle', 'jextic', 'krembl', 'lompsy', 'mogrel',
+    'plogic', 'queltic', 'rimpel', 'splogm', 'twindle', 'vogric', 'wimble', 'yextic',
+    'zogrel', 'bliffin', 'cromble', 'driptic', 'flemble', 'glimp', 'hoctic', 'jemble',
+    'klimpsy', 'lomeric', 'moptic', 'neldric', 'pligon', 'quemble', 'rimble', 'slemic',
+    'trembl', 'voptic', 'wemble', 'yoptic', 'zemble', 'blurgic', 'cromble', 'dimptic',
+    'flemjor', 'gomptic', 'hemble', 'jimptic', 'kremble', 'lomptic', 'nimptic', 'pemble',
     
     // B2 Level fake words (sophisticated but varied patterns)
     'voxicate', 'plethoric', 'quimbular', 'flaxitude', 'nembletic', 'dralphic', 'spendular',
-    'blorganic', 'frimtitude', 'quelmatic', 'voplexity', 'kremtonic', 'plangible', 'drofferent',
+    'blorganic', 'frimtitude', 'quelmatic', 'voplexity', 'kremtonic', 'plangible', 'drofulent',
     'splinquet', 'blomerate', 'quilmatic', 'frambolic', 'nempathy', 'groltude', 'plemtitude',
     'vronique', 'klematic', 'froplent', 'quelitude', 'blomphic', 'sprantec', 'drimitude',
     'flonquer', 'gremtude', 'plinquet', 'voquetic', 'kremtude', 'fleptide', 'quomeric',
@@ -111,10 +111,12 @@ function RealFakeWordsExercise({ onBack }) {
     setWords(testWords);
   }, []);
 
-  // Initialize test
+  // Initialize test only when instructions are complete
   useEffect(() => {
-    generateTestWords();
-  }, [generateTestWords]);
+    if (!showInstructions) {
+      generateTestWords();
+    }
+  }, [generateTestWords, showInstructions]);
 
   // Timer effect
   useEffect(() => {
@@ -132,14 +134,14 @@ function RealFakeWordsExercise({ onBack }) {
     return () => clearInterval(interval);
   }, [isActive, timeLeft, showFeedback]);
 
-  // Start timer when component mounts or new question starts
+  // Start timer only when test has actually started (not during instructions)
   useEffect(() => {
-    if (words.length > 0 && currentQuestion < words.length && !testCompleted) {
+    if (!showInstructions && words.length > 0 && currentQuestion < words.length && !testCompleted) {
       setTimeLeft(TIMER_DURATION);
       setIsActive(true);
       setShowFeedback(false);
     }
-  }, [currentQuestion, words, testCompleted]);
+  }, [currentQuestion, words, testCompleted, showInstructions]);
 
   const handleAnswer = (userAnswer, isTimeout = false) => {
     if (showFeedback || testCompleted) return;
@@ -185,6 +187,15 @@ function RealFakeWordsExercise({ onBack }) {
 
   const startTest = () => {
     setShowInstructions(false);
+    // Reset everything when starting the actual test
+    setCurrentQuestion(0);
+    setScore(0);
+    setUserAnswers([]);
+    setTestCompleted(false);
+    setShowFeedback(false);
+    setLastAnswer(null);
+    setTimeLeft(TIMER_DURATION);
+    setIsActive(false); // Will be set to true by useEffect
     generateTestWords();
   };
 
