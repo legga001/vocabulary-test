@@ -3186,14 +3186,14 @@ button:hover, .btn:hover {
   }
 }
 /* ==============================================
-   DUOLINGO-STYLE LANDING PAGE STYLES
-   Add this to your App.css file
+   DUOLINGO-STYLE LANDING PAGE WITH RESPONSIVE MENU
    ============================================== */
 
 .landing-duolingo {
   min-height: 100vh;
   background: #f7f7f7;
   position: relative;
+  display: flex;
 }
 
 .landing-duolingo.fade-in {
@@ -3201,10 +3201,95 @@ button:hover, .btn:hover {
 }
 
 /* ==============================================
-   HEADER STYLES
+   DESKTOP SIDEBAR - Always Visible on Desktop
    ============================================== */
-.duolingo-header {
+.desktop-sidebar {
+  width: 280px;
+  background: white;
+  border-right: 1px solid #e5e5e5;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
   display: flex;
+  flex-direction: column;
+}
+
+.desktop-sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.sidebar-title {
+  font-size: 1.3em;
+  font-weight: 700;
+  color: #4c51bf;
+  text-transform: lowercase;
+  letter-spacing: -0.02em;
+}
+
+.desktop-sidebar-content {
+  flex: 1;
+  padding: 20px 0;
+}
+
+.desktop-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 25px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  color: #4b4b4b;
+}
+
+.desktop-sidebar-item:hover {
+  background: #f0f0f0;
+}
+
+.desktop-sidebar-item.active {
+  background: #e6f4ff;
+  color: #4c51bf;
+  border-right: 3px solid #4c51bf;
+}
+
+.sidebar-icon {
+  font-size: 1.2em;
+  width: 24px;
+  text-align: center;
+}
+
+.sidebar-text {
+  font-weight: 600;
+  font-size: 0.9em;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: #e5e5e5;
+  margin: 15px 0;
+}
+
+/* ==============================================
+   MOBILE HEADER - Only Visible on Mobile
+   ============================================== */
+.mobile-header {
+  display: none;
   align-items: center;
   justify-content: space-between;
   padding: 15px 20px;
@@ -3290,104 +3375,131 @@ button:hover, .btn:hover {
 }
 
 /* ==============================================
-   NAVIGATION DRAWER STYLES
+   MOBILE FULL-SCREEN MENU OVERLAY
    ============================================== */
-.drawer-overlay {
+.mobile-menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 998;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-}
-
-.drawer-overlay.open {
-  opacity: 1;
-  visibility: visible;
-}
-
-.navigation-drawer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 280px;
-  height: 100vh;
   background: white;
   z-index: 999;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: slideInFromTop 0.3s ease-out;
 }
 
-.navigation-drawer.open {
-  transform: translateX(0);
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
-.close-drawer-btn {
-  position: absolute;
-  top: 15px;
-  right: 20px;
+.mobile-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.mobile-menu-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-menu-logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.mobile-menu-title {
+  font-size: 1.3em;
+  font-weight: 700;
+  color: #4c51bf;
+  text-transform: lowercase;
+  letter-spacing: -0.02em;
+}
+
+.mobile-menu-close {
   background: none;
   border: none;
   font-size: 1.5em;
   color: #777;
   cursor: pointer;
   padding: 5px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.3s ease;
 }
 
-.drawer-content {
-  padding: 60px 0 20px 0;
+.mobile-menu-close:hover {
+  background: #f0f0f0;
 }
 
-.drawer-item {
+.mobile-menu-content {
+  flex: 1;
+  padding: 20px 0;
+  overflow-y: auto;
+}
+
+.mobile-menu-item {
   display: flex;
   align-items: center;
   gap: 15px;
-  padding: 15px 25px;
+  padding: 20px 25px;
   cursor: pointer;
   transition: background 0.3s ease;
   color: #4b4b4b;
 }
 
-.drawer-item:hover {
+.mobile-menu-item:hover {
   background: #f0f0f0;
 }
 
-.drawer-item.active {
+.mobile-menu-item.active {
   background: #e6f4ff;
   color: #4c51bf;
   border-right: 3px solid #4c51bf;
 }
 
-.drawer-icon {
-  font-size: 1.2em;
-  width: 24px;
+.mobile-menu-icon {
+  font-size: 1.4em;
+  width: 28px;
   text-align: center;
 }
 
-.drawer-text {
+.mobile-menu-text {
   font-weight: 600;
-  font-size: 0.9em;
+  font-size: 1em;
   letter-spacing: 0.5px;
 }
 
-.drawer-divider {
+.mobile-menu-divider {
   height: 1px;
   background: #e5e5e5;
-  margin: 15px 0;
+  margin: 20px 0;
 }
 
 /* ==============================================
-   MAIN CONTENT STYLES
+   MAIN CONTENT AREA
    ============================================== */
-.main-content {
+.main-content-area {
+  flex: 1;
   padding: 20px;
   max-width: 600px;
   margin: 0 auto;
+  margin-left: 280px; /* Account for sidebar on desktop */
 }
 
 /* ==============================================
@@ -3651,14 +3763,32 @@ button:hover, .btn:hover {
 }
 
 /* ==============================================
-   RESPONSIVE DESIGN
+   RESPONSIVE BREAKPOINTS
    ============================================== */
+
+/* Hide desktop sidebar on mobile, show mobile header */
+@media (max-width: 1024px) {
+  .desktop-sidebar {
+    display: none;
+  }
+  
+  .mobile-header {
+    display: flex;
+  }
+  
+  .main-content-area {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* Tablet and small desktop adjustments */
 @media (max-width: 768px) {
-  .main-content {
+  .main-content-area {
     padding: 15px;
   }
   
-  .duolingo-header {
+  .mobile-header {
     padding: 12px 15px;
   }
   
@@ -3668,10 +3798,6 @@ button:hover, .btn:hover {
   
   .header-title {
     font-size: 1.1em;
-  }
-  
-  .navigation-drawer {
-    width: 260px;
   }
   
   .full-test-section {
@@ -3696,14 +3822,19 @@ button:hover, .btn:hover {
     padding: 10px 12px;
     font-size: 0.8em;
   }
+  
+  .mobile-menu-item {
+    padding: 18px 20px;
+  }
 }
 
+/* Mobile phone adjustments */
 @media (max-width: 480px) {
-  .main-content {
+  .main-content-area {
     padding: 10px;
   }
   
-  .duolingo-header {
+  .mobile-header {
     padding: 10px;
   }
   
@@ -3720,12 +3851,30 @@ button:hover, .btn:hover {
     font-size: 1em;
   }
   
-  .navigation-drawer {
-    width: 240px;
+  .mobile-menu-header {
+    padding: 15px;
   }
   
-  .drawer-item {
-    padding: 12px 20px;
+  .mobile-menu-logo-img {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .mobile-menu-title {
+    font-size: 1.2em;
+  }
+  
+  .mobile-menu-item {
+    padding: 16px 20px;
+  }
+  
+  .mobile-menu-icon {
+    font-size: 1.3em;
+    width: 26px;
+  }
+  
+  .mobile-menu-text {
+    font-size: 0.95em;
   }
   
   .full-test-section {
@@ -3766,5 +3915,40 @@ button:hover, .btn:hover {
   .category-tab {
     padding: 8px 10px;
     font-size: 0.75em;
+  }
+}
+
+/* Large desktop adjustments */
+@media (min-width: 1200px) {
+  .desktop-sidebar {
+    width: 320px;
+  }
+  
+  .main-content-area {
+    margin-left: 320px;
+    max-width: 700px;
+  }
+  
+  .sidebar-title {
+    font-size: 1.4em;
+  }
+  
+  .desktop-sidebar-item {
+    padding: 18px 30px;
+  }
+  
+  .sidebar-text {
+    font-size: 1em;
+  }
+}
+
+/* Ensure mobile menu never shows on desktop */
+@media (min-width: 1025px) {
+  .mobile-menu-overlay {
+    display: none !important;
+  }
+  
+  .mobile-header {
+    display: none !important;
   }
 }

@@ -1,10 +1,10 @@
-// src/components/LandingPage.js - Redesigned with Duolingo-style layout
+// src/components/LandingPage.js - Updated with full-screen mobile menu and desktop sidebar
 import React, { useEffect, useState } from 'react';
 
 function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitioning }) {
   const [showExercises, setShowExercises] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
-  const [showDrawer, setShowDrawer] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Trigger exercise animations after component mounts
   useEffect(() => {
@@ -114,12 +114,17 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     return exercises.filter(ex => ex.category === selectedCategory);
   };
 
-  const toggleDrawer = () => {
-    setShowDrawer(!showDrawer);
+  const toggleMobileMenu = () => {
+    setShowMobileMenu(!showMobileMenu);
   };
 
-  const closeDrawer = () => {
-    setShowDrawer(false);
+  const closeMobileMenu = () => {
+    setShowMobileMenu(false);
+  };
+
+  const handleMenuItemClick = (action) => {
+    closeMobileMenu();
+    if (action === 'progress') onProgress();
   };
 
   const handleExerciseClick = (exercise) => {
@@ -128,11 +133,84 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     }
   };
 
+  const menuItems = [
+    { id: 'home', icon: '🏠', text: 'HOME', action: null, isActive: true },
+    { id: 'practice', icon: '🎯', text: 'PRACTICE', action: null, isActive: true },
+    { id: 'progress', icon: '📊', text: 'MY PROGRESS', action: 'progress', isActive: false },
+    { id: 'settings', icon: '⚙️', text: 'SETTINGS', action: null, isActive: false },
+    { id: 'language', icon: '🌐', text: 'SITE LANGUAGE', action: null, isActive: false },
+    { id: 'logout', icon: '↗️', text: 'LOG OUT', action: null, isActive: false }
+  ];
+
   return (
     <div className={`landing-duolingo ${isTransitioning === false ? 'fade-in' : ''}`}>
-      {/* Header */}
-      <div className="duolingo-header">
-        <button className="hamburger-btn" onClick={toggleDrawer}>
+      {/* Desktop Sidebar - Always Visible */}
+      <div className="desktop-sidebar">
+        <div className="desktop-sidebar-header">
+          <div className="sidebar-logo">
+            <img 
+              src="/purple_fox_transparent.png" 
+              alt="Mr. Fox English" 
+              className="sidebar-logo-img"
+            />
+            <span className="sidebar-title">mr. fox english</span>
+          </div>
+        </div>
+        
+        <div className="desktop-sidebar-content">
+          {menuItems.map((item, index) => (
+            <div key={item.id}>
+              <div 
+                className={`desktop-sidebar-item ${item.isActive ? 'active' : ''}`}
+                onClick={() => item.action && handleMenuItemClick(item.action)}
+                style={{ cursor: item.action ? 'pointer' : 'default' }}
+              >
+                <span className="sidebar-icon">{item.icon}</span>
+                <span className="sidebar-text">{item.text}</span>
+              </div>
+              {index === 2 && <div className="sidebar-divider"></div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile Full-Screen Menu Overlay */}
+      {showMobileMenu && (
+        <div className="mobile-menu-overlay">
+          <div className="mobile-menu-header">
+            <div className="mobile-menu-logo">
+              <img 
+                src="/purple_fox_transparent.png" 
+                alt="Mr. Fox English" 
+                className="mobile-menu-logo-img"
+              />
+              <span className="mobile-menu-title">mr. fox english</span>
+            </div>
+            <button className="mobile-menu-close" onClick={closeMobileMenu}>
+              ✕
+            </button>
+          </div>
+          
+          <div className="mobile-menu-content">
+            {menuItems.map((item, index) => (
+              <div key={item.id}>
+                <div 
+                  className={`mobile-menu-item ${item.isActive ? 'active' : ''}`}
+                  onClick={() => item.action && handleMenuItemClick(item.action)}
+                >
+                  <span className="mobile-menu-icon">{item.icon}</span>
+                  <span className="mobile-menu-text">{item.text}</span>
+                </div>
+                {index === 2 && <div className="mobile-menu-divider"></div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Header */}
+      <div className="mobile-header">
+        <button className="hamburger-btn" onClick={toggleMobileMenu}>
           <div className="hamburger-lines">
             <span></span>
             <span></span>
@@ -156,43 +234,8 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
         </div>
       </div>
 
-      {/* Slide-out Drawer */}
-      <div className={`drawer-overlay ${showDrawer ? 'open' : ''}`} onClick={closeDrawer}></div>
-      <div className={`navigation-drawer ${showDrawer ? 'open' : ''}`}>
-        <button className="close-drawer-btn" onClick={closeDrawer}>×</button>
-        
-        <div className="drawer-content">
-          <div className="drawer-item" onClick={() => { closeDrawer(); /* Navigate home */ }}>
-            <span className="drawer-icon">🏠</span>
-            <span className="drawer-text">HOME</span>
-          </div>
-          
-          <div className="drawer-item active" onClick={closeDrawer}>
-            <span className="drawer-icon">🎯</span>
-            <span className="drawer-text">PRACTICE</span>
-          </div>
-          
-          <div className="drawer-item" onClick={() => { closeDrawer(); onProgress(); }}>
-            <span className="drawer-icon">📊</span>
-            <span className="drawer-text">MY PROGRESS</span>
-          </div>
-          
-          <div className="drawer-divider"></div>
-          
-          <div className="drawer-item">
-            <span className="drawer-icon">⚙️</span>
-            <span className="drawer-text">SETTINGS</span>
-          </div>
-          
-          <div className="drawer-item">
-            <span className="drawer-icon">🌐</span>
-            <span className="drawer-text">SITE LANGUAGE</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="main-content">
+      {/* Main Content Area */}
+      <div className="main-content-area">
         {/* Practice Full Test Button */}
         <div className="full-test-section">
           <div className="full-test-content">
