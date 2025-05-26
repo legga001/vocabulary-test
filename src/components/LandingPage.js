@@ -1,98 +1,267 @@
-// src/components/LandingPage.js
+// src/components/LandingPage.js - Redesigned with Duolingo-style layout
 import React, { useEffect, useState } from 'react';
 
 function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitioning }) {
-  const [showCards, setShowCards] = useState(false);
+  const [showExercises, setShowExercises] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [showDrawer, setShowDrawer] = useState(false);
 
-  // Trigger card animations after component mounts and transition is complete
+  // Trigger exercise animations after component mounts
   useEffect(() => {
     if (!isTransitioning) {
-      // Small delay to ensure page is ready
       const timer = setTimeout(() => {
-        setShowCards(true);
-      }, 100);
+        setShowExercises(true);
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [isTransitioning]);
 
+  const categories = [
+    { id: 'ALL', name: 'ALL', icon: '📚' },
+    { id: 'READING', name: 'READING', icon: '📖' },
+    { id: 'WRITING', name: 'WRITING', icon: '✍️' },
+    { id: 'LISTENING', name: 'LISTENING', icon: '🎧' },
+    { id: 'SPEAKING', name: 'SPEAKING', icon: '🎤' }
+  ];
+
   const exercises = [
     {
       type: 'reading',
+      category: 'READING',
       icon: '📖',
-      title: 'Reading',
-      description: 'Vocabulary tests based on current BBC articles and standard CEFR levels'
+      title: 'Standard Vocabulary',
+      subtitle: 'Fill in the gaps',
+      progress: '6/10',
+      isActive: true
+    },
+    {
+      type: 'reading',
+      category: 'READING', 
+      icon: '📰',
+      title: 'Article-Based Vocab',
+      subtitle: 'Real news stories',
+      progress: '3/8',
+      isActive: true
+    },
+    {
+      type: 'reading',
+      category: 'READING',
+      icon: '🎯',
+      title: 'Real or Fake Words',
+      subtitle: 'Quick recognition',
+      progress: '2/5',
+      isActive: true,
+      isNew: true
     },
     {
       type: 'writing',
+      category: 'WRITING',
       icon: '✍️',
-      title: 'Writing',
-      description: 'Grammar exercises and sentence construction practice'
+      title: 'Grammar Practice',
+      subtitle: 'Sentence building',
+      progress: '0/6',
+      isActive: false
     },
     {
-      type: 'speaking',
-      icon: '🎤',
-      title: 'Speaking',
-      description: 'Pronunciation practice with audio feedback'
+      type: 'writing',
+      category: 'WRITING',
+      icon: '📝',
+      title: 'Essay Writing',
+      subtitle: 'Structured responses',
+      progress: '0/4',
+      isActive: false
     },
     {
       type: 'listening',
+      category: 'LISTENING',
       icon: '🎧',
-      title: 'Listening',
-      description: 'Audio comprehension and conversation exercises'
+      title: 'Audio Comprehension',
+      subtitle: 'Listen and answer',
+      progress: '0/7',
+      isActive: false
+    },
+    {
+      type: 'listening',
+      category: 'LISTENING',
+      icon: '🔊',
+      title: 'Pronunciation',
+      subtitle: 'Listen and repeat',
+      progress: '0/5',
+      isActive: false
+    },
+    {
+      type: 'speaking',
+      category: 'SPEAKING',
+      icon: '🎤',
+      title: 'Conversation Practice',
+      subtitle: 'Speaking prompts',
+      progress: '0/6',
+      isActive: false
+    },
+    {
+      type: 'speaking',
+      category: 'SPEAKING',
+      icon: '🗣️',
+      title: 'Pronunciation Check',
+      subtitle: 'Voice analysis',
+      progress: '0/4',
+      isActive: false
     }
   ];
 
+  const getFilteredExercises = () => {
+    if (selectedCategory === 'ALL') return exercises;
+    return exercises.filter(ex => ex.category === selectedCategory);
+  };
+
+  const toggleDrawer = () => {
+    setShowDrawer(!showDrawer);
+  };
+
+  const closeDrawer = () => {
+    setShowDrawer(false);
+  };
+
+  const handleExerciseClick = (exercise) => {
+    if (exercise.isActive) {
+      onSelectExercise(exercise.type);
+    }
+  };
+
   return (
-    <div className={`landing ${isTransitioning === false ? 'fade-in' : ''}`}>
-      <div className="logo-container">
-        <img 
-          src="/purple_fox_transparent.png" 
-          alt="Mr. Fox English" 
-          className="app-logo"
-        />
-      </div>
-      
-      <h1 className="landing-title">🎯 Mr. Fox English</h1>
-      
-      <div className="welcome-text">
-        <p>Choose your English exercise type:</p>
-      </div>
-
-      {/* Exercise Grid with Staggered Animation */}
-      <div className={`exercise-grid ${showCards ? 'cards-visible' : ''}`}>
-        {exercises.map((exercise, index) => (
-          <div 
-            key={exercise.type}
-            className={`exercise-card clickable-card card-${index}`}
-            onClick={() => onSelectExercise(exercise.type)}
-            style={{
-              '--card-delay': `${index * 0.15}s`
-            }}
-          >
-            <div className="exercise-icon">{exercise.icon}</div>
-            <h3>{exercise.title}</h3>
-            <p>{exercise.description}</p>
-            <div className="exercise-arrow">→</div>
+    <div className={`landing-duolingo ${isTransitioning === false ? 'fade-in' : ''}`}>
+      {/* Header */}
+      <div className="duolingo-header">
+        <button className="hamburger-btn" onClick={toggleDrawer}>
+          <div className="hamburger-lines">
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
-        ))}
-      </div>
-
-      {/* Progress Section - Appears after cards */}
-      <div className={`progress-section ${showCards ? 'progress-visible' : ''}`}>
-        <button 
-          className="btn progress-btn" 
-          onClick={onProgress}
-        >
-          📊 See My Progress
         </button>
-        <p className="progress-description">
-          Track your learning journey, view daily stats, and monitor improvement!
-        </p>
+        
+        <div className="header-logo">
+          <img 
+            src="/purple_fox_transparent.png" 
+            alt="Mr. Fox English" 
+            className="header-logo-img"
+          />
+          <span className="header-title">mr. fox english</span>
+        </div>
+        
+        <div className="header-right">
+          <button className="progress-icon-btn" onClick={onProgress}>
+            📊
+          </button>
+        </div>
       </div>
 
-      <div className={`getting-started ${showCards ? 'info-visible' : ''}`}>
-        <h3>🚀 Getting Started</h3>
-        <p>Click any exercise type above to start practicing, or check your progress to see how you're improving!</p>
+      {/* Slide-out Drawer */}
+      <div className={`drawer-overlay ${showDrawer ? 'open' : ''}`} onClick={closeDrawer}></div>
+      <div className={`navigation-drawer ${showDrawer ? 'open' : ''}`}>
+        <button className="close-drawer-btn" onClick={closeDrawer}>×</button>
+        
+        <div className="drawer-content">
+          <div className="drawer-item" onClick={() => { closeDrawer(); /* Navigate home */ }}>
+            <span className="drawer-icon">🏠</span>
+            <span className="drawer-text">HOME</span>
+          </div>
+          
+          <div className="drawer-item active" onClick={closeDrawer}>
+            <span className="drawer-icon">🎯</span>
+            <span className="drawer-text">PRACTICE</span>
+          </div>
+          
+          <div className="drawer-item" onClick={() => { closeDrawer(); onProgress(); }}>
+            <span className="drawer-icon">📊</span>
+            <span className="drawer-text">MY PROGRESS</span>
+          </div>
+          
+          <div className="drawer-divider"></div>
+          
+          <div className="drawer-item">
+            <span className="drawer-icon">⚙️</span>
+            <span className="drawer-text">SETTINGS</span>
+          </div>
+          
+          <div className="drawer-item">
+            <span className="drawer-icon">🌐</span>
+            <span className="drawer-text">SITE LANGUAGE</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="main-content">
+        {/* Practice Full Test Button */}
+        <div className="full-test-section">
+          <div className="full-test-content">
+            <h2>Take a full length practice test</h2>
+            <div className="test-illustration">📋</div>
+          </div>
+          <button className="practice-test-btn" disabled>
+            PRACTICE FULL TEST
+            <span className="coming-soon-badge">Coming Soon</span>
+          </button>
+        </div>
+
+        {/* Categories Tabs */}
+        <div className="categories-section">
+          <h3>Skill practice</h3>
+          <div className="categories-tabs">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(category.id)}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Exercises List */}
+        <div className="exercises-list">
+          {showExercises && getFilteredExercises().map((exercise, index) => (
+            <div
+              key={`${exercise.category}-${index}`}
+              className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''}`}
+              onClick={() => handleExerciseClick(exercise)}
+              style={{
+                animationDelay: `${index * 0.1}s`
+              }}
+            >
+              <div className="exercise-icon-container">
+                <div className={`exercise-icon ${exercise.isActive ? 'active' : 'disabled'}`}>
+                  {exercise.icon}
+                </div>
+                {exercise.isNew && <div className="new-badge">NEW</div>}
+              </div>
+              
+              <div className="exercise-content">
+                <h4 className="exercise-title">{exercise.title}</h4>
+                <p className="exercise-subtitle">{exercise.subtitle}</p>
+                
+                {exercise.isActive && (
+                  <div className="exercise-progress">
+                    <div className="progress-bar-small">
+                      <div 
+                        className="progress-fill-small" 
+                        style={{ width: `${(parseInt(exercise.progress) / parseInt(exercise.progress.split('/')[1])) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="progress-text-small">{exercise.progress}</span>
+                  </div>
+                )}
+                
+                {!exercise.isActive && (
+                  <div className="coming-soon-small">Coming soon</div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

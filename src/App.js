@@ -1,4 +1,4 @@
-// src/App.js
+// src/App.js - Updated for Duolingo-style navigation
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import SplashPage from './components/SplashPage';
@@ -125,59 +125,4 @@ function App() {
   };
 
   const goToProgress = () => {
-    setCurrentScreen('progress');
-  };
-
-  const selectExercise = (exerciseType) => {
-    setCurrentScreen(exerciseType);
-  };
-
-  const restartApp = () => {
-    // Clear all saved state when restarting
-    localStorage.removeItem(APP_STATE_KEY);
-    sessionStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem(SPLASH_SHOWN_KEY);
-    setCurrentScreen('splash');
-  };
-
-  const goBackToLanding = () => {
-    setCurrentScreen('landing');
-  };
-
-  return (
-    <div className={`App ${currentScreen === 'splash' ? 'splash-mode' : ''} ${isTransitioning ? 'transition-loading' : ''}`}>
-      {currentScreen === 'splash' && (
-        <SplashPage 
-          onStartPracticing={goToLanding} 
-          isTransitioning={isTransitioning}
-        />
-      )}
-      {currentScreen === 'landing' && (
-        <LandingPage 
-          onProgress={goToProgress}
-          onSelectExercise={selectExercise}
-          isTransitioning={isTransitioning}
-        />
-      )}
-      {currentScreen === 'progress' && (
-        <ProgressPage 
-          onBack={goBackToLanding}
-        />
-      )}
-      {currentScreen === 'reading' && (
-        <ReadingExercise onBack={goBackToLanding} />
-      )}
-      {currentScreen === 'writing' && (
-        <WritingExercise onBack={goBackToLanding} />
-      )}
-      {currentScreen === 'speaking' && (
-        <SpeakingExercise onBack={goBackToLanding} />
-      )}
-      {currentScreen === 'listening' && (
-        <ListeningExercise onBack={goBackToLanding} />
-      )}
-    </div>
-  );
-}
-
-export default App;
+    setCurrent
