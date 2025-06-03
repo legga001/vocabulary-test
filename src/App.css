@@ -1842,3 +1842,50 @@ button:hover, .btn:hover {
     font-size: 0.75em;
   }
 }
+/* ==============================================
+  Section 18: SCROLLABLE PAGE FIX FOR RESULTS
+   ============================================== */
+
+.scrollable-page {
+  min-height: auto !important;
+  height: auto !important;
+  overflow-y: visible !important;
+}
+
+/* Ensure quiz container can expand and scroll */
+.quiz-container {
+  min-height: auto;
+  height: auto;
+  overflow: visible;
+}
+
+/* Fix for desktop layout scrolling */
+@media (min-width: 1025px) {
+  body {
+    overflow: auto !important;
+  }
+  
+  .App {
+    overflow-y: auto !important;
+    max-height: none !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+  
+  .exercise-page.scrollable-page {
+    overflow: auto;
+    height: auto;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+}
+
+/* Mobile scrolling */
+@media (max-width: 1024px) {
+  .exercise-page.scrollable-page {
+    overflow: auto;
+    height: auto;
+    min-height: 100vh;
+    padding-bottom: 20px;
+  }
+}
