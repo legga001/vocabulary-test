@@ -1,4 +1,4 @@
-// src/App.js - Updated for Duolingo-style navigation
+// src/App.js - Updated for direct exercise navigation
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import SplashPage from './components/SplashPage';
@@ -8,6 +8,8 @@ import WritingExercise from './components/WritingExercise';
 import SpeakingExercise from './components/SpeakingExercise';
 import ListeningExercise from './components/ListeningExercise';
 import ProgressPage from './components/ProgressPage';
+import ArticleSelection from './components/ArticleSelection';
+import RealFakeWordsExercise from './components/RealFakeWordsExercise';
 
 // Key for localStorage - only for preserving state during page refresh
 const APP_STATE_KEY = 'mrFoxEnglishAppState';
@@ -154,6 +156,17 @@ function App() {
 
   const handleSelectExercise = (exerciseType) => {
     switch(exerciseType) {
+      // Direct exercise navigation
+      case 'standard-vocabulary':
+        setCurrentScreen('standard-vocabulary');
+        break;
+      case 'article-vocabulary':
+        setCurrentScreen('article-selection');
+        break;
+      case 'real-fake-words':
+        setCurrentScreen('real-fake-words');
+        break;
+      // Traditional navigation (for non-active exercises)
       case 'reading':
         goToReading();
         break;
@@ -169,6 +182,12 @@ function App() {
       default:
         console.warn('Unknown exercise type:', exerciseType);
     }
+  };
+
+  const handleArticleSelection = (articleType) => {
+    // Navigate to reading exercise with specific article type
+    setCurrentScreen('reading');
+    // Note: We'll need to pass the article type to ReadingExercise if needed
   };
 
   const renderCurrentScreen = () => {
@@ -190,6 +209,25 @@ function App() {
             isTransitioning={isTransitioning}
           />
         );
+      
+      case 'standard-vocabulary':
+        return (
+          <ReadingExercise 
+            onBack={goBack} 
+            initialView="standard-quiz"
+          />
+        );
+      
+      case 'article-selection':
+        return (
+          <ArticleSelection 
+            onBack={goBack}
+            onSelectArticle={handleArticleSelection}
+          />
+        );
+      
+      case 'real-fake-words':
+        return <RealFakeWordsExercise onBack={goBack} />;
       
       case 'reading':
         return <ReadingExercise onBack={goBack} />;
