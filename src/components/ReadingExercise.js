@@ -169,7 +169,7 @@ function ReadingExercise({ onBack }) {
     );
   }
 
-  // Results view
+  // Results view - UPDATED WITH RESPONSIVE BOX
   if (showResults) {
     const score = calculateScore();
     const isArticleTest = currentView === 'octopus-quiz' || currentView === 'smuggling-quiz';
@@ -187,35 +187,39 @@ function ReadingExercise({ onBack }) {
         
         <h1>📖 Reading Exercise Results</h1>
         
-        <div className="results">
-          <h2>🎉 Quiz Complete!</h2>
-          <div className="score-display">{score}/10</div>
-          
-          <div className="level-estimate">
-            <h3>{isArticleTest ? '📰 Article-Based' : '📚 Standard'} Vocabulary Test</h3>
-            {isArticleTest && <p>Based on: "{currentArticleInfo.title}"</p>}
-          </div>
+        {/* RESULTS CONTAINER - RESPONSIVE GREY BOX WRAPS EVERYTHING */}
+        <div className="quiz-container">
+          <div className="results">
+            <h2>🎉 Quiz Complete!</h2>
+            <div className="score-display">{score}/10</div>
+            
+            <div className="level-estimate">
+              <h3>{isArticleTest ? '📰 Article-Based' : '📚 Standard'} Vocabulary Test</h3>
+              {isArticleTest && <p>Based on: "{currentArticleInfo.title}"</p>}
+            </div>
 
-          <AnswerReview 
-            questions={questions}
-            userAnswers={userAnswers}
-            title="Your Answers"
-          />
-          
-          <div className="feedback-message">
-            <strong>Well done!</strong> You've practised {isArticleTest ? 'vocabulary from a current BBC article' : 'standard English vocabulary'}. 
-            {isArticleTest && ' This helps you learn words in context from real news stories.'}
-          </div>
-          
-          <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
-            <button className="btn btn-primary" onClick={backToSelection}>
-              Try Another Test
-            </button>
-            <button className="btn btn-secondary" onClick={onBack}>
-              ← Back to Exercises
-            </button>
+            <AnswerReview 
+              questions={questions}
+              userAnswers={userAnswers}
+              title="Your Answers"
+            />
+            
+            <div className="feedback-message">
+              <strong>Well done!</strong> You've practised {isArticleTest ? 'vocabulary from a current BBC article' : 'standard English vocabulary'}. 
+              {isArticleTest && ' This helps you learn words in context from real news stories.'}
+            </div>
+            
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
+              <button className="btn btn-primary" onClick={backToSelection}>
+                Try Another Test
+              </button>
+              <button className="btn btn-secondary" onClick={onBack}>
+                ← Back to Exercises
+              </button>
+            </div>
           </div>
         </div>
+        {/* END RESULTS CONTAINER */}
       </div>
     );
   }
