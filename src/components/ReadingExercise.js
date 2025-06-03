@@ -235,28 +235,31 @@ function ReadingExercise({ onBack }) {
     const currentArticleInfo = getCurrentArticleInfo();
 
     return (
-      <div className="exercise-page">
-        {/* Article Link Button - Only show for article-based tests */}
-        {currentArticleInfo && (
-          <div className="article-link-header">
-            <button 
-              className="btn btn-article-link"
-              onClick={() => window.open(currentArticleInfo.url, '_blank')}
-              title={`Read the original article: ${currentArticleInfo.title}`}
-            >
-              📖 Read Original Article
-            </button>
-            <div className="article-title-small">
-              "{currentArticleInfo.title}"
-            </div>
-          </div>
-        )}
-
-        <div className="quiz-header">
-          <div className="quiz-type-badge">
-            📖 {currentArticleInfo ? 'Article-Based' : 'Standard'} Vocabulary Exercise
-          </div>
+  <div className="exercise-page">
+    <div style={{background: 'blue', color: 'white', padding: '10px', textAlign: 'center'}}>
+      THIS IS READINGEXERCISE.JS COMPONENT - TEMPORARY MARKER
+    </div>
+    {/* Article Link Button - Only show for article-based tests */}
+    {currentArticleInfo && (
+      <div className="article-link-header">
+        <button 
+          className="btn btn-article-link"
+          onClick={() => window.open(currentArticleInfo.url, '_blank')}
+          title={`Read the original article: ${currentArticleInfo.title}`}
+        >
+          📖 Read Original Article
+        </button>
+        <div className="article-title-small">
+          "{currentArticleInfo.title}"
         </div>
+      </div>
+    )}
+
+    <div className="quiz-header">
+      <div className="quiz-type-badge">
+        📖 {currentArticleInfo ? 'Article-Based' : 'Standard'} Vocabulary Exercise
+      </div>
+    </div>
 
         <div className="progress-container">
           <div className="progress-bar">
