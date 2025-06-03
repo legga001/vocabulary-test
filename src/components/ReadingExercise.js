@@ -1,4 +1,4 @@
-// src/components/ReadingExercise.js - Complete file with Real/Fake Words integration
+// src/components/ReadingExercise.js - Complete file with Responsive Box
 import React, { useState } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
@@ -147,7 +147,7 @@ function ReadingExercise({ onBack }) {
       setFeedback({ show: false, type: '', message: '' });
     }
   };
-    
+
   const calculateScore = () => {
     let score = 0;
     for (let i = 0; i < 10; i++) {
@@ -220,7 +220,7 @@ function ReadingExercise({ onBack }) {
     );
   }
 
-  // Quiz view
+  // Quiz view - UPDATED WITH RESPONSIVE BOX
   if (currentView !== 'selection') {
     const processedSentence = processGap(question.sentence, question.answer);
     const placeholder = getPlaceholder(question.sentence, question.answer);
@@ -235,84 +235,88 @@ function ReadingExercise({ onBack }) {
     const currentArticleInfo = getCurrentArticleInfo();
 
     return (
- 
-    {/* Article Link Button - Only show for article-based tests */}
-    {currentArticleInfo && (
-      <div className="article-link-header">
-        <button 
-          className="btn btn-article-link"
-          onClick={() => window.open(currentArticleInfo.url, '_blank')}
-          title={`Read the original article: ${currentArticleInfo.title}`}
-        >
-          📖 Read Original Article
-        </button>
-        <div className="article-title-small">
-          "{currentArticleInfo.title}"
-        </div>
-      </div>
-    )}
-
-    <div className="quiz-header">
-      <div className="quiz-type-badge">
-        📖 {currentArticleInfo ? 'Article-Based' : 'Standard'} Vocabulary Exercise
-      </div>
-    </div>
-
-        <div className="progress-container">
-          <div className="progress-bar">
-            <div className="progress-fill" style={{width: `${progress}%`}}></div>
-          </div>
-          <div className="progress-text">Question {currentQuestion + 1} of 10</div>
-        </div>
-
-        <div className="question-header">
-          <div className="question-number">Question {currentQuestion + 1}</div>
-          <div className="level-badge">{question.level}</div>
-        </div>
-
-        <div className="question-text">{processedSentence}</div>
-
-        {/* Show context for article-based questions */}
-        {question.context && (
-          <div className="question-context">
-            <small>📰 {question.context}</small>
+      <div className="exercise-page">
+        {/* Article Link Button - Only show for article-based tests */}
+        {currentArticleInfo && (
+          <div className="article-link-header">
+            <button 
+              className="btn btn-article-link"
+              onClick={() => window.open(currentArticleInfo.url, '_blank')}
+              title={`Read the original article: ${currentArticleInfo.title}`}
+            >
+              📖 Read Original Article
+            </button>
+            <div className="article-title-small">
+              "{currentArticleInfo.title}"
+            </div>
           </div>
         )}
 
-        <div className="input-container">
-          <input
-            type="text"
-            className={`answer-input ${feedback.show ? feedback.type : ''}`}
-            value={userAnswers[currentQuestion]}
-            onChange={(e) => updateAnswer(e.target.value)}
-            placeholder={placeholder}
-            onKeyPress={(e) => e.key === 'Enter' && checkAnswer()}
-          />
-          {feedback.show && (
-            <div className={`feedback ${feedback.type}`}>
-              {feedback.message}
+        {/* QUIZ CONTAINER - RESPONSIVE GREY BOX WRAPS EVERYTHING */}
+        <div className="quiz-container">
+          <div className="quiz-header">
+            <div className="quiz-type-badge">
+              📖 {currentArticleInfo ? 'Article-Based' : 'Standard'} Vocabulary Exercise
+            </div>
+          </div>
+
+          <div className="progress-container">
+            <div className="progress-bar">
+              <div className="progress-fill" style={{width: `${progress}%`}}></div>
+            </div>
+            <div className="progress-text">Question {currentQuestion + 1} of 10</div>
+          </div>
+
+          <div className="question-header">
+            <div className="question-number">Question {currentQuestion + 1}</div>
+            <div className="level-badge">{question.level}</div>
+          </div>
+
+          <div className="question-text">{processedSentence}</div>
+
+          {/* Show context for article-based questions */}
+          {question.context && (
+            <div className="question-context">
+              <small>📰 {question.context}</small>
             </div>
           )}
-        </div>
 
-        <button className="btn" onClick={checkAnswer}>
-          Check Answer
-        </button>
+          <div className="input-container">
+            <input
+              type="text"
+              className={`answer-input ${feedback.show ? feedback.type : ''}`}
+              value={userAnswers[currentQuestion]}
+              onChange={(e) => updateAnswer(e.target.value)}
+              placeholder={placeholder}
+              onKeyPress={(e) => e.key === 'Enter' && checkAnswer()}
+            />
+            {feedback.show && (
+              <div className={`feedback ${feedback.type}`}>
+                {feedback.message}
+              </div>
+            )}
+          </div>
 
-        <div className="navigation">
-          <button 
-            className="nav-btn" 
-            onClick={previousQuestion}
-            disabled={currentQuestion === 0}
-          >
-            Previous
+          <button className="btn" onClick={checkAnswer}>
+            Check Answer
           </button>
-          <button className="nav-btn" onClick={nextQuestion}>
-            {currentQuestion === 9 ? 'Finish' : 'Next'}
-          </button>
-        </div>
 
-        {/* Back button */}
+          <div className="navigation">
+            <button 
+              className="nav-btn" 
+              onClick={previousQuestion}
+              disabled={currentQuestion === 0}
+            >
+              Previous
+            </button>
+            <button className="nav-btn" onClick={nextQuestion}>
+              {currentQuestion === 9 ? 'Finish' : 'Next'}
+            </button>
+          </div>
+        </div>
+        {/* END QUIZ CONTAINER */}
+
+        {/* Back button - OUTSIDE the grey box */}
         <div className="quiz-footer">
           <button 
             className="btn btn-secondary btn-small" 
