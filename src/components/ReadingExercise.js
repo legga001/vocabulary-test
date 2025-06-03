@@ -8,8 +8,8 @@ import AnswerReview from './AnswerReview';
 import ArticleSelection from './ArticleSelection';
 import RealFakeWordsExercise from './RealFakeWordsExercise';
 
-function ReadingExercise({ onBack }) {
-  const [currentView, setCurrentView] = useState('selection'); // 'selection', 'article-selection', 'octopus-quiz', 'smuggling-quiz', 'standard-quiz', 'real-fake-words'
+function ReadingExercise({ onBack, initialView = 'selection' }) {
+  const [currentView, setCurrentView] = useState(initialView); // Now accepts initial view
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
   const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
