@@ -147,7 +147,7 @@ function ReadingExercise({ onBack }) {
       setFeedback({ show: false, type: '', message: '' });
     }
   };
-
+    
   const calculateScore = () => {
     let score = 0;
     for (let i = 0; i < 10; i++) {
