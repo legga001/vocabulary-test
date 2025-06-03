@@ -798,6 +798,76 @@ button:hover, .btn:hover {
 /* ==============================================
    10. QUIZ INTERFACE
    ============================================== */
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <!--
+        This <div> element is your main "responsive box".
+        It's designed to hold all your website's text content.
+        We apply a series of Tailwind CSS classes to it to control its appearance and responsiveness:
+
+        --- Responsive Width Classes ---
+        These classes define how wide the box will be on different screen sizes:
+        - w-full: "width: 100%". On ALL screen sizes (this is the mobile-first default),
+                  the box will take 100% of the available width.
+        - md:w-3/4: "medium: width: 75%". When the screen size is "medium" (md breakpoint,
+                    typically 768px wide and up), it will take 75% of the width.
+        - lg:w-2/3: "large: width: 66.6%". On "large" (lg breakpoint, typically 1024px wide and up)
+                    screens, it will take 66.6% of the width.
+        - xl:w-1/2: "extra-large: width: 50%". On "extra-large" (xl breakpoint, typically 1280px wide and up)
+                    screens, it will take 50% of the width.
+        - max-w-4xl: "max-width: 4xl". This is a maximum width constraint. Even if the screen
+                     is super wide, the box won't exceed a certain size (equivalent to about 896px).
+                     This prevents text lines from becoming too long and hard to read on very large monitors.
+
+        --- Styling Classes ---
+        These classes control the visual appearance of the box:
+        - bg-white: Sets the background color of the box to white.
+        - p-6: "padding: 6". Adds padding (space between content and the box's inner edge)
+               of 1.5rem (24px) on all sides.
+        - md:p-8: "medium: padding: 8". Increases padding to 2rem (32px) on medium screens and larger.
+        - lg:p-10: "large: padding: 10". Increases padding to 2.5rem (40px) on large screens and larger.
+        - rounded-lg: Applies a nice rounded corner effect to the box.
+        - shadow-xl: Adds a prominent shadow beneath the box, making it appear to float slightly off the page.
+        - border: Adds a thin border around the box.
+        - border-gray-200: Sets the border color to a very light gray.
+    -->
+    <div class="
+        w-full md:w-3/4 lg:w-2/3 xl:w-1/2
+        bg-white p-6 md:p-8 lg:p-10
+        rounded-lg shadow-xl border border-gray-200
+        max-w-4xl
+    ">
+        <!--
+            This is where your website's main text content will go.
+            You can replace this with your actual headings, paragraphs, images, etc.
+            We're using Tailwind classes here too for basic text styling:
+            - text-3xl, md:text-4xl: Responsive font size for the heading.
+            - font-bold: Bold text.
+            - text-gray-800: Dark gray text color.
+            - mb-4: Margin-bottom (space below the element).
+            - text-center: Centers the text horizontally.
+            - text-base, md:text-lg: Responsive font size for paragraphs.
+            - leading-relaxed: Sets line height for better readability.
+        -->
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4 text-center">
+            Welcome to Our Website!
+        </h1>
+        <p class="text-base md:text-lg text-gray-700 leading-relaxed mb-4">
+            This is an example of a responsive text box. On smaller screens like mobile phones,
+            this box will stretch to take up almost the entire width of the page, making it
+            easy to read.
+        </p>
+        <p class="text-base md:text-lg text-gray-700 leading-relaxed mb-4">
+            As you view this on a larger screen, such as a tablet or a desktop computer,
+            the box will automatically shrink to a comfortable width and center itself
+            on the page. This helps keep your content readable and visually appealing
+            without forcing users to scroll horizontally or read very long lines of text.
+        </p>
+        <p class="text-base md:text-lg text-gray-700 leading-relaxed">
+            The design uses Tailwind CSS classes for easy styling and responsiveness,
+            ensuring a great experience across all devices.
+        </p>
+    </div>
+
 .quiz-header {
   text-align: center;
   margin-bottom: 20px;
