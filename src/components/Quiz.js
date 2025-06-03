@@ -148,7 +148,7 @@ function Quiz({ onFinish, quizType }) {
   };
 
   return (
-    <div className="quiz">
+    <div className="quiz-container">
       <div className="quiz-header">
         <div className="quiz-type-badge">
           {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
