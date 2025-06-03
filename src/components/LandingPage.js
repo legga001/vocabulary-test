@@ -1,4 +1,4 @@
-// src/components/LandingPage.js - Updated with full-screen mobile menu and desktop sidebar
+// src/components/LandingPage.js - Updated with direct exercise navigation
 import React, { useEffect, useState } from 'react';
 
 function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitioning }) {
@@ -26,7 +26,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
 
   const exercises = [
     {
-      type: 'reading',
+      type: 'standard-vocabulary',
       category: 'READING',
       icon: '📖',
       title: 'Standard Vocabulary',
@@ -35,7 +35,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
       isActive: true
     },
     {
-      type: 'reading',
+      type: 'article-vocabulary', 
       category: 'READING', 
       icon: '📰',
       title: 'Article-Based Vocab',
@@ -44,7 +44,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
       isActive: true
     },
     {
-      type: 'reading',
+      type: 'real-fake-words',
       category: 'READING',
       icon: '🎯',
       title: 'Real or Fake Words',
@@ -129,6 +129,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
 
   const handleExerciseClick = (exercise) => {
     if (exercise.isActive) {
+      // Direct navigation to specific exercises
       onSelectExercise(exercise.type);
     }
   };
