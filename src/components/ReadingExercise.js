@@ -313,18 +313,18 @@ function ReadingExercise({ onBack }) {
               {currentQuestion === 9 ? 'Finish' : 'Next'}
             </button>
           </div>
+
+          {/* Back button - NOW INSIDE the grey box */}
+          <div className="quiz-footer">
+            <button 
+              className="btn btn-secondary btn-small" 
+              onClick={currentArticleInfo ? backToArticleSelection : backToSelection}
+            >
+              ← Back to {currentArticleInfo ? 'Article Selection' : 'Reading Options'}
+            </button>
+          </div>
         </div>
         {/* END QUIZ CONTAINER */}
-
-        {/* Back button - OUTSIDE the grey box */}
-        <div className="quiz-footer">
-          <button 
-            className="btn btn-secondary btn-small" 
-            onClick={currentArticleInfo ? backToArticleSelection : backToSelection}
-          >
-            ← Back to {currentArticleInfo ? 'Article Selection' : 'Reading Options'}
-          </button>
-        </div>
       </div>
     );
   }
