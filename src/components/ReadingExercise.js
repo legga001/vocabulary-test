@@ -235,10 +235,7 @@ function ReadingExercise({ onBack }) {
     const currentArticleInfo = getCurrentArticleInfo();
 
     return (
-  <div className="exercise-page">
-    <div style={{background: 'blue', color: 'white', padding: '10px', textAlign: 'center'}}>
-      THIS IS READINGEXERCISE.JS COMPONENT - TEMPORARY MARKER
-    </div>
+ 
     {/* Article Link Button - Only show for article-based tests */}
     {currentArticleInfo && (
       <div className="article-link-header">
