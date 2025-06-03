@@ -148,7 +148,12 @@ function Quiz({ onFinish, quizType }) {
   };
 
   return (
+  <div>
+    <div style={{background: 'red', color: 'white', padding: '10px', textAlign: 'center'}}>
+      THIS IS QUIZ.JS COMPONENT - TEMPORARY MARKER
+    </div>
     <div className="quiz-container">
+      // ... rest of your content
       <div className="quiz-header">
         <div className="quiz-type-badge">
           {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
