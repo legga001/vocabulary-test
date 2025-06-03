@@ -16,6 +16,9 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
   const [feedback, setFeedback] = useState({ show: false, type: '', message: '' });
   const [showResults, setShowResults] = useState(false);
 
+  // Determine if we came directly from landing page
+  const isDirectFromLanding = initialView !== 'selection';
+
   // Get article info for displays
   const octopusArticleInfo = getReadingArticleInfo();
   const smugglingArticleInfo = getArticleInfo();
@@ -61,8 +64,14 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
   };
 
   const backToSelection = () => {
-    setCurrentView('selection');
-    resetQuizState();
+    if (isDirectFromLanding) {
+      // If we came directly from landing, go back to landing
+      onBack();
+    } else {
+      // Otherwise, go to the reading exercise selection
+      setCurrentView('selection');
+      resetQuizState();
+    }
   };
 
   const backToArticleSelection = () => {
@@ -211,11 +220,13 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
             
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
               <button className="btn btn-primary" onClick={backToSelection}>
-                Try Another Test
+                {isDirectFromLanding ? 'Back to Main Menu' : 'Try Another Test'}
               </button>
-              <button className="btn btn-secondary" onClick={onBack}>
-                ← Back to Exercises
-              </button>
+              {!isDirectFromLanding && (
+                <button className="btn btn-secondary" onClick={onBack}>
+                  ← Back to Exercises
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -324,7 +335,7 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
               className="btn btn-secondary btn-small" 
               onClick={currentArticleInfo ? backToArticleSelection : backToSelection}
             >
-              ← Back to {currentArticleInfo ? 'Article Selection' : 'Reading Options'}
+              ← Back to {isDirectFromLanding ? 'Main Menu' : (currentArticleInfo ? 'Article Selection' : 'Reading Options')}
             </button>
           </div>
         </div>
