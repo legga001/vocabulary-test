@@ -169,14 +169,14 @@ function ReadingExercise({ onBack }) {
     );
   }
 
-  // Results view - UPDATED WITH RESPONSIVE BOX
+  // Results view - UPDATED WITH RESPONSIVE BOX AND MAIN HEADING INSIDE
   if (showResults) {
     const score = calculateScore();
     const isArticleTest = currentView === 'octopus-quiz' || currentView === 'smuggling-quiz';
     const currentArticleInfo = currentView === 'octopus-quiz' ? octopusArticleInfo : smugglingArticleInfo;
 
     return (
-      <div className="exercise-page">
+      <div className="exercise-page scrollable-page">
         <div className="logo-container">
           <img 
             src="/purple_fox_transparent.png" 
@@ -185,10 +185,10 @@ function ReadingExercise({ onBack }) {
           />
         </div>
         
-        <h1>📖 Reading Exercise Results</h1>
-        
-        {/* RESULTS CONTAINER - RESPONSIVE GREY BOX WRAPS EVERYTHING */}
+        {/* RESULTS CONTAINER - RESPONSIVE GREY BOX WRAPS EVERYTHING INCLUDING HEADING */}
         <div className="quiz-container">
+          <h1>📖 Reading Exercise Results</h1>
+          
           <div className="results">
             <h2>🎉 Quiz Complete!</h2>
             <div className="score-display">{score}/10</div>
