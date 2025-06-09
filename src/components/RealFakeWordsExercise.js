@@ -1,5 +1,6 @@
-// src/components/RealFakeWordsExercise.js
+// src/components/RealFakeWordsExercise.js - Updated with ClickableLogo
 import React, { useState, useEffect, useCallback } from 'react';
+import ClickableLogo from './ClickableLogo';
 import { recordTestResult } from '../utils/progressDataManager';
 
 // Word bank with 300 words (150 real, 150 fake)
@@ -74,7 +75,7 @@ const WORD_BANK = {
 
 const TIMER_DURATION = 5; // 5 seconds
 
-function RealFakeWordsExercise({ onBack }) {
+function RealFakeWordsExercise({ onBack, onLogoClick }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [words, setWords] = useState([]);
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION);
@@ -246,13 +247,7 @@ function RealFakeWordsExercise({ onBack }) {
   if (showInstructions) {
     return (
       <div className="exercise-page real-fake-words">
-        <div className="logo-container">
-          <img 
-            src="/purple_fox_transparent.png" 
-            alt="Mr. Fox English" 
-            className="app-logo"
-          />
-        </div>
+        <ClickableLogo onLogoClick={onLogoClick} />
 
         {/* INSTRUCTIONS CONTAINER - RESPONSIVE GREY BOX */}
         <div className="quiz-container">
@@ -300,7 +295,7 @@ function RealFakeWordsExercise({ onBack }) {
               </div>
             </div>
 
-            <div className="example-section">
+                          <div className="example-section">
               <h3>🎯 Try This Practice Example</h3>
               <p className="example-description">
                 This example is <strong>untimed</strong> so you can get familiar with the interface. 
@@ -386,13 +381,7 @@ function RealFakeWordsExercise({ onBack }) {
     
     return (
       <div className="exercise-page scrollable-page">
-        <div className="logo-container">
-          <img 
-            src="/purple_fox_transparent.png" 
-            alt="Mr. Fox English" 
-            className="app-logo"
-          />
-        </div>
+        <ClickableLogo onLogoClick={onLogoClick} />
         
         {/* RESULTS CONTAINER - RESPONSIVE GREY BOX */}
         <div className="quiz-container">
@@ -460,13 +449,7 @@ function RealFakeWordsExercise({ onBack }) {
 
   return (
     <div className="exercise-page real-fake-words">
-      <div className="logo-container">
-        <img 
-          src="/purple_fox_transparent.png" 
-          alt="Mr. Fox English" 
-          className="app-logo"
-        />
-      </div>
+      <ClickableLogo onLogoClick={onLogoClick} />
 
       {/* QUIZ CONTAINER - RESPONSIVE GREY BOX WRAPS EVERYTHING */}
       <div className="quiz-container">
