@@ -106,71 +106,71 @@ const SENTENCE_POOLS = {
       difficulty: "B2 - Inverted conditional structures"
     },
     {
-      correctText: "The company is committed to reducing its environmental impact",
-      difficulty: "B2 - Business vocabulary with passive structures"
+      correctText: "The company is trying to reduce the damage it causes to nature",
+      difficulty: "B2 - Business vocabulary with relative pronouns"
     },
     {
-      correctText: "Not only did she finish the project early but she also exceeded expectations",
+      correctText: "Not only did she finish early but she also did better than expected",
       difficulty: "B2 - Inverted structures with 'not only'"
     },
     {
-      correctText: "The phenomenon has been observed in various scientific studies",
-      difficulty: "B2 - Academic vocabulary with present perfect passive"
+      correctText: "The study has been done in many different schools and colleges",
+      difficulty: "B2 - Present perfect passive with simple vocabulary"
     },
     {
-      correctText: "Scarcely had we entered the building when the alarm went off",
-      difficulty: "B2 - Inverted structures with 'scarcely'"
+      correctText: "No sooner had we entered the room than the phone started ringing",
+      difficulty: "B2 - Inverted structures with 'no sooner'"
     },
     {
-      correctText: "The proposal was rejected on the grounds that it lacked sufficient detail",
-      difficulty: "B2 - Formal language with reason clauses"
+      correctText: "The idea was turned down because it didn't have enough details",
+      difficulty: "B2 - Passive voice with phrasal verbs"
     },
     {
-      correctText: "Were it not for the support of volunteers the charity couldn't function",
-      difficulty: "B2 - Hypothetical conditionals with inversion"
+      correctText: "If it weren't for the help of friends the project couldn't work",
+      difficulty: "B2 - Hypothetical conditionals with simple vocabulary"
     }
   ],
   
   C1: [
     {
-      correctText: "The government's reluctance to implement comprehensive reforms has been criticised extensively",
-      difficulty: "C1 - Complex academic vocabulary with passive voice"
+      correctText: "The government's refusal to make big changes has been criticised a lot",
+      difficulty: "C1 - Complex possessive structures with passive voice"
     },
     {
-      correctText: "Notwithstanding the committee's recommendations the proposal was unanimously rejected",
-      difficulty: "C1 - Formal language with complex conjunctions"
+      correctText: "Despite what the committee said the idea was rejected by everyone",
+      difficulty: "C1 - Complex clause structures with simple vocabulary"
     },
     {
-      correctText: "The phenomenon manifests itself in a variety of seemingly unrelated contexts",
-      difficulty: "C1 - Advanced academic vocabulary with reflexive pronouns"
+      correctText: "The problem shows itself in many different ways that seem unconnected",
+      difficulty: "C1 - Complex sentence structure with relative clauses"
     },
     {
-      correctText: "Such was the magnitude of the disaster that international aid was immediately mobilised",
-      difficulty: "C1 - Inverted structures with formal vocabulary"
+      correctText: "So big was the disaster that help from other countries came straight away",
+      difficulty: "C1 - Inverted structures for emphasis"
     },
     {
-      correctText: "The implications of these findings extend far beyond the scope of this particular study",
-      difficulty: "C1 - Academic discourse with complex sentence structures"
+      correctText: "What these results mean goes far beyond what this one study looked at",
+      difficulty: "C1 - Complex clause structures with embedded questions"
     },
     {
-      correctText: "Paradoxically the most successful entrepreneurs often embrace failure as a prerequisite for innovation",
-      difficulty: "C1 - Advanced linking words with business terminology"
+      correctText: "Strangely the most successful business people often see failure as necessary",
+      difficulty: "C1 - Complex ideas with simple vocabulary"
     },
     {
-      correctText: "The proliferation of digital technologies has fundamentally transformed how we conceptualise communication",
-      difficulty: "C1 - Academic vocabulary with complex verb structures"
+      correctText: "The growth of digital technology has completely changed how we think about talking to people",
+      difficulty: "C1 - Complex embedded clauses with simple words"
     },
     {
-      correctText: "Albeit controversial the methodology employed in the research yielded unprecedented insights",
-      difficulty: "C1 - Formal conjunctions with academic vocabulary"
+      correctText: "Although it caused arguments the method used in the research gave new understanding",
+      difficulty: "C1 - Complex concessive clauses"
     },
     {
-      correctText: "The ramifications of climate change permeate virtually every aspect of contemporary society",
-      difficulty: "C1 - Advanced vocabulary with complex sentence structure"
+      correctText: "The effects of climate change touch almost every part of modern life",
+      difficulty: "C1 - Complex ideas expressed simply"
     },
     {
-      correctText: "Irrespective of one's political affiliations the evidence presented is incontrovertible",
-      difficulty: "C1 - Formal language with complex noun phrases"
+      correctText: "Whatever someone's political views the evidence shown cannot be argued with",
+      difficulty: "C1 - Complex concessive structures with simple vocabulary"
     }
   ]
 };
@@ -294,9 +294,63 @@ function ListenAndTypeExercise({ onBack }) {
   const normaliseText = (text) => {
     return text
       .toLowerCase()
-      .replace(/[.,!?;:]/g, '') // Remove punctuation except apostrophes
+      .replace(/[.,!?;:'"()-]/g, '') // Remove ALL punctuation including apostrophes
       .replace(/\s+/g, ' ') // Replace multiple spaces with single space
       .trim();
+  };
+
+  // Handle American/British spelling variations and number formats
+  const normaliseForComparison = (text) => {
+    let normalised = normaliseText(text);
+    
+    // Number variations (accept both words and digits)
+    normalised = normalised.replace(/\b(three|3)\b/g, 'three');
+    normalised = normalised.replace(/\b(seven|7)\b/g, 'seven');
+    normalised = normalised.replace(/\b(one|1)\b/g, 'one');
+    normalised = normalised.replace(/\b(two|2)\b/g, 'two');
+    normalised = normalised.replace(/\b(four|4)\b/g, 'four');
+    normalised = normalised.replace(/\b(five|5)\b/g, 'five');
+    normalised = normalised.replace(/\b(six|6)\b/g, 'six');
+    normalised = normalised.replace(/\b(eight|8)\b/g, 'eight');
+    normalised = normalised.replace(/\b(nine|9)\b/g, 'nine');
+    normalised = normalised.replace(/\b(ten|10)\b/g, 'ten');
+    
+    // British/American spelling variations for words in our sentences
+    normalised = normalised.replace(/\bcancelled\b/g, 'canceled'); // Standardise to American
+    normalised = normalised.replace(/\bcriticised\b/g, 'criticized'); // Standardise to American
+    normalised = normalised.replace(/\bcolour\b/g, 'color'); // Standardise to American (if used)
+    normalised = normalised.replace(/\bcentre\b/g, 'center'); // Standardise to American (if used)
+    
+    // Handle contractions - accept with or without apostrophes
+    normalised = normalised.replace(/\bshes\b/g, 'she is');
+    normalised = normalised.replace(/\bshe s\b/g, 'she is');
+    normalised = normalised.replace(/\bwere\b/g, 'we are'); // Handle "were" -> "we're" confusion
+    normalised = normalised.replace(/\bwere\b/g, 'we are');
+    normalised = normalised.replace(/\bwe re\b/g, 'we are');
+    normalised = normalised.replace(/\bcant\b/g, 'can not');
+    normalised = normalised.replace(/\bcan t\b/g, 'can not');
+    normalised = normalised.replace(/\bdont\b/g, 'do not');
+    normalised = normalised.replace(/\bdo nt\b/g, 'do not');
+    normalised = normalised.replace(/\btheres\b/g, 'there is');
+    normalised = normalised.replace(/\bthere s\b/g, 'there is');
+    normalised = normalised.replace(/\bive\b/g, 'i have');
+    normalised = normalised.replace(/\bi ve\b/g, 'i have');
+    normalised = normalised.replace(/\bdoesnt\b/g, 'does not');
+    normalised = normalised.replace(/\bdoes nt\b/g, 'does not');
+    normalised = normalised.replace(/\bwell\b/g, 'we will');
+    normalised = normalised.replace(/\bwe ll\b/g, 'we will');
+    normalised = normalised.replace(/\bwasnt\b/g, 'was not');
+    normalised = normalised.replace(/\bwas nt\b/g, 'was not');
+    normalised = normalised.replace(/\bid\b/g, 'i would');
+    normalised = normalised.replace(/\bi d\b/g, 'i would');
+    normalised = normalised.replace(/\bwerent\b/g, 'were not');
+    normalised = normalised.replace(/\bwere nt\b/g, 'were not');
+    normalised = normalised.replace(/\bcouldnt\b/g, 'could not');
+    normalised = normalised.replace(/\bcould nt\b/g, 'could not');
+    normalised = normalised.replace(/\bdidnt\b/g, 'did not');
+    normalised = normalised.replace(/\bdid nt\b/g, 'did not');
+    
+    return normalised;
   };
 
   const playAudio = () => {
@@ -322,7 +376,7 @@ function ListenAndTypeExercise({ onBack }) {
 
   const handleNext = () => {
     // Save current answer
-    const isCorrect = normaliseText(userInput) === normaliseText(currentData.correctText);
+    const isCorrect = normaliseForComparison(userInput) === normaliseForComparison(currentData.correctText);
     setAnswers(prev => [...prev, {
       sentence: currentData,
       userInput: userInput.trim(),
@@ -479,11 +533,19 @@ function ListenAndTypeExercise({ onBack }) {
               </div>
               <div className="instruction-item">
                 <span className="instruction-icon">✅</span>
-                <span>Spelling and apostrophes must be correct</span>
+                <span>Type what you hear - spelling variations accepted</span>
+              </div>
+              <div className="instruction-item">
+                <span className="instruction-icon">🔢</span>
+                <span>Numbers can be written as words (three) or digits (3)</span>
+              </div>
+              <div className="instruction-item">
+                <span className="instruction-icon">🌍</span>
+                <span>Both British and American spellings accepted</span>
               </div>
               <div className="instruction-item">
                 <span className="instruction-icon">❌</span>
-                <span>Punctuation (. , ! ?) is not required</span>
+                <span>Punctuation (including apostrophes) not required</span>
               </div>
             </div>
             
@@ -588,7 +650,7 @@ function ListenAndTypeExercise({ onBack }) {
           />
           
           <div className="input-info">
-            <p>💡 <strong>Remember:</strong> Spelling and apostrophes must be correct, but punctuation is optional</p>
+            <p>💡 <strong>Remember:</strong> Just type what you hear - spelling variations, numbers as words/digits, and missing punctuation are all fine!</p>
           </div>
         </div>
 
