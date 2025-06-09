@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { recordTestResult } from '../utils/progressDataManager';
 
-// Word bank with 300 words (150 real, 150 fake)
+// Word bank with 400 words (200 real, 200 fake)
 const WORD_BANK = {
   real: [
     // B1 Level real words
@@ -16,62 +16,68 @@ const WORD_BANK = {
     'strength', 'temperature', 'mountain', 'ocean', 'forest', 'desert', 'island', 'valley',
     'modern', 'popular', 'special', 'private', 'public', 'simple', 'complex', 'similar',
     'financial', 'political', 'physical', 'mental', 'social', 'personal', 'professional', 'international',
-    
-    // B2 Level real words  
+
+    // B2 Level real words
     'accomplish', 'appreciate', 'certificate', 'circumstances', 'colleague', 'concentrate', 'consequence',
-    'definitely', 'eliminate', 'environment', 'equipment', 'essential', 'experience', 'familiar',
+    'definitely', 'eliminate', 'equipment', 'essential', 'experience', 'familiar',
     'government', 'identity', 'immediately', 'independence', 'influence', 'intelligence', 'management',
-    'necessary', 'opportunity', 'particular', 'personality', 'possibility', 'preparation', 'professional',
-    'relationship', 'responsibility', 'situation', 'technology', 'temperature', 'tradition', 'university',
-    'appearance', 'arrangement', 'atmosphere', 'authority', 'beginning', 'celebration', 'comfortable',
-    'competition', 'condition', 'connection', 'consideration', 'construction', 'development', 'difficulty',
-    'discussion', 'economic', 'education', 'emergency', 'entertainment', 'establishment', 'examination',
-    
+    'necessary', 'particular', 'personality', 'possibility', 'preparation', 'relationship', 'responsibility',
+    'situation', 'technology', 'tradition', 'university', 'appearance', 'arrangement', 'atmosphere',
+    'authority', 'beginning', 'celebration', 'comfortable', 'competition', 'condition', 'connection',
+    'consideration', 'construction', 'development', 'difficulty', 'discussion', 'economic', 'education',
+    'emergency', 'entertainment', 'establishment', 'examination', 'adjustment', 'navigation', 'admission',
+    'cooperation', 'publication', 'resolution', 'transmission', 'comprehension', 'exaggeration',
+    'accommodation', 'distribution', 'motivation', 'innovation', 'translation', 'declaration',
+
     // C1 Level real words
     'abundance', 'bureaucracy', 'catastrophe', 'diminish', 'elaborate', 'facilitate', 'gregarious',
     'hypothesis', 'inevitable', 'juxtapose', 'labyrinth', 'magnificent', 'notorious', 'obsolete',
     'phenomenal', 'quintessential', 'renaissance', 'sophisticated', 'tremendous', 'ubiquitous',
     'vicarious', 'whimsical', 'xenophobia', 'zealous', 'ambiguous', 'benevolent', 'conscientious',
     'diligent', 'eloquent', 'fastidious', 'grandiose', 'haphazard', 'immaculate', 'judicious',
-    'meticulous', 'nonchalant', 'ostentatious', 'pragmatic', 'resilient', 'serendipity',
-    'accomplish', 'anonymous', 'articulate', 'comprehensive', 'contemporary', 'demonstrate', 'distinguish',
-    'entrepreneur', 'fundamental', 'influential', 'prestigious', 'spontaneous', 'substantial', 'versatile'
+    'meticulous', 'nonchalant', 'ostentatious', 'pragmatic', 'resilient', 'serendipity', 'anonymous',
+    'articulate', 'comprehensive', 'contemporary', 'demonstrate', 'distinguish', 'entrepreneur',
+    'fundamental', 'influential', 'prestigious', 'spontaneous', 'substantial', 'versatile',
+    'transcendent', 'legislation', 'anticipation', 'proclamation', 'reconciliation', 'conglomerate',
+    'unprecedented', 'revolutionary', 'indispensable', 'charismatic', 'peripheral', 'theoretical'
   ],
-  
+
   fake: [
-    // B1 Level fake words (varied phonetic patterns, completely original)
-    'blaxter', 'quildon', 'fremic', 'joscal', 'vipthen', 'norgal', 'spendel', 'klytic',
-    'wemble', 'throque', 'plidge', 'zogent', 'frimble', 'quelph', 'blantic', 'crivel',
-    'dompish', 'flexton', 'gorply', 'hingle', 'jextic', 'krembl', 'lompsy', 'mogrel',
-    'plogic', 'queltic', 'rimpel', 'splogm', 'twindle', 'vogric', 'wimble', 'yextic',
-    'zogrel', 'bliffin', 'cromble', 'driptic', 'flemble', 'glimp', 'hoctic', 'jemble',
-    'klimpsy', 'lomeric', 'moptic', 'neldric', 'pligon', 'quemble', 'rimble', 'slemic',
-    'trembl', 'voptic', 'wemble', 'yoptic', 'zemble', 'blurgic', 'cromble', 'dimptic',
-    'flemjor', 'gomptic', 'hemble', 'jimptic', 'kremble', 'lomptic', 'nimptic', 'pemble',
-    
-    // B2 Level fake words (sophisticated but varied patterns)
-    'voxicate', 'plethoric', 'quimbular', 'flaxitude', 'nembletic', 'dralphic', 'spendular',
-    'blorganic', 'frimtitude', 'quelmatic', 'voplexity', 'kremtonic', 'plangible', 'drofulent',
-    'splinquet', 'blomerate', 'quilmatic', 'frambolic', 'nempathy', 'groltude', 'plemtitude',
-    'vronique', 'klematic', 'froplent', 'quelitude', 'blomphic', 'sprantec', 'drimitude',
-    'flonquer', 'gremtude', 'plinquet', 'voquetic', 'kremtude', 'fleptide', 'quomeric',
-    'blomtude', 'splingue', 'fremtude', 'quelphic', 'vromtude', 'kleptude', 'flomeric',
-    'grenture', 'plomtude', 'voqueric', 'kremolic', 'fleptude', 'quomtude', 'blomeric',
-    'spronque', 'fremolic', 'queltura', 'vromeric', 'klemtude', 'floquent', 'quepture',
-    
-    // C1 Level fake words (academic-sounding with completely invented roots)
-    'voxendral', 'nepholithic', 'axiotropic', 'morphendal', 'cryptalic', 'stelloptic',
-    'photendric', 'neurolithic', 'chromatropic', 'helioptric', 'thermendal', 'crystallopic',
-    'magnetropic', 'photoendal', 'neuromatic', 'crystallendal', 'thermoendric', 'photolithic',
-    'neuroptric', 'crystalloptric', 'magnetendal', 'photomatic', 'neuroendal', 'crystallendric',
-    'magnetolithic', 'photomatic', 'neuroptric', 'crystallendal', 'magnetropic', 'photoendric',
-    'neuroendic', 'crystallotropic', 'magnetendric', 'photolithc', 'neuromatic', 'crystallendic',
-    'magnetropic', 'photoendal', 'neurolithc', 'crystalloptric', 'magnetendric', 'photomatic',
-    'neuroendal', 'crystallendic', 'magnetolithic', 'photoendric', 'neuroptric', 'crystalloptric',
-    'voxendric', 'blaphetic', 'quornalistic', 'flemtropism', 'grondology', 'spendalism',
-    'kromantic', 'fleptology', 'voxendism', 'quormalism', 'bleptitude', 'flemtology'
+    // B1 Level fake words
+    'blanter', 'tramble', 'glinter', 'shorple', 'drimble', 'flanter', 'brinque', 'quaster',
+    'velder', 'prombly', 'snorfle', 'grintle', 'platcher', 'zindle', 'crumper', 'jubber',
+    'wintrel', 'hobbert', 'clander', 'nobric', 'yindle', 'vintera', 'swarpish', 'grobnel',
+    'tribber', 'loftrel', 'stumber', 'flonick', 'garblet', 'bremmer', 'nindle', 'blorick',
+    'jinter', 'croffer', 'mavrick', 'skelven', 'rindle', 'tworple', 'brastic', 'frindle',
+    'clamber', 'drepper', 'fraston', 'quorple', 'neffer', 'drompel', 'hintera', 'plimnel',
+    'groffle', 'sninter', 'swarpish', 'glimber', 'vrember', 'cromnel', 'marnick', 'squinter',
+    'twelfic', 'shindle', 'pabbler', 'glonser', 'trenner', 'blicken', 'flinter', 'scrabblet',
+
+    // B2 Level fake words
+    'transique', 'plethorax', 'inquentive', 'glanterior', 'provolate', 'miscalver', 'bracternal',
+    'convitual', 'dremphasis', 'gratuline', 'posteneric', 'invergent', 'qualitence', 'tribulant',
+    'advancery', 'refluctant', 'condevise', 'elocitive', 'fentrusion', 'majesticor', 'imposulate',
+    'noblesque', 'dretinence', 'calcivorous', 'vintacular', 'unceptive', 'socrative', 'exturnal',
+    'denomical', 'figmentive', 'architude', 'fractaline', 'dormitive', 'conceptualic', 'underistic',
+    'projentive', 'clandorical', 'hypentical', 'veratude', 'tremulate', 'indolance', 'probantive',
+    'metrasive', 'phostulate', 'resindral', 'blanquetic', 'invasary', 'stravicate', 'reglective',
+    'verantric', 'monterial', 'unobtrene', 'penthrite', 'drestalise', 'sublature', 'galverine',
+    'prodenique', 'infrecalate', 'drastimate', 'frabulate', 'snardulent', 'opthaloric', 'vesturate',
+
+    // C1 Level fake words
+    'polymentra', 'crenovastic', 'epitulary', 'quantivance', 'strabellate', 'xenotivate',
+    'luminescor', 'tranchevate', 'verastruct', 'mendacine', 'typolastive', 'centracline',
+    'rhetovance', 'anecrosive', 'dilatophyte', 'breviculine', 'inexorane', 'phylonomist',
+    'equitastic', 'gravitise', 'thermospire', 'juxtapulant', 'federalithic', 'morpharate',
+    'crystafied', 'haptolux', 'circavide', 'spectravane', 'neurometrix', 'ecstaticore',
+    'propulique', 'tranquilest', 'phorenzic', 'subtempore', 'obstructale', 'narratide',
+    'ephemeric', 'contralinear', 'dialustic', 'tracelith', 'elegentium', 'sublantive',
+    'ornaphonic', 'caustalectic', 'garnathene', 'nomenclastic', 'ubervasive', 'lexantric',
+    'hypnostral', 'quandisphere', 'velocentrix', 'detrialomic', 'maliphoric', 'corvastide',
+    'brenarithic', 'opulantide', 'venastrine', 'elucivist', 'delathoric', 'pentropose'
   ]
 };
+
 
 const TIMER_DURATION = 5; // 5 seconds
 
