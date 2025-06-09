@@ -272,6 +272,8 @@
 }
 /* Add these additional styles to your src/styles/quiz.css file */
 
+/* Add these additional styles to your src/styles/quiz.css file */
+
 /* ==============================================
    QUESTION SECTION WITH LETTER INPUT
    ============================================== */
@@ -308,28 +310,11 @@
   justify-content: center;
 }
 
-.word-hint {
-  font-size: 0.9em;
-  color: #666;
-  font-style: italic;
-  margin-top: 10px;
-  background: #f8f9fa;
-  padding: 8px 15px;
-  border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  display: inline-block;
-}
-
 /* Responsive adjustments for question section */
 @media (max-width: 768px) {
   .question-text {
     font-size: 1.2em;
     gap: 12px;
-  }
-  
-  .word-hint {
-    font-size: 0.85em;
-    padding: 6px 12px;
   }
 }
 
@@ -342,14 +327,7 @@
   .letter-input-wrapper {
     margin: 12px 0;
   }
-  
-  .word-hint {
-    font-size: 0.8em;
-    padding: 5px 10px;
-  }
 }
-/* Add these styles to your src/styles/quiz.css file */
-
 /* ==============================================
    LETTER INPUT COMPONENT STYLES
    ============================================== */
