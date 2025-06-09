@@ -6,22 +6,24 @@ import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
 // HELPER FUNCTIONS
 // ==============================================
 
-// Generate random test sentences according to test structure
+// Generate random test sentences with proper shuffling
 const generateTestSentences = () => {
   const testSentences = [];
   let sentenceCounter = 1;
 
   TEST_STRUCTURE.forEach(({ level, count }) => {
+    // Create a copy and shuffle it properly
     const availableSentences = [...SENTENCE_POOLS[level]];
     
-    for (let i = 0; i < count; i++) {
-      if (availableSentences.length === 0) {
-        console.warn(`Not enough ${level} sentences available`);
-        break;
-      }
-      
-      const randomIndex = Math.floor(Math.random() * availableSentences.length);
-      const selectedSentence = availableSentences.splice(randomIndex, 1)[0];
+    // Fisher-Yates shuffle for true randomness
+    for (let i = availableSentences.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [availableSentences[i], availableSentences[j]] = [availableSentences[j], availableSentences[i]];
+    }
+    
+    // Take the required number of sentences
+    for (let i = 0; i < count && i < availableSentences.length; i++) {
+      const selectedSentence = availableSentences[i];
       
       testSentences.push({
         id: sentenceCounter,
@@ -35,10 +37,22 @@ const generateTestSentences = () => {
     }
   });
 
+  // Final shuffle of the entire test to randomise order
+  for (let i = testSentences.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [testSentences[i], testSentences[j]] = [testSentences[j], testSentences[i]];
+  }
+
+  console.log('Generated random test sentences:', testSentences.map(s => ({
+    level: s.level,
+    audio: s.audioFile,
+    text: s.correctText.substring(0, 30) + '...'
+  })));
+
   return testSentences;
 };
 
-// Normalise text for comparison (remove punctuation, extra spaces, convert to lowercase)
+// Basic text normalisation
 const normaliseText = (text) => {
   return text
     .toLowerCase()
@@ -47,7 +61,7 @@ const normaliseText = (text) => {
     .trim();
 };
 
-// Calculate Levenshtein distance for fuzzy matching
+// Levenshtein distance calculation
 const getLevenshteinDistance = (str1, str2) => {
   const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
   
@@ -58,9 +72,9 @@ const getLevenshteinDistance = (str1, str2) => {
     for (let i = 1; i <= str1.length; i++) {
       const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
       matrix[j][i] = Math.min(
-        matrix[j][i - 1] + 1,     // deletion
-        matrix[j - 1][i] + 1,     // insertion
-        matrix[j - 1][i - 1] + indicator // substitution
+        matrix[j][i - 1] + 1,
+        matrix[j - 1][i] + 1,
+        matrix[j - 1][i - 1] + indicator
       );
     }
   }
@@ -68,7 +82,7 @@ const getLevenshteinDistance = (str1, str2) => {
   return matrix[str2.length][str1.length];
 };
 
-// Check if two strings are similar within a threshold
+// Check similarity between strings
 const isCloseMatch = (userText, correctText, threshold = 0.85) => {
   const distance = getLevenshteinDistance(userText, correctText);
   const maxLength = Math.max(userText.length, correctText.length);
@@ -77,7 +91,7 @@ const isCloseMatch = (userText, correctText, threshold = 0.85) => {
   return similarity >= threshold;
 };
 
-// Advanced text normalisation for comparison
+// Advanced normalisation with contractions and spelling variants
 const normaliseForComparison = (text) => {
   let normalised = normaliseText(text);
   
@@ -94,20 +108,36 @@ const normaliseForComparison = (text) => {
   // Handle British/American spelling differences
   const spellingMap = {
     'cancelled': 'canceled', 'criticised': 'criticized',
-    'colour': 'color', 'centre': 'center'
+    'colour': 'color', 'centre': 'center', 'realise': 'realize',
+    'organise': 'organize', 'analyse': 'analyze'
   };
   
   Object.entries(spellingMap).forEach(([british, american]) => {
     normalised = normalised.replace(new RegExp(`\\b${british}\\b`, 'g'), american);
   });
   
-  // Handle contractions
+  // Handle contractions - expand them to full forms
   const contractionMap = {
-    'shes|she s': 'she is', 'cant|can t': 'can not', 'dont|do nt': 'do not',
-    'theres|there s': 'there is', 'ive|i ve': 'i have', 'doesnt|does nt': 'does not',
-    'well|we ll': 'we will', 'wasnt|was nt': 'was not', 'id|i d': 'i would',
-    'werent|were nt': 'were not', 'couldnt|could nt': 'could not',
-    'didnt|did nt': 'did not'
+    'shes|she s': 'she is',
+    'cant|can t': 'can not',
+    'dont|do nt': 'do not',
+    'theres|there s': 'there is',
+    'ive|i ve': 'i have',
+    'doesnt|does nt': 'does not',
+    'well|we ll': 'we will',
+    'wasnt|was nt': 'was not',
+    'id|i d': 'i would',
+    'werent|were nt': 'were not',
+    'couldnt|could nt': 'could not',
+    'didnt|did nt': 'did not',
+    'wouldve|would ve': 'would have',
+    'shouldve|should ve': 'should have',
+    'couldve|could ve': 'could have',
+    'mightve|might ve': 'might have',
+    'mustve|must ve': 'must have',
+    'theyre|they re': 'they are',
+    'youre|you re': 'you are',
+    'were|we re': 'we are'
   };
   
   Object.entries(contractionMap).forEach(([contractions, expanded]) => {
@@ -117,53 +147,175 @@ const normaliseForComparison = (text) => {
   return normalised;
 };
 
-// Generate word-by-word highlighting for mistakes
-const generateHighlights = (originalUserInput, originalCorrectText) => {
-  const userInputWords = originalUserInput.trim().split(/\s+/);
-  const correctTextWords = originalCorrectText.trim().split(/\s+/);
+// Advanced word alignment using dynamic programming
+const alignWords = (userWords, correctWords) => {
+  const m = userWords.length;
+  const n = correctWords.length;
   
-  const highlighted = [];
-  const maxLength = Math.max(userInputWords.length, correctTextWords.length);
+  // Create DP table for alignment scores
+  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+  const operations = Array(m + 1).fill(null).map(() => Array(n + 1).fill(''));
   
-  for (let i = 0; i < maxLength; i++) {
-    const userWord = userInputWords[i] || '';
-    const correctWord = correctTextWords[i] || '';
-    
-    if (!userWord && correctWord) {
-      // Missing word
-      highlighted.push({
-        type: 'missing',
-        text: `[${correctWord}]`,
-        userText: '',
-        correctText: correctWord
-      });
-    } else if (userWord && !correctWord) {
-      // Extra word
-      highlighted.push({
-        type: 'extra',
-        text: userWord,
-        userText: userWord,
-        correctText: ''
-      });
-    } else if (normaliseText(userWord) === normaliseText(correctWord)) {
-      // Correct word
-      highlighted.push({
-        type: 'correct',
-        text: userWord,
-        userText: userWord,
-        correctText: correctWord
-      });
-    } else {
-      // Wrong or close word
-      const similarity = isCloseMatch(normaliseText(userWord), normaliseText(correctWord), 0.7);
-      highlighted.push({
-        type: similarity ? 'close' : 'wrong',
-        text: userWord,
-        userText: userWord,
-        correctText: correctWord
-      });
+  // Initialise base cases
+  for (let i = 0; i <= m; i++) {
+    dp[i][0] = i;
+    operations[i][0] = 'delete';
+  }
+  for (let j = 0; j <= n; j++) {
+    dp[0][j] = j;
+    operations[0][j] = 'insert';
+  }
+  
+  // Fill the DP table
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const userWord = normaliseText(userWords[i - 1]);
+      const correctWord = normaliseText(correctWords[j - 1]);
+      
+      let matchCost = 0;
+      if (userWord !== correctWord) {
+        // Check if it's a close match (spelling error)
+        if (isCloseMatch(userWord, correctWord, 0.7)) {
+          matchCost = 0.5; // Small penalty for close matches
+        } else {
+          matchCost = 1; // Full penalty for wrong words
+        }
+      }
+      
+      const substituteCost = dp[i - 1][j - 1] + matchCost;
+      const deleteCost = dp[i - 1][j] + 1;
+      const insertCost = dp[i][j - 1] + 1;
+      
+      if (substituteCost <= deleteCost && substituteCost <= insertCost) {
+        dp[i][j] = substituteCost;
+        operations[i][j] = matchCost === 0 ? 'match' : (matchCost === 0.5 ? 'close' : 'substitute');
+      } else if (deleteCost <= insertCost) {
+        dp[i][j] = deleteCost;
+        operations[i][j] = 'delete';
+      } else {
+        dp[i][j] = insertCost;
+        operations[i][j] = 'insert';
+      }
     }
   }
+  
+  // Backtrack to find the alignment
+  const alignment = [];
+  let i = m, j = n;
+  
+  while (i > 0 || j > 0) {
+    const operation = operations[i][j];
+    
+    if (operation === 'match') {
+      alignment.unshift({
+        type: 'correct',
+        userWord: userWords[i - 1],
+        correctWord: correctWords[j - 1],
+        userIndex: i - 1,
+        correctIndex: j - 1
+      });
+      i--; j--;
+    } else if (operation === 'close') {
+      alignment.unshift({
+        type: 'close',
+        userWord: userWords[i - 1],
+        correctWord: correctWords[j - 1],
+        userIndex: i - 1,
+        correctIndex: j - 1
+      });
+      i--; j--;
+    } else if (operation === 'substitute') {
+      alignment.unshift({
+        type: 'wrong',
+        userWord: userWords[i - 1],
+        correctWord: correctWords[j - 1],
+        userIndex: i - 1,
+        correctIndex: j - 1
+      });
+      i--; j--;
+    } else if (operation === 'delete') {
+      alignment.unshift({
+        type: 'extra',
+        userWord: userWords[i - 1],
+        correctWord: null,
+        userIndex: i - 1,
+        correctIndex: null
+      });
+      i--;
+    } else if (operation === 'insert') {
+      alignment.unshift({
+        type: 'missing',
+        userWord: null,
+        correctWord: correctWords[j - 1],
+        userIndex: null,
+        correctIndex: j - 1
+      });
+      j--;
+    }
+  }
+  
+  return alignment;
+};
+
+// Generate highlighting using proper sequence alignment
+const generateHighlights = (originalUserInput, originalCorrectText) => {
+  // First normalise both texts for contraction handling
+  const userNormalised = normaliseForComparison(originalUserInput);
+  const correctNormalised = normaliseForComparison(originalCorrectText);
+  
+  const userWords = userNormalised.trim().split(/\s+/).filter(w => w.length > 0);
+  const correctWords = correctNormalised.trim().split(/\s+/).filter(w => w.length > 0);
+  
+  // Get the optimal alignment
+  const alignment = alignWords(userWords, correctWords);
+  
+  // Convert alignment to highlight format
+  const highlighted = alignment.map(item => {
+    switch (item.type) {
+      case 'correct':
+        return {
+          type: 'correct',
+          text: item.userWord,
+          userText: item.userWord,
+          correctText: item.correctWord
+        };
+      case 'close':
+        return {
+          type: 'close',
+          text: item.userWord,
+          userText: item.userWord,
+          correctText: item.correctWord
+        };
+      case 'wrong':
+        return {
+          type: 'wrong',
+          text: item.userWord,
+          userText: item.userWord,
+          correctText: item.correctWord
+        };
+      case 'extra':
+        return {
+          type: 'extra',
+          text: item.userWord,
+          userText: item.userWord,
+          correctText: ''
+        };
+      case 'missing':
+        return {
+          type: 'missing',
+          text: `[${item.correctWord}]`,
+          userText: '',
+          correctText: item.correctWord
+        };
+      default:
+        return {
+          type: 'wrong',
+          text: item.userWord || `[${item.correctWord}]`,
+          userText: item.userWord || '',
+          correctText: item.correctWord || ''
+        };
+    }
+  });
   
   return highlighted;
 };
@@ -231,7 +383,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   useEffect(() => {
     const sentences = generateTestSentences();
     setTestSentences(sentences);
-    console.log('Generated test sentences:', sentences);
   }, []);
 
   // Timer countdown
@@ -396,6 +547,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     setHasStarted(false);
     setAudioError(false);
     
+    // Generate completely new random sentences
     const newSentences = generateTestSentences();
     setTestSentences(newSentences);
   };
