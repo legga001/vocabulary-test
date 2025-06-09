@@ -1,0 +1,500 @@
+/* ==============================================
+   LISTEN-AND-TYPE.CSS - Listen and Type exercise styles
+   ============================================== */
+
+.listen-type-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #f7f7f7;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.listen-type-quiz-container {
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 800px;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  position: relative;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==============================================
+   HEADER SECTION
+   ============================================== */
+.listen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.timer-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timer-icon {
+  font-size: 1.2em;
+}
+
+.timer-text {
+  font-weight: 700;
+  font-size: 1.2em;
+}
+
+.progress-section {
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  color: #666;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+}
+
+.close-btn:hover {
+  background: #f0f0f0;
+}
+
+/* ==============================================
+   MAIN CONTENT SECTION
+   ============================================== */
+.listen-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 25px;
+}
+
+.level-indicator {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.level-badge {
+  background: #4c51bf;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 700;
+  margin-right: 15px;
+  display: inline-block;
+}
+
+.level-description {
+  color: #666;
+  font-style: italic;
+  display: block;
+  margin-top: 8px;
+}
+
+/* ==============================================
+   AUDIO SECTION
+   ============================================== */
+.audio-section {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.audio-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.play-btn {
+  background: linear-gradient(135deg, #4c51bf, #667eea);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 18px 35px;
+  font-size: 1.1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 180px;
+  justify-content: center;
+}
+
+.play-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(76, 81, 191, 0.3);
+}
+
+.play-btn:disabled {
+  background: #cbd5e0;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.play-btn.playing {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+}
+
+.play-icon {
+  font-size: 1.2em;
+}
+
+.play-counter {
+  font-weight: 600;
+  color: #4c51bf;
+  background: #f0f2ff;
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+
+.audio-error {
+  background: #fff5f5;
+  border: 2px solid #f56565;
+  border-radius: 8px;
+  padding: 15px;
+  color: #e53e3e;
+  margin-top: 15px;
+  text-align: left;
+}
+
+/* ==============================================
+   INPUT SECTION
+   ============================================== */
+.input-section {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.input-section h3 {
+  color: #4c51bf;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.typing-input {
+  width: 100%;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 15px;
+  font-size: 1.1em;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.3s ease;
+}
+
+.typing-input:focus {
+  outline: none;
+  border-color: #4c51bf;
+  box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.1);
+}
+
+.input-info {
+  margin-top: 15px;
+  padding: 12px;
+  background: #fffbeb;
+  border-radius: 8px;
+  border-left: 4px solid #f6e05e;
+}
+
+.input-info p {
+  margin: 0;
+  color: #d69e2e;
+  font-size: 0.95em;
+}
+
+/* ==============================================
+   NAVIGATION SECTION
+   ============================================== */
+.navigation-section {
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* ==============================================
+   INSTRUCTIONS STYLES
+   ============================================== */
+.instructions-container {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  margin: 0 auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.instruction-content h3 {
+  color: #4c51bf;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.instruction-list {
+  margin-bottom: 25px;
+}
+
+.instruction-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 12px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.instruction-icon {
+  font-size: 1.2em;
+  width: 25px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.difficulty-info {
+  background: #f0f2ff;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.difficulty-info h4 {
+  color: #4c51bf;
+  margin-bottom: 10px;
+}
+
+.difficulty-info p {
+  color: #666;
+  margin: 0 0 8px 0;
+}
+
+.difficulty-info ul {
+  text-align: left;
+  margin: 10px auto 0 auto;
+  max-width: 300px;
+}
+
+.loading-message {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.loading-message p {
+  font-size: 1.1em;
+  margin-bottom: 10px;
+}
+
+/* ==============================================
+   RESULTS STYLES
+   ============================================== */
+.detailed-results {
+  margin: 25px 0;
+}
+
+.detailed-results h3 {
+  color: #4c51bf;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.results-list {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.result-item {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+.result-item.correct {
+  border-color: #48bb78;
+  background: #f0fff4;
+}
+
+.result-item.incorrect {
+  border-color: #f56565;
+  background: #fff5f5;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.result-emoji {
+  font-size: 1.1em;
+}
+
+.result-level {
+  background: #4c51bf;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  font-weight: 700;
+}
+
+.result-number {
+  color: #666;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.result-content {
+  text-align: left;
+  font-size: 0.9em;
+}
+
+.correct-text {
+  margin-bottom: 6px;
+  color: #2d3748;
+  line-height: 1.4;
+}
+
+.user-text {
+  margin-bottom: 6px;
+  color: #e53e3e;
+  line-height: 1.4;
+}
+
+.time-taken {
+  font-size: 0.85em;
+  color: #666;
+  font-style: italic;
+}
+
+/* ==============================================
+   RESPONSIVE DESIGN
+   ============================================== */
+@media (max-width: 768px) {
+  .listen-type-container {
+    padding: 15px;
+  }
+
+  .listen-type-quiz-container {
+    padding: 20px;
+    min-height: 500px;
+  }
+
+  .listen-header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .audio-section,
+  .input-section {
+    padding: 20px;
+  }
+
+  .play-btn {
+    padding: 15px 30px;
+    font-size: 1em;
+    min-width: 160px;
+  }
+
+  .typing-input {
+    font-size: 1em;
+  }
+
+  .instructions-container {
+    padding: 20px;
+  }
+
+  .instruction-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .instruction-icon {
+    width: auto;
+  }
+
+  .level-badge {
+    display: block;
+    margin-bottom: 8px;
+    margin-right: 0;
+  }
+
+  .level-description {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .listen-type-container {
+    padding: 10px;
+  }
+
+  .listen-type-quiz-container {
+    padding: 15px;
+    min-height: 450px;
+  }
+
+  .timer-text {
+    font-size: 1em;
+  }
+
+  .play-btn {
+    padding: 12px 25px;
+    min-width: 140px;
+    font-size: 0.95em;
+  }
+
+  .typing-input {
+    min-height: 70px;
+    padding: 12px;
+  }
+
+  .result-item {
+    padding: 12px;
+  }
+
+  .result-header {
+    gap: 8px;
+  }
+
+  .instructions-container {
+    padding: 15px;
+  }
+
+  .difficulty-info {
+    padding: 15px;
+  }
+}
