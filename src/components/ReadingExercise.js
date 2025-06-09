@@ -1,5 +1,5 @@
 // src/components/ReadingExercise.js - Updated quiz section only
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
 import { questions as staticQuestions } from '../questionsData';
