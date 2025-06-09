@@ -276,11 +276,6 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
                 <small>📰 {question.context}</small>
               </div>
             )}
-
-            {/* Word length hint */}
-            <div className="word-hint">
-              Complete the word ({question.answer.length} letters total)
-            </div>
           </div>
 
           {feedback.show && (
