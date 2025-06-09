@@ -57,19 +57,6 @@ export const processSentence = (sentence, answer) => {
 };
 
 /**
- * Formats a word for display showing only the first few letters
- * @param {string} word - The complete word
- * @returns {string} - Formatted display word
- */
-export const formatWordDisplay = (word) => {
-  const lettersToShow = getLettersToShow(word);
-  const visiblePart = word.substring(0, lettersToShow);
-  const hiddenPart = '_'.repeat(word.length - lettersToShow);
-  
-  return visiblePart + hiddenPart;
-};
-
-/**
  * Extracts the visible letters from a sentence gap
  * @param {string} sentence - The sentence with gap
  * @returns {string} - The visible letters
@@ -79,14 +66,4 @@ export const extractVisibleLetters = (sentence) => {
   if (!gapMatch) return '';
   
   return gapMatch[0].replace(/_/g, '');
-};
-
-/**
- * Creates a clean sentence for display (removes the gap, ready for letter input)
- * @param {string} sentence - The sentence with gap
- * @returns {string} - Clean sentence ready for letter input
- */
-export const createDisplaySentence = (sentence) => {
-  // Replace the gap pattern with a placeholder
-  return sentence.replace(/\b\w*_+\w*\b/, '[WORD]');
 };
