@@ -1,9 +1,8 @@
-// src/components/ProgressPage.js
+// src/components/ProgressPage.js - Updated with weaknesses analysis
 import React, { useState, useEffect } from 'react';
 import {
   getProgressStats,
   getRecentTests,
-  getDailyStatsForChart,
   exportProgressData,
   clearAllProgress
 } from '../utils/progressDataManager';
@@ -11,17 +10,113 @@ import {
 function ProgressPage({ onBack }) {
   const [stats, setStats] = useState(null);
   const [recentTests, setRecentTests] = useState([]);
-  const [chartData, setChartData] = useState([]);
-  const [chartPeriod, setChartPeriod] = useState(30);
+  const [weaknesses, setWeaknesses] = useState({ levels: [], words: [], exercises: [] });
 
   useEffect(() => {
     loadProgressData();
-  }, [chartPeriod]);
+  }, []);
 
   const loadProgressData = () => {
-    setStats(getProgressStats());
-    setRecentTests(getRecentTests(15));
-    setChartData(getDailyStatsForChart(chartPeriod));
+    const progressStats = getProgressStats();
+    const tests = getRecentTests(20); // Get more tests for better analysis
+    
+    setStats(progressStats);
+    setRecentTests(tests.slice(0, 15)); // Still show only 15 in recent tests
+    
+    // Analyse weaknesses from recent tests
+    analyseWeaknesses(tests);
+  };
+
+  const analyseWeaknesses = (tests) => {
+    if (tests.length === 0) {
+      setWeaknesses({ levels: [], words: [], exercises: [] });
+      return;
+    }
+
+    // 1. Analyse level performance
+    const levelPerformance = {};
+    const exercisePerformance = {};
+    const incorrectWords = [];
+
+    tests.forEach(test => {
+      // Track level performance
+      const level = test.level;
+      if (!levelPerformance[level]) {
+        levelPerformance[level] = { correct: 0, total: 0 };
+      }
+      
+      // For tests with 10 questions, each answer represents 10% of the score
+      const normalizedScore = test.totalQuestions === 20 ? test.score / 2 : test.score;
+      levelPerformance[level].total += 10;
+      levelPerformance[level].correct += normalizedScore;
+
+      // Track exercise type performance
+      const exerciseType = test.quizTypeDisplay || 'Standard Vocabulary';
+      if (!exercisePerformance[exerciseType]) {
+        exercisePerformance[exerciseType] = { scores: [], icon: test.quizTypeIcon || '📚' };
+      }
+      exercisePerformance[exerciseType].scores.push(test.percentage);
+
+      // Collect incorrect words (if available in userAnswers)
+      if (test.userAnswers && Array.isArray(test.userAnswers)) {
+        test.userAnswers.forEach(answer => {
+          if (!answer.isCorrect && answer.answer) {
+            incorrectWords.push({
+              word: answer.answer,
+              testDate: test.date,
+              exerciseType: exerciseType
+            });
+          }
+        });
+      }
+    });
+
+    // Find weak levels (below 70% success rate)
+    const weakLevels = Object.entries(levelPerformance)
+      .map(([level, data]) => ({
+        level,
+        percentage: Math.round((data.correct / data.total) * 100),
+        total: data.total
+      }))
+      .filter(item => item.percentage < 70 && item.total >= 10) // Only show if enough attempts
+      .sort((a, b) => a.percentage - b.percentage);
+
+    // Find weak exercise types (below average performance)
+    const weakExercises = Object.entries(exercisePerformance)
+      .map(([type, data]) => ({
+        type,
+        icon: data.icon,
+        averageScore: Math.round(data.scores.reduce((sum, score) => sum + score, 0) / data.scores.length),
+        attempts: data.scores.length
+      }))
+      .filter(item => item.averageScore < 75 && item.attempts >= 3)
+      .sort((a, b) => a.averageScore - b.averageScore);
+
+    // Find most commonly missed words
+    const wordCounts = {};
+    incorrectWords.forEach(item => {
+      if (!wordCounts[item.word]) {
+        wordCounts[item.word] = { count: 0, exercises: new Set() };
+      }
+      wordCounts[item.word].count++;
+      wordCounts[item.word].exercises.add(item.exerciseType);
+    });
+
+    const problemWords = Object.entries(wordCounts)
+      .map(([word, data]) => ({
+        word,
+        count: data.count,
+        exercises: Array.from(data.exercises)
+      }))
+      .filter(item => item.count >= 2) // Missed at least twice
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8); // Top 8 problem words
+
+    setWeaknesses({
+      levels: weakLevels,
+      words: problemWords,
+      exercises: weakExercises
+    });
   };
 
   const handleExport = () => {
@@ -139,45 +234,85 @@ function ProgressPage({ onBack }) {
         </div>
       </div>
 
-      {/* Chart Section */}
-      <div className="chart-section">
-        <div className="chart-header">
-          <h3>📊 Daily Performance</h3>
-          <div className="chart-controls">
-            <button 
-              className={`chart-period-btn ${chartPeriod === 7 ? 'active' : ''}`}
-              onClick={() => setChartPeriod(7)}
-            >
-              7 Days
-            </button>
-            <button 
-              className={`chart-period-btn ${chartPeriod === 30 ? 'active' : ''}`}
-              onClick={() => setChartPeriod(30)}
-            >
-              30 Days
-            </button>
+      {/* Weaknesses Analysis Section */}
+      <div className="weaknesses-section">
+        <div className="weaknesses-header">
+          <h3>🎯 Areas for Improvement</h3>
+          <p>Based on your recent test performance</p>
+        </div>
+
+        {(weaknesses.levels.length > 0 || weaknesses.words.length > 0 || weaknesses.exercises.length > 0) ? (
+          <div className="weaknesses-grid">
+            {/* Weak Levels */}
+            {weaknesses.levels.length > 0 && (
+              <div className="weakness-card">
+                <h4>📚 Challenging Levels</h4>
+                <div className="weakness-items">
+                  {weaknesses.levels.map((level, index) => (
+                    <div key={index} className="weakness-item level-weakness">
+                      <div className="weakness-info">
+                        <span className="weakness-title">{level.level}</span>
+                        <span className="weakness-detail">{level.percentage}% success rate</span>
+                      </div>
+                      <div className="weakness-suggestion">
+                        Practice more {level.level} level vocabulary
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Problem Words */}
+            {weaknesses.words.length > 0 && (
+              <div className="weakness-card">
+                <h4>🔤 Tricky Words</h4>
+                <div className="weakness-items">
+                  {weaknesses.words.map((word, index) => (
+                    <div key={index} className="weakness-item word-weakness">
+                      <div className="weakness-info">
+                        <span className="weakness-title">"{word.word}"</span>
+                        <span className="weakness-detail">Missed {word.count} times</span>
+                      </div>
+                      <div className="weakness-suggestion">
+                        Review this word's meaning and usage
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Weak Exercise Types */}
+            {weaknesses.exercises.length > 0 && (
+              <div className="weakness-card">
+                <h4>💪 Exercise Focus</h4>
+                <div className="weakness-items">
+                  {weaknesses.exercises.map((exercise, index) => (
+                    <div key={index} className="weakness-item exercise-weakness">
+                      <div className="weakness-info">
+                        <span className="weakness-title">{exercise.icon} {exercise.type}</span>
+                        <span className="weakness-detail">{exercise.averageScore}% average</span>
+                      </div>
+                      <div className="weakness-suggestion">
+                        Focus more practice on this exercise type
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-        
-        <div className="simple-chart">
-          {chartData.map((day, index) => (
-            <div key={index} className="chart-bar-container">
-              <div 
-                className="chart-bar"
-                style={{
-                  height: `${Math.max(day.averageScore * 10, 2)}px`,
-                  backgroundColor: day.testsCompleted > 0 ? '#4c51bf' : '#e2e8f0'
-                }}
-                title={`${day.date}: ${day.testsCompleted} tests, ${day.averageScore}/10 avg`}
-              />
-              <div className="chart-label">{day.date}</div>
-            </div>
-          ))}
-        </div>
-        
-        <div className="chart-legend">
-          <span>📊 Average daily score (height) • 📅 Test frequency (color)</span>
-        </div>
+        ) : (
+          <div className="no-weaknesses">
+            <div className="no-weaknesses-icon">🌟</div>
+            <h4>Excellent Work!</h4>
+            <p>You're performing well across all areas. Keep up the great work!</p>
+            {stats.totalTests < 5 && (
+              <p><small>Complete more tests to get detailed weakness analysis.</small></p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Recent Tests */}
@@ -212,7 +347,7 @@ function ProgressPage({ onBack }) {
           </div>
         ) : (
           <div className="no-tests">
-            <p>No tests completed yet. Start practicing to see your progress!</p>
+            <p>No tests completed yet. Start practising to see your progress!</p>
           </div>
         )}
       </div>
