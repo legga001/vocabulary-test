@@ -384,6 +384,7 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
                   onChange={updateAnswer}
                   disabled={checkedQuestions[currentQuestion]}
                   className={feedback.show ? feedback.type : ''}
+                  onEnterPress={!checkedQuestions[currentQuestion] && userAnswers[currentQuestion] ? checkAnswer : null}
                 />
               </div>
               {processedData.afterGap}
