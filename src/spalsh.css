@@ -1,0 +1,54 @@
+/* ==============================================
+   SPLASH.CSS - Splash page styles
+   ============================================== */
+
+.splash-page {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.splash-content {
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.splash-logo {
+  max-width: 200px;
+  max-height: 150px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+.splash-title {
+  font-family: 'Nunito', sans-serif;
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: white;
+  margin: 0 0 40px 0;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.025em;
+}
+
+.splash-page.fade-out {
+  animation: fadeOutSlide 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .splash-title {
+    font-size: 2.5rem;
+  }
+}
