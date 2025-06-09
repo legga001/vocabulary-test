@@ -284,6 +284,23 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     }
   }, [currentSentence, hasStarted, audioError, playCount]);
 
+  // Handle Enter key press to submit answer
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter' && hasStarted && !showResults && userInput.trim()) {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    if (hasStarted && !showResults) {
+      document.addEventListener('keypress', handleKeyPress);
+      return () => {
+        document.removeEventListener('keypress', handleKeyPress);
+      };
+    }
+  }, [hasStarted, showResults, userInput]);
+
   // ==============================================
   // HANDLERS
   // ==============================================
@@ -312,6 +329,11 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   const startExercise = () => {
     setHasStarted(true);
     setTimeLeft(60);
+  };
+
+  const handleSubmit = () => {
+    if (!currentData || !userInput.trim()) return;
+    handleNext();
   };
 
   const handleNext = () => {
@@ -665,7 +687,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           </div>
 
           <div className="audio-section">
-            <audio ref={audioRef} preload="auto">
+            <audio ref={audioRef} preload="auto" key={currentData?.audioFile}>
               <source src={`/${currentData?.audioFile}`} type="audio/mpeg" />
               Your browser does not support the audio element.
             </audio>
@@ -712,14 +734,27 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             <div className="input-info">
               <p>💡 <strong>Remember:</strong> Just type what you hear - spelling variations, numbers as words/digits, and missing punctuation are all fine!</p>
             </div>
+
+            <div className="submit-section">
+              <button 
+                className="btn btn-primary"
+                onClick={handleSubmit}
+                disabled={!userInput.trim()}
+              >
+                Submit Answer
+              </button>
+              <p className="keyboard-hint">
+                <small>💻 Press <strong>Enter</strong> to submit on desktop</small>
+              </p>
+            </div>
           </div>
 
           <div className="navigation-section">
             <button 
-              className="btn btn-primary btn-large"
+              className="btn btn-secondary"
               onClick={handleNext}
             >
-              {currentSentence + 1 === testSentences.length ? 'Finish Test' : 'Next Sentence'}
+              {currentSentence + 1 === testSentences.length ? 'Finish Test' : 'Skip Question'}
             </button>
           </div>
         </div>
