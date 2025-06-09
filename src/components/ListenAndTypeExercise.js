@@ -1,82 +1,220 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-// 10 sentences progressing from A2 to C1 level
-const LISTENING_SENTENCES = [
-  // A2 Level (2 sentences)
-  {
-    id: 1,
-    level: "A2",
-    audioFile: "LandT1.mp3",
-    correctText: "I like to eat pizza on Fridays",
-    difficulty: "A2 - Simple present tense with basic vocabulary"
-  },
-  {
-    id: 2,
-    level: "A2", 
-    audioFile: "LandT2.mp3",
-    correctText: "She's going to the supermarket tomorrow",
-    difficulty: "A2 - Future with 'going to' and contractions"
-  },
-  // B1 Level (3 sentences)
-  {
-    id: 3,
-    level: "B1",
-    audioFile: "LandT3.mp3",
-    correctText: "I've been working here for three years",
-    difficulty: "B1 - Present perfect with time expressions"
-  },
-  {
-    id: 4,
-    level: "B1",
-    audioFile: "LandT4.mp3",
-    correctText: "If it doesn't rain tomorrow we'll have a picnic",
-    difficulty: "B1 - First conditional with contractions"
-  },
-  {
-    id: 5,
-    level: "B1",
-    audioFile: "LandT5.mp3",
-    correctText: "The meeting was cancelled because the manager wasn't available",
-    difficulty: "B1 - Past tense with reason clauses"
-  },
-  // B2 Level (3 sentences)
-  {
-    id: 6,
-    level: "B2",
-    audioFile: "LandT6.mp3",
-    correctText: "Despite having studied for weeks he couldn't pass the examination",
-    difficulty: "B2 - Complex sentence with 'despite' and past perfect"
-  },
-  {
-    id: 7,
-    level: "B2",
-    audioFile: "LandT7.mp3",
-    correctText: "The research suggests that people who exercise regularly live longer",
-    difficulty: "B2 - Relative clauses with academic vocabulary"
-  },
-  {
-    id: 8,
-    level: "B2",
-    audioFile: "LandT8.mp3",
-    correctText: "I wish I'd taken that job offer instead of staying here",
-    difficulty: "B2 - Third conditional with regret"
-  },
-  // C1 Level (2 sentences)
-  {
-    id: 9,
-    level: "C1",
-    audioFile: "LandT9.mp3",
-    correctText: "The government's reluctance to implement comprehensive reforms has been criticised extensively",
-    difficulty: "C1 - Complex academic vocabulary with passive voice"
-  },
-  {
-    id: 10,
-    level: "C1",
-    audioFile: "LandT10.mp3",
-    correctText: "Notwithstanding the committee's recommendations the proposal was unanimously rejected",
-    difficulty: "C1 - Formal language with complex conjunctions"
-  }
+// Complete sentence pools for each level
+const SENTENCE_POOLS = {
+  A2: [
+    {
+      correctText: "I like to eat pizza on Fridays",
+      difficulty: "A2 - Simple present tense with basic vocabulary"
+    },
+    {
+      correctText: "She's going to the supermarket tomorrow",
+      difficulty: "A2 - Future with 'going to' and contractions"
+    },
+    {
+      correctText: "My brother works in a big office",
+      difficulty: "A2 - Simple present with family and work vocabulary"
+    },
+    {
+      correctText: "We can't find our keys anywhere",
+      difficulty: "A2 - Modal verbs with contractions"
+    },
+    {
+      correctText: "The children are playing in the garden",
+      difficulty: "A2 - Present continuous with basic vocabulary"
+    },
+    {
+      correctText: "I don't like coffee but I love tea",
+      difficulty: "A2 - Preferences with conjunctions"
+    },
+    {
+      correctText: "There's a new restaurant near my house",
+      difficulty: "A2 - There is/are with location vocabulary"
+    },
+    {
+      correctText: "He usually gets up at seven o'clock",
+      difficulty: "A2 - Adverbs of frequency with time"
+    },
+    {
+      correctText: "We're planning to visit Paris next month",
+      difficulty: "A2 - Future plans with 'going to'"
+    },
+    {
+      correctText: "The weather was terrible last weekend",
+      difficulty: "A2 - Past simple with weather vocabulary"
+    }
+  ],
+  
+  B1: [
+    {
+      correctText: "I've been working here for three years",
+      difficulty: "B1 - Present perfect with time expressions"
+    },
+    {
+      correctText: "If it doesn't rain tomorrow we'll have a picnic",
+      difficulty: "B1 - First conditional with contractions"
+    },
+    {
+      correctText: "The meeting was cancelled because the manager wasn't available",
+      difficulty: "B1 - Past tense with reason clauses"
+    },
+    {
+      correctText: "I used to live in Manchester when I was younger",
+      difficulty: "B1 - Used to with past experiences"
+    },
+    {
+      correctText: "She's been studying English since she moved here",
+      difficulty: "B1 - Present perfect continuous with time clauses"
+    },
+    {
+      correctText: "The film we watched last night was really boring",
+      difficulty: "B1 - Relative clauses with past tense"
+    },
+    {
+      correctText: "I'd rather stay at home than go to the party",
+      difficulty: "B1 - Preferences with 'would rather'"
+    },
+    {
+      correctText: "By the time we arrived the concert had already started",
+      difficulty: "B1 - Past perfect with time expressions"
+    },
+    {
+      correctText: "The doctor advised me to take more exercise",
+      difficulty: "B1 - Reported speech with advice"
+    },
+    {
+      correctText: "Although it was raining we decided to go for a walk",
+      difficulty: "B1 - Concessive clauses with 'although'"
+    }
+  ],
+  
+  B2: [
+    {
+      correctText: "Despite having studied for weeks he couldn't pass the examination",
+      difficulty: "B2 - Complex sentence with 'despite' and past perfect"
+    },
+    {
+      correctText: "The research suggests that people who exercise regularly live longer",
+      difficulty: "B2 - Relative clauses with academic vocabulary"
+    },
+    {
+      correctText: "I wish I'd taken that job offer instead of staying here",
+      difficulty: "B2 - Third conditional with regret"
+    },
+    {
+      correctText: "Had I known about the traffic I would have left earlier",
+      difficulty: "B2 - Inverted conditional structures"
+    },
+    {
+      correctText: "The company is committed to reducing its environmental impact",
+      difficulty: "B2 - Business vocabulary with passive structures"
+    },
+    {
+      correctText: "Not only did she finish the project early but she also exceeded expectations",
+      difficulty: "B2 - Inverted structures with 'not only'"
+    },
+    {
+      correctText: "The phenomenon has been observed in various scientific studies",
+      difficulty: "B2 - Academic vocabulary with present perfect passive"
+    },
+    {
+      correctText: "Scarcely had we entered the building when the alarm went off",
+      difficulty: "B2 - Inverted structures with 'scarcely'"
+    },
+    {
+      correctText: "The proposal was rejected on the grounds that it lacked sufficient detail",
+      difficulty: "B2 - Formal language with reason clauses"
+    },
+    {
+      correctText: "Were it not for the support of volunteers the charity couldn't function",
+      difficulty: "B2 - Hypothetical conditionals with inversion"
+    }
+  ],
+  
+  C1: [
+    {
+      correctText: "The government's reluctance to implement comprehensive reforms has been criticised extensively",
+      difficulty: "C1 - Complex academic vocabulary with passive voice"
+    },
+    {
+      correctText: "Notwithstanding the committee's recommendations the proposal was unanimously rejected",
+      difficulty: "C1 - Formal language with complex conjunctions"
+    },
+    {
+      correctText: "The phenomenon manifests itself in a variety of seemingly unrelated contexts",
+      difficulty: "C1 - Advanced academic vocabulary with reflexive pronouns"
+    },
+    {
+      correctText: "Such was the magnitude of the disaster that international aid was immediately mobilised",
+      difficulty: "C1 - Inverted structures with formal vocabulary"
+    },
+    {
+      correctText: "The implications of these findings extend far beyond the scope of this particular study",
+      difficulty: "C1 - Academic discourse with complex sentence structures"
+    },
+    {
+      correctText: "Paradoxically the most successful entrepreneurs often embrace failure as a prerequisite for innovation",
+      difficulty: "C1 - Advanced linking words with business terminology"
+    },
+    {
+      correctText: "The proliferation of digital technologies has fundamentally transformed how we conceptualise communication",
+      difficulty: "C1 - Academic vocabulary with complex verb structures"
+    },
+    {
+      correctText: "Albeit controversial the methodology employed in the research yielded unprecedented insights",
+      difficulty: "C1 - Formal conjunctions with academic vocabulary"
+    },
+    {
+      correctText: "The ramifications of climate change permeate virtually every aspect of contemporary society",
+      difficulty: "C1 - Advanced vocabulary with complex sentence structure"
+    },
+    {
+      correctText: "Irrespective of one's political affiliations the evidence presented is incontrovertible",
+      difficulty: "C1 - Formal language with complex noun phrases"
+    }
+  ]
+};
+
+// Test structure: 2 A2, 3 B1, 3 B2, 2 C1
+const TEST_STRUCTURE = [
+  { level: 'A2', count: 2 },
+  { level: 'B1', count: 3 },
+  { level: 'B2', count: 3 },
+  { level: 'C1', count: 2 }
 ];
+
+// Function to generate random test sentences
+const generateTestSentences = () => {
+  const testSentences = [];
+  let audioFileCounter = 1;
+
+  TEST_STRUCTURE.forEach(({ level, count }) => {
+    const availableSentences = [...SENTENCE_POOLS[level]];
+    
+    for (let i = 0; i < count; i++) {
+      if (availableSentences.length === 0) {
+        console.warn(`Not enough ${level} sentences available`);
+        break;
+      }
+      
+      // Select random sentence from available pool
+      const randomIndex = Math.floor(Math.random() * availableSentences.length);
+      const selectedSentence = availableSentences.splice(randomIndex, 1)[0];
+      
+      testSentences.push({
+        id: audioFileCounter,
+        level: level,
+        audioFile: `LandT${audioFileCounter}.mp3`,
+        correctText: selectedSentence.correctText,
+        difficulty: selectedSentence.difficulty
+      });
+      
+      audioFileCounter++;
+    }
+  });
+
+  return testSentences;
+};
 
 function ListenAndTypeExercise({ onBack }) {
   const [currentSentence, setCurrentSentence] = useState(0);
@@ -88,11 +226,19 @@ function ListenAndTypeExercise({ onBack }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [audioError, setAudioError] = useState(false);
+  const [testSentences, setTestSentences] = useState([]);
   
   const audioRef = useRef(null);
   const inputRef = useRef(null);
 
-  const currentData = LISTENING_SENTENCES[currentSentence];
+  // Generate test sentences when component mounts
+  useEffect(() => {
+    const sentences = generateTestSentences();
+    setTestSentences(sentences);
+    console.log('Generated test sentences:', sentences.map(s => ({ level: s.level, text: s.correctText })));
+  }, []);
+
+  const currentData = testSentences[currentSentence];
 
   // Timer effect
   useEffect(() => {
@@ -185,7 +331,7 @@ function ListenAndTypeExercise({ onBack }) {
     }]);
 
     // Move to next or finish
-    if (currentSentence + 1 < LISTENING_SENTENCES.length) {
+    if (currentSentence + 1 < testSentences.length) {
       setCurrentSentence(currentSentence + 1);
       setUserInput('');
       setTimeLeft(60);
@@ -274,7 +420,31 @@ function ListenAndTypeExercise({ onBack }) {
     );
   }
 
-  if (!hasStarted) {
+        return (
+        <div className="exercise-page">
+          <div className="logo-container">
+            <img 
+              src="/purple_fox_transparent.png" 
+              alt="Mr. Fox English" 
+              className="app-logo"
+            />
+          </div>
+          
+          <h1>🎧 Listen and Type</h1>
+          
+          <div className="loading-message">
+            <p>🎲 Generating your random test...</p>
+            <p><small>Selecting sentences from different difficulty levels</small></p>
+          </div>
+
+          <button className="btn btn-secondary" onClick={onBack} style={{ marginTop: '20px' }}>
+            ← Back to Exercises
+          </button>
+        </div>
+      );
+    }
+
+    if (!hasStarted) {
     return (
       <div className="exercise-page">
         <div className="logo-container">
@@ -318,8 +488,17 @@ function ListenAndTypeExercise({ onBack }) {
             </div>
             
             <div className="difficulty-info">
-              <h4>📊 Difficulty Levels</h4>
-              <p>10 sentences progressing from A2 (elementary) to C1 (advanced)</p>
+              <h4>📊 Test Structure</h4>
+              <p>Random selection from pools of sentences:</p>
+              <ul style={{ textAlign: 'left', marginTop: '10px' }}>
+                <li>2 A2 level sentences (elementary)</li>
+                <li>3 B1 level sentences (intermediate)</li>
+                <li>3 B2 level sentences (upper-intermediate)</li>
+                <li>2 C1 level sentences (advanced)</li>
+              </ul>
+              <p style={{ fontSize: '0.9em', fontStyle: 'italic', marginTop: '10px' }}>
+                Sentences are randomly selected each time - no two tests are the same!
+              </p>
             </div>
           </div>
           
