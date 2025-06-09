@@ -221,13 +221,52 @@ const generateTestSentences = () => {
   return testSentences;
 };
 
-// Text normalisation functions
+// Text normalisation and fuzzy matching functions
 const normaliseText = (text) => {
   return text
     .toLowerCase()
     .replace(/[.,!?;:'"()-]/g, '') // Remove all punctuation
     .replace(/\s+/g, ' ') // Replace multiple spaces with single space
     .trim();
+};
+
+// Calculate Levenshtein distance between two strings
+const getLevenshteinDistance = (str1, str2) => {
+  const matrix = [];
+  
+  // Create matrix
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= str1.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  // Fill matrix
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+  
+  return matrix[str2.length][str1.length];
+};
+
+// Check if answer is close enough (fuzzy matching)
+const isCloseMatch = (userText, correctText, threshold = 0.85) => {
+  const distance = getLevenshteinDistance(userText, correctText);
+  const maxLength = Math.max(userText.length, correctText.length);
+  const similarity = 1 - (distance / maxLength);
+  
+  return similarity >= threshold;
 };
 
 const normaliseForComparison = (text) => {
@@ -276,6 +315,105 @@ const normaliseForComparison = (text) => {
   });
   
   return normalised;
+};
+
+// Enhanced answer checking with mistake highlighting
+const checkAnswer = (userInput, correctText) => {
+  const userNormalised = normaliseForComparison(userInput);
+  const correctNormalised = normaliseForComparison(correctText);
+  
+  // Level 1: Perfect match
+  if (userNormalised === correctNormalised) {
+    return { 
+      type: 'perfect', 
+      score: 1.0,
+      highlights: null
+    };
+  }
+  
+  // Generate word-by-word comparison for highlighting
+  const userWords = userNormalised.split(' ');
+  const correctWords = correctNormalised.split(' ');
+  const highlights = generateHighlights(userInput, correctText, userWords, correctWords);
+  
+  // Level 2: Very close match (minor spelling errors)
+  if (isCloseMatch(userNormalised, correctNormalised, 0.85)) {
+    return { 
+      type: 'close', 
+      score: 0.8,
+      highlights: highlights
+    };
+  }
+  
+  // Level 3: Partial match (got some words right)
+  const matchingWords = userWords.filter(word => correctWords.includes(word));
+  const partialScore = matchingWords.length / correctWords.length;
+  
+  if (partialScore >= 0.5) { // At least half the words correct
+    return { 
+      type: 'partial', 
+      score: partialScore * 0.5,
+      highlights: highlights
+    };
+  }
+  
+  // Level 4: Incorrect
+  return { 
+    type: 'incorrect', 
+    score: 0,
+    highlights: highlights
+  };
+};
+
+// Generate highlighted version showing mistakes
+const generateHighlights = (originalUserInput, originalCorrectText, userWords, correctWords) => {
+  const userInputWords = originalUserInput.trim().split(/\s+/);
+  const correctTextWords = originalCorrectText.trim().split(/\s+/);
+  
+  const highlighted = [];
+  const maxLength = Math.max(userInputWords.length, correctTextWords.length);
+  
+  for (let i = 0; i < maxLength; i++) {
+    const userWord = userInputWords[i] || '';
+    const correctWord = correctTextWords[i] || '';
+    
+    if (!userWord && correctWord) {
+      // Missing word
+      highlighted.push({
+        type: 'missing',
+        text: `[${correctWord}]`,
+        userText: '',
+        correctText: correctWord
+      });
+    } else if (userWord && !correctWord) {
+      // Extra word
+      highlighted.push({
+        type: 'extra',
+        text: userWord,
+        userText: userWord,
+        correctText: ''
+      });
+    } else if (normaliseText(userWord) === normaliseText(correctWord)) {
+      // Correct word
+      highlighted.push({
+        type: 'correct',
+        text: userWord,
+        userText: userWord,
+        correctText: correctWord
+      });
+    } else {
+      // Different word - check if it's a close spelling mistake
+      const similarity = isCloseMatch(normaliseText(userWord), normaliseText(correctWord), 0.7);
+      highlighted.push({
+        type: similarity ? 'close' : 'wrong',
+        text: userWord,
+        userText: userWord,
+        correctText: correctWord
+      });
+    }
+  }
+  
+  return highlighted;
 };
 
 // Main component
@@ -400,14 +538,17 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   const handleNext = () => {
     if (!currentData) return;
 
-    // Calculate if answer is correct
-    const isCorrect = normaliseForComparison(userInput) === normaliseForComparison(currentData.correctText);
+    // Use enhanced answer checking
+    const result = checkAnswer(userInput, currentData.correctText);
     
-    // Save answer
+    // Save answer with detailed result
     setAnswers(prev => [...prev, {
       sentence: currentData,
       userInput: userInput.trim(),
-      correct: isCorrect,
+      result: result,
+      correct: result.type === 'perfect',
+      close: result.type === 'close',
+      partial: result.type === 'partial',
       timeTaken: 60 - timeLeft
     }]);
 
@@ -424,10 +565,26 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   };
 
   const calculateScore = () => {
-    const correct = answers.filter(answer => answer.correct).length;
-    const total = answers.length;
-    const percentage = Math.round((correct / total) * 100);
-    return { correct, total, percentage };
+    // Calculate weighted score
+    const totalScore = answers.reduce((sum, answer) => sum + answer.result.score, 0);
+    const maxScore = answers.length;
+    const percentage = Math.round((totalScore / maxScore) * 100);
+    
+    // Count different types
+    const perfect = answers.filter(a => a.result.type === 'perfect').length;
+    const close = answers.filter(a => a.result.type === 'close').length;
+    const partial = answers.filter(a => a.result.type === 'partial').length;
+    const incorrect = answers.filter(a => a.result.type === 'incorrect').length;
+    
+    return { 
+      totalScore: Math.round(totalScore * 10) / 10, // Round to 1 decimal
+      maxScore, 
+      percentage,
+      perfect,
+      close,
+      partial,
+      incorrect
+    };
   };
 
   const restartTest = () => {
@@ -482,8 +639,32 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           
           <div className="results">
             <h2>🎉 Test Complete!</h2>
-            <div className="score-display">{score.correct}/{score.total}</div>
+            <div className="score-display">{score.totalScore}/{score.maxScore}</div>
             <div className="score-percentage">({score.percentage}%)</div>
+            
+            {/* Score breakdown */}
+            <div className="score-breakdown">
+              <div className="breakdown-item perfect">
+                <span className="breakdown-icon">💯</span>
+                <span className="breakdown-count">{score.perfect}</span>
+                <span className="breakdown-label">Perfect</span>
+              </div>
+              <div className="breakdown-item close">
+                <span className="breakdown-icon">✨</span>
+                <span className="breakdown-count">{score.close}</span>
+                <span className="breakdown-label">Close</span>
+              </div>
+              <div className="breakdown-item partial">
+                <span className="breakdown-icon">👍</span>
+                <span className="breakdown-count">{score.partial}</span>
+                <span className="breakdown-label">Partial</span>
+              </div>
+              <div className="breakdown-item incorrect">
+                <span className="breakdown-icon">❌</span>
+                <span className="breakdown-count">{score.incorrect}</span>
+                <span className="breakdown-label">Incorrect</span>
+              </div>
+            </div>
             
             <div className="level-estimate">
               <h3>Listening and Typing Skills</h3>
@@ -498,28 +679,95 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             <div className="detailed-results">
               <h3>📝 Detailed Results:</h3>
               <div className="results-list">
-                {answers.map((answer, index) => (
-                  <div key={index} className={`result-item ${answer.correct ? 'correct' : 'incorrect'}`}>
-                    <div className="result-header">
-                      <span className="result-emoji">{answer.correct ? '✅' : '❌'}</span>
-                      <span className="result-level">{answer.sentence.level}</span>
-                      <span className="result-number">#{index + 1}</span>
-                    </div>
-                    <div className="result-content">
-                      <div className="correct-text">
-                        <strong>Correct:</strong> "{answer.sentence.correctText}"
+                {answers.map((answer, index) => {
+                  const getResultDisplay = (result) => {
+                    switch(result.type) {
+                      case 'perfect':
+                        return { emoji: '💯', label: 'Perfect!', className: 'perfect' };
+                      case 'close':
+                        return { emoji: '✨', label: 'Very Close!', className: 'close' };
+                      case 'partial':
+                        return { emoji: '👍', label: 'Partial Credit', className: 'partial' };
+                      default:
+                        return { emoji: '❌', label: 'Incorrect', className: 'incorrect' };
+                    }
+                  };
+                  
+                  const display = getResultDisplay(answer.result);
+                  
+                  return (
+                    <div key={index} className={`result-item ${display.className}`}>
+                      <div className="result-header">
+                        <span className="result-emoji">{display.emoji}</span>
+                        <span className="result-level">{answer.sentence.level}</span>
+                        <span className="result-number">#{index + 1}</span>
+                        <span className="result-score">+{answer.result.score}</span>
                       </div>
-                      {!answer.correct && (
-                        <div className="user-text">
-                          <strong>You typed:</strong> "{answer.userInput || '(no answer)'}"
+                      <div className="result-content">
+                        <div className="result-status">
+                          <strong>{display.label}</strong>
+                          {answer.result.type === 'close' && (
+                            <small> (Minor spelling errors - still great job!)</small>
+                          )}
+                          {answer.result.type === 'partial' && (
+                            <small> (Got some words right - keep going!)</small>
+                          )}
                         </div>
-                      )}
-                      <div className="time-taken">
-                        Time taken: {answer.timeTaken} seconds
+                        <div className="correct-text">
+                          <strong>Correct:</strong> "{answer.sentence.correctText}"
+                        </div>
+                        {(answer.result.type !== 'perfect') && (
+                          <div className="user-answer-analysis">
+                            <strong>Your answer:</strong>
+                            <div className="highlighted-answer">
+                              {answer.result.highlights?.map((highlight, idx) => (
+                                <span
+                                  key={idx}
+                                  className={`highlight-word ${highlight.type}`}
+                                  title={
+                                    highlight.type === 'missing' ? `Missing: "${highlight.correctText}"` :
+                                    highlight.type === 'extra' ? `Extra word: "${highlight.userText}"` :
+                                    highlight.type === 'wrong' ? `Should be: "${highlight.correctText}"` :
+                                    highlight.type === 'close' ? `Close! Should be: "${highlight.correctText}"` :
+                                    'Correct'
+                                  }
+                                >
+                                  {highlight.text}
+                                </span>
+                              )) || (
+                                <span className="highlight-word wrong">
+                                  {answer.userInput || '(no answer)'}
+                                </span>
+                              )}
+                            </div>
+                            <div className="highlight-legend">
+                              <small>
+                                <span className="legend-item">
+                                  <span className="legend-color correct"></span> Correct
+                                </span>
+                                <span className="legend-item">
+                                  <span className="legend-color close"></span> Close
+                                </span>
+                                <span className="legend-item">
+                                  <span className="legend-color wrong"></span> Wrong
+                                </span>
+                                <span className="legend-item">
+                                  <span className="legend-color missing"></span> Missing
+                                </span>
+                                <span className="legend-item">
+                                  <span className="legend-color extra"></span> Extra
+                                </span>
+                              </small>
+                            </div>
+                          </div>
+                        )}
+                        <div className="time-taken">
+                          Time taken: {answer.timeTaken} seconds
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
             
