@@ -70,6 +70,7 @@ function LetterInput({ word, value, onChange, disabled = false, className = '', 
       const currentWord = letters.join('');
       if (currentWord.length >= lettersToShow + 1) { // At least one user letter
         e.preventDefault();
+        e.stopPropagation();
         onEnterPress();
         return;
       }
