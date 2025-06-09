@@ -186,7 +186,7 @@ const TEST_STRUCTURE = [
 // Function to generate random test sentences
 const generateTestSentences = () => {
   const testSentences = [];
-  let audioFileCounter = 1;
+  let sentenceCounter = 1;
 
   TEST_STRUCTURE.forEach(({ level, count }) => {
     const availableSentences = [...SENTENCE_POOLS[level]];
@@ -201,15 +201,19 @@ const generateTestSentences = () => {
       const randomIndex = Math.floor(Math.random() * availableSentences.length);
       const selectedSentence = availableSentences.splice(randomIndex, 1)[0];
       
+      // Find the original index to determine the correct audio file name
+      const originalIndex = SENTENCE_POOLS[level].findIndex(s => s.correctText === selectedSentence.correctText) + 1;
+      const audioFileName = `audio/listen-and-type/${level}-${originalIndex.toString().padStart(2, '0')}.mp3`;
+      
       testSentences.push({
-        id: audioFileCounter,
+        id: sentenceCounter,
         level: level,
-        audioFile: `LandT${audioFileCounter}.mp3`,
+        audioFile: audioFileName,
         correctText: selectedSentence.correctText,
         difficulty: selectedSentence.difficulty
       });
       
-      audioFileCounter++;
+      sentenceCounter++;
     }
   });
 
