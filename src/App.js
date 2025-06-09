@@ -1,4 +1,4 @@
-// src/App.js - Updated for direct exercise navigation
+// src/App.js - Complete file with clickable logo navigation
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import SplashPage from './components/SplashPage';
@@ -99,7 +99,7 @@ function App() {
     // Also handle when user navigates away
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        // User switched tabs or minimized - don't clear session
+        // User switched tabs or minimised - don't clear session
         // This allows them to return without seeing splash again
       }
     };
@@ -214,6 +214,7 @@ function App() {
         return (
           <ReadingExercise 
             onBack={goBack} 
+            onLogoClick={goToLanding}
             initialView="standard-quiz"
           />
         );
@@ -222,27 +223,58 @@ function App() {
         return (
           <ArticleSelection 
             onBack={goBack}
+            onLogoClick={goToLanding}
             onSelectArticle={handleArticleSelection}
           />
         );
       
       case 'real-fake-words':
-        return <RealFakeWordsExercise onBack={goBack} />;
+        return (
+          <RealFakeWordsExercise 
+            onBack={goBack} 
+            onLogoClick={goToLanding}
+          />
+        );
       
       case 'reading':
-        return <ReadingExercise onBack={goBack} />;
+        return (
+          <ReadingExercise 
+            onBack={goBack} 
+            onLogoClick={goToLanding}
+          />
+        );
       
       case 'writing':
-        return <WritingExercise onBack={goBack} />;
+        return (
+          <WritingExercise 
+            onBack={goBack} 
+            onLogoClick={goToLanding}
+          />
+        );
       
       case 'speaking':
-        return <SpeakingExercise onBack={goBack} />;
+        return (
+          <SpeakingExercise 
+            onBack={goBack} 
+            onLogoClick={goToLanding}
+          />
+        );
       
       case 'listening':
-        return <ListeningExercise onBack={goBack} />;
+        return (
+          <ListeningExercise 
+            onBack={goBack} 
+            onLogoClick={goToLanding}
+          />
+        );
       
       case 'progress':
-        return <ProgressPage onBack={goBack} />;
+        return (
+          <ProgressPage 
+            onBack={goBack} 
+            onLogoClick={goToLanding}
+          />
+        );
       
       default:
         return (
