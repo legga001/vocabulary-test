@@ -1,4 +1,4 @@
-// src/App.js - Complete file with clickable logo navigation
+// src/App.js - Complete file with all exercises including Listen and Type
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import SplashPage from './components/SplashPage';
@@ -10,6 +10,8 @@ import ListeningExercise from './components/ListeningExercise';
 import ProgressPage from './components/ProgressPage';
 import ArticleSelection from './components/ArticleSelection';
 import RealFakeWordsExercise from './components/RealFakeWordsExercise';
+import DETInteractiveReading from './components/DETInteractiveReading';
+import ListenAndTypeExercise from './components/ListenAndTypeExercise';
 
 // Key for localStorage - only for preserving state during page refresh
 const APP_STATE_KEY = 'mrFoxEnglishAppState';
@@ -150,6 +152,14 @@ function App() {
     setCurrentScreen('listening');
   };
 
+  const goToInteractiveReading = () => {
+    setCurrentScreen('interactive-reading');
+  };
+
+  const goToListenAndType = () => {
+    setCurrentScreen('listen-and-type');
+  };
+
   const goBack = () => {
     setCurrentScreen('landing');
   };
@@ -165,6 +175,12 @@ function App() {
         break;
       case 'real-fake-words':
         setCurrentScreen('real-fake-words');
+        break;
+      case 'interactive-reading':
+        goToInteractiveReading();
+        break;
+      case 'listen-and-type':
+        goToListenAndType();
         break;
       // Traditional navigation (for non-active exercises)
       case 'reading':
@@ -235,6 +251,12 @@ function App() {
             onLogoClick={goToLanding}
           />
         );
+      
+      case 'interactive-reading':
+        return <DETInteractiveReading onBack={goBack} />;
+      
+      case 'listen-and-type':
+        return <ListenAndTypeExercise onBack={goBack} />;
       
       case 'reading':
         return (
