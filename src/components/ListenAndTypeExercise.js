@@ -1,210 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
-
-// ==============================================
-// SENTENCE DATA - Organised by CEFR levels
-// ==============================================
-const SENTENCE_POOLS = {
-  A2: [
-    {
-      correctText: "I like to eat pizza on Fridays",
-      difficulty: "A2 - Simple present tense with basic vocabulary"
-    },
-    {
-      correctText: "She's going to the supermarket tomorrow",
-      difficulty: "A2 - Future with 'going to' and contractions"
-    },
-    {
-      correctText: "My brother works in a big office",
-      difficulty: "A2 - Simple present with family and work vocabulary"
-    },
-    {
-      correctText: "We can't find our keys anywhere",
-      difficulty: "A2 - Modal verbs with contractions"
-    },
-    {
-      correctText: "The children are playing in the garden",
-      difficulty: "A2 - Present continuous with basic vocabulary"
-    },
-    {
-      correctText: "I don't like coffee but I love tea",
-      difficulty: "A2 - Preferences with conjunctions"
-    },
-    {
-      correctText: "There's a new restaurant near my house",
-      difficulty: "A2 - There is/are with location vocabulary"
-    },
-    {
-      correctText: "He usually gets up at seven o'clock",
-      difficulty: "A2 - Adverbs of frequency with time"
-    },
-    {
-      correctText: "We're planning to visit Paris next month",
-      difficulty: "A2 - Future plans with 'going to'"
-    },
-    {
-      correctText: "The weather was terrible last weekend",
-      difficulty: "A2 - Past simple with weather vocabulary"
-    }
-  ],
-  
-  B1: [
-    {
-      correctText: "I've been working here for three years",
-      difficulty: "B1 - Present perfect with time expressions"
-    },
-    {
-      correctText: "If it doesn't rain tomorrow we'll have a picnic",
-      difficulty: "B1 - First conditional with contractions"
-    },
-    {
-      correctText: "The meeting was cancelled because the manager wasn't available",
-      difficulty: "B1 - Past tense with reason clauses"
-    },
-    {
-      correctText: "I used to live in Manchester when I was younger",
-      difficulty: "B1 - Used to with past experiences"
-    },
-    {
-      correctText: "She's been studying English since she moved here",
-      difficulty: "B1 - Present perfect continuous with time clauses"
-    },
-    {
-      correctText: "The film we watched last night was really boring",
-      difficulty: "B1 - Relative clauses with past tense"
-    },
-    {
-      correctText: "I'd rather stay at home than go to the party",
-      difficulty: "B1 - Preferences with 'would rather'"
-    },
-    {
-      correctText: "By the time we arrived the concert had already started",
-      difficulty: "B1 - Past perfect with time expressions"
-    },
-    {
-      correctText: "The doctor advised me to take more exercise",
-      difficulty: "B1 - Reported speech with advice"
-    },
-    {
-      correctText: "Although it was raining we decided to go for a walk",
-      difficulty: "B1 - Concessive clauses with 'although'"
-    }
-  ],
-  
-  B2: [
-    {
-      correctText: "Despite having studied for weeks he couldn't pass the examination",
-      difficulty: "B2 - Complex sentence with 'despite' and past perfect"
-    },
-    {
-      correctText: "The research suggests that people who exercise regularly live longer",
-      difficulty: "B2 - Relative clauses with academic vocabulary"
-    },
-    {
-      correctText: "I wish I'd taken that job offer instead of staying here",
-      difficulty: "B2 - Third conditional with regret"
-    },
-    {
-      correctText: "Had I known about the traffic I would have left earlier",
-      difficulty: "B2 - Inverted conditional structures"
-    },
-    {
-      correctText: "The company is trying to reduce the damage it causes to nature",
-      difficulty: "B2 - Business vocabulary with relative pronouns"
-    },
-    {
-      correctText: "Not only did she finish early but she also did better than expected",
-      difficulty: "B2 - Inverted structures with 'not only'"
-    },
-    {
-      correctText: "The study has been done in many different schools and colleges",
-      difficulty: "B2 - Present perfect passive with simple vocabulary"
-    },
-    {
-      correctText: "No sooner had we entered the room than the phone started ringing",
-      difficulty: "B2 - Inverted structures with 'no sooner'"
-    },
-    {
-      correctText: "The idea was turned down because it didn't have enough details",
-      difficulty: "B2 - Passive voice with phrasal verbs"
-    },
-    {
-      correctText: "If it weren't for the help of friends the project couldn't work",
-      difficulty: "B2 - Hypothetical conditionals with simple vocabulary"
-    }
-  ],
-  
-  C1: [
-    {
-      correctText: "The government's refusal to make big changes has been criticised a lot",
-      difficulty: "C1 - Complex possessive structures with passive voice"
-    },
-    {
-      correctText: "Despite what the committee said the idea was rejected by everyone",
-      difficulty: "C1 - Complex clause structures with simple vocabulary"
-    },
-    {
-      correctText: "The problem shows itself in many different ways that seem unconnected",
-      difficulty: "C1 - Complex sentence structure with relative clauses"
-    },
-    {
-      correctText: "So big was the disaster that help from other countries came straight away",
-      difficulty: "C1 - Inverted structures for emphasis"
-    },
-    {
-      correctText: "What these results mean goes far beyond what this one study looked at",
-      difficulty: "C1 - Complex clause structures with embedded questions"
-    },
-    {
-      correctText: "Strangely the most successful business people often see failure as necessary",
-      difficulty: "C1 - Complex ideas with simple vocabulary"
-    },
-    {
-      correctText: "The growth of digital technology has completely changed how we think about talking to people",
-      difficulty: "C1 - Complex embedded clauses with simple words"
-    },
-    {
-      correctText: "Although it caused arguments the method used in the research gave new understanding",
-      difficulty: "C1 - Complex concessive clauses"
-    },
-    {
-      correctText: "The effects of climate change touch almost every part of modern life",
-      difficulty: "C1 - Complex ideas expressed simply"
-    },
-    {
-      correctText: "Whatever someone's political views the evidence shown cannot be argued with",
-      difficulty: "C1 - Complex concessive structures with simple vocabulary"
-    }
-  ]
-};
-
-// Test structure: 2 A2, 3 B1, 3 B2, 2 C1 = 10 total
-const TEST_STRUCTURE = [
-  { level: 'A2', count: 2 },
-  { level: 'B1', count: 3 },
-  { level: 'B2', count: 3 },
-  { level: 'C1', count: 2 }
-];
+import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
 
 // ==============================================
 // HELPER FUNCTIONS
 // ==============================================
 
-// Generate random test sentences
-const generateTestSentences = () => {
-  const testSentences = [];
-  let sentenceCounter = 1;
-
-  TEST_STRUCTURE.forEach(({ level, count }) => {
-    const availableSentences = [...SENTENCE_POOLS[level]];
-    
-    for (let i = 0; i < count; i++) {
-      if (availableSentences.length === 0) {
-        console.warn(`Not enough ${level} sentences available`);
-        break;
-      }
-      
-// Generate random test sentences
+// Generate random test sentences according to test structure
 const generateTestSentences = () => {
   const testSentences = [];
   let sentenceCounter = 1;
@@ -221,13 +23,10 @@ const generateTestSentences = () => {
       const randomIndex = Math.floor(Math.random() * availableSentences.length);
       const selectedSentence = availableSentences.splice(randomIndex, 1)[0];
       
-      const originalIndex = SENTENCE_POOLS[level].findIndex(s => s.correctText === selectedSentence.correctText) + 1;
-      const audioFileName = `audio/listen-and-type/${level}-${originalIndex.toString().padStart(2, '0')}.mp3`;
-      
       testSentences.push({
         id: sentenceCounter,
         level: level,
-        audioFile: audioFileName,
+        audioFile: selectedSentence.audioFile,
         correctText: selectedSentence.correctText,
         difficulty: selectedSentence.difficulty
       });
@@ -239,7 +38,7 @@ const generateTestSentences = () => {
   return testSentences;
 };
 
-// Text normalisation
+// Normalise text for comparison (remove punctuation, extra spaces, convert to lowercase)
 const normaliseText = (text) => {
   return text
     .toLowerCase()
@@ -248,7 +47,7 @@ const normaliseText = (text) => {
     .trim();
 };
 
-// Levenshtein distance calculation for fuzzy matching
+// Calculate Levenshtein distance for fuzzy matching
 const getLevenshteinDistance = (str1, str2) => {
   const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
   
@@ -269,7 +68,7 @@ const getLevenshteinDistance = (str1, str2) => {
   return matrix[str2.length][str1.length];
 };
 
-// Check similarity between two strings
+// Check if two strings are similar within a threshold
 const isCloseMatch = (userText, correctText, threshold = 0.85) => {
   const distance = getLevenshteinDistance(userText, correctText);
   const maxLength = Math.max(userText.length, correctText.length);
@@ -282,7 +81,7 @@ const isCloseMatch = (userText, correctText, threshold = 0.85) => {
 const normaliseForComparison = (text) => {
   let normalised = normaliseText(text);
   
-  // Number variations
+  // Handle number variations
   const numberMap = {
     'three': '3', 'seven': '7', 'one': '1', 'two': '2', 'four': '4',
     'five': '5', 'six': '6', 'eight': '8', 'nine': '9', 'ten': '10'
@@ -292,7 +91,7 @@ const normaliseForComparison = (text) => {
     normalised = normalised.replace(new RegExp(`\\b(${word}|${digit})\\b`, 'g'), word);
   });
   
-  // British/American spelling
+  // Handle British/American spelling differences
   const spellingMap = {
     'cancelled': 'canceled', 'criticised': 'criticized',
     'colour': 'color', 'centre': 'center'
@@ -302,7 +101,7 @@ const normaliseForComparison = (text) => {
     normalised = normalised.replace(new RegExp(`\\b${british}\\b`, 'g'), american);
   });
   
-  // Contractions
+  // Handle contractions
   const contractionMap = {
     'shes|she s': 'she is', 'cant|can t': 'can not', 'dont|do nt': 'do not',
     'theres|there s': 'there is', 'ive|i ve': 'i have', 'doesnt|does nt': 'does not',
@@ -318,8 +117,8 @@ const normaliseForComparison = (text) => {
   return normalised;
 };
 
-// Generate word-by-word highlighting
-const generateHighlights = (originalUserInput, originalCorrectText, userWords, correctWords) => {
+// Generate word-by-word highlighting for mistakes
+const generateHighlights = (originalUserInput, originalCorrectText) => {
   const userInputWords = originalUserInput.trim().split(/\s+/);
   const correctTextWords = originalCorrectText.trim().split(/\s+/);
   
@@ -331,6 +130,7 @@ const generateHighlights = (originalUserInput, originalCorrectText, userWords, c
     const correctWord = correctTextWords[i] || '';
     
     if (!userWord && correctWord) {
+      // Missing word
       highlighted.push({
         type: 'missing',
         text: `[${correctWord}]`,
@@ -338,6 +138,7 @@ const generateHighlights = (originalUserInput, originalCorrectText, userWords, c
         correctText: correctWord
       });
     } else if (userWord && !correctWord) {
+      // Extra word
       highlighted.push({
         type: 'extra',
         text: userWord,
@@ -345,6 +146,7 @@ const generateHighlights = (originalUserInput, originalCorrectText, userWords, c
         correctText: ''
       });
     } else if (normaliseText(userWord) === normaliseText(correctWord)) {
+      // Correct word
       highlighted.push({
         type: 'correct',
         text: userWord,
@@ -352,6 +154,7 @@ const generateHighlights = (originalUserInput, originalCorrectText, userWords, c
         correctText: correctWord
       });
     } else {
+      // Wrong or close word
       const similarity = isCloseMatch(normaliseText(userWord), normaliseText(correctWord), 0.7);
       highlighted.push({
         type: similarity ? 'close' : 'wrong',
@@ -365,23 +168,27 @@ const generateHighlights = (originalUserInput, originalCorrectText, userWords, c
   return highlighted;
 };
 
-// Enhanced answer checking with highlighting
+// Main answer checking function
 const checkAnswer = (userInput, correctText) => {
   const userNormalised = normaliseForComparison(userInput);
   const correctNormalised = normaliseForComparison(correctText);
   
+  // Perfect match
   if (userNormalised === correctNormalised) {
     return { type: 'perfect', score: 1.0, highlights: null };
   }
   
-  const userWords = userNormalised.split(' ');
-  const correctWords = correctNormalised.split(' ');
-  const highlights = generateHighlights(userInput, correctText, userWords, correctWords);
+  // Generate highlights for imperfect answers
+  const highlights = generateHighlights(userInput, correctText);
   
+  // Close match (minor spelling errors)
   if (isCloseMatch(userNormalised, correctNormalised, 0.85)) {
     return { type: 'close', score: 0.8, highlights: highlights };
   }
   
+  // Partial match (some words correct)
+  const userWords = userNormalised.split(' ');
+  const correctWords = correctNormalised.split(' ');
   const matchingWords = userWords.filter(word => correctWords.includes(word));
   const partialScore = matchingWords.length / correctWords.length;
   
@@ -389,6 +196,7 @@ const checkAnswer = (userInput, correctText) => {
     return { type: 'partial', score: partialScore * 0.5, highlights: highlights };
   }
   
+  // Incorrect
   return { type: 'incorrect', score: 0, highlights: highlights };
 };
 
@@ -522,12 +330,14 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     }]);
 
     if (currentSentence + 1 < testSentences.length) {
+      // Move to next sentence
       setCurrentSentence(prev => prev + 1);
       setUserInput('');
       setTimeLeft(60);
       setPlayCount(0);
       setIsPlaying(false);
     } else {
+      // Test completed
       setShowResults(true);
     }
   };
@@ -569,7 +379,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   };
 
   // ==============================================
-  // RENDER FUNCTIONS
+  // RENDER HELPER FUNCTIONS
   // ==============================================
   
   const getResultDisplay = (result) => {
@@ -584,6 +394,10 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
         return { emoji: '❌', label: 'Incorrect', className: 'incorrect' };
     }
   };
+
+  // ==============================================
+  // RENDER CONDITIONS
+  // ==============================================
 
   // Loading state
   if (testSentences.length === 0) {
