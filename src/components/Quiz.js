@@ -111,6 +111,20 @@ function Quiz({ onFinish, quizType }) {
   const processedData = processSentence(question.sentence, question.answer);
   const visibleLetters = extractVisibleLetters(question.sentence);
 
+  // Add Enter key listener for checking answers
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter' && userAnswers[currentQuestion] && !checkedQuestions[currentQuestion]) {
+        checkAnswer();
+      }
+    };
+
+    document.addEventListener('keypress', handleKeyPress);
+    return () => {
+      document.removeEventListener('keypress', handleKeyPress);
+    };
+  }, [userAnswers, currentQuestion, checkedQuestions]); // Dependencies for the effect
+
   // Load saved quiz state on component mount
   useEffect(() => {
     const savedQuizState = localStorage.getItem(QUIZ_STATE_KEY);
@@ -201,6 +215,10 @@ function Quiz({ onFinish, quizType }) {
     } else {
       setCurrentQuestion(currentQuestion + 1);
       setFeedback({ show: false, type: '', message: '' });
+      // Small delay to allow component to re-render before focus
+      setTimeout(() => {
+        // Focus will be handled by LetterInput component's useEffect
+      }, 50);
     }
   };
 
