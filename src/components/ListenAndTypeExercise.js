@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
 
-// Sentence pools organised by CEFR level
+// ==============================================
+// SENTENCE DATA - Organised by CEFR levels
+// ==============================================
 const SENTENCE_POOLS = {
   A2: [
     {
@@ -176,13 +178,17 @@ const SENTENCE_POOLS = {
   ]
 };
 
-// Test structure: total of 10 questions across levels
+// Test structure: 2 A2, 3 B1, 3 B2, 2 C1 = 10 total
 const TEST_STRUCTURE = [
   { level: 'A2', count: 2 },
   { level: 'B1', count: 3 },
   { level: 'B2', count: 3 },
   { level: 'C1', count: 2 }
 ];
+
+// ==============================================
+// HELPER FUNCTIONS
+// ==============================================
 
 // Generate random test sentences
 const generateTestSentences = () => {
@@ -198,11 +204,23 @@ const generateTestSentences = () => {
         break;
       }
       
-      // Select random sentence from available pool
+// Generate random test sentences
+const generateTestSentences = () => {
+  const testSentences = [];
+  let sentenceCounter = 1;
+
+  TEST_STRUCTURE.forEach(({ level, count }) => {
+    const availableSentences = [...SENTENCE_POOLS[level]];
+    
+    for (let i = 0; i < count; i++) {
+      if (availableSentences.length === 0) {
+        console.warn(`Not enough ${level} sentences available`);
+        break;
+      }
+      
       const randomIndex = Math.floor(Math.random() * availableSentences.length);
       const selectedSentence = availableSentences.splice(randomIndex, 1)[0];
       
-      // Find original index for audio file naming
       const originalIndex = SENTENCE_POOLS[level].findIndex(s => s.correctText === selectedSentence.correctText) + 1;
       const audioFileName = `audio/listen-and-type/${level}-${originalIndex.toString().padStart(2, '0')}.mp3`;
       
@@ -221,151 +239,86 @@ const generateTestSentences = () => {
   return testSentences;
 };
 
-// Text normalisation and fuzzy matching functions
+// Text normalisation
 const normaliseText = (text) => {
   return text
     .toLowerCase()
-    .replace(/[.,!?;:'"()-]/g, '') // Remove all punctuation
-    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+    .replace(/[.,!?;:'"()-]/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 };
 
-// Calculate Levenshtein distance between two strings
+// Levenshtein distance calculation for fuzzy matching
 const getLevenshteinDistance = (str1, str2) => {
-  const matrix = [];
+  const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
   
-  // Create matrix
-  for (let i = 0; i <= str2.length; i++) {
-    matrix[i] = [i];
-  }
-  for (let j = 0; j <= str1.length; j++) {
-    matrix[0][j] = j;
-  }
+  for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+  for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
   
-  // Fill matrix
-  for (let i = 1; i <= str2.length; i++) {
-    for (let j = 1; j <= str1.length; j++) {
-      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
-        );
-      }
+  for (let j = 1; j <= str2.length; j++) {
+    for (let i = 1; i <= str1.length; i++) {
+      const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      matrix[j][i] = Math.min(
+        matrix[j][i - 1] + 1,     // deletion
+        matrix[j - 1][i] + 1,     // insertion
+        matrix[j - 1][i - 1] + indicator // substitution
+      );
     }
   }
   
   return matrix[str2.length][str1.length];
 };
 
-// Check if answer is close enough (fuzzy matching)
+// Check similarity between two strings
 const isCloseMatch = (userText, correctText, threshold = 0.85) => {
   const distance = getLevenshteinDistance(userText, correctText);
   const maxLength = Math.max(userText.length, correctText.length);
+  if (maxLength === 0) return true;
   const similarity = 1 - (distance / maxLength);
-  
   return similarity >= threshold;
 };
 
+// Advanced text normalisation for comparison
 const normaliseForComparison = (text) => {
   let normalised = normaliseText(text);
   
-  // Handle number variations
-  const numberReplacements = {
+  // Number variations
+  const numberMap = {
     'three': '3', 'seven': '7', 'one': '1', 'two': '2', 'four': '4',
     'five': '5', 'six': '6', 'eight': '8', 'nine': '9', 'ten': '10'
   };
   
-  Object.entries(numberReplacements).forEach(([word, digit]) => {
+  Object.entries(numberMap).forEach(([word, digit]) => {
     normalised = normalised.replace(new RegExp(`\\b(${word}|${digit})\\b`, 'g'), word);
   });
   
-  // Handle British/American spelling variations
-  const spellingReplacements = {
-    'cancelled': 'canceled',
-    'criticised': 'criticized',
-    'colour': 'color',
-    'centre': 'center'
+  // British/American spelling
+  const spellingMap = {
+    'cancelled': 'canceled', 'criticised': 'criticized',
+    'colour': 'color', 'centre': 'center'
   };
   
-  Object.entries(spellingReplacements).forEach(([british, american]) => {
+  Object.entries(spellingMap).forEach(([british, american]) => {
     normalised = normalised.replace(new RegExp(`\\b${british}\\b`, 'g'), american);
   });
   
-  // Handle contractions (with or without apostrophes)
-  const contractionReplacements = {
-    'shes|she s': 'she is',
-    'cant|can t': 'can not',
-    'dont|do nt': 'do not',
-    'theres|there s': 'there is',
-    'ive|i ve': 'i have',
-    'doesnt|does nt': 'does not',
-    'well|we ll': 'we will',
-    'wasnt|was nt': 'was not',
-    'id|i d': 'i would',
-    'werent|were nt': 'were not',
-    'couldnt|could nt': 'could not',
+  // Contractions
+  const contractionMap = {
+    'shes|she s': 'she is', 'cant|can t': 'can not', 'dont|do nt': 'do not',
+    'theres|there s': 'there is', 'ive|i ve': 'i have', 'doesnt|does nt': 'does not',
+    'well|we ll': 'we will', 'wasnt|was nt': 'was not', 'id|i d': 'i would',
+    'werent|were nt': 'were not', 'couldnt|could nt': 'could not',
     'didnt|did nt': 'did not'
   };
   
-  Object.entries(contractionReplacements).forEach(([contractions, expanded]) => {
+  Object.entries(contractionMap).forEach(([contractions, expanded]) => {
     normalised = normalised.replace(new RegExp(`\\b(${contractions})\\b`, 'g'), expanded);
   });
   
   return normalised;
 };
 
-// Enhanced answer checking with mistake highlighting
-const checkAnswer = (userInput, correctText) => {
-  const userNormalised = normaliseForComparison(userInput);
-  const correctNormalised = normaliseForComparison(correctText);
-  
-  // Level 1: Perfect match
-  if (userNormalised === correctNormalised) {
-    return { 
-      type: 'perfect', 
-      score: 1.0,
-      highlights: null
-    };
-  }
-  
-  // Generate word-by-word comparison for highlighting
-  const userWords = userNormalised.split(' ');
-  const correctWords = correctNormalised.split(' ');
-  const highlights = generateHighlights(userInput, correctText, userWords, correctWords);
-  
-  // Level 2: Very close match (minor spelling errors)
-  if (isCloseMatch(userNormalised, correctNormalised, 0.85)) {
-    return { 
-      type: 'close', 
-      score: 0.8,
-      highlights: highlights
-    };
-  }
-  
-  // Level 3: Partial match (got some words right)
-  const matchingWords = userWords.filter(word => correctWords.includes(word));
-  const partialScore = matchingWords.length / correctWords.length;
-  
-  if (partialScore >= 0.5) { // At least half the words correct
-    return { 
-      type: 'partial', 
-      score: partialScore * 0.5,
-      highlights: highlights
-    };
-  }
-  
-  // Level 4: Incorrect
-  return { 
-    type: 'incorrect', 
-    score: 0,
-    highlights: highlights
-  };
-};
-
-// Generate highlighted version showing mistakes
+// Generate word-by-word highlighting
 const generateHighlights = (originalUserInput, originalCorrectText, userWords, correctWords) => {
   const userInputWords = originalUserInput.trim().split(/\s+/);
   const correctTextWords = originalCorrectText.trim().split(/\s+/);
@@ -378,7 +331,6 @@ const generateHighlights = (originalUserInput, originalCorrectText, userWords, c
     const correctWord = correctTextWords[i] || '';
     
     if (!userWord && correctWord) {
-      // Missing word
       highlighted.push({
         type: 'missing',
         text: `[${correctWord}]`,
@@ -386,7 +338,6 @@ const generateHighlights = (originalUserInput, originalCorrectText, userWords, c
         correctText: correctWord
       });
     } else if (userWord && !correctWord) {
-      // Extra word
       highlighted.push({
         type: 'extra',
         text: userWord,
@@ -394,7 +345,6 @@ const generateHighlights = (originalUserInput, originalCorrectText, userWords, c
         correctText: ''
       });
     } else if (normaliseText(userWord) === normaliseText(correctWord)) {
-      // Correct word
       highlighted.push({
         type: 'correct',
         text: userWord,
@@ -402,7 +352,6 @@ const generateHighlights = (originalUserInput, originalCorrectText, userWords, c
         correctText: correctWord
       });
     } else {
-      // Different word - check if it's a close spelling mistake
       const similarity = isCloseMatch(normaliseText(userWord), normaliseText(correctWord), 0.7);
       highlighted.push({
         type: similarity ? 'close' : 'wrong',
@@ -416,9 +365,38 @@ const generateHighlights = (originalUserInput, originalCorrectText, userWords, c
   return highlighted;
 };
 
-// Main component
+// Enhanced answer checking with highlighting
+const checkAnswer = (userInput, correctText) => {
+  const userNormalised = normaliseForComparison(userInput);
+  const correctNormalised = normaliseForComparison(correctText);
+  
+  if (userNormalised === correctNormalised) {
+    return { type: 'perfect', score: 1.0, highlights: null };
+  }
+  
+  const userWords = userNormalised.split(' ');
+  const correctWords = correctNormalised.split(' ');
+  const highlights = generateHighlights(userInput, correctText, userWords, correctWords);
+  
+  if (isCloseMatch(userNormalised, correctNormalised, 0.85)) {
+    return { type: 'close', score: 0.8, highlights: highlights };
+  }
+  
+  const matchingWords = userWords.filter(word => correctWords.includes(word));
+  const partialScore = matchingWords.length / correctWords.length;
+  
+  if (partialScore >= 0.5) {
+    return { type: 'partial', score: partialScore * 0.5, highlights: highlights };
+  }
+  
+  return { type: 'incorrect', score: 0, highlights: highlights };
+};
+
+// ==============================================
+// MAIN COMPONENT
+// ==============================================
 function ListenAndTypeExercise({ onBack, onLogoClick }) {
-  // State variables
+  // State management
   const [currentSentence, setCurrentSentence] = useState(0);
   const [userInput, setUserInput] = useState('');
   const [timeLeft, setTimeLeft] = useState(60);
@@ -434,77 +412,74 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   const audioRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Generate test sentences on component mount
+  // Get current sentence data
+  const currentData = testSentences[currentSentence] || null;
+
+  // ==============================================
+  // EFFECTS
+  // ==============================================
+  
+  // Generate test sentences on mount
   useEffect(() => {
     const sentences = generateTestSentences();
     setTestSentences(sentences);
     console.log('Generated test sentences:', sentences);
   }, []);
 
-  // Get current sentence data
-  const currentData = testSentences[currentSentence] || null;
-
-  // Timer effect
+  // Timer countdown
   useEffect(() => {
     if (hasStarted && timeLeft > 0 && !showResults) {
-      const timer = setTimeout(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
+      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
       return () => clearTimeout(timer);
     } else if (timeLeft === 0 && hasStarted && !showResults) {
       handleNext();
     }
   }, [timeLeft, hasStarted, showResults]);
 
-  // Audio setup effect
+  // Audio event listeners
   useEffect(() => {
-    if (audioRef.current && currentData) {
-      const audio = audioRef.current;
-      
-      const handleLoadError = () => {
-        setAudioError(true);
-        console.warn(`Audio file ${currentData.audioFile} not found`);
-      };
+    if (!audioRef.current || !currentData) return;
 
-      const handleCanPlay = () => {
-        setAudioError(false);
-      };
+    const audio = audioRef.current;
+    
+    const handleLoadError = () => {
+      setAudioError(true);
+      console.warn(`Audio file ${currentData.audioFile} not found`);
+    };
 
-      const handleEnded = () => {
-        setIsPlaying(false);
-      };
+    const handleCanPlay = () => setAudioError(false);
+    const handleEnded = () => setIsPlaying(false);
 
-      audio.addEventListener('error', handleLoadError);
-      audio.addEventListener('canplay', handleCanPlay);
-      audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleLoadError);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('ended', handleEnded);
 
-      return () => {
-        audio.removeEventListener('error', handleLoadError);
-        audio.removeEventListener('canplay', handleCanPlay);
-        audio.removeEventListener('ended', handleEnded);
-      };
-    }
+    return () => {
+      audio.removeEventListener('error', handleLoadError);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('ended', handleEnded);
+    };
   }, [currentData]);
 
-  // Focus input when starting or changing questions
+  // Focus input when appropriate
   useEffect(() => {
     if (hasStarted && inputRef.current) {
       inputRef.current.focus();
     }
   }, [hasStarted, currentSentence]);
 
-  // Auto-play audio when new question loads
+  // Auto-play audio with delay
   useEffect(() => {
     if (hasStarted && currentData && !audioError && playCount === 0) {
-      const autoPlayTimer = setTimeout(() => {
-        playAudio();
-      }, 1000); // 1 second delay
-
+      const autoPlayTimer = setTimeout(playAudio, 1000);
       return () => clearTimeout(autoPlayTimer);
     }
   }, [currentSentence, hasStarted, audioError, playCount]);
 
-  // Helper functions
+  // ==============================================
+  // HANDLERS
+  // ==============================================
+  
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -512,17 +487,13 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   };
 
   const playAudio = () => {
-    if (playCount >= 3 || !audioRef.current || audioError) {
-      return;
-    }
+    if (playCount >= 3 || !audioRef.current || audioError) return;
     
     setIsPlaying(true);
     audioRef.current.currentTime = 0;
     
     audioRef.current.play()
-      .then(() => {
-        setPlayCount(prev => prev + 1);
-      })
+      .then(() => setPlayCount(prev => prev + 1))
       .catch(error => {
         console.error('Audio play error:', error);
         setAudioError(true);
@@ -538,10 +509,8 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   const handleNext = () => {
     if (!currentData) return;
 
-    // Use enhanced answer checking
     const result = checkAnswer(userInput, currentData.correctText);
     
-    // Save answer with detailed result
     setAnswers(prev => [...prev, {
       sentence: currentData,
       userInput: userInput.trim(),
@@ -552,7 +521,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       timeTaken: 60 - timeLeft
     }]);
 
-    // Move to next question or show results
     if (currentSentence + 1 < testSentences.length) {
       setCurrentSentence(prev => prev + 1);
       setUserInput('');
@@ -565,19 +533,17 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   };
 
   const calculateScore = () => {
-    // Calculate weighted score
     const totalScore = answers.reduce((sum, answer) => sum + answer.result.score, 0);
     const maxScore = answers.length;
     const percentage = Math.round((totalScore / maxScore) * 100);
     
-    // Count different types
     const perfect = answers.filter(a => a.result.type === 'perfect').length;
     const close = answers.filter(a => a.result.type === 'close').length;
     const partial = answers.filter(a => a.result.type === 'partial').length;
     const incorrect = answers.filter(a => a.result.type === 'incorrect').length;
     
     return { 
-      totalScore: Math.round(totalScore * 10) / 10, // Round to 1 decimal
+      totalScore: Math.round(totalScore * 10) / 10,
       maxScore, 
       percentage,
       perfect,
@@ -588,7 +554,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   };
 
   const restartTest = () => {
-    // Reset all state
     setCurrentSentence(0);
     setUserInput('');
     setTimeLeft(60);
@@ -599,12 +564,28 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     setHasStarted(false);
     setAudioError(false);
     
-    // Generate new test sentences
     const newSentences = generateTestSentences();
     setTestSentences(newSentences);
   };
 
-  // Render loading state
+  // ==============================================
+  // RENDER FUNCTIONS
+  // ==============================================
+  
+  const getResultDisplay = (result) => {
+    switch(result.type) {
+      case 'perfect':
+        return { emoji: '💯', label: 'Perfect!', className: 'perfect' };
+      case 'close':
+        return { emoji: '✨', label: 'Very Close!', className: 'close' };
+      case 'partial':
+        return { emoji: '👍', label: 'Partial Credit', className: 'partial' };
+      default:
+        return { emoji: '❌', label: 'Incorrect', className: 'incorrect' };
+    }
+  };
+
+  // Loading state
   if (testSentences.length === 0) {
     return (
       <div className="listen-type-container">
@@ -626,7 +607,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Render results state
+  // Results state
   if (showResults) {
     const score = calculateScore();
 
@@ -642,7 +623,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             <div className="score-display">{score.totalScore}/{score.maxScore}</div>
             <div className="score-percentage">({score.percentage}%)</div>
             
-            {/* Score breakdown */}
             <div className="score-breakdown">
               <div className="breakdown-item perfect">
                 <span className="breakdown-icon">💯</span>
@@ -680,19 +660,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               <h3>📝 Detailed Results:</h3>
               <div className="results-list">
                 {answers.map((answer, index) => {
-                  const getResultDisplay = (result) => {
-                    switch(result.type) {
-                      case 'perfect':
-                        return { emoji: '💯', label: 'Perfect!', className: 'perfect' };
-                      case 'close':
-                        return { emoji: '✨', label: 'Very Close!', className: 'close' };
-                      case 'partial':
-                        return { emoji: '👍', label: 'Partial Credit', className: 'partial' };
-                      default:
-                        return { emoji: '❌', label: 'Incorrect', className: 'incorrect' };
-                    }
-                  };
-                  
                   const display = getResultDisplay(answer.result);
                   
                   return (
@@ -771,7 +738,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               </div>
             </div>
             
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '30px' }}>
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '30px', flexWrap: 'wrap' }}>
               <button className="btn btn-primary" onClick={restartTest}>
                 🔄 Try Again
               </button>
@@ -785,7 +752,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Render instructions state
+  // Instructions state
   if (!hasStarted) {
     return (
       <div className="listen-type-container">
@@ -860,11 +827,10 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Render main test interface
+  // Main test interface
   return (
     <div className="listen-type-container">
       <div className="listen-type-quiz-container">
-        {/* Header Section */}
         <div className="listen-header">
           <div className="timer-section">
             <span className="timer-icon">⏱️</span>
@@ -878,15 +844,12 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           <button className="close-btn" onClick={onBack}>✕</button>
         </div>
 
-        {/* Main Content Section */}
         <div className="listen-main">
-          {/* Level Indicator */}
           <div className="level-indicator">
             <span className="level-badge">{currentData?.level}</span>
             <span className="level-description">{currentData?.difficulty}</span>
           </div>
 
-          {/* Audio Section */}
           <div className="audio-section">
             <audio ref={audioRef} preload="auto">
               <source src={`/${currentData?.audioFile}`} type="audio/mpeg" />
@@ -921,7 +884,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             )}
           </div>
 
-          {/* Input Section */}
           <div className="input-section">
             <h3>Type what you hear:</h3>
             <textarea
@@ -938,7 +900,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             </div>
           </div>
 
-          {/* Navigation Section */}
           <div className="navigation-section">
             <button 
               className="btn btn-primary btn-large"
