@@ -189,42 +189,58 @@
 }
 /* Add these styles to your src/styles/quiz.css file */
 
+/* Add these styles to your src/styles/quiz.css file */
+
 /* ==============================================
    LETTER INPUT COMPONENT STYLES
    ============================================== */
 
 .letter-input-container {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  align-items: center;
-  margin: 20px 0;
-  flex-wrap: wrap;
+  display: inline-flex;
+  gap: 2px;
+  align-items: baseline;
+  margin: 0 4px;
+  flex-wrap: nowrap;
 }
 
 .letter-input-box {
-  width: 45px;
-  height: 45px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
+  width: 1.2em;
+  height: 1.4em;
+  border: 1px solid #cbd5e0;
+  border-radius: 3px;
   text-align: center;
   font-family: 'Nunito', sans-serif;
-  font-size: 1.2em;
+  font-size: 1em;
   font-weight: 600;
   background: white;
   transition: all 0.3s ease;
   outline: none;
   text-transform: lowercase;
+  line-height: 1.2;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
-.letter-input-box:focus {
+/* Pre-filled letters (given letters) */
+.letter-input-box.pre-filled {
+  background: #e6f4ff;
   border-color: #4c51bf;
-  box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.1);
-  background: #f8f9ff;
+  color: #4c51bf;
+  font-weight: 700;
+  cursor: not-allowed;
 }
 
-.letter-input-box:hover:not(:disabled) {
-  border-color: #cbd5e0;
+/* Editable letters (user input) */
+.letter-input-box.editable:focus {
+  border-color: #48bb78;
+  box-shadow: 0 0 0 2px rgba(72, 187, 120, 0.1);
+  background: #f0fff4;
+}
+
+.letter-input-box.editable:hover:not(:focus) {
+  border-color: #a0aec0;
+  background: #fafafa;
 }
 
 .letter-input-box:disabled {
@@ -240,34 +256,48 @@
   color: #38a169;
 }
 
+.letter-input-container.correct .letter-input-box.pre-filled {
+  background: #e6fffa;
+  border-color: #38a169;
+  color: #2d3748;
+}
+
 .letter-input-container.incorrect .letter-input-box {
   border-color: #f56565;
   background: #fff5f5;
   color: #e53e3e;
 }
 
+.letter-input-container.incorrect .letter-input-box.pre-filled {
+  background: #fed7d7;
+  border-color: #e53e3e;
+  color: #2d3748;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .letter-input-box {
-    width: 40px;
-    height: 40px;
-    font-size: 1.1em;
+    width: 1.1em;
+    height: 1.3em;
+    font-size: 0.95em;
   }
   
   .letter-input-container {
-    gap: 6px;
+    gap: 1px;
+    margin: 0 3px;
   }
 }
 
 @media (max-width: 480px) {
   .letter-input-box {
-    width: 35px;
-    height: 35px;
-    font-size: 1em;
+    width: 1em;
+    height: 1.2em;
+    font-size: 0.9em;
   }
   
   .letter-input-container {
-    gap: 4px;
+    gap: 1px;
+    margin: 0 2px;
   }
 }
 /* Add these additional styles to your src/styles/quiz.css file */
