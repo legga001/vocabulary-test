@@ -1,7 +1,9 @@
-// src/components/Quiz.js
+// src/components/Quiz.js - Updated with letter input system
 import React, { useState, useEffect } from 'react';
 import { questions as staticQuestions, correctMessages } from '../questionsData';
 import { getArticleQuestions } from '../articleQuestions';
+import LetterInput from './LetterInput';
+import { processSentence, extractVisibleLetters } from '../utils/quizHelpers';
 
 // Key for localStorage
 const QUIZ_STATE_KEY = 'mrFoxEnglishQuizState';
@@ -16,6 +18,10 @@ function Quiz({ onFinish, quizType }) {
   const questions = quizType === 'article' ? getArticleQuestions() : staticQuestions;
   const question = questions[currentQuestion];
   const progress = ((currentQuestion) / 10) * 100;
+
+  // Process the current sentence
+  const processedData = processSentence(question.sentence, question.answer);
+  const visibleLetters = extractVisibleLetters(question.sentence);
 
   // Load saved quiz state on component mount
   useEffect(() => {
@@ -64,49 +70,6 @@ function Quiz({ onFinish, quizType }) {
     }
   }, [currentQuestion, userAnswers, checkedQuestions, quizType]);
 
-  // Handle both old format (h_t) and new format (h__t) gaps
-  const processGap = (sentence, answer) => {
-    // Check for new format first (multiple underscores between letters)
-    const newFormatMatch = sentence.match(/([a-zA-Z])_+([a-zA-Z])/);
-    if (newFormatMatch) {
-      // Replace the gap with blanks: h__t becomes h___
-      const gapLength = answer.length;
-      const blanks = '_'.repeat(gapLength);
-      return sentence.replace(/([a-zA-Z])_+([a-zA-Z])/, blanks);
-    }
-    
-    // Fall back to old format (h_t)
-    const oldFormatMatch = sentence.match(/([a-zA-Z])_([a-zA-Z])/);
-    if (oldFormatMatch) {
-      return sentence.replace(/([a-zA-Z])_([a-zA-Z])/, '___');
-    }
-    
-    return sentence;
-  };
-
-  const getPlaceholder = (sentence, answer) => {
-    // For new format, show first letter, underscores, last letter, and length
-    const newFormatMatch = sentence.match(/([a-zA-Z])_+([a-zA-Z])/);
-    if (newFormatMatch) {
-      const firstLetter = newFormatMatch[1];
-      const lastLetter = newFormatMatch[2];
-      const middleLength = answer.length - 2;
-      const middleUnderscores = '_'.repeat(middleLength);
-      return `${firstLetter}${middleUnderscores}${lastLetter} (${answer.length})`;
-    }
-    
-    // Fall back to old format
-    const oldFormatMatch = sentence.match(/([a-zA-Z])_([a-zA-Z])/);
-    if (oldFormatMatch) {
-      return `${oldFormatMatch[1]}_${oldFormatMatch[2]} (${answer.length})`;
-    }
-    
-    return `(${answer.length} letters)`;
-  };
-
-  const processedSentence = processGap(question.sentence, question.answer);
-  const placeholder = getPlaceholder(question.sentence, question.answer);
-
   const checkAnswer = () => {
     const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
     const correctAnswer = question.answer.toLowerCase();
@@ -148,12 +111,7 @@ function Quiz({ onFinish, quizType }) {
   };
 
   return (
-  <div>
-    <div style={{background: 'red', color: 'white', padding: '10px', textAlign: 'center'}}>
-      THIS IS QUIZ.JS COMPONENT - TEMPORARY MARKER
-    </div>
     <div className="quiz-container">
-      // ... rest of your content
       <div className="quiz-header">
         <div className="quiz-type-badge">
           {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
@@ -172,32 +130,47 @@ function Quiz({ onFinish, quizType }) {
         <div className="level-badge">{question.level}</div>
       </div>
 
-      <div className="question-text">{processedSentence}</div>
+      {/* Display sentence with letter input */}
+      <div className="question-section">
+        <div className="question-text">
+          {processedData.beforeGap}
+          {visibleLetters && <span className="visible-letters">{visibleLetters}</span>}
+          <div className="letter-input-wrapper">
+            <LetterInput
+              word={question.answer}
+              value={userAnswers[currentQuestion]}
+              onChange={updateAnswer}
+              disabled={checkedQuestions[currentQuestion]}
+              className={feedback.show ? feedback.type : ''}
+            />
+          </div>
+          {processedData.afterGap}
+        </div>
 
-      {/* Show context for article-based questions */}
-      {quizType === 'article' && question.context && (
-        <div className="question-context">
-          <small>📖 {question.context}</small>
+        {/* Show context for article-based questions */}
+        {quizType === 'article' && question.context && (
+          <div className="question-context">
+            <small>📖 {question.context}</small>
+          </div>
+        )}
+
+        {/* Word length hint */}
+        <div className="word-hint">
+          Complete the word ({question.answer.length} letters total)
+        </div>
+      </div>
+
+      {feedback.show && (
+        <div className={`feedback ${feedback.type}`}>
+          {feedback.message}
         </div>
       )}
 
-      <div className="input-container">
-        <input
-          type="text"
-          className={`answer-input ${feedback.show ? feedback.type : ''}`}
-          value={userAnswers[currentQuestion]}
-          onChange={(e) => updateAnswer(e.target.value)}
-          placeholder={placeholder}
-          onKeyPress={(e) => e.key === 'Enter' && checkAnswer()}
-        />
-        {feedback.show && (
-          <div className={`feedback ${feedback.type}`}>
-            {feedback.message}
-          </div>
-        )}
-      </div>
-
-      <button className="btn" onClick={checkAnswer}>
+      <button 
+        className="btn" 
+        onClick={checkAnswer}
+        disabled={checkedQuestions[currentQuestion] || !userAnswers[currentQuestion]}
+      >
         Check Answer
       </button>
 
