@@ -61,7 +61,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
       category: 'LISTENING',
       icon: '🎧',
       title: 'Listen and Type',
-      subtitle: 'DET-style dictation',
+      subtitle: 'Type what you hear',
       progress: '0/10',
       isActive: true,
       isNew: true,
@@ -202,7 +202,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
                 alt="Mr. Fox English" 
                 className="mobile-menu-logo-img"
               />
-              <span className="mobile-menu-title">mr. fox english</span>
+              <span className="mobile-menu-title">Mr. Fox English</span>
             </div>
             <button className="mobile-menu-close" onClick={closeMobileMenu}>
               ✕
