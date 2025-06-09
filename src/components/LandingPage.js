@@ -1,4 +1,4 @@
-// src/components/LandingPage.js - Updated with direct exercise navigation
+// src/components/LandingPage.js - Complete with all exercises including Listen and Type
 import React, { useEffect, useState } from 'react';
 
 function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitioning }) {
@@ -25,6 +25,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
   ];
 
   const exercises = [
+    // READING EXERCISES
     {
       type: 'standard-vocabulary',
       category: 'READING',
@@ -54,6 +55,50 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
       isNew: true
     },
     {
+      type: 'interactive-reading',
+      category: 'READING',
+      icon: '🎯',
+      title: 'Interactive Reading',
+      subtitle: 'DET-style highlighting',
+      progress: '0/6',
+      isActive: true,
+      isNew: true,
+      isDET: true
+    },
+    
+    // LISTENING EXERCISES
+    {
+      type: 'listen-and-type',
+      category: 'LISTENING',
+      icon: '🎧',
+      title: 'Listen and Type',
+      subtitle: 'DET-style dictation',
+      progress: '0/10',
+      isActive: true,
+      isNew: true,
+      isDET: true
+    },
+    {
+      type: 'listening',
+      category: 'LISTENING',
+      icon: '🔊',
+      title: 'Audio Comprehension',
+      subtitle: 'Listen and answer',
+      progress: '0/7',
+      isActive: false
+    },
+    {
+      type: 'listening',
+      category: 'LISTENING',
+      icon: '🎵',
+      title: 'Pronunciation Practice',
+      subtitle: 'Listen and repeat',
+      progress: '0/5',
+      isActive: false
+    },
+    
+    // WRITING EXERCISES
+    {
       type: 'writing',
       category: 'WRITING',
       icon: '✍️',
@@ -71,24 +116,8 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
       progress: '0/4',
       isActive: false
     },
-    {
-      type: 'listening',
-      category: 'LISTENING',
-      icon: '🎧',
-      title: 'Audio Comprehension',
-      subtitle: 'Listen and answer',
-      progress: '0/7',
-      isActive: false
-    },
-    {
-      type: 'listening',
-      category: 'LISTENING',
-      icon: '🔊',
-      title: 'Pronunciation',
-      subtitle: 'Listen and repeat',
-      progress: '0/5',
-      isActive: false
-    },
+    
+    // SPEAKING EXERCISES
     {
       type: 'speaking',
       category: 'SPEAKING',
@@ -129,7 +158,6 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
 
   const handleExerciseClick = (exercise) => {
     if (exercise.isActive) {
-      // Direct navigation to specific exercises
       onSelectExercise(exercise.type);
     }
   };
@@ -270,7 +298,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           {showExercises && getFilteredExercises().map((exercise, index) => (
             <div
               key={`${exercise.category}-${index}`}
-              className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''}`}
+              className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''}`}
               onClick={() => handleExerciseClick(exercise)}
               style={{
                 animationDelay: `${index * 0.1}s`
@@ -281,6 +309,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
                   {exercise.icon}
                 </div>
                 {exercise.isNew && <div className="new-badge">NEW</div>}
+                {exercise.isDET && <div className="det-badge">DET</div>}
               </div>
               
               <div className="exercise-content">
