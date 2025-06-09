@@ -171,7 +171,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
               alt="Mr. Fox English" 
               className="sidebar-logo-img"
             />
-            <span className="sidebar-title">mr. fox english</span>
+            <span className="sidebar-title">Mr. Fox English</span>
           </div>
         </div>
         
