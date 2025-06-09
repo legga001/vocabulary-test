@@ -1,4 +1,4 @@
-// src/components/ReadingExercise.js - Complete file with Responsive Box
+// src/components/ReadingExercise.js - Updated quiz section only
 import React, { useState } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
@@ -7,9 +7,11 @@ import { correctMessages } from '../questionsData';
 import AnswerReview from './AnswerReview';
 import ArticleSelection from './ArticleSelection';
 import RealFakeWordsExercise from './RealFakeWordsExercise';
+import LetterInput from './LetterInput';
+import { processSentence, extractVisibleLetters } from '../utils/quizHelpers';
 
 function ReadingExercise({ onBack, initialView = 'selection' }) {
-  const [currentView, setCurrentView] = useState(initialView); // Now accepts initial view
+  const [currentView, setCurrentView] = useState(initialView);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
   const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
@@ -65,10 +67,8 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
 
   const backToSelection = () => {
     if (isDirectFromLanding) {
-      // If we came directly from landing, go back to landing
       onBack();
     } else {
-      // Otherwise, go to the reading exercise selection
       setCurrentView('selection');
       resetQuizState();
     }
@@ -84,41 +84,7 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
     return <RealFakeWordsExercise onBack={backToSelection} />;
   }
 
-  // Quiz logic (same as before)
-  const processGap = (sentence, answer) => {
-    const newFormatMatch = sentence.match(/([a-zA-Z])_+([a-zA-Z])/);
-    if (newFormatMatch) {
-      const gapLength = answer.length;
-      const blanks = '_'.repeat(gapLength);
-      return sentence.replace(/([a-zA-Z])_+([a-zA-Z])/, blanks);
-    }
-    
-    const oldFormatMatch = sentence.match(/([a-zA-Z])_([a-zA-Z])/);
-    if (oldFormatMatch) {
-      return sentence.replace(/([a-zA-Z])_([a-zA-Z])/, '___');
-    }
-    
-    return sentence;
-  };
-
-  const getPlaceholder = (sentence, answer) => {
-    const newFormatMatch = sentence.match(/([a-zA-Z])_+([a-zA-Z])/);
-    if (newFormatMatch) {
-      const firstLetter = newFormatMatch[1];
-      const lastLetter = newFormatMatch[2];
-      const middleLength = answer.length - 2;
-      const middleUnderscores = '_'.repeat(middleLength);
-      return `${firstLetter}${middleUnderscores}${lastLetter} (${answer.length})`;
-    }
-    
-    const oldFormatMatch = sentence.match(/([a-zA-Z])_([a-zA-Z])/);
-    if (oldFormatMatch) {
-      return `${oldFormatMatch[1]}_${oldFormatMatch[2]} (${answer.length})`;
-    }
-    
-    return `(${answer.length} letters)`;
-  };
-
+  // Quiz logic
   const checkAnswer = () => {
     const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
     const correctAnswer = question.answer.toLowerCase();
@@ -235,10 +201,11 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
     );
   }
 
-  // Quiz view - UPDATED WITH RESPONSIVE BOX
+  // Quiz view - UPDATED WITH NEW LETTER INPUT SYSTEM
   if (currentView !== 'selection') {
-    const processedSentence = processGap(question.sentence, question.answer);
-    const placeholder = getPlaceholder(question.sentence, question.answer);
+    // Process the current sentence
+    const processedData = processSentence(question.sentence, question.answer);
+    const visibleLetters = extractVisibleLetters(question.sentence);
 
     // Get article info for current quiz
     const getCurrentArticleInfo = () => {
@@ -287,32 +254,47 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
             <div className="level-badge">{question.level}</div>
           </div>
 
-          <div className="question-text">{processedSentence}</div>
+          {/* NEW: Display sentence with letter input */}
+          <div className="question-section">
+            <div className="question-text">
+              {processedData.beforeGap}
+              {visibleLetters && <span className="visible-letters"> {visibleLetters}</span>}
+              <div className="letter-input-wrapper">
+                <LetterInput
+                  word={question.answer}
+                  value={userAnswers[currentQuestion]}
+                  onChange={updateAnswer}
+                  disabled={checkedQuestions[currentQuestion]}
+                  className={feedback.show ? feedback.type : ''}
+                />
+              </div>
+              {processedData.afterGap}
+            </div>
 
-          {/* Show context for article-based questions */}
-          {question.context && (
-            <div className="question-context">
-              <small>📰 {question.context}</small>
+            {/* Show context for article-based questions */}
+            {question.context && (
+              <div className="question-context">
+                <small>📰 {question.context}</small>
+              </div>
+            )}
+
+            {/* Word length hint */}
+            <div className="word-hint">
+              Complete the word ({question.answer.length} letters total)
+            </div>
+          </div>
+
+          {feedback.show && (
+            <div className={`feedback ${feedback.type}`}>
+              {feedback.message}
             </div>
           )}
 
-          <div className="input-container">
-            <input
-              type="text"
-              className={`answer-input ${feedback.show ? feedback.type : ''}`}
-              value={userAnswers[currentQuestion]}
-              onChange={(e) => updateAnswer(e.target.value)}
-              placeholder={placeholder}
-              onKeyPress={(e) => e.key === 'Enter' && checkAnswer()}
-            />
-            {feedback.show && (
-              <div className={`feedback ${feedback.type}`}>
-                {feedback.message}
-              </div>
-            )}
-          </div>
-
-          <button className="btn" onClick={checkAnswer}>
+          <button 
+            className="btn" 
+            onClick={checkAnswer}
+            disabled={checkedQuestions[currentQuestion] || !userAnswers[currentQuestion]}
+          >
             Check Answer
           </button>
 
