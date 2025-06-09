@@ -258,7 +258,6 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
           <div className="question-section">
             <div className="question-text">
               {processedData.beforeGap}
-              {visibleLetters && <span className="visible-letters"> {visibleLetters}</span>}
               <div className="letter-input-wrapper">
                 <LetterInput
                   word={question.answer}
