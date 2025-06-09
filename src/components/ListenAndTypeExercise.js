@@ -239,7 +239,7 @@ function ListenAndTypeExercise({ onBack }) {
   useEffect(() => {
     const sentences = generateTestSentences();
     setTestSentences(sentences);
-    console.log('Generated test sentences:', sentences.map(s => ({ level: s.level, text: s.correctText })));
+    console.log('Generated test sentences:', sentences.map(s => ({ level: s.level, text: s.correctText, file: s.audioFile })));
   }, []);
 
   const currentData = testSentences[currentSentence];
@@ -407,6 +407,32 @@ function ListenAndTypeExercise({ onBack }) {
     return { correct, total, percentage };
   };
 
+  // Show loading while sentences are being generated
+  if (testSentences.length === 0) {
+    return (
+      <div className="exercise-page">
+        <div className="logo-container">
+          <img 
+            src="/purple_fox_transparent.png" 
+            alt="Mr. Fox English" 
+            className="app-logo"
+          />
+        </div>
+        
+        <h1>🎧 Listen and Type</h1>
+        
+        <div className="loading-message">
+          <p>🎲 Generating your random test...</p>
+          <p><small>Selecting sentences from different difficulty levels</small></p>
+        </div>
+
+        <button className="btn btn-secondary" onClick={onBack} style={{ marginTop: '20px' }}>
+          ← Back to Exercises
+        </button>
+      </div>
+    );
+  }
+
   if (showResults) {
     const score = calculateScore();
 
@@ -478,31 +504,7 @@ function ListenAndTypeExercise({ onBack }) {
     );
   }
 
-        return (
-        <div className="exercise-page">
-          <div className="logo-container">
-            <img 
-              src="/purple_fox_transparent.png" 
-              alt="Mr. Fox English" 
-              className="app-logo"
-            />
-          </div>
-          
-          <h1>🎧 Listen and Type</h1>
-          
-          <div className="loading-message">
-            <p>🎲 Generating your random test...</p>
-            <p><small>Selecting sentences from different difficulty levels</small></p>
-          </div>
-
-          <button className="btn btn-secondary" onClick={onBack} style={{ marginTop: '20px' }}>
-            ← Back to Exercises
-          </button>
-        </div>
-      );
-    }
-
-    if (!hasStarted) {
+  if (!hasStarted) {
     return (
       <div className="exercise-page">
         <div className="logo-container">
@@ -592,7 +594,7 @@ function ListenAndTypeExercise({ onBack }) {
         </div>
         <div className="progress-section">
           <span className="progress-text">
-            Question {currentSentence + 1} of {LISTENING_SENTENCES.length}
+            Question {currentSentence + 1} of {testSentences.length}
           </span>
         </div>
         <button className="close-btn" onClick={onBack}>✕</button>
@@ -635,7 +637,7 @@ function ListenAndTypeExercise({ onBack }) {
             <div className="audio-error">
               ⚠️ Audio file not found: {currentData.audioFile}
               <br />
-              <small>Please ensure the file exists in the public folder</small>
+              <small>Please ensure the file exists in the public/audio/listen-and-type/ folder</small>
             </div>
           )}
         </div>
@@ -664,7 +666,7 @@ function ListenAndTypeExercise({ onBack }) {
             className="btn btn-primary btn-large"
             onClick={handleNext}
           >
-            {currentSentence + 1 === LISTENING_SENTENCES.length ? 'Finish Test' : 'Next Sentence'}
+            {currentSentence + 1 === testSentences.length ? 'Finish Test' : 'Next Sentence'}
           </button>
         </div>
       </div>
@@ -1009,6 +1011,17 @@ function ListenAndTypeExercise({ onBack }) {
           font-style: italic;
         }
 
+        .loading-message {
+          text-align: center;
+          padding: 40px;
+          color: #666;
+        }
+
+        .loading-message p {
+          font-size: 1.1em;
+          margin-bottom: 10px;
+        }
+
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
           .listen-main {
@@ -1067,9 +1080,4 @@ function ListenAndTypeExercise({ onBack }) {
             min-width: 150px;
           }
         }
-      `}</style>
-    </div>
-  );
-}
-
-export default ListenAndTypeExercise;
+      `}
