@@ -125,6 +125,22 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
   const question = questions[currentQuestion];
   const progress = ((currentQuestion) / 10) * 100;
 
+  // Add Enter key listener for checking answers (only during quiz)
+  useEffect(() => {
+    if (currentView !== 'selection' && currentView !== 'article-selection' && currentView !== 'real-fake-words' && !showResults) {
+      const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && userAnswers[currentQuestion] && !checkedQuestions[currentQuestion]) {
+          checkAnswer();
+        }
+      };
+
+      document.addEventListener('keypress', handleKeyPress);
+      return () => {
+        document.removeEventListener('keypress', handleKeyPress);
+      };
+    }
+  }, [userAnswers, currentQuestion, checkedQuestions, currentView, showResults]); // Dependencies for the effect
+
   // Navigation functions
   const goToArticleSelection = () => {
     setCurrentView('article-selection');
@@ -214,6 +230,10 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
     } else {
       setCurrentQuestion(currentQuestion + 1);
       setFeedback({ show: false, type: '', message: '' });
+      // Small delay to allow component to re-render before focus
+      setTimeout(() => {
+        // Focus will be handled by LetterInput component's useEffect
+      }, 50);
     }
   };
 
