@@ -1,0 +1,175 @@
+/* ==============================================
+   BUTTONS.CSS - All button styles
+   ============================================== */
+
+button, .btn {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 150px;
+  background: #48bb78;
+}
+
+button:hover, .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
+}
+
+/* Button variants */
+.btn-primary { background: #48bb78; }
+.btn-primary:hover { background: #38a169; }
+
+.btn-secondary { background: #4c51bf; }
+.btn-secondary:hover { background: #434190; }
+
+.btn-danger { background: #e53e3e; }
+.btn-danger:hover { background: #c53030; }
+
+/* Button sizes */
+.btn-small { font-size: 0.9em; padding: 10px 20px; }
+.btn-large { padding: 18px 35px; font-size: 1.2em; }
+
+/* Special buttons */
+.start-practicing-btn {
+  background: linear-gradient(180deg, #58cc02 0%, #4caf50 100%);
+  border-radius: 16px;
+  padding: 18px 48px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(88, 204, 2, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 200px;
+}
+
+.start-practicing-btn:hover {
+  background: linear-gradient(180deg, #61d004 0%, #52c555 100%);
+  box-shadow: 0 6px 20px rgba(88, 204, 2, 0.5);
+}
+
+.start-practicing-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.practice-test-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+.practice-test-btn:disabled {
+  background: #ddd;
+  cursor: not-allowed;
+  color: #999;
+}
+
+.coming-soon-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff4757;
+  color: white;
+  font-size: 0.7em;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* Navigation buttons */
+.nav-btn {
+  background: #4c51bf;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1em;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: #434190;
+}
+
+.nav-btn:disabled {
+  background: #cbd5e0;
+  cursor: not-allowed;
+}
+
+/* Hamburger button */
+.hamburger-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+}
+
+.hamburger-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hamburger-lines span {
+  width: 20px;
+  height: 2px;
+  background: #777;
+  border-radius: 1px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-btn:hover .hamburger-lines span { background: #333; }
+
+.progress-icon-btn {
+  background: none;
+  border: none;
+  font-size: 1.3em;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+}
+
+.progress-icon-btn:hover { background: #f0f0f0; }
+
+.mobile-menu-close {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  color: #777;
+  cursor: pointer;
+  padding: 5px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+}
+
+.mobile-menu-close:hover { background: #f0f0f0; }
