@@ -8,6 +8,94 @@ import { processSentence, extractVisibleLetters } from '../utils/quizHelpers';
 // Key for localStorage
 const QUIZ_STATE_KEY = 'mrFoxEnglishQuizState';
 
+// Function to get alternative spellings (British vs American)
+const getAlternativeSpellings = (word) => {
+  const spellingMap = {
+    // American -> British alternatives
+    'analyze': ['analyse'],
+    'realize': ['realise'],
+    'organize': ['organise'],
+    'recognize': ['recognise'],
+    'criticize': ['criticise'],
+    'apologize': ['apologise'],
+    'optimize': ['optimise'],
+    'minimize': ['minimise'],
+    'maximize': ['maximise'],
+    'centralize': ['centralise'],
+    'normalize': ['normalise'],
+    'categorize': ['categorise'],
+    'memorize': ['memorise'],
+    'authorize': ['authorise'],
+    'modernize': ['modernise'],
+    'utilize': ['utilise'],
+    'fertilize': ['fertilise'],
+    'sterilize': ['sterilise'],
+    'stabilize': ['stabilise'],
+    'summarize': ['summarise'],
+    // British -> American alternatives  
+    'analyse': ['analyze'],
+    'realise': ['realize'],
+    'organise': ['organize'],
+    'recognise': ['recognize'],
+    'criticise': ['criticize'],
+    'apologise': ['apologize'],
+    'optimise': ['optimize'],
+    'minimise': ['minimize'],
+    'maximise': ['maximize'],
+    'centralise': ['centralize'],
+    'normalise': ['normalize'],
+    'categorise': ['categorize'],
+    'memorise': ['memorize'],
+    'authorise': ['authorize'],
+    'modernise': ['modernize'],
+    'utilise': ['utilize'],
+    'fertilise': ['fertilize'],
+    'sterilise': ['sterilize'],
+    'stabilise': ['stabilize'],
+    'summarise': ['summarize'],
+    // Color/colour variations
+    'color': ['colour'],
+    'colours': ['colors'],
+    'colored': ['coloured'],
+    'coloring': ['colouring'],
+    'colour': ['color'],
+    'colors': ['colours'],
+    'coloured': ['colored'],
+    'colouring': ['coloring'],
+    // Honor/honour variations
+    'honor': ['honour'],
+    'honors': ['honours'],
+    'honored': ['honoured'],
+    'honoring': ['honouring'],
+    'honour': ['honor'],
+    'honours': ['honors'],
+    'honoured': ['honored'],
+    'honouring': ['honoring'],
+    // Center/centre variations
+    'center': ['centre'],
+    'centers': ['centres'],
+    'centered': ['centred'],
+    'centering': ['centring'],
+    'centre': ['center'],
+    'centres': ['centers'],
+    'centred': ['centered'],
+    'centring': ['centering'],
+    // Theater/theatre variations
+    'theater': ['theatre'],
+    'theaters': ['theatres'],
+    'theatre': ['theater'],
+    'theatres': ['theaters'],
+    // Meter/metre variations
+    'meter': ['metre'],
+    'meters': ['metres'],
+    'metre': ['meter'],
+    'metres': ['meters']
+  };
+  
+  const normalizedWord = word.toLowerCase();
+  return spellingMap[normalizedWord] || [];
+};
+
 function Quiz({ onFinish, quizType }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
@@ -73,17 +161,23 @@ function Quiz({ onFinish, quizType }) {
   const checkAnswer = () => {
     const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
     const correctAnswer = question.answer.toLowerCase();
+    
+    // Check for alternative spellings (British vs American)
+    const alternativeAnswers = getAlternativeSpellings(question.answer);
+    const isCorrect = userAnswer === correctAnswer || alternativeAnswers.includes(userAnswer);
 
-    if (userAnswer === correctAnswer) {
+    if (isCorrect) {
       const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
       setFeedback({ show: true, type: 'correct', message: randomMessage });
+      
+      // Only disable input after correct answer
+      const newChecked = [...checkedQuestions];
+      newChecked[currentQuestion] = true;
+      setCheckedQuestions(newChecked);
     } else {
       setFeedback({ show: true, type: 'incorrect', message: `💡 Hint: ${question.hint}` });
+      // Don't disable input for incorrect answers - allow retry
     }
-
-    const newChecked = [...checkedQuestions];
-    newChecked[currentQuestion] = true;
-    setCheckedQuestions(newChecked);
   };
 
   const updateAnswer = (value) => {
