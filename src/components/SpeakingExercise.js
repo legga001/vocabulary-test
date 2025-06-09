@@ -1,16 +1,11 @@
-// src/components/SpeakingExercise.js
+// src/components/SpeakingExercise.js - Updated with ClickableLogo
 import React from 'react';
+import ClickableLogo from './ClickableLogo';
 
-function SpeakingExercise({ onBack }) {
+function SpeakingExercise({ onBack, onLogoClick }) {
   return (
     <div className="exercise-page">
-      <div className="logo-container">
-        <img 
-          src="/purple_fox_transparent.png" 
-          alt="Mr. Fox English" 
-          className="app-logo"
-        />
-      </div>
+      <ClickableLogo onLogoClick={onLogoClick} />
       
       <h1>🎤 Speaking Exercise</h1>
       
