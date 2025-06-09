@@ -1,5 +1,6 @@
-// src/components/ReadingExercise.js - Complete file with Responsive Box
+// src/components/ReadingExercise.js - Updated with ClickableLogo
 import React, { useState } from 'react';
+import ClickableLogo from './ClickableLogo';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
 import { questions as staticQuestions } from '../questionsData';
@@ -8,7 +9,7 @@ import AnswerReview from './AnswerReview';
 import ArticleSelection from './ArticleSelection';
 import RealFakeWordsExercise from './RealFakeWordsExercise';
 
-function ReadingExercise({ onBack, initialView = 'selection' }) {
+function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   const [currentView, setCurrentView] = useState(initialView); // Now accepts initial view
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
@@ -81,7 +82,7 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
 
   // Show the Real/Fake Words exercise
   if (currentView === 'real-fake-words') {
-    return <RealFakeWordsExercise onBack={backToSelection} />;
+    return <RealFakeWordsExercise onBack={backToSelection} onLogoClick={onLogoClick} />;
   }
 
   // Quiz logic (same as before)
@@ -170,85 +171,6 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
 
   // Article Selection View
   if (currentView === 'article-selection') {
-    return (
-      <ArticleSelection 
-        onBack={backToSelection}
-        onSelectArticle={startArticleQuiz}
-      />
-    );
-  }
-
-  // Results view - UPDATED WITH RESPONSIVE BOX AND MAIN HEADING INSIDE
-  if (showResults) {
-    const score = calculateScore();
-    const isArticleTest = currentView === 'octopus-quiz' || currentView === 'smuggling-quiz';
-    const currentArticleInfo = currentView === 'octopus-quiz' ? octopusArticleInfo : smugglingArticleInfo;
-
-    return (
-      <div className="exercise-page scrollable-page">
-        <div className="logo-container">
-          <img 
-            src="/purple_fox_transparent.png" 
-            alt="Mr. Fox English" 
-            className="app-logo"
-          />
-        </div>
-        
-        {/* RESULTS CONTAINER - RESPONSIVE GREY BOX WRAPS EVERYTHING INCLUDING HEADING */}
-        <div className="quiz-container">
-          <h1>📖 Reading Exercise Results</h1>
-          
-          <div className="results">
-            <h2>🎉 Quiz Complete!</h2>
-            <div className="score-display">{score}/10</div>
-            
-            <div className="level-estimate">
-              <h3>{isArticleTest ? '📰 Article-Based' : '📚 Standard'} Vocabulary Test</h3>
-              {isArticleTest && <p>Based on: "{currentArticleInfo.title}"</p>}
-            </div>
-
-            <AnswerReview 
-              questions={questions}
-              userAnswers={userAnswers}
-              title="Your Answers"
-            />
-            
-            <div className="feedback-message">
-              <strong>Well done!</strong> You've practised {isArticleTest ? 'vocabulary from a current BBC article' : 'standard English vocabulary'}. 
-              {isArticleTest && ' This helps you learn words in context from real news stories.'}
-            </div>
-            
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
-              <button className="btn btn-primary" onClick={backToSelection}>
-                {isDirectFromLanding ? 'Back to Main Menu' : 'Try Another Test'}
-              </button>
-              {!isDirectFromLanding && (
-                <button className="btn btn-secondary" onClick={onBack}>
-                  ← Back to Exercises
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-        {/* END RESULTS CONTAINER */}
-      </div>
-    );
-  }
-
-  // Quiz view - UPDATED WITH RESPONSIVE BOX
-  if (currentView !== 'selection') {
-    const processedSentence = processGap(question.sentence, question.answer);
-    const placeholder = getPlaceholder(question.sentence, question.answer);
-
-    // Get article info for current quiz
-    const getCurrentArticleInfo = () => {
-      if (currentView === 'octopus-quiz') return octopusArticleInfo;
-      if (currentView === 'smuggling-quiz') return smugglingArticleInfo;
-      return null;
-    };
-
-    const currentArticleInfo = getCurrentArticleInfo();
-
     return (
       <div className="exercise-page">
         {/* Article Link Button - Only show for article-based tests */}
@@ -347,13 +269,7 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
   // Main Selection view (Reading page) - NOW WITH 3 CARDS
   return (
     <div className="exercise-page">
-      <div className="logo-container">
-        <img 
-          src="/purple_fox_transparent.png" 
-          alt="Mr. Fox English" 
-          className="app-logo"
-        />
-      </div>
+      <ClickableLogo onLogoClick={onLogoClick} />
       
       <h1>📖 Reading Exercises</h1>
       
@@ -416,3 +332,77 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
 }
 
 export default ReadingExercise;
+      <ArticleSelection 
+        onBack={backToSelection}
+        onLogoClick={onLogoClick}
+        onSelectArticle={startArticleQuiz}
+      />
+    );
+  }
+
+  // Results view - UPDATED WITH RESPONSIVE BOX AND MAIN HEADING INSIDE
+  if (showResults) {
+    const score = calculateScore();
+    const isArticleTest = currentView === 'octopus-quiz' || currentView === 'smuggling-quiz';
+    const currentArticleInfo = currentView === 'octopus-quiz' ? octopusArticleInfo : smugglingArticleInfo;
+
+    return (
+      <div className="exercise-page scrollable-page">
+        <ClickableLogo onLogoClick={onLogoClick} />
+        
+        {/* RESULTS CONTAINER - RESPONSIVE GREY BOX WRAPS EVERYTHING INCLUDING HEADING */}
+        <div className="quiz-container">
+          <h1>📖 Reading Exercise Results</h1>
+          
+          <div className="results">
+            <h2>🎉 Quiz Complete!</h2>
+            <div className="score-display">{score}/10</div>
+            
+            <div className="level-estimate">
+              <h3>{isArticleTest ? '📰 Article-Based' : '📚 Standard'} Vocabulary Test</h3>
+              {isArticleTest && <p>Based on: "{currentArticleInfo.title}"</p>}
+            </div>
+
+            <AnswerReview 
+              questions={questions}
+              userAnswers={userAnswers}
+              title="Your Answers"
+            />
+            
+            <div className="feedback-message">
+              <strong>Well done!</strong> You've practised {isArticleTest ? 'vocabulary from a current BBC article' : 'standard English vocabulary'}. 
+              {isArticleTest && ' This helps you learn words in context from real news stories.'}
+            </div>
+            
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
+              <button className="btn btn-primary" onClick={backToSelection}>
+                {isDirectFromLanding ? 'Back to Main Menu' : 'Try Another Test'}
+              </button>
+              {!isDirectFromLanding && (
+                <button className="btn btn-secondary" onClick={onBack}>
+                  ← Back to Exercises
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        {/* END RESULTS CONTAINER */}
+      </div>
+    );
+  }
+
+  // Quiz view - UPDATED WITH RESPONSIVE BOX
+  if (currentView !== 'selection') {
+    const processedSentence = processGap(question.sentence, question.answer);
+    const placeholder = getPlaceholder(question.sentence, question.answer);
+
+    // Get article info for current quiz
+    const getCurrentArticleInfo = () => {
+      if (currentView === 'octopus-quiz') return octopusArticleInfo;
+      if (currentView === 'smuggling-quiz') return smugglingArticleInfo;
+      return null;
+    };
+
+    const currentArticleInfo = getCurrentArticleInfo();
+
+    return (
