@@ -8,13 +8,15 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: #f7f7f7;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
   z-index: 1000;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 20px;
+  overflow-y: auto;
 }
 
 .listen-type-quiz-container {
@@ -27,8 +29,11 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   position: relative;
   min-height: 600px;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  margin: auto;
 }
 
 /* ==============================================
@@ -613,11 +618,16 @@
 @media (max-width: 768px) {
   .listen-type-container {
     padding: 15px;
+    justify-content: flex-start;
+    padding-top: 30px;
   }
 
   .listen-type-quiz-container {
     padding: 20px;
     min-height: 500px;
+    max-height: none;
+    margin-top: 0;
+    margin-bottom: 20px;
   }
 
   .listen-header {
@@ -669,6 +679,7 @@
 @media (max-width: 480px) {
   .listen-type-container {
     padding: 10px;
+    padding-top: 20px;
   }
 
   .listen-type-quiz-container {
@@ -705,5 +716,42 @@
 
   .difficulty-info {
     padding: 15px;
+  }
+}
+
+/* Desktop-specific improvements */
+@media (min-width: 769px) {
+  .listen-type-container {
+    padding: 40px;
+  }
+  
+  .listen-type-quiz-container {
+    max-height: 85vh;
+    margin: 20px auto;
+  }
+  
+  /* Ensure scrolling works on desktop */
+  .results-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+  }
+  
+  .results-list::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .results-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  .results-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+  
+  .results-list::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
   }
 }
