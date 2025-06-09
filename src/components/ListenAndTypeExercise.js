@@ -6,22 +6,23 @@ import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
 // HELPER FUNCTIONS
 // ==============================================
 
-// Generate random test sentences with proper shuffling
+// Generate test sentences in proper order: A2 → B1 → B2 → C1
 const generateTestSentences = () => {
   const testSentences = [];
   let sentenceCounter = 1;
 
+  // Process each level in the correct order
   TEST_STRUCTURE.forEach(({ level, count }) => {
-    // Create a copy and shuffle it properly
+    // Create a copy and shuffle only within this level
     const availableSentences = [...SENTENCE_POOLS[level]];
     
-    // Fisher-Yates shuffle for true randomness
+    // Fisher-Yates shuffle for randomness within the level
     for (let i = availableSentences.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [availableSentences[i], availableSentences[j]] = [availableSentences[j], availableSentences[i]];
     }
     
-    // Take the required number of sentences
+    // Take the required number of sentences from this level
     for (let i = 0; i < count && i < availableSentences.length; i++) {
       const selectedSentence = availableSentences[i];
       
@@ -37,16 +38,12 @@ const generateTestSentences = () => {
     }
   });
 
-  // Final shuffle of the entire test to randomise order
-  for (let i = testSentences.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [testSentences[i], testSentences[j]] = [testSentences[j], testSentences[i]];
-  }
-
-  console.log('Generated random test sentences:', testSentences.map(s => ({
+  // Log the generated sequence for verification
+  console.log('Generated test sequence:', testSentences.map(s => ({
+    order: s.id,
     level: s.level,
     audio: s.audioFile,
-    text: s.correctText.substring(0, 30) + '...'
+    preview: s.correctText.substring(0, 25) + '...'
   })));
 
   return testSentences;
@@ -547,7 +544,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     setHasStarted(false);
     setAudioError(false);
     
-    // Generate completely new random sentences
+    // Generate new random sentences in proper order
     const newSentences = generateTestSentences();
     setTestSentences(newSentences);
   };
@@ -583,8 +580,8 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           <h1>🎧 Listen and Type</h1>
           
           <div className="loading-message">
-            <p>🎲 Generating your random test...</p>
-            <p><small>Selecting sentences from different difficulty levels</small></p>
+            <p>🎲 Generating your test...</p>
+            <p><small>Preparing sentences in difficulty order: A2 → B1 → B2 → C1</small></p>
           </div>
 
           <button className="btn btn-secondary" onClick={onBack}>
@@ -656,7 +653,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
                         <span className="result-emoji">{display.emoji}</span>
                         <span className="result-level">{answer.sentence.level}</span>
                         <span className="result-number">#{index + 1}</span>
-                        <span className="result-score">+{answer.result.score}</span>
                       </div>
                       <div className="result-content">
                         <div className="result-status">
@@ -789,15 +785,15 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               
               <div className="difficulty-info">
                 <h4>📊 Test Structure</h4>
-                <p>Random selection from pools of sentences:</p>
+                <p>Structured progression through difficulty levels:</p>
                 <ul>
-                  <li>2 A2 level sentences (elementary)</li>
-                  <li>3 B1 level sentences (intermediate)</li>
-                  <li>3 B2 level sentences (upper-intermediate)</li>
-                  <li>2 C1 level sentences (advanced)</li>
+                  <li>2 A2 level sentences (elementary) - <strong>First</strong></li>
+                  <li>3 B1 level sentences (intermediate) - <strong>Second</strong></li>
+                  <li>3 B2 level sentences (upper-intermediate) - <strong>Third</strong></li>
+                  <li>2 C1 level sentences (advanced) - <strong>Final</strong></li>
                 </ul>
                 <p style={{ fontSize: '0.9em', fontStyle: 'italic', marginTop: '10px' }}>
-                  Sentences are randomly selected each time - no two tests are the same!
+                  The test gets progressively harder as you go through!
                 </p>
               </div>
             </div>
