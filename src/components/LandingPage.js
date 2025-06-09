@@ -1,4 +1,4 @@
-// src/components/LandingPage.js - Complete with all exercises including Listen and Type
+// src/components/LandingPage.js - Complete with Listen and Type only
 import React, { useEffect, useState } from 'react';
 
 function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitioning }) {
@@ -53,17 +53,6 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
       progress: '2/5',
       isActive: true,
       isNew: true
-    },
-    {
-      type: 'interactive-reading',
-      category: 'READING',
-      icon: '🎯',
-      title: 'Interactive Reading',
-      subtitle: 'DET-style highlighting',
-      progress: '0/6',
-      isActive: true,
-      isNew: true,
-      isDET: true
     },
     
     // LISTENING EXERCISES
