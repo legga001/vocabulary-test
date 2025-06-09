@@ -1,7 +1,7 @@
 // src/components/LetterInput.js - Simple test version
 import React, { useState, useRef, useEffect } from 'react';
 
-function LetterInput({ word, value, onChange, disabled = false, className = '' }) {
+function LetterInput({ word, value, onChange, disabled = false, className = '', onEnterPress }) {
   const [letters, setLetters] = useState([]);
   const inputRefs = useRef([]);
   
@@ -64,6 +64,16 @@ function LetterInput({ word, value, onChange, disabled = false, className = '' }
 
   const handleKeyDown = (index, e) => {
     if (disabled) return;
+
+    // Handle Enter key - check if we have a complete answer
+    if (e.key === 'Enter' && onEnterPress) {
+      const currentWord = letters.join('');
+      if (currentWord.length >= lettersToShow + 1) { // At least one user letter
+        e.preventDefault();
+        onEnterPress();
+        return;
+      }
+    }
 
     if (index < lettersToShow && ['Backspace', 'Delete'].includes(e.key)) {
       e.preventDefault();
