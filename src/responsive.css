@@ -1,0 +1,412 @@
+/* ==============================================
+   RESPONSIVE.CSS - All responsive design rules
+   ============================================== */
+
+/* ==============================================
+   DESKTOP LAYOUT (1025px and above)
+   ============================================== */
+@media (min-width: 1025px) {
+  /* Ensure landing page takes full screen on desktop */
+  .landing-duolingo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+  }
+  
+  /* Sidebar fixed to left edge */
+  .desktop-sidebar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 280px;
+    height: 100vh;
+  }
+  
+  /* Main content area properly positioned */
+  .main-content-area {
+    margin-left: 280px;
+    width: calc(100vw - 280px);
+    height: 100vh;
+    overflow-y: auto;
+    padding: 20px 40px;
+  }
+  
+  /* Hide mobile elements on desktop */
+  .mobile-header {
+    display: none !important;
+  }
+  
+  .mobile-menu-overlay {
+    display: none !important;
+  }
+  
+  /* Ensure body doesn't interfere with fixed layout */
+  body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  /* Override App container for landing page */
+  .App {
+    padding: 0;
+    margin: 0;
+    max-width: none;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  /* Fix for desktop layout scrolling */
+  body {
+    overflow: auto !important;
+  }
+  
+  .App {
+    overflow-y: auto !important;
+    max-height: none !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+  
+  .exercise-page.scrollable-page {
+    overflow: auto;
+    height: auto;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+}
+
+/* ==============================================
+   LARGE DESKTOP (1200px and above)
+   ============================================== */
+@media (min-width: 1200px) {
+  .desktop-sidebar {
+    width: 320px;
+  }
+  
+  .main-content-area {
+    margin-left: 320px;
+    width: calc(100vw - 320px);
+    max-width: none;
+  }
+  
+  .sidebar-title {
+    font-size: 1.4em;
+  }
+  
+  .desktop-sidebar-item {
+    padding: 18px 30px;
+  }
+  
+  .sidebar-text {
+    font-size: 1em;
+  }
+}
+
+/* ==============================================
+   MOBILE LAYOUT (1024px and below)
+   ============================================== */
+@media (max-width: 1024px) {
+  /* Hide desktop sidebar */
+  .desktop-sidebar {
+    display: none;
+  }
+  
+  /* Show mobile header */
+  .mobile-header {
+    display: flex;
+  }
+  
+  /* Reset body for mobile */
+  body {
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Reset App container for mobile */
+  .App {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  /* Landing page mobile layout */
+  .landing-duolingo {
+    position: relative;
+    height: auto;
+    min-height: 100vh;
+    display: block;
+  }
+  
+  /* Mobile main content */
+  .main-content-area {
+    margin-left: 0;
+    width: 100%;
+    padding-top: 80px;
+    height: auto;
+    overflow: visible;
+    background: transparent;
+  }
+  
+  /* Mobile border fix */
+  .App:not(.splash-mode) {
+    padding: 15px;
+    margin: 15px;
+    max-width: calc(100vw - 30px);
+    min-height: calc(100vh - 30px);
+  }
+
+  /* Mobile scrolling */
+  .exercise-page.scrollable-page {
+    overflow: auto;
+    height: auto;
+    min-height: 100vh;
+    padding-bottom: 20px;
+  }
+}
+
+/* ==============================================
+   TABLET ADJUSTMENTS (768px and below)
+   ============================================== */
+@media (max-width: 768px) {
+  .main-content-area {
+    padding: 80px 15px 15px 15px;
+  }
+  
+  .mobile-header {
+    padding: 12px 15px;
+  }
+  
+  .stat-grid {
+    max-width: 100%;
+    gap: 15px;
+  }
+  
+  .stat-card {
+    padding: 15px 10px;
+    min-height: 100px;
+  }
+  
+  .exercise-item {
+    padding: 15px;
+  }
+  
+  .exercise-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5em;
+  }
+  
+  .word-display {
+    font-size: 2.5em;
+    margin: 30px 0;
+    padding: 15px;
+  }
+  
+  .word-answer-buttons {
+    gap: 15px;
+  }
+  
+  .word-results-grid {
+    grid-template-columns: 1fr;
+    max-height: 300px;
+  }
+
+  .quiz-container {
+    margin: 10px;
+    padding: 20px;
+    border-radius: 15px;
+  }
+  
+  .question-text {
+    font-size: 1.1em;
+    padding: 15px;
+  }
+  
+  .answer-input {
+    padding: 12px;
+    font-size: 1em;
+  }
+
+  .reading-main-options {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .article-selection-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .chart-controls {
+    justify-content: center;
+  }
+
+  .simple-chart {
+    height: 150px;
+    padding: 15px 5px;
+  }
+
+  .test-item {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .test-info {
+    text-align: center;
+  }
+}
+
+/* ==============================================
+   MOBILE PHONE ADJUSTMENTS (480px and below)
+   ============================================== */
+@media (max-width: 480px) {
+  .App:not(.splash-mode) {
+    padding: 12px;
+    margin: 12px;
+    max-width: calc(100vw - 24px);
+    min-height: calc(100vh - 24px);
+  }
+  
+  .main-content-area {
+    padding: 70px 10px 10px 10px;
+  }
+  
+  .mobile-header {
+    padding: 10px;
+  }
+  
+  .header-logo-img {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .header-title {
+    font-size: 1em;
+  }
+  
+  .stat-grid {
+    gap: 12px;
+  }
+  
+  .stat-card {
+    padding: 12px 8px;
+    min-height: 90px;
+  }
+  
+  .stat-icon {
+    font-size: 1.6em;
+  }
+  
+  .stat-value {
+    font-size: 1.3em;
+  }
+  
+  .exercise-item {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .exercise-icon {
+    width: 45px;
+    height: 45px;
+    font-size: 1.3em;
+  }
+  
+  .word-display {
+    font-size: 2em;
+    margin: 20px 0;
+    padding: 10px;
+  }
+  
+  .word-answer-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .word-answer-btn {
+    width: 80%;
+    max-width: 200px;
+  }
+  
+  .instruction-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+  
+  .categories-tabs {
+    padding: 3px;
+  }
+  
+  .category-tab {
+    padding: 8px 10px;
+    font-size: 0.75em;
+  }
+
+  .quiz-container {
+    margin: 5px;
+    padding: 15px;
+    border-radius: 12px;
+  }
+  
+  .question-text {
+    font-size: 1em;
+    padding: 12px;
+  }
+  
+  .navigation {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .nav-btn {
+    width: 100%;
+  }
+
+  .start-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .progress-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .article-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .simple-chart {
+    height: 120px;
+    padding: 10px 2px;
+  }
+
+  .chart-label {
+    font-size: 0.6em;
+  }
+}
