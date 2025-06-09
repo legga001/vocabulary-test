@@ -1,0 +1,104 @@
+/* ==============================================
+   BASE.CSS - Foundation styles
+   Fonts, resets, typography, and animations
+   ============================================== */
+
+/* ==============================================
+   1. IMPORTS & FONTS
+   ============================================== */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+/* ==============================================
+   2. RESET & BASE STYLES
+   ============================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==============================================
+   3. TYPOGRAPHY
+   ============================================== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-rendering: optimizeLegibility;
+}
+
+h1 { font-weight: 900; font-size: 2.5em; }
+h2 { font-weight: 800; font-size: 2em; }
+h3 { font-weight: 700; font-size: 1.5em; }
+
+p {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 1.1em;
+  line-height: 1.6;
+}
+
+/* ==============================================
+   4. KEYFRAME ANIMATIONS
+   ============================================== */
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fadeOutSlide {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
+@keyframes fadeInSlide {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cardFadeIn {
+  0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes scoreReveal {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 3px 8px rgba(72, 187, 120, 0.4); }
+  50% { box-shadow: 0 3px 12px rgba(72, 187, 120, 0.6); }
+  100% { box-shadow: 0 3px 8px rgba(72, 187, 120, 0.4); }
+}
+
+@keyframes slideInFromTop {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes exerciseItemFadeIn {
+  to { opacity: 1; transform: translateY(0); }
+}
