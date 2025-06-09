@@ -142,3 +142,58 @@
   height: auto !important;
   overflow-y: visible !important;
 }
+/* Add these styles to your src/layout.css file */
+
+/* ==============================================
+   CLICKABLE LOGO STYLES
+   ============================================== */
+.clickable-logo {
+  cursor: pointer;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  outline: none; /* Remove default focus outline */
+}
+
+.clickable-logo:hover {
+  transform: scale(1.08);
+  filter: brightness(1.1) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15));
+}
+
+.clickable-logo:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+/* Keyboard focus styling for accessibility */
+.clickable-logo:focus {
+  outline: 3px solid #4c51bf;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* Add subtle hint that logo is clickable */
+.logo-container {
+  position: relative;
+}
+
+.logo-container::after {
+  content: "🏠";
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #4c51bf;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7em;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.logo-container:hover::after {
+  opacity: 1;
+}
