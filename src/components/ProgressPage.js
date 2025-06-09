@@ -1,372 +1,312 @@
-// src/components/ProgressPage.js - Updated with weaknesses analysis
-import React, { useState, useEffect } from 'react';
-import {
-  getProgressStats,
-  getRecentTests,
-  exportProgressData,
-  clearAllProgress
-} from '../utils/progressDataManager';
+/* Add these styles to your src/progress.css file */
 
-function ProgressPage({ onBack }) {
-  const [stats, setStats] = useState(null);
-  const [recentTests, setRecentTests] = useState([]);
-  const [weaknesses, setWeaknesses] = useState({ levels: [], words: [], exercises: [] });
-
-  useEffect(() => {
-    loadProgressData();
-  }, []);
-
-  const loadProgressData = () => {
-    const progressStats = getProgressStats();
-    const tests = getRecentTests(20); // Get more tests for better analysis
-    
-    setStats(progressStats);
-    setRecentTests(tests.slice(0, 15)); // Still show only 15 in recent tests
-    
-    // Analyse weaknesses from recent tests
-    analyseWeaknesses(tests);
-  };
-
-  const analyseWeaknesses = (tests) => {
-    if (tests.length === 0) {
-      setWeaknesses({ levels: [], words: [], exercises: [] });
-      return;
-    }
-
-    // 1. Analyse level performance
-    const levelPerformance = {};
-    const exercisePerformance = {};
-    const incorrectWords = [];
-
-    tests.forEach(test => {
-      // Track level performance
-      const level = test.level;
-      if (!levelPerformance[level]) {
-        levelPerformance[level] = { correct: 0, total: 0 };
-      }
-      
-      // For tests with 10 questions, each answer represents 10% of the score
-      const normalizedScore = test.totalQuestions === 20 ? test.score / 2 : test.score;
-      levelPerformance[level].total += 10;
-      levelPerformance[level].correct += normalizedScore;
-
-      // Track exercise type performance
-      const exerciseType = test.quizTypeDisplay || 'Standard Vocabulary';
-      if (!exercisePerformance[exerciseType]) {
-        exercisePerformance[exerciseType] = { scores: [], icon: test.quizTypeIcon || '📚' };
-      }
-      exercisePerformance[exerciseType].scores.push(test.percentage);
-
-      // Collect incorrect words (if available in userAnswers)
-      if (test.userAnswers && Array.isArray(test.userAnswers)) {
-        test.userAnswers.forEach(answer => {
-          if (!answer.isCorrect && answer.answer) {
-            incorrectWords.push({
-              word: answer.answer,
-              testDate: test.date,
-              exerciseType: exerciseType
-            });
-          }
-        });
-      }
-    });
-
-    // Find weak levels (below 70% success rate)
-    const weakLevels = Object.entries(levelPerformance)
-      .map(([level, data]) => ({
-        level,
-        percentage: Math.round((data.correct / data.total) * 100),
-        total: data.total
-      }))
-      .filter(item => item.percentage < 70 && item.total >= 10) // Only show if enough attempts
-      .sort((a, b) => a.percentage - b.percentage);
-
-    // Find weak exercise types (below average performance)
-    const weakExercises = Object.entries(exercisePerformance)
-      .map(([type, data]) => ({
-        type,
-        icon: data.icon,
-        averageScore: Math.round(data.scores.reduce((sum, score) => sum + score, 0) / data.scores.length),
-        attempts: data.scores.length
-      }))
-      .filter(item => item.averageScore < 75 && item.attempts >= 3)
-      .sort((a, b) => a.averageScore - b.averageScore);
-
-    // Find most commonly missed words
-    const wordCounts = {};
-    incorrectWords.forEach(item => {
-      if (!wordCounts[item.word]) {
-        wordCounts[item.word] = { count: 0, exercises: new Set() };
-      }
-      wordCounts[item.word].count++;
-      wordCounts[item.word].exercises.add(item.exerciseType);
-    });
-
-    const problemWords = Object.entries(wordCounts)
-      .map(([word, data]) => ({
-        word,
-        count: data.count,
-        exercises: Array.from(data.exercises)
-      }))
-      .filter(item => item.count >= 2) // Missed at least twice
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8); // Top 8 problem words
-
-    setWeaknesses({
-      levels: weakLevels,
-      words: problemWords,
-      exercises: weakExercises
-    });
-  };
-
-  const handleExport = () => {
-    exportProgressData();
-  };
-
-  const handleClearData = () => {
-    if (clearAllProgress()) {
-      loadProgressData(); // Refresh after clearing
-    }
-  };
-
-  const getTrendIcon = (trend) => {
-    switch (trend) {
-      case 'improving': return '📈';
-      case 'declining': return '📉';
-      default: return '➡️';
-    }
-  };
-
-  const getTrendText = (trend) => {
-    switch (trend) {
-      case 'improving': return 'Improving';
-      case 'declining': return 'Needs attention';
-      default: return 'Stable';
-    }
-  };
-
-  const getStreakEmoji = (streak) => {
-    if (streak >= 30) return '🔥';
-    if (streak >= 14) return '⚡';
-    if (streak >= 7) return '💪';
-    if (streak >= 3) return '🎯';
-    return '🌟';
-  };
-
-  const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
-  const getScoreColor = (percentage) => {
-    if (percentage >= 80) return '#48bb78';
-    if (percentage >= 60) return '#ed8936';
-    return '#f56565';
-  };
-
-  // Get quiz type display with icon
-  const getQuizTypeDisplay = (test) => {
-    const icon = test.quizTypeIcon || '📚';
-    const display = test.quizTypeDisplay || 'Vocabulary Test';
-    return `${icon} ${display}`;
-  };
-
-  if (!stats) return <div>Loading progress...</div>;
-
-  return (
-    <div className="progress-page">
-      <div className="logo-container">
-        <img 
-          src="/purple_fox_transparent.png" 
-          alt="Mr. Fox English" 
-          className="app-logo"
-        />
-      </div>
-      
-      <h1>📊 Your Progress</h1>
-
-      {/* Overview Stats */}
-      <div className="progress-overview">
-        <div className="stat-grid">
-          <div className="stat-card">
-            <div className="stat-icon">🎯</div>
-            <div className="stat-value">{stats.totalTests}</div>
-            <div className="stat-label">Total Tests</div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="stat-icon">{getStreakEmoji(stats.currentStreak)}</div>
-            <div className="stat-value">{stats.currentStreak}</div>
-            <div className="stat-label">Current Streak</div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="stat-icon">🏆</div>
-            <div className="stat-value">{stats.bestStreak}</div>
-            <div className="stat-label">Best Streak</div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="stat-icon">📈</div>
-            <div className="stat-value">{stats.averagePercentage}%</div>
-            <div className="stat-label">Average Score</div>
-          </div>
-        </div>
-
-        <div className="progress-insights">
-          <div className="insight-card">
-            <h3>🎚️ Your Level</h3>
-            <p>Most common: <strong>{stats.mostCommonLevel}</strong></p>
-          </div>
-          
-          <div className="insight-card">
-            <h3>{getTrendIcon(stats.trend)} Progress Trend</h3>
-            <p>{getTrendText(stats.trend)}</p>
-          </div>
-          
-          <div className="insight-card">
-            <h3>📅 This Week</h3>
-            <p><strong>{stats.testsThisWeek}</strong> tests completed</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Weaknesses Analysis Section */}
-      <div className="weaknesses-section">
-        <div className="weaknesses-header">
-          <h3>🎯 Areas for Improvement</h3>
-          <p>Based on your recent test performance</p>
-        </div>
-
-        {(weaknesses.levels.length > 0 || weaknesses.words.length > 0 || weaknesses.exercises.length > 0) ? (
-          <div className="weaknesses-grid">
-            {/* Weak Levels */}
-            {weaknesses.levels.length > 0 && (
-              <div className="weakness-card">
-                <h4>📚 Challenging Levels</h4>
-                <div className="weakness-items">
-                  {weaknesses.levels.map((level, index) => (
-                    <div key={index} className="weakness-item level-weakness">
-                      <div className="weakness-info">
-                        <span className="weakness-title">{level.level}</span>
-                        <span className="weakness-detail">{level.percentage}% success rate</span>
-                      </div>
-                      <div className="weakness-suggestion">
-                        Practice more {level.level} level vocabulary
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Problem Words */}
-            {weaknesses.words.length > 0 && (
-              <div className="weakness-card">
-                <h4>🔤 Tricky Words</h4>
-                <div className="weakness-items">
-                  {weaknesses.words.map((word, index) => (
-                    <div key={index} className="weakness-item word-weakness">
-                      <div className="weakness-info">
-                        <span className="weakness-title">"{word.word}"</span>
-                        <span className="weakness-detail">Missed {word.count} times</span>
-                      </div>
-                      <div className="weakness-suggestion">
-                        Review this word's meaning and usage
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Weak Exercise Types */}
-            {weaknesses.exercises.length > 0 && (
-              <div className="weakness-card">
-                <h4>💪 Exercise Focus</h4>
-                <div className="weakness-items">
-                  {weaknesses.exercises.map((exercise, index) => (
-                    <div key={index} className="weakness-item exercise-weakness">
-                      <div className="weakness-info">
-                        <span className="weakness-title">{exercise.icon} {exercise.type}</span>
-                        <span className="weakness-detail">{exercise.averageScore}% average</span>
-                      </div>
-                      <div className="weakness-suggestion">
-                        Focus more practice on this exercise type
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="no-weaknesses">
-            <div className="no-weaknesses-icon">🌟</div>
-            <h4>Excellent Work!</h4>
-            <p>You're performing well across all areas. Keep up the great work!</p>
-            {stats.totalTests < 5 && (
-              <p><small>Complete more tests to get detailed weakness analysis.</small></p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Recent Tests */}
-      <div className="recent-tests">
-        <h3>📝 Recent Test Results</h3>
-        {recentTests.length > 0 ? (
-          <div className="test-list">
-            {recentTests.map((test) => (
-              <div key={test.id} className="test-item">
-                <div className="test-info">
-                  <div className="test-type">
-                    {getQuizTypeDisplay(test)}
-                  </div>
-                  <div className="test-date">{formatDate(test.date)}</div>
-                  <div className="test-details">
-                    {test.totalQuestions} questions • {test.percentage}% correct
-                  </div>
-                </div>
-                <div className="test-score">
-                  <div 
-                    className="score-circle"
-                    style={{ borderColor: getScoreColor(test.percentage) }}
-                  >
-                    <span style={{ color: getScoreColor(test.percentage) }}>
-                      {test.score}/{test.totalQuestions}
-                    </span>
-                  </div>
-                  <div className="score-level">{test.level}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="no-tests">
-            <p>No tests completed yet. Start practising to see your progress!</p>
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="progress-actions">
-        <button className="btn btn-secondary" onClick={handleExport}>
-          💾 Export Data
-        </button>
-        <button className="btn btn-danger" onClick={handleClearData}>
-          🗑️ Clear All Data
-        </button>
-      </div>
-
-      <button className="btn btn-secondary back-btn" onClick={onBack}>
-        ← Back to Main Menu
-      </button>
-    </div>
-  );
+/* ==============================================
+   RECENT TESTS SECTION (Grey Box Styling)
+   ============================================== */
+.recent-tests {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  margin: 30px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-export default ProgressPage;
+.recent-tests-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.recent-tests-header h3 {
+  color: #4c51bf;
+  margin: 0;
+  font-size: 1.4em;
+}
+
+.test-list {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.test-item {
+  background: #f8f9fa;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.test-item:hover {
+  border-color: #4c51bf;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76, 81, 191, 0.1);
+}
+
+.test-info {
+  flex: 1;
+  text-align: left;
+}
+
+.test-type {
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 4px;
+  font-size: 0.95em;
+}
+
+.test-date {
+  color: #666;
+  font-size: 0.85em;
+  margin-bottom: 4px;
+}
+
+.test-details {
+  color: #4a5568;
+  font-size: 0.8em;
+}
+
+.test-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.score-circle {
+  width: 50px;
+  height: 50px;
+  border: 3px solid;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9em;
+}
+
+.score-level {
+  font-size: 0.75em;
+  color: #666;
+  font-weight: 600;
+}
+
+.no-tests {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.no-tests p {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+/* ==============================================
+   WEAKNESSES ANALYSIS SECTION
+   ============================================== */
+.weaknesses-section {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  margin: 30px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.weaknesses-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.weaknesses-header h3 {
+  color: #4c51bf;
+  margin-bottom: 8px;
+  font-size: 1.4em;
+}
+
+.weaknesses-header p {
+  color: #666;
+  margin: 0;
+  font-size: 0.95em;
+}
+
+.weaknesses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.weakness-card {
+  background: #f8f9fa;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.weakness-card:hover {
+  border-color: #4c51bf;
+  box-shadow: 0 4px 12px rgba(76, 81, 191, 0.1);
+}
+
+.weakness-card h4 {
+  color: #4c51bf;
+  margin-bottom: 15px;
+  font-size: 1.1em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weakness-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.weakness-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 15px;
+  transition: all 0.3s ease;
+}
+
+.weakness-item:hover {
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+.weakness-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.weakness-title {
+  font-weight: 700;
+  color: #2d3748;
+  font-size: 0.95em;
+}
+
+.weakness-detail {
+  font-size: 0.85em;
+  color: #666;
+  font-weight: 600;
+}
+
+.weakness-suggestion {
+  font-size: 0.85em;
+  color: #4a5568;
+  font-style: italic;
+  background: #f7fafc;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #4c51bf;
+}
+
+/* Specific weakness type styles */
+.level-weakness {
+  border-left: 4px solid #ed8936;
+}
+
+.word-weakness {
+  border-left: 4px solid #f56565;
+}
+
+.exercise-weakness {
+  border-left: 4px solid #9f7aea;
+}
+
+/* No weaknesses state */
+.no-weaknesses {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #f0fff4, #e6fffa);
+  border-radius: 12px;
+  border: 2px solid #48bb78;
+}
+
+.no-weaknesses-icon {
+  font-size: 3em;
+  margin-bottom: 15px;
+}
+
+.no-weaknesses h4 {
+  color: #38a169;
+  margin-bottom: 10px;
+  font-size: 1.3em;
+}
+
+.no-weaknesses p {
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+
+.no-weaknesses small {
+  color: #4a5568;
+  font-style: italic;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .weaknesses-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .weakness-card {
+    padding: 15px;
+  }
+  
+  .weakness-item {
+    padding: 12px;
+  }
+  
+  .weakness-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .weakness-suggestion {
+    padding: 6px 10px;
+    font-size: 0.8em;
+  }
+  
+  .no-weaknesses {
+    padding: 30px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .weaknesses-section {
+    padding: 20px;
+    margin: 20px 0;
+  }
+  
+  .weaknesses-header h3 {
+    font-size: 1.2em;
+  }
+  
+  .weakness-card h4 {
+    font-size: 1em;
+  }
+  
+  .weakness-title {
+    font-size: 0.9em;
+  }
+  
+  .weakness-detail {
+    font-size: 0.8em;
+  }
+  
+  .weakness-suggestion {
+    font-size: 0.75em;
+  }
+}
