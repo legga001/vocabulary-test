@@ -1,4 +1,4 @@
-// src/components/LandingPage.js - Fixed and optimised version
+// src/components/LandingPage.js - Updated without progress bars and DET badge
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 
 // Constants for better performance - moved outside component
@@ -18,7 +18,6 @@ const EXERCISES = Object.freeze([
     icon: '📖',
     title: 'Standard Vocabulary',
     subtitle: 'Fill in the gaps',
-    progress: '6/10',
     isActive: true
   },
   {
@@ -27,7 +26,6 @@ const EXERCISES = Object.freeze([
     icon: '📰',
     title: 'Article-Based Vocab',
     subtitle: 'Real news stories',
-    progress: '3/8',
     isActive: true
   },
   {
@@ -36,7 +34,6 @@ const EXERCISES = Object.freeze([
     icon: '🎯',
     title: 'Real or Fake Words',
     subtitle: 'Quick recognition',
-    progress: '2/5',
     isActive: true,
     isNew: true
   },
@@ -48,10 +45,8 @@ const EXERCISES = Object.freeze([
     icon: '🎧',
     title: 'Listen and Type',
     subtitle: 'Type what you hear',
-    progress: '0/10',
     isActive: true,
-    isNew: true,
-    isDET: true
+    isNew: true
   },
   {
     type: 'listening',
@@ -59,7 +54,6 @@ const EXERCISES = Object.freeze([
     icon: '🔊',
     title: 'Audio Comprehension',
     subtitle: 'Listen and answer',
-    progress: '0/7',
     isActive: false
   },
   {
@@ -68,7 +62,6 @@ const EXERCISES = Object.freeze([
     icon: '🎵',
     title: 'Pronunciation Practice',
     subtitle: 'Listen and repeat',
-    progress: '0/5',
     isActive: false
   },
   
@@ -79,7 +72,6 @@ const EXERCISES = Object.freeze([
     icon: '✍️',
     title: 'Grammar Practice',
     subtitle: 'Sentence building',
-    progress: '0/6',
     isActive: false
   },
   {
@@ -88,7 +80,6 @@ const EXERCISES = Object.freeze([
     icon: '📝',
     title: 'Essay Writing',
     subtitle: 'Structured responses',
-    progress: '0/4',
     isActive: false
   },
   
@@ -99,7 +90,6 @@ const EXERCISES = Object.freeze([
     icon: '🎤',
     title: 'Conversation Practice',
     subtitle: 'Speaking prompts',
-    progress: '0/6',
     isActive: false
   },
   {
@@ -108,7 +98,6 @@ const EXERCISES = Object.freeze([
     icon: '🗣️',
     title: 'Pronunciation Check',
     subtitle: 'Voice analysis',
-    progress: '0/4',
     isActive: false
   }
 ]);
@@ -145,17 +134,6 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     if (selectedCategory === 'ALL') return EXERCISES;
     return EXERCISES.filter(exercise => exercise.category === selectedCategory);
   }, [selectedCategory]);
-
-  // Memoised progress calculations
-  const exerciseProgressData = useMemo(() => {
-    return filteredExercises.map(exercise => {
-      const [current, total] = exercise.progress.split('/').map(Number);
-      return {
-        ...exercise,
-        progressPercentage: (current / total) * 100
-      };
-    });
-  }, [filteredExercises]);
 
   // Event handlers with useCallback for performance
   const handleMobileMenuToggle = useCallback(() => {
@@ -231,12 +209,10 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
   ), [selectedCategory, handleCategoryChange]);
 
   const renderExerciseItem = useCallback((exercise, index) => {
-    const exerciseData = exerciseProgressData.find(e => e.type === exercise.type) || exercise;
-    
     return (
       <div
         key={`${exercise.category}-${exercise.type}-${index}`}
-        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''}`}
+        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''}`}
         onClick={() => handleExerciseClick(exercise)}
         style={{ animationDelay: `${index * 0.1}s` }}
         role={exercise.isActive ? 'button' : 'text'}
@@ -254,30 +230,20 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
             {exercise.icon}
           </div>
           {exercise.isNew && <div className="new-badge">NEW</div>}
-          {exercise.isDET && <div className="det-badge">DET</div>}
         </div>
         
         <div className="exercise-content">
           <h4 className="exercise-title">{exercise.title}</h4>
           <p className="exercise-subtitle">{exercise.subtitle}</p>
           
-          {exercise.isActive ? (
-            <div className="exercise-progress">
-              <div className="progress-bar-small">
-                <div 
-                  className="progress-fill-small" 
-                  style={{ width: `${exerciseData.progressPercentage}%` }}
-                ></div>
-              </div>
-              <span className="progress-text-small">{exercise.progress}</span>
-            </div>
-          ) : (
+          {/* REMOVED: Progress bars and coming soon text */}
+          {!exercise.isActive && (
             <div className="coming-soon-small">Coming soon</div>
           )}
         </div>
       </div>
     );
-  }, [exerciseProgressData, handleExerciseClick]);
+  }, [handleExerciseClick]);
 
   return (
     <div className={`landing-duolingo ${isTransitioning === false ? 'fade-in' : ''}`}>
