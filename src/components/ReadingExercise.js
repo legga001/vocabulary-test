@@ -1,4 +1,4 @@
-// src/components/ReadingExercise.js - Updated quiz section only
+// src/components/ReadingExercise.js - Rewritten with streamlined article flow
 import React, { useState, useEffect } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
@@ -98,7 +98,7 @@ const getAlternativeSpellings = (word) => {
   return spellingMap[normalizedWord] || [];
 };
 
-function ReadingExercise({ onBack, initialView = 'selection' }) {
+function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   const [currentView, setCurrentView] = useState(initialView);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
@@ -139,7 +139,7 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
         document.removeEventListener('keypress', handleKeyPress);
       };
     }
-  }, [userAnswers, currentQuestion, checkedQuestions, currentView, showResults]); // Dependencies for the effect
+  }, [userAnswers, currentQuestion, checkedQuestions, currentView, showResults]);
 
   // Navigation functions
   const goToArticleSelection = () => {
@@ -185,7 +185,7 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
 
   // Show the Real/Fake Words exercise
   if (currentView === 'real-fake-words') {
-    return <RealFakeWordsExercise onBack={backToSelection} />;
+    return <RealFakeWordsExercise onBack={backToSelection} onLogoClick={onLogoClick} />;
   }
 
   // Quiz logic
@@ -258,12 +258,17 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
     return (
       <ArticleSelection 
         onBack={backToSelection}
-        onSelectArticle={startArticleQuiz}
+        onLogoClick={onLogoClick}
+        onSelectArticle={(articleId) => {
+          // Directly start the quiz for the selected article
+          setCurrentView(articleId);
+          resetQuizState();
+        }}
       />
     );
   }
 
-  // Results view - UPDATED WITH RESPONSIVE BOX AND MAIN HEADING INSIDE
+  // Results view
   if (showResults) {
     const score = calculateScore();
     const isArticleTest = currentView === 'octopus-quiz' || currentView === 'smuggling-quiz';
@@ -276,10 +281,11 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
             src="/purple_fox_transparent.png" 
             alt="Mr. Fox English" 
             className="app-logo"
+            onClick={onLogoClick}
+            style={{ cursor: 'pointer' }}
           />
         </div>
         
-        {/* RESULTS CONTAINER - RESPONSIVE GREY BOX WRAPS EVERYTHING INCLUDING HEADING */}
         <div className="quiz-container">
           <h1>📖 Reading Exercise Results</h1>
           
@@ -303,24 +309,42 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
               {isArticleTest && ' This helps you learn words in context from real news stories.'}
             </div>
             
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
-              <button className="btn btn-primary" onClick={backToSelection}>
-                {isDirectFromLanding ? 'Back to Main Menu' : 'Try Another Test'}
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px', flexWrap: 'wrap' }}>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => {
+                  // Reset to quiz state for same article type
+                  resetQuizState();
+                }}
+              >
+                🔄 Try Again
               </button>
-              {!isDirectFromLanding && (
-                <button className="btn btn-secondary" onClick={onBack}>
-                  ← Back to Exercises
-                </button>
-              )}
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  if (currentView === 'octopus-quiz' || currentView === 'smuggling-quiz') {
+                    setCurrentView('article-selection');
+                    resetQuizState();
+                  } else if (isDirectFromLanding) {
+                    onBack();
+                  } else {
+                    backToSelection();
+                  }
+                }}
+              >
+                ← Back to {
+                  (currentView === 'octopus-quiz' || currentView === 'smuggling-quiz') ? 'Article Selection' :
+                  isDirectFromLanding ? 'Main Menu' : 'Reading Options'
+                }
+              </button>
             </div>
           </div>
         </div>
-        {/* END RESULTS CONTAINER */}
       </div>
     );
   }
 
-  // Quiz view - UPDATED WITH NEW LETTER INPUT SYSTEM
+  // Quiz view
   if (currentView !== 'selection') {
     // Process the current sentence
     const processedData = processSentence(question.sentence, question.answer);
@@ -353,7 +377,6 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
           </div>
         )}
 
-        {/* QUIZ CONTAINER - RESPONSIVE GREY BOX WRAPS EVERYTHING */}
         <div className="quiz-container">
           <div className="quiz-header">
             <div className="quiz-type-badge">
@@ -373,7 +396,6 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
             <div className="level-badge">{question.level}</div>
           </div>
 
-          {/* NEW: Display sentence with letter input */}
           <div className="question-section">
             <div className="question-text">
               {processedData.beforeGap}
@@ -425,22 +447,34 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
             </button>
           </div>
 
-          {/* Back button - NOW INSIDE the grey box */}
           <div className="quiz-footer">
             <button 
               className="btn btn-secondary btn-small" 
-              onClick={currentArticleInfo ? backToArticleSelection : backToSelection}
+              onClick={() => {
+                // If we're in an article quiz, go back to article selection
+                // Otherwise go to appropriate parent screen
+                if (currentView === 'octopus-quiz' || currentView === 'smuggling-quiz') {
+                  setCurrentView('article-selection');
+                  resetQuizState();
+                } else if (isDirectFromLanding) {
+                  onBack();
+                } else {
+                  backToSelection();
+                }
+              }}
             >
-              ← Back to {isDirectFromLanding ? 'Main Menu' : (currentArticleInfo ? 'Article Selection' : 'Reading Options')}
+              ← Back to {
+                (currentView === 'octopus-quiz' || currentView === 'smuggling-quiz') ? 'Article Selection' :
+                isDirectFromLanding ? 'Main Menu' : 'Reading Options'
+              }
             </button>
           </div>
         </div>
-        {/* END QUIZ CONTAINER */}
       </div>
     );
   }
 
-  // Main Selection view (Reading page) - NOW WITH 3 CARDS
+  // Main Selection view (Reading page)
   return (
     <div className="exercise-page">
       <div className="logo-container">
@@ -448,6 +482,8 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
           src="/purple_fox_transparent.png" 
           alt="Mr. Fox English" 
           className="app-logo"
+          onClick={onLogoClick}
+          style={{ cursor: 'pointer' }}
         />
       </div>
       
@@ -484,7 +520,7 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
           <div className="card-arrow">→</div>
         </div>
 
-        {/* NEW: Real or Fake Words */}
+        {/* Real or Fake Words */}
         <div className="reading-main-card featured-card" onClick={startWordRecognition}>
           <div className="new-badge">✨ NEW</div>
           <div className="card-icon">🎯</div>
@@ -500,7 +536,7 @@ function ReadingExercise({ onBack, initialView = 'selection' }) {
       </div>
 
       <div className="reading-info">
-        <h3>💡 Why Practice Reading Vocabulary?</h3>
+        <h3>💡 Why Practise Reading Vocabulary?</h3>
         <p>Building vocabulary through reading helps you understand context, improve comprehension, and learn how words are used naturally in English. Word recognition exercises train your brain to quickly identify real English words from fake ones.</p>
       </div>
 
