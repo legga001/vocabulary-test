@@ -1,9 +1,12 @@
-// src/components/ProgressPage.js - Updated with ClickableLogo
+// src/components/ProgressPage.js - Updated with comprehensive progress tracking
 import React, { useState, useEffect } from 'react';
 import ClickableLogo from './ClickableLogo';
 import {
   getProgressStats,
   getRecentTests,
+  getExercisePerformance,
+  getLearningInsights,
+  getAchievements,
   exportProgressData,
   clearAllProgress
 } from '../utils/progressDataManager';
@@ -11,7 +14,9 @@ import {
 function ProgressPage({ onBack, onLogoClick }) {
   const [stats, setStats] = useState(null);
   const [recentTests, setRecentTests] = useState([]);
-  const [weaknesses, setWeaknesses] = useState({ levels: [], words: [], exercises: [] });
+  const [exercisePerformance, setExercisePerformance] = useState({});
+  const [learningInsights, setLearningInsights] = useState(null);
+  const [achievements, setAchievements] = useState([]);
 
   useEffect(() => {
     loadProgressData();
@@ -19,105 +24,16 @@ function ProgressPage({ onBack, onLogoClick }) {
 
   const loadProgressData = () => {
     const progressStats = getProgressStats();
-    const tests = getRecentTests(20); // Get more tests for better analysis
+    const tests = getRecentTests(15);
+    const performance = getExercisePerformance();
+    const insights = getLearningInsights();
+    const userAchievements = getAchievements();
     
     setStats(progressStats);
-    setRecentTests(tests.slice(0, 15)); // Still show only 15 in recent tests
-    
-    // Analyse weaknesses from recent tests
-    analyseWeaknesses(tests);
-  };
-
-  const analyseWeaknesses = (tests) => {
-    if (tests.length === 0) {
-      setWeaknesses({ levels: [], words: [], exercises: [] });
-      return;
-    }
-
-    // 1. Analyse level performance
-    const levelPerformance = {};
-    const exercisePerformance = {};
-    const incorrectWords = [];
-
-    tests.forEach(test => {
-      // Track level performance
-      const level = test.level;
-      if (!levelPerformance[level]) {
-        levelPerformance[level] = { correct: 0, total: 0 };
-      }
-      
-      // For tests with 10 questions, each answer represents 10% of the score
-      const normalizedScore = test.totalQuestions === 20 ? test.score / 2 : test.score;
-      levelPerformance[level].total += 10;
-      levelPerformance[level].correct += normalizedScore;
-
-      // Track exercise type performance
-      const exerciseType = test.quizTypeDisplay || 'Standard Vocabulary';
-      if (!exercisePerformance[exerciseType]) {
-        exercisePerformance[exerciseType] = { scores: [], icon: test.quizTypeIcon || '📚' };
-      }
-      exercisePerformance[exerciseType].scores.push(test.percentage);
-
-      // Collect incorrect words (if available in userAnswers)
-      if (test.userAnswers && Array.isArray(test.userAnswers)) {
-        test.userAnswers.forEach(answer => {
-          if (!answer.isCorrect && answer.answer) {
-            incorrectWords.push({
-              word: answer.answer,
-              testDate: test.date,
-              exerciseType: exerciseType
-            });
-          }
-        });
-      }
-    });
-
-    // Find weak levels (below 70% success rate)
-    const weakLevels = Object.entries(levelPerformance)
-      .map(([level, data]) => ({
-        level,
-        percentage: Math.round((data.correct / data.total) * 100),
-        total: data.total
-      }))
-      .filter(item => item.percentage < 70 && item.total >= 10) // Only show if enough attempts
-      .sort((a, b) => a.percentage - b.percentage);
-
-    // Find weak exercise types (below average performance)
-    const weakExercises = Object.entries(exercisePerformance)
-      .map(([type, data]) => ({
-        type,
-        icon: data.icon,
-        averageScore: Math.round(data.scores.reduce((sum, score) => sum + score, 0) / data.scores.length),
-        attempts: data.scores.length
-      }))
-      .filter(item => item.averageScore < 75 && item.attempts >= 3)
-      .sort((a, b) => a.averageScore - b.averageScore);
-
-    // Find most commonly missed words
-    const wordCounts = {};
-    incorrectWords.forEach(item => {
-      if (!wordCounts[item.word]) {
-        wordCounts[item.word] = { count: 0, exercises: new Set() };
-      }
-      wordCounts[item.word].count++;
-      wordCounts[item.word].exercises.add(item.exerciseType);
-    });
-
-    const problemWords = Object.entries(wordCounts)
-      .map(([word, data]) => ({
-        word,
-        count: data.count,
-        exercises: Array.from(data.exercises)
-      }))
-      .filter(item => item.count >= 2) // Missed at least twice
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8); // Top 8 problem words
-
-    setWeaknesses({
-      levels: weakLevels,
-      words: problemWords,
-      exercises: weakExercises
-    });
+    setRecentTests(tests);
+    setExercisePerformance(performance);
+    setLearningInsights(insights);
+    setAchievements(userAchievements);
   };
 
   const handleExport = () => {
@@ -154,6 +70,13 @@ function ProgressPage({ onBack, onLogoClick }) {
     return '🌟';
   };
 
+  const formatTime = (minutes) => {
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  };
+
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-GB', {
       day: 'numeric',
@@ -168,11 +91,22 @@ function ProgressPage({ onBack, onLogoClick }) {
     return '#f56565';
   };
 
-  // Get quiz type display with icon
-  const getQuizTypeDisplay = (test) => {
-    const icon = test.quizTypeIcon || '📚';
-    const display = test.quizTypeDisplay || 'Vocabulary Test';
-    return `${icon} ${display}`;
+  const getImprovementIcon = (improvement) => {
+    switch (improvement) {
+      case 'improving': return '📈';
+      case 'declining': return '📉';
+      case 'stable': return '➡️';
+      default: return '❓';
+    }
+  };
+
+  const getImprovementText = (improvement) => {
+    switch (improvement) {
+      case 'improving': return 'Improving';
+      case 'declining': return 'Declining';
+      case 'stable': return 'Stable';
+      default: return 'New';
+    }
   };
 
   if (!stats) return <div>Loading progress...</div>;
@@ -183,13 +117,14 @@ function ProgressPage({ onBack, onLogoClick }) {
       
       <h1>📊 Your Progress</h1>
 
-      {/* Overview Stats */}
+      {/* 1. OVERALL STATISTICS */}
       <div className="progress-overview">
+        <h2>📈 Overall Statistics</h2>
         <div className="stat-grid">
           <div className="stat-card">
             <div className="stat-icon">🎯</div>
             <div className="stat-value">{stats.totalTests}</div>
-            <div className="stat-label">Total Tests</div>
+            <div className="stat-label">Total Exercises</div>
           </div>
           
           <div className="stat-card">
@@ -209,6 +144,18 @@ function ProgressPage({ onBack, onLogoClick }) {
             <div className="stat-value">{stats.averagePercentage}%</div>
             <div className="stat-label">Average Score</div>
           </div>
+
+          <div className="stat-card">
+            <div className="stat-icon">⏱️</div>
+            <div className="stat-value">{formatTime(stats.totalTimeSpent)}</div>
+            <div className="stat-label">Time Spent Learning</div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon">❤️</div>
+            <div className="stat-value">{stats.favouriteExercise}</div>
+            <div className="stat-label">Favourite Exercise</div>
+          </div>
         </div>
 
         <div className="progress-insights">
@@ -223,109 +170,166 @@ function ProgressPage({ onBack, onLogoClick }) {
           </div>
           
           <div className="insight-card">
-            <h3>📅 This Week</h3>
-            <p><strong>{stats.testsThisWeek}</strong> tests completed</p>
+            <h3>📅 Member Since</h3>
+            <p>{formatDate(stats.startDate)}</p>
           </div>
         </div>
       </div>
 
-      {/* Weaknesses Analysis Section */}
-      <div className="weaknesses-section">
-        <div className="weaknesses-header">
-          <h3>🎯 Areas for Improvement</h3>
-          <p>Based on your recent test performance</p>
-        </div>
-
-        {(weaknesses.levels.length > 0 || weaknesses.words.length > 0 || weaknesses.exercises.length > 0) ? (
-          <div className="weaknesses-grid">
-            {/* Weak Levels */}
-            {weaknesses.levels.length > 0 && (
-              <div className="weakness-card">
-                <h4>📚 Challenging Levels</h4>
-                <div className="weakness-items">
-                  {weaknesses.levels.map((level, index) => (
-                    <div key={index} className="weakness-item level-weakness">
-                      <div className="weakness-info">
-                        <span className="weakness-title">{level.level}</span>
-                        <span className="weakness-detail">{level.percentage}% success rate</span>
-                      </div>
-                      <div className="weakness-suggestion">
-                        Practice more {level.level} level vocabulary
-                      </div>
+      {/* 3. EXERCISE-SPECIFIC PERFORMANCE */}
+      <div className="exercise-performance-section">
+        <h2>🎯 Exercise Performance</h2>
+        {Object.keys(exercisePerformance).length > 0 ? (
+          <div className="performance-grid">
+            {Object.entries(exercisePerformance).map(([exerciseType, performance]) => (
+              <div key={exerciseType} className="performance-card">
+                <div className="performance-header">
+                  <span className="performance-icon">{performance.icon}</span>
+                  <h4>{performance.displayName}</h4>
+                  <span className="improvement-indicator">
+                    {getImprovementIcon(performance.improvement)}
+                  </span>
+                </div>
+                <div className="performance-stats">
+                  <div className="stat-row">
+                    <span>Attempts:</span>
+                    <strong>{performance.attempts}</strong>
+                  </div>
+                  <div className="stat-row">
+                    <span>Average Score:</span>
+                    <strong style={{ color: getScoreColor(performance.averageScore) }}>
+                      {performance.averageScore}%
+                    </strong>
+                  </div>
+                  <div className="stat-row">
+                    <span>Best Score:</span>
+                    <strong style={{ color: getScoreColor(performance.bestScore) }}>
+                      {performance.bestScore}%
+                    </strong>
+                  </div>
+                  {performance.totalTime > 0 && (
+                    <div className="stat-row">
+                      <span>Time Spent:</span>
+                      <strong>{formatTime(Math.round(performance.totalTime / 60))}</strong>
                     </div>
-                  ))}
+                  )}
+                  <div className="stat-row">
+                    <span>Trend:</span>
+                    <strong>{getImprovementText(performance.improvement)}</strong>
+                  </div>
                 </div>
               </div>
-            )}
-
-            {/* Problem Words */}
-            {weaknesses.words.length > 0 && (
-              <div className="weakness-card">
-                <h4>🔤 Tricky Words</h4>
-                <div className="weakness-items">
-                  {weaknesses.words.map((word, index) => (
-                    <div key={index} className="weakness-item word-weakness">
-                      <div className="weakness-info">
-                        <span className="weakness-title">"{word.word}"</span>
-                        <span className="weakness-detail">Missed {word.count} times</span>
-                      </div>
-                      <div className="weakness-suggestion">
-                        Review this word's meaning and usage
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Weak Exercise Types */}
-            {weaknesses.exercises.length > 0 && (
-              <div className="weakness-card">
-                <h4>💪 Exercise Focus</h4>
-                <div className="weakness-items">
-                  {weaknesses.exercises.map((exercise, index) => (
-                    <div key={index} className="weakness-item exercise-weakness">
-                      <div className="weakness-info">
-                        <span className="weakness-title">{exercise.icon} {exercise.type}</span>
-                        <span className="weakness-detail">{exercise.averageScore}% average</span>
-                      </div>
-                      <div className="weakness-suggestion">
-                        Focus more practice on this exercise type
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            ))}
           </div>
         ) : (
-          <div className="no-weaknesses">
-            <div className="no-weaknesses-icon">🌟</div>
-            <h4>Excellent Work!</h4>
-            <p>You're performing well across all areas. Keep up the great work!</p>
-            {stats.totalTests < 5 && (
-              <p><small>Complete more tests to get detailed weakness analysis.</small></p>
-            )}
+          <div className="no-performance">
+            <p>Complete some exercises to see your performance data!</p>
           </div>
         )}
       </div>
 
-      {/* Recent Tests */}
+      {/* 4. ACHIEVEMENT BADGES/MILESTONES */}
+      <div className="achievements-section">
+        <h2>🏆 Achievements</h2>
+        {achievements.length > 0 ? (
+          <div className="achievements-grid">
+            {achievements.map((achievement, index) => (
+              <div key={achievement.id} className="achievement-badge">
+                <div className="achievement-icon">{achievement.icon}</div>
+                <div className="achievement-content">
+                  <h4>{achievement.title}</h4>
+                  <p>{achievement.description}</p>
+                  <small>Earned: {formatDate(achievement.earnedDate)}</small>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="no-achievements">
+            <div className="no-achievements-icon">🎯</div>
+            <h4>Start Your Achievement Journey!</h4>
+            <p>Complete exercises to unlock achievements and track your progress.</p>
+          </div>
+        )}
+      </div>
+
+      {/* 5. LEARNING INSIGHTS */}
+      <div className="learning-insights-section">
+        <h2>💡 Learning Insights</h2>
+        <div className="insights-grid">
+          {learningInsights.strongestSkill && (
+            <div className="insight-card large">
+              <h4>🌟 Strongest Skill Area</h4>
+              <div className="insight-content">
+                <span className="insight-icon">{learningInsights.strongestSkill.icon}</span>
+                <div>
+                  <strong>{learningInsights.strongestSkill.displayName}</strong>
+                  <p>Average: {learningInsights.strongestSkill.average}%</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {learningInsights.mostImproved && (
+            <div className="insight-card large">
+              <h4>📈 Most Improved</h4>
+              <div className="insight-content">
+                <span className="insight-icon">{learningInsights.mostImproved.icon}</span>
+                <div>
+                  <strong>{learningInsights.mostImproved.displayName}</strong>
+                  <p>Great progress!</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="insight-card large">
+            <h4>🎯 Recommended Challenge</h4>
+            <div className="insight-content">
+              <span className="insight-icon">{learningInsights.recommendedChallenge.icon}</span>
+              <div>
+                <strong>{learningInsights.recommendedChallenge.displayName}</strong>
+                <p>{learningInsights.recommendedChallenge.reason}</p>
+              </div>
+            </div>
+          </div>
+
+          {learningInsights.wordsToReview.length > 0 && (
+            <div className="insight-card words-review">
+              <h4>📝 Words to Review</h4>
+              <div className="words-list">
+                {learningInsights.wordsToReview.map((wordData, index) => (
+                  <div key={index} className="word-item">
+                    <span className="word-text">"{wordData.word}"</span>
+                    <span className="word-count">Missed {wordData.count} times</span>
+                    <span className="word-exercises">
+                      in {wordData.exercises.join(', ')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Recent Tests History */}
       <div className="recent-tests">
         <div className="recent-tests-header">
-          <h3>📝 Recent Test Results</h3>
+          <h2>📝 Recent Test Results</h2>
         </div>
         {recentTests.length > 0 ? (
           <div className="test-list">
-            {recentTests.map((test) => (
+            {recentTests.slice(0, 10).map((test) => (
               <div key={test.id} className="test-item">
                 <div className="test-info">
                   <div className="test-type">
-                    {getQuizTypeDisplay(test)}
+                    {test.quizTypeIcon} {test.quizTypeDisplay}
                   </div>
                   <div className="test-date">{formatDate(test.date)}</div>
                   <div className="test-details">
                     {test.totalQuestions} questions • {test.percentage}% correct
+                    {test.timeSpent && ` • ${formatTime(Math.round(test.timeSpent / 60))}`}
                   </div>
                 </div>
                 <div className="test-score">
