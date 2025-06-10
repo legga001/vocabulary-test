@@ -1,8 +1,40 @@
-// src/utils/progressDataManager.js
+// src/utils/progressDataManager.js - Complete rewrite with all functions
 // Manages long-term user progress data in localStorage
 
+// Constants
 const PROGRESS_DATA_KEY = 'mrFoxEnglishProgressData';
 const MAX_HISTORY_DAYS = 365; // Keep 1 year of history
+
+// Default data structure
+const DEFAULT_PROGRESS_DATA = Object.freeze({
+  totalTests: 0,
+  streak: 0,
+  bestStreak: 0,
+  lastTestDate: null,
+  testHistory: [],
+  dailyStats: {},
+  levelProgress: {
+    'A1-A2': 0,
+    'A2-B1': 0,
+    'B1-B2': 0,
+    'B2-C1': 0,
+    'C1-C2': 0
+  }
+});
+
+// Quiz type display mappings
+const QUIZ_TYPE_MAPPINGS = Object.freeze({
+  realFakeWords: { display: 'Word Recognition', icon: '🎯' },
+  article: { display: 'Article-Based', icon: '📰' },
+  'speak-and-record': { display: 'Speaking Practice', icon: '🎤' },
+  'listen-and-type': { display: 'Listen & Type', icon: '🎧' },
+  standard: { display: 'Standard Vocabulary', icon: '📚' },
+  default: { display: 'Vocabulary Test', icon: '📚' }
+});
+
+// ==============================================
+// CORE DATA FUNCTIONS
+// ==============================================
 
 // Initialize or get existing progress data
 export const getProgressData = () => {
@@ -10,19 +42,13 @@ export const getProgressData = () => {
     const saved = localStorage.getItem(PROGRESS_DATA_KEY);
     if (saved) {
       const data = JSON.parse(saved);
+      // Merge with defaults to ensure all properties exist
       return {
-        totalTests: data.totalTests || 0,
-        streak: data.streak || 0,
-        bestStreak: data.bestStreak || 0,
-        lastTestDate: data.lastTestDate || null,
-        testHistory: data.testHistory || [],
-        dailyStats: data.dailyStats || {},
-        levelProgress: data.levelProgress || {
-          'A1-A2': 0,
-          'A2-B1': 0,
-          'B1-B2': 0,
-          'B2-C1': 0,
-          'C1-C2': 0
+        ...DEFAULT_PROGRESS_DATA,
+        ...data,
+        levelProgress: {
+          ...DEFAULT_PROGRESS_DATA.levelProgress,
+          ...(data.levelProgress || {})
         }
       };
     }
@@ -31,24 +57,10 @@ export const getProgressData = () => {
   }
   
   // Return default structure if no data or error
-  return {
-    totalTests: 0,
-    streak: 0,
-    bestStreak: 0,
-    lastTestDate: null,
-    testHistory: [],
-    dailyStats: {},
-    levelProgress: {
-      'A1-A2': 0,
-      'A2-B1': 0,
-      'B1-B2': 0,
-      'B2-C1': 0,
-      'C1-C2': 0
-    }
-  };
+  return { ...DEFAULT_PROGRESS_DATA };
 };
 
-// Save progress data
+// Save progress data with error handling
 const saveProgressData = (data) => {
   try {
     localStorage.setItem(PROGRESS_DATA_KEY, JSON.stringify(data));
@@ -59,9 +71,13 @@ const saveProgressData = (data) => {
   }
 };
 
+// ==============================================
+// UTILITY FUNCTIONS
+// ==============================================
+
 // Get user's estimated level based on score and total questions
 const getScoreLevel = (score, totalQuestions = 10) => {
-  const percentage = (score / totalQuestions) * 100;
+  const percentage = Math.round((score / totalQuestions) * 100);
   if (percentage <= 25) return 'A1-A2';
   if (percentage <= 50) return 'A2-B1';
   if (percentage <= 70) return 'B1-B2';
@@ -69,25 +85,31 @@ const getScoreLevel = (score, totalQuestions = 10) => {
   return 'C1-C2';
 };
 
-// Get display name for quiz types
-const getQuizTypeDisplay = (type) => {
-  switch(type) {
-    case 'realFakeWords': return 'Word Recognition';
-    case 'article': return 'Article-Based';
-    case 'standard': return 'Standard Vocabulary';
-    default: return 'Vocabulary Test';
+// Get display information for quiz types
+const getQuizTypeInfo = (type) => {
+  return QUIZ_TYPE_MAPPINGS[type] || QUIZ_TYPE_MAPPINGS.default;
+};
+
+// Calculate streak based on dates
+const calculateStreak = (lastTestDate, today) => {
+  if (!lastTestDate) return 1; // First test
+  
+  const lastDate = new Date(lastTestDate).toDateString();
+  const todayStr = today.toDateString();
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+  
+  if (lastDate === todayStr) {
+    return 0; // Same day, don't increment
+  } else if (lastDate === yesterday) {
+    return 1; // Consecutive day, increment by 1
+  } else {
+    return 'reset'; // Streak broken, reset to 1
   }
 };
 
-// Get icon for quiz types
-const getQuizTypeIcon = (type) => {
-  switch(type) {
-    case 'realFakeWords': return '🎯';
-    case 'article': return '📰';
-    case 'standard': return '📚';
-    default: return '📚';
-  }
-};
+// ==============================================
+// MAIN RECORDING FUNCTION
+// ==============================================
 
 // Record a completed test
 export const recordTestResult = (testData) => {
@@ -101,16 +123,18 @@ export const recordTestResult = (testData) => {
   } = testData;
 
   const progressData = getProgressData();
-  const today = new Date().toDateString();
+  const today = new Date();
+  const todayStr = today.toDateString();
   const level = getScoreLevel(score, totalQuestions);
+  const quizTypeInfo = getQuizTypeInfo(quizType);
 
   // Create test record
   const testRecord = {
     id: Date.now(),
     date: completedAt.toISOString(),
     quizType,
-    quizTypeDisplay: getQuizTypeDisplay(quizType),
-    quizTypeIcon: getQuizTypeIcon(quizType),
+    quizTypeDisplay: quizTypeInfo.display,
+    quizTypeIcon: quizTypeInfo.icon,
     score,
     totalQuestions,
     percentage: Math.round((score / totalQuestions) * 100),
@@ -134,8 +158,8 @@ export const recordTestResult = (testData) => {
   progressData.totalTests += 1;
 
   // Update daily stats
-  if (!progressData.dailyStats[today]) {
-    progressData.dailyStats[today] = {
+  if (!progressData.dailyStats[todayStr]) {
+    progressData.dailyStats[todayStr] = {
       testsCompleted: 0,
       totalScore: 0,
       averageScore: 0,
@@ -143,7 +167,7 @@ export const recordTestResult = (testData) => {
     };
   }
 
-  const dailyStat = progressData.dailyStats[today];
+  const dailyStat = progressData.dailyStats[todayStr];
   dailyStat.testsCompleted += 1;
   
   // Calculate score out of 10 for consistency in daily averages
@@ -154,18 +178,14 @@ export const recordTestResult = (testData) => {
   if (timeSpent) dailyStat.timeSpent += timeSpent;
 
   // Update streak
-  const lastTestDate = progressData.lastTestDate ? new Date(progressData.lastTestDate).toDateString() : null;
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+  const streakChange = calculateStreak(progressData.lastTestDate, today);
   
-  if (lastTestDate === today) {
-    // Same day, streak continues
-  } else if (lastTestDate === yesterday || !lastTestDate) {
-    // Consecutive day or first test
-    progressData.streak += 1;
-  } else {
-    // Streak broken
+  if (streakChange === 'reset') {
     progressData.streak = 1;
+  } else if (streakChange === 1) {
+    progressData.streak += 1;
   }
+  // If streakChange === 0, don't change streak (same day)
 
   // Update best streak
   if (progressData.streak > progressData.bestStreak) {
@@ -173,13 +193,17 @@ export const recordTestResult = (testData) => {
   }
 
   // Update level progress
-  progressData.levelProgress[level] += 1;
+  progressData.levelProgress[level] = (progressData.levelProgress[level] || 0) + 1;
   progressData.lastTestDate = completedAt.toISOString();
 
   // Save and return updated data
   saveProgressData(progressData);
   return progressData;
 };
+
+// ==============================================
+// DATA RETRIEVAL FUNCTIONS
+// ==============================================
 
 // Get recent test history (last N tests)
 export const getRecentTests = (limit = 10) => {
@@ -209,7 +233,77 @@ export const getDailyStatsForChart = (days = 30) => {
   return chartData;
 };
 
-// Get progress statistics
+// Get exercise performance data for analytics
+export const getExercisePerformance = () => {
+  const progressData = getProgressData();
+  const exerciseStats = {};
+  
+  // Analyse performance by exercise type
+  progressData.testHistory.forEach(test => {
+    const exerciseType = test.quizTypeDisplay || 'Standard Vocabulary';
+    
+    if (!exerciseStats[exerciseType]) {
+      exerciseStats[exerciseType] = {
+        totalTests: 0,
+        totalScore: 0,
+        averageScore: 0,
+        bestScore: 0,
+        recentScores: [],
+        icon: test.quizTypeIcon || '📚',
+        trend: 'stable'
+      };
+    }
+    
+    const stat = exerciseStats[exerciseType];
+    stat.totalTests++;
+    
+    // Normalise score to 10-point scale for consistency
+    const normalizedScore = test.totalQuestions === 20 ? test.score / 2 : test.score;
+    stat.totalScore += normalizedScore;
+    stat.averageScore = Math.round(stat.totalScore / stat.totalTests);
+    
+    if (normalizedScore > stat.bestScore) {
+      stat.bestScore = normalizedScore;
+    }
+    
+    // Keep track of recent scores for trend analysis
+    stat.recentScores.push({
+      score: normalizedScore,
+      date: test.date,
+      percentage: test.percentage
+    });
+    
+    // Keep only last 10 scores for trend analysis
+    if (stat.recentScores.length > 10) {
+      stat.recentScores = stat.recentScores.slice(-10);
+    }
+  });
+  
+  // Calculate trends for each exercise type
+  Object.values(exerciseStats).forEach(stat => {
+    if (stat.recentScores.length >= 5) {
+      const recent5 = stat.recentScores.slice(-5);
+      const older5 = stat.recentScores.slice(-10, -5);
+      
+      if (older5.length >= 3) {
+        const recentAvg = recent5.reduce((sum, s) => sum + s.score, 0) / recent5.length;
+        const olderAvg = older5.reduce((sum, s) => sum + s.score, 0) / older5.length;
+        
+        if (recentAvg > olderAvg + 0.5) {
+          stat.trend = 'improving';
+        } else if (recentAvg < olderAvg - 0.5) {
+          stat.trend = 'declining';
+        } else {
+          stat.trend = 'stable';
+        }
+      }
+    }
+  });
+  
+  return exerciseStats;
+};
+
+// Get progress statistics with performance optimizations
 export const getProgressStats = () => {
   const progressData = getProgressData();
   const recentTests = progressData.testHistory.slice(0, 10);
@@ -228,8 +322,10 @@ export const getProgressStats = () => {
     : 0;
 
   // Find most common level
-  const levelCounts = Object.entries(progressData.levelProgress);
-  const mostCommonLevel = levelCounts.reduce((a, b) => a[1] > b[1] ? a : b)[0];
+  const levelEntries = Object.entries(progressData.levelProgress);
+  const mostCommonLevel = levelEntries.length > 0
+    ? levelEntries.reduce((a, b) => a[1] > b[1] ? a : b)[0]
+    : 'A1-A2';
 
   // Calculate improvement trend (compare first 5 vs last 5 tests)
   let trend = 'stable';
@@ -250,6 +346,13 @@ export const getProgressStats = () => {
     else if (recentAvg < olderAvg - 0.5) trend = 'declining';
   }
 
+  // Count tests this week
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const testsThisWeek = recentTests.filter(test => {
+    const testDate = new Date(test.date);
+    return testDate > weekAgo;
+  }).length;
+
   return {
     totalTests: progressData.totalTests,
     currentStreak: progressData.streak,
@@ -259,13 +362,13 @@ export const getProgressStats = () => {
     mostCommonLevel,
     trend,
     lastTestDate: progressData.lastTestDate,
-    testsThisWeek: recentTests.filter(test => {
-      const testDate = new Date(test.date);
-      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      return testDate > weekAgo;
-    }).length
+    testsThisWeek
   };
 };
+
+// ==============================================
+// UTILITY FUNCTIONS
+// ==============================================
 
 // Export progress data for backup
 export const exportProgressData = () => {
@@ -277,13 +380,66 @@ export const exportProgressData = () => {
   link.href = URL.createObjectURL(dataBlob);
   link.download = `mr-fox-english-progress-${new Date().toISOString().split('T')[0]}.json`;
   link.click();
+  
+  // Clean up
+  URL.revokeObjectURL(link.href);
 };
 
 // Clear all progress data (with confirmation)
 export const clearAllProgress = () => {
   if (window.confirm('Are you sure you want to clear all progress data? This cannot be undone.')) {
-    localStorage.removeItem(PROGRESS_DATA_KEY);
-    return true;
+    try {
+      localStorage.removeItem(PROGRESS_DATA_KEY);
+      return true;
+    } catch (error) {
+      console.error('Error clearing progress data:', error);
+      return false;
+    }
   }
   return false;
+};
+
+// Import progress data from backup
+export const importProgressData = (jsonData) => {
+  try {
+    const data = JSON.parse(jsonData);
+    
+    // Validate data structure
+    if (typeof data !== 'object' || !Array.isArray(data.testHistory)) {
+      throw new Error('Invalid data format');
+    }
+    
+    // Merge with defaults to ensure all properties exist
+    const validatedData = {
+      ...DEFAULT_PROGRESS_DATA,
+      ...data,
+      levelProgress: {
+        ...DEFAULT_PROGRESS_DATA.levelProgress,
+        ...(data.levelProgress || {})
+      }
+    };
+    
+    return saveProgressData(validatedData);
+  } catch (error) {
+    console.error('Error importing progress data:', error);
+    return false;
+  }
+};
+
+// Get statistics for admin/debugging
+export const getDataStats = () => {
+  const progressData = getProgressData();
+  const stats = {
+    totalTests: progressData.totalTests,
+    totalHistory: progressData.testHistory.length,
+    streakInfo: {
+      current: progressData.streak,
+      best: progressData.bestStreak
+    },
+    levelDistribution: progressData.levelProgress,
+    dailyStatsCount: Object.keys(progressData.dailyStats).length,
+    storageSize: new Blob([JSON.stringify(progressData)]).size
+  };
+  
+  return stats;
 };
