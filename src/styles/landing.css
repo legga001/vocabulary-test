@@ -1,5 +1,6 @@
 /* ==============================================
-   LANDING.CSS - Landing page (Duolingo style)
+   LANDING.CSS - Landing page (Duolingo style) - REWRITTEN
+   Fixed title capitalization and optimized for performance
    ============================================== */
 
 .landing-duolingo {
@@ -19,7 +20,7 @@
 }
 
 /* ==============================================
-   DESKTOP SIDEBAR
+   DESKTOP SIDEBAR - Optimized for performance
    ============================================== */
 .desktop-sidebar {
   width: 280px;
@@ -33,6 +34,7 @@
   z-index: 100;
   display: flex;
   flex-direction: column;
+  will-change: transform; /* GPU acceleration */
 }
 
 .desktop-sidebar-header {
@@ -56,7 +58,7 @@
   font-size: 1.3em;
   font-weight: 700;
   color: #4c51bf;
-  text-transform: lowercase;
+  /* FIXED: Removed text-transform: lowercase */
   letter-spacing: -0.02em;
 }
 
@@ -75,7 +77,10 @@
   color: #4b4b4b;
 }
 
-.desktop-sidebar-item:hover { background: #f0f0f0; }
+.desktop-sidebar-item:hover { 
+  background: #f0f0f0; 
+}
+
 .desktop-sidebar-item.active {
   background: #e6f4ff;
   color: #4c51bf;
@@ -86,6 +91,7 @@
   font-size: 1.2em;
   width: 24px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .sidebar-text {
@@ -101,7 +107,7 @@
 }
 
 /* ==============================================
-   MOBILE HEADER
+   MOBILE HEADER - Optimized layout
    ============================================== */
 .mobile-header {
   display: none;
@@ -116,6 +122,7 @@
   right: 0;
   z-index: 100;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .header-logo {
@@ -137,7 +144,7 @@
   font-size: 1.2em;
   font-weight: 700;
   color: #4c51bf;
-  text-transform: lowercase;
+  /* FIXED: Removed text-transform: lowercase */
   letter-spacing: -0.02em;
 }
 
@@ -148,7 +155,7 @@
 }
 
 /* ==============================================
-   MOBILE MENU
+   MOBILE MENU - Enhanced performance
    ============================================== */
 .mobile-menu-overlay {
   position: fixed;
@@ -161,6 +168,7 @@
   display: flex;
   flex-direction: column;
   animation: slideInFromTop 0.3s ease-out;
+  will-change: transform; /* GPU acceleration */
 }
 
 .mobile-menu-header {
@@ -187,6 +195,7 @@
   font-size: 1.3em;
   font-weight: 700;
   color: #4c51bf;
+  /* FIXED: Ensure proper capitalization */
   text-transform: none;
   letter-spacing: -0.02em;
 }
@@ -207,7 +216,10 @@
   color: #4b4b4b;
 }
 
-.mobile-menu-item:hover { background: #f0f0f0; }
+.mobile-menu-item:hover { 
+  background: #f0f0f0; 
+}
+
 .mobile-menu-item.active {
   background: #e6f4ff;
   color: #4c51bf;
@@ -218,6 +230,7 @@
   font-size: 1.4em;
   width: 28px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .mobile-menu-text {
@@ -233,7 +246,7 @@
 }
 
 /* ==============================================
-   MAIN CONTENT AREA
+   MAIN CONTENT AREA - Improved layout
    ============================================== */
 .main-content-area {
   margin-left: 280px;
@@ -243,10 +256,11 @@
   background: #f7f7f7;
   flex: 1;
   width: calc(100vw - 280px);
+  box-sizing: border-box;
 }
 
 /* ==============================================
-   FULL TEST SECTION
+   FULL TEST SECTION - Enhanced styling
    ============================================== */
 .full-test-section {
   background: white;
@@ -271,7 +285,7 @@
 }
 
 /* ==============================================
-   CATEGORIES SECTION
+   CATEGORIES SECTION - Optimized tabs
    ============================================== */
 .categories-section {
   margin-bottom: 25px;
@@ -292,6 +306,12 @@
   padding: 5px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.categories-tabs::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .category-tab {
@@ -312,6 +332,7 @@
 .category-tab.active {
   background: #4c51bf;
   color: white;
+  transform: translateY(-1px);
 }
 
 .category-tab:hover:not(.active) {
@@ -320,7 +341,7 @@
 }
 
 /* ==============================================
-   EXERCISES LIST
+   EXERCISES LIST - Performance optimized
    ============================================== */
 .exercises-list {
   display: flex;
@@ -342,6 +363,7 @@
   opacity: 0;
   transform: translateY(20px);
   animation: exerciseItemFadeIn 0.6s ease-out forwards;
+  will-change: transform; /* GPU acceleration */
 }
 
 .exercise-item.active:hover {
@@ -409,6 +431,20 @@
   letter-spacing: 0.3px;
 }
 
+.det-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  color: white;
+  font-size: 0.6em;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
 .exercise-content {
   flex: 1;
   min-width: 0;
@@ -459,4 +495,128 @@
   font-size: 0.8em;
   color: #999;
   font-style: italic;
+}
+
+/* ==============================================
+   BUTTON STYLES - Enhanced practice test button
+   ============================================== */
+.practice-test-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  display: block;
+}
+
+.practice-test-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.practice-test-btn:disabled {
+  background: #ddd;
+  cursor: not-allowed;
+  color: #999;
+  transform: none;
+  box-shadow: none;
+}
+
+.coming-soon-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff4757;
+  color: white;
+  font-size: 0.7em;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* ==============================================
+   HAMBURGER BUTTON - Improved accessibility
+   ============================================== */
+.hamburger-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.hamburger-btn:hover {
+  background: #f0f0f0;
+}
+
+.hamburger-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hamburger-lines span {
+  width: 20px;
+  height: 2px;
+  background: #777;
+  border-radius: 1px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-btn:hover .hamburger-lines span { 
+  background: #333; 
+}
+
+.progress-icon-btn {
+  background: none;
+  border: none;
+  font-size: 1.3em;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-icon-btn:hover { 
+  background: #f0f0f0; 
+}
+
+.mobile-menu-close {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  color: #777;
+  cursor: pointer;
+  padding: 5px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+}
+
+.mobile-menu-close:hover { 
+  background: #f0f0f0; 
 }
