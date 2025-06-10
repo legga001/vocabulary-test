@@ -1,4 +1,4 @@
-// src/components/ArticleSelection.js - Updated with ClickableLogo
+// src/components/ArticleSelection.js - Updated with ClickableLogo and responsive grey box
 import React from 'react';
 import ClickableLogo from './ClickableLogo';
 import { getReadingArticleInfo } from '../readingVocabularyData';
@@ -56,77 +56,81 @@ function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
     <div className="exercise-page">
       <ClickableLogo onLogoClick={onLogoClick} />
       
-      <h1>📰 Article-Based Vocabulary Tests</h1>
-      
-      <div className="welcome-text">
-        <p>Choose an article to practice vocabulary from real BBC news stories:</p>
-      </div>
+      {/* ARTICLE SELECTION CONTAINER - RESPONSIVE GREY BOX */}
+      <div className="quiz-container">
+        <h1>📰 Article-Based Vocabulary Tests</h1>
+        
+        <div className="welcome-text">
+          <p>Choose an article to practise vocabulary from real BBC news stories:</p>
+        </div>
 
-      <div className="article-selection-grid">
-        {sortedArticles.map((article, index) => (
-          <div key={article.id} className="article-selection-card">
-            {index === 0 && (
-              <div className="newest-badge">
-                ✨ Most Recent
+        <div className="article-selection-grid">
+          {sortedArticles.map((article, index) => (
+            <div key={article.id} className="article-selection-card">
+              {index === 0 && (
+                <div className="newest-badge">
+                  ✨ Most Recent
+                </div>
+              )}
+              
+              <div className="article-header">
+                <h3 className="article-title">"{article.title}"</h3>
+                <div className="article-meta">
+                  <span className="article-date">{formatDate(article.date)}</span>
+                  <span className="article-time-ago">({getTimeAgo(article.date)})</span>
+                </div>
               </div>
-            )}
-            
-            <div className="article-header">
-              <h3 className="article-title">"{article.title}"</h3>
-              <div className="article-meta">
-                <span className="article-date">{formatDate(article.date)}</span>
-                <span className="article-time-ago">({getTimeAgo(article.date)})</span>
+
+              <div className="article-summary">
+                {article.summary}
+              </div>
+
+              {article.excerpt && (
+                <div className="article-excerpt">
+                  <strong>Sample:</strong> {article.excerpt.substring(0, 150)}...
+                </div>
+              )}
+
+              <div className="article-actions">
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => window.open(article.url, '_blank')}
+                >
+                  📖 Read Full Article
+                </button>
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => onSelectArticle(article.id)}
+                >
+                  🎯 Start Vocabulary Test
+                </button>
+              </div>
+
+              <div className="test-info">
+                <span>📚 10 questions</span>
+                <span>🎚️ A2-C1 levels</span>
+                <span>⏱️ 5-10 minutes</span>
               </div>
             </div>
+          ))}
+        </div>
 
-            <div className="article-summary">
-              {article.summary}
-            </div>
+        <div className="article-selection-info">
+          <h3>💡 Why Practise with Articles?</h3>
+          <p>Learning vocabulary from real news articles helps you:</p>
+          <ul>
+            <li>🎯 <strong>Context Learning:</strong> See how words are used naturally</li>
+            <li>📰 <strong>Current Topics:</strong> Stay updated with contemporary English</li>
+            <li>🌍 <strong>Real Situations:</strong> Practise with authentic content</li>
+            <li>📈 <strong>Level Progression:</strong> Build from basic to advanced vocabulary</li>
+          </ul>
+        </div>
 
-            {article.excerpt && (
-              <div className="article-excerpt">
-                <strong>Sample:</strong> {article.excerpt.substring(0, 150)}...
-              </div>
-            )}
-
-            <div className="article-actions">
-              <button 
-                className="btn btn-secondary"
-                onClick={() => window.open(article.url, '_blank')}
-              >
-                📖 Read Full Article
-              </button>
-              <button 
-                className="btn btn-primary"
-                onClick={() => onSelectArticle(article.id)}
-              >
-                🎯 Start Vocabulary Test
-              </button>
-            </div>
-
-            <div className="test-info">
-              <span>📚 10 questions</span>
-              <span>🎚️ A2-C1 levels</span>
-              <span>⏱️ 5-10 minutes</span>
-            </div>
-          </div>
-        ))}
+        <button className="btn btn-secondary" onClick={onBack}>
+          ← Back to Reading Options
+        </button>
       </div>
-
-      <div className="article-selection-info">
-        <h3>💡 Why Practice with Articles?</h3>
-        <p>Learning vocabulary from real news articles helps you:</p>
-        <ul>
-          <li>🎯 <strong>Context Learning:</strong> See how words are used naturally</li>
-          <li>📰 <strong>Current Topics:</strong> Stay updated with contemporary English</li>
-          <li>🌍 <strong>Real Situations:</strong> Practice with authentic content</li>
-          <li>📈 <strong>Level Progression:</strong> Build from basic to advanced vocabulary</li>
-        </ul>
-      </div>
-
-      <button className="btn btn-secondary" onClick={onBack}>
-        ← Back to Reading Options
-      </button>
+      {/* END ARTICLE SELECTION CONTAINER */}
     </div>
   );
 }
