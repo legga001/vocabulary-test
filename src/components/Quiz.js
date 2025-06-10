@@ -1,4 +1,4 @@
-// src/components/Quiz.js - Updated with letter input system
+// src/components/Quiz.js - Rewritten with fixed British/American spelling support
 import React, { useState, useEffect } from 'react';
 import { questions as staticQuestions, correctMessages } from '../questionsData';
 import { getArticleQuestions } from '../articleQuestions';
@@ -11,7 +11,7 @@ const QUIZ_STATE_KEY = 'mrFoxEnglishQuizState';
 // Function to get alternative spellings (British vs American)
 const getAlternativeSpellings = (word) => {
   const spellingMap = {
-    // American -> British alternatives
+    // American to British
     'analyze': ['analyse'],
     'realize': ['realise'],
     'organize': ['organise'],
@@ -32,7 +32,7 @@ const getAlternativeSpellings = (word) => {
     'sterilize': ['sterilise'],
     'stabilize': ['stabilise'],
     'summarize': ['summarise'],
-    // British -> American alternatives  
+    // British to American
     'analyse': ['analyze'],
     'realise': ['realize'],
     'organise': ['organize'],
@@ -55,40 +55,40 @@ const getAlternativeSpellings = (word) => {
     'summarise': ['summarize'],
     // Color/colour variations
     'color': ['colour'],
-    'colours': ['colors'],
-    'colored': ['coloured'],
-    'coloring': ['colouring'],
     'colour': ['color'],
     'colors': ['colours'],
+    'colours': ['colors'],
+    'colored': ['coloured'],
     'coloured': ['colored'],
+    'coloring': ['colouring'],
     'colouring': ['coloring'],
     // Honor/honour variations
     'honor': ['honour'],
-    'honors': ['honours'],
-    'honored': ['honoured'],
-    'honoring': ['honouring'],
     'honour': ['honor'],
+    'honors': ['honours'],
     'honours': ['honors'],
+    'honored': ['honoured'],
     'honoured': ['honored'],
+    'honoring': ['honouring'],
     'honouring': ['honoring'],
     // Center/centre variations
     'center': ['centre'],
-    'centers': ['centres'],
-    'centered': ['centred'],
-    'centering': ['centring'],
     'centre': ['center'],
+    'centers': ['centres'],
     'centres': ['centers'],
+    'centered': ['centred'],
     'centred': ['centered'],
+    'centering': ['centring'],
     'centring': ['centering'],
     // Theater/theatre variations
     'theater': ['theatre'],
-    'theaters': ['theatres'],
     'theatre': ['theater'],
+    'theaters': ['theatres'],
     'theatres': ['theaters'],
     // Meter/metre variations
     'meter': ['metre'],
-    'meters': ['metres'],
     'metre': ['meter'],
+    'meters': ['metres'],
     'metres': ['meters']
   };
   
@@ -123,7 +123,7 @@ function Quiz({ onFinish, quizType }) {
     return () => {
       document.removeEventListener('keypress', handleKeyPress);
     };
-  }, [userAnswers, currentQuestion, checkedQuestions]); // Dependencies for the effect
+  }, [userAnswers, currentQuestion, checkedQuestions]);
 
   // Load saved quiz state on component mount
   useEffect(() => {
