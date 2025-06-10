@@ -1,4 +1,4 @@
-// src/App.js - Complete file with streamlined article flow
+// src/App.js - Complete rewrite with speaking exercise support
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import SplashPage from './components/SplashPage';
@@ -12,11 +12,9 @@ import ArticleSelection from './components/ArticleSelection';
 import RealFakeWordsExercise from './components/RealFakeWordsExercise';
 import ListenAndTypeExercise from './components/ListenAndTypeExercise';
 
-// Key for localStorage - only for preserving state during page refresh
+// Storage keys for state management
 const APP_STATE_KEY = 'mrFoxEnglishAppState';
-// Key for sessionStorage - to detect new sessions
 const SESSION_KEY = 'mrFoxEnglishSession';
-// Key to track if splash was shown in this session
 const SPLASH_SHOWN_KEY = 'mrFoxEnglishSplashShown';
 
 function App() {
@@ -62,10 +60,6 @@ function App() {
     
     // If we get here, this is NOT a page refresh
     // Check if this is a new session (new tab, browser restart, etc.)
-    const existingSessionId = sessionStorage.getItem(SESSION_KEY);
-    const splashShownThisSession = sessionStorage.getItem(SPLASH_SHOWN_KEY);
-    
-    // Always show splash for new sessions or if splash hasn't been shown
     const currentSessionId = Date.now().toString();
     sessionStorage.setItem(SESSION_KEY, currentSessionId);
     sessionStorage.removeItem(SPLASH_SHOWN_KEY);
@@ -97,7 +91,6 @@ function App() {
       sessionStorage.removeItem(SPLASH_SHOWN_KEY);
     };
 
-    // Also handle when user navigates away
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         // User switched tabs or minimised - don't clear session
@@ -114,6 +107,7 @@ function App() {
     };
   }, []);
 
+  // Navigation functions
   const goToLanding = () => {
     setIsTransitioning(true);
     
@@ -159,6 +153,7 @@ function App() {
     setCurrentScreen('landing');
   };
 
+  // Main exercise selection handler - UPDATED WITH SPEAKING SUPPORT
   const handleSelectExercise = (exerciseType) => {
     switch(exerciseType) {
       // Direct exercise navigation
@@ -166,13 +161,16 @@ function App() {
         setCurrentScreen('standard-vocabulary');
         break;
       case 'article-vocabulary':
-        setCurrentScreen('article-selection'); // Go directly to article selection
+        setCurrentScreen('article-selection');
         break;
       case 'real-fake-words':
         setCurrentScreen('real-fake-words');
         break;
       case 'listen-and-type':
-        goToListenAndType();
+        setCurrentScreen('listen-and-type');
+        break;
+      case 'speak-and-record':  // NEW: Speaking exercise
+        setCurrentScreen('speak-and-record');
         break;
       // Traditional navigation (for non-active exercises)
       case 'reading':
@@ -197,6 +195,7 @@ function App() {
     setCurrentScreen(articleType);
   };
 
+  // Main render function - UPDATED WITH SPEAKING SUPPORT
   const renderCurrentScreen = () => {
     switch(currentScreen) {
       case 'splash':
@@ -262,7 +261,20 @@ function App() {
         );
       
       case 'listen-and-type':
-        return <ListenAndTypeExercise onBack={goBack} />;
+        return (
+          <ListenAndTypeExercise 
+            onBack={goBack} 
+            onLogoClick={goToLanding}
+          />
+        );
+      
+      case 'speak-and-record':  // NEW: Speaking exercise case
+        return (
+          <SpeakingExercise 
+            onBack={goBack} 
+            onLogoClick={goToLanding}
+          />
+        );
       
       case 'reading':
         return (
