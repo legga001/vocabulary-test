@@ -1,14 +1,13 @@
 // src/utils/contentFilter.js - Content filtering system
 // Protects against inappropriate language in user input
 
-// Note: This list contains offensive terms for filtering purposes only
-// These are the most commonly used inappropriate words that need to be blocked
+// Common inappropriate words that need to be blocked
 const BLOCKED_WORDS = [
-  // Common profanity (mild to severe)
+  // Common profanity
   'damn', 'hell', 'crap', 'shit', 'fuck', 'fucking', 'fucked', 'fucker', 'bitch', 'bastard',
   'asshole', 'ass', 'piss', 'cock', 'dick', 'pussy', 'whore', 'slut', 'cunt',
   
-  // Racial slurs and discriminatory terms (these must be blocked)
+  // Racial slurs and discriminatory terms
   'nigger', 'nigga', 'chink', 'gook', 'spic', 'wetback', 'kike', 'faggot', 'fag', 'dyke',
   'retard', 'retarded', 'spastic', 'cripple', 'midget', 'tranny', 'shemale',
   
@@ -45,19 +44,19 @@ const LEETSPEAK_MAP = {
 };
 
 // Convert leetspeak and common substitutions back to normal letters
-const normalizeLeetSpeak = (text) => {
-  let normalized = text.toLowerCase();
+const normaliseLeetSpeak = (text) => {
+  let normalised = text.toLowerCase();
   
   // Replace common substitutions
   Object.entries(LEETSPEAK_MAP).forEach(([leet, normal]) => {
     const regex = new RegExp(leet, 'gi');
-    normalized = normalized.replace(regex, normal);
+    normalised = normalised.replace(regex, normal);
   });
   
   // Remove common separators used to bypass filters
-  normalized = normalized.replace(/[.\-_*+\s]/g, '');
+  normalised = normalised.replace(/[.\-_*+\s]/g, '');
   
-  return normalized;
+  return normalised;
 };
 
 // Check if text contains blocked words
@@ -65,10 +64,10 @@ const containsBlockedContent = (text) => {
   if (!text || typeof text !== 'string') return false;
   
   const originalText = text.toLowerCase().trim();
-  const normalizedText = normalizeLeetSpeak(originalText);
+  const normalisedText = normaliseLeetSpeak(originalText);
   
-  // Check both original and normalized versions
-  const textsToCheck = [originalText, normalizedText];
+  // Check both original and normalised versions
+  const textsToCheck = [originalText, normalisedText];
   
   return textsToCheck.some(textToCheck => {
     return BLOCKED_WORDS.some(blockedWord => {
@@ -92,14 +91,14 @@ const containsBlockedContent = (text) => {
 
 // Get appropriate error message based on content type
 const getFilterErrorMessage = (text) => {
-  const normalizedText = normalizeLeetSpeak(text.toLowerCase());
+  const normalisedText = normaliseLeetSpeak(text.toLowerCase());
   
   // Check what type of inappropriate content was detected
   const violenceWords = ['kill', 'murder', 'suicide', 'die', 'death', 'shoot', 'bomb', 'terrorist'];
   const profanityWords = ['damn', 'hell', 'shit', 'fuck', 'bitch', 'bastard', 'asshole'];
   const discriminatoryWords = ['nigger', 'nigga', 'chink', 'gook', 'spic', 'faggot', 'retard'];
   
-  if (violenceWords.some(word => normalizedText.includes(word))) {
+  if (violenceWords.some(word => normalisedText.includes(word))) {
     return {
       title: 'Inappropriate Content Detected',
       message: 'Please keep your responses appropriate for a learning environment. Violence-related content is not allowed.',
@@ -107,7 +106,7 @@ const getFilterErrorMessage = (text) => {
     };
   }
   
-  if (discriminatoryWords.some(word => normalizedText.includes(word))) {
+  if (discriminatoryWords.some(word => normalisedText.includes(word))) {
     return {
       title: 'Offensive Content Blocked',
       message: 'Discriminatory language and slurs are strictly prohibited. Please use respectful language.',
@@ -115,7 +114,7 @@ const getFilterErrorMessage = (text) => {
     };
   }
   
-  if (profanityWords.some(word => normalizedText.includes(word))) {
+  if (profanityWords.some(word => normalisedText.includes(word))) {
     return {
       title: 'Language Filter Active',
       message: 'Please use appropriate language for this educational exercise.',
@@ -184,7 +183,7 @@ export const testFilter = (testCases = []) => {
 };
 
 // Utility to clean text while preserving educational content
-export const sanitizeEducationalText = (text) => {
+export const sanitiseEducationalText = (text) => {
   if (!text || typeof text !== 'string') return '';
   
   // Remove only clearly inappropriate content while preserving educational words
