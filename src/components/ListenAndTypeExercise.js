@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
+import { filterUserInput } from '../utils/contentFilter';
 
 // ==============================================
 // HELPER FUNCTIONS
@@ -364,6 +365,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   const [hasStarted, setHasStarted] = useState(false);
   const [audioError, setAudioError] = useState(false);
   const [testSentences, setTestSentences] = useState([]);
+  const [contentFilterError, setContentFilterError] = useState(null);
   
   // Refs
   const audioRef = useRef(null);
@@ -435,7 +437,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   // Handle Enter key press to submit answer
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (e.key === 'Enter' && hasStarted && !showResults && userInput.trim()) {
+      if (e.key === 'Enter' && hasStarted && !showResults && userInput.trim() && !contentFilterError) {
         e.preventDefault();
         handleSubmit();
       }
@@ -447,7 +449,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
         document.removeEventListener('keypress', handleKeyPress);
       };
     }
-  }, [hasStarted, showResults, userInput]);
+  }, [hasStarted, showResults, userInput, contentFilterError]);
 
   // ==============================================
   // HANDLERS
@@ -479,8 +481,37 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     setTimeLeft(60);
   };
 
+  // NEW: Content filter input handler
+  const handleInputChange = (value) => {
+    setUserInput(value);
+    
+    // Check content filter as user types
+    if (value.trim().length > 0) {
+      const filterResult = filterUserInput(value);
+      if (!filterResult.isAllowed) {
+        setContentFilterError(filterResult.error);
+      } else {
+        setContentFilterError(null);
+      }
+    } else {
+      setContentFilterError(null);
+    }
+  };
+
+  // UPDATED: Submit handler with content filter
   const handleSubmit = () => {
     if (!currentData || !userInput.trim()) return;
+
+    // Check content filter before processing
+    const filterResult = filterUserInput(userInput);
+    
+    if (!filterResult.isAllowed) {
+      setContentFilterError(filterResult.error);
+      return; // Stop here - don't process inappropriate content
+    }
+
+    // Clear any filter errors and continue normally
+    setContentFilterError(null);
     handleNext();
   };
 
@@ -506,6 +537,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       setTimeLeft(60);
       setPlayCount(0);
       setIsPlaying(false);
+      setContentFilterError(null); // Clear content filter error
     } else {
       // Test completed
       setShowResults(true);
@@ -543,6 +575,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     setIsPlaying(false);
     setHasStarted(false);
     setAudioError(false);
+    setContentFilterError(null);
     
     // Generate new random sentences in proper order
     const newSentences = generateTestSentences();
@@ -781,6 +814,10 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
                   <span className="instruction-icon">❌</span>
                   <span>Punctuation (including apostrophes) not required</span>
                 </div>
+                <div className="instruction-item">
+                  <span className="instruction-icon">🛡️</span>
+                  <span>Keep responses appropriate for educational purposes</span>
+                </div>
               </div>
               
               <div className="difficulty-info">
@@ -872,12 +909,23 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             <h3>Type what you hear:</h3>
             <textarea
               ref={inputRef}
-              className="typing-input"
+              className={`typing-input ${contentFilterError ? 'error' : ''}`}
               value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
+              onChange={(e) => handleInputChange(e.target.value)}
               placeholder="Type the sentence here..."
               rows={3}
             />
+
+            {/* Content Filter Error Display */}
+            {contentFilterError && (
+              <div className={`content-filter-error ${contentFilterError.severity}`}>
+                <div className="filter-error-icon">⚠️</div>
+                <div className="filter-error-content">
+                  <div className="filter-error-title">{contentFilterError.title}</div>
+                  <div className="filter-error-message">{contentFilterError.message}</div>
+                </div>
+              </div>
+            )}
             
             <div className="input-info">
               <p>💡 <strong>Remember:</strong> Just type what you hear - spelling variations, numbers as words/digits, and missing punctuation are all fine!</p>
@@ -887,7 +935,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               <button 
                 className="btn btn-primary"
                 onClick={handleSubmit}
-                disabled={!userInput.trim()}
+                disabled={!userInput.trim() || contentFilterError}
               >
                 Submit Answer
               </button>
