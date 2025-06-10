@@ -371,31 +371,111 @@ const checkBasicContentFilter = (text) => {
 };
 
 // ==============================================
-// MAIN COMPONENT
+// MAIN COMPONENT - COMPLETELY REWRITTEN
 // ==============================================
 function ListenAndTypeExercise({ onBack, onLogoClick }) {
-  // State management
+  // Core state
   const [currentSentence, setCurrentSentence] = useState(0);
   const [userInput, setUserInput] = useState('');
   const [timeLeft, setTimeLeft] = useState(60);
-  const [playCount, setPlayCount] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [answers, setAnswers] = useState([]);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
-  const [audioError, setAudioError] = useState(false);
   const [testSentences, setTestSentences] = useState([]);
   const [contentFilterError, setContentFilterError] = useState(null);
+  
+  // NEW: Separated audio state management for better control
+  const [audioState, setAudioState] = useState({
+    isPlaying: false,
+    playCount: 0,
+    hasError: false,
+    isLoaded: false
+  });
   
   // Refs
   const audioRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Memoised current sentence data
+  // Current sentence data
   const currentData = useMemo(() => testSentences[currentSentence] || null, [testSentences, currentSentence]);
 
   // ==============================================
-  // OPTIMISED HANDLERS WITH useCallback
+  // AUDIO MANAGEMENT - COMPLETELY REWRITTEN
+  // ==============================================
+  
+  // NEW: Reset audio state completely
+  const resetAudioState = useCallback(() => {
+    console.log('🔄 Resetting audio state');
+    setAudioState({
+      isPlaying: false,
+      playCount: 0,
+      hasError: false,
+      isLoaded: false
+    });
+  }, []);
+
+  // NEW: Update only specific audio state properties
+  const updateAudioState = useCallback((updates) => {
+    setAudioState(prev => {
+      const newState = { ...prev, ...updates };
+      console.log('🎵 Audio state update:', updates, '→ New state:', newState);
+      return newState;
+    });
+  }, []);
+
+  // NEW: Play audio function with better state management
+  const playAudio = useCallback(() => {
+    console.log('🎯 Play audio requested');
+    console.log('Current audio state:', audioState);
+    
+    if (!audioRef.current || !currentData) {
+      console.log('❌ No audio ref or current data');
+      return;
+    }
+    
+    if (audioState.playCount >= 3) {
+      console.log('❌ Play count limit reached');
+      return;
+    }
+    
+    if (audioState.hasError) {
+      console.log('❌ Audio has error');
+      return;
+    }
+    
+    if (audioState.isPlaying) {
+      console.log('❌ Audio already playing');
+      return;
+    }
+
+    console.log('✅ Starting audio playback');
+    
+    // Set playing state immediately
+    updateAudioState({ isPlaying: true });
+    
+    const audio = audioRef.current;
+    audio.currentTime = 0;
+    
+    const playPromise = audio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log('✅ Audio play promise resolved');
+          updateAudioState({ playCount: audioState.playCount + 1 });
+        })
+        .catch(error => {
+          console.error('❌ Audio play promise rejected:', error);
+          updateAudioState({ 
+            isPlaying: false, 
+            hasError: true 
+          });
+        });
+    }
+  }, [audioState, currentData, updateAudioState]);
+
+  // ==============================================
+  // OTHER HANDLERS
   // ==============================================
   
   const formatTime = useCallback((seconds) => {
@@ -404,34 +484,12 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }, []);
 
-  const playAudio = useCallback(() => {
-    console.log('Play audio clicked, playCount:', playCount);
-    
-    if (playCount >= 3 || !audioRef.current || audioError) {
-      console.log('Cannot play audio - limit reached or error');
-      return;
-    }
-    
-    setIsPlaying(true);
-    audioRef.current.currentTime = 0;
-    
-    audioRef.current.play()
-      .then(() => {
-        console.log('Audio play successful');
-        setPlayCount(prev => prev + 1);
-      })
-      .catch(error => {
-        console.error('Audio play error:', error);
-        setAudioError(true);
-        setIsPlaying(false);
-      });
-  }, [playCount, audioError]);
-
   const startExercise = useCallback(() => {
-    console.log('Starting exercise');
+    console.log('🚀 Starting exercise');
     setHasStarted(true);
     setTimeLeft(60);
-  }, []);
+    resetAudioState();
+  }, [resetAudioState]);
 
   const handleInputChange = useCallback((value) => {
     setUserInput(value);
@@ -445,8 +503,8 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     }
   }, []);
 
-  const handleNext = useCallback(() => {
-    console.log('Moving to next question');
+  const moveToNextQuestion = useCallback(() => {
+    console.log('➡️ Moving to next question');
     
     if (!currentData) return;
 
@@ -467,34 +525,30 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       setCurrentSentence(prev => prev + 1);
       setUserInput('');
       setTimeLeft(60);
-      setPlayCount(0);
-      setIsPlaying(false); // FIXED: Explicitly reset playing state
       setContentFilterError(null);
+      resetAudioState(); // Complete audio state reset
     } else {
       // Test completed
       setShowResults(true);
     }
-  }, [currentData, userInput, timeLeft, currentSentence, testSentences.length]);
+  }, [currentData, userInput, timeLeft, currentSentence, testSentences.length, resetAudioState]);
 
   const handleSubmit = useCallback(() => {
-    console.log('Submit button clicked');
-    console.log('User input:', userInput);
-    console.log('Content filter error:', contentFilterError);
+    console.log('📤 Submit button clicked');
     
     if (!currentData || !userInput.trim()) {
-      console.log('No current data or empty input');
+      console.log('❌ No current data or empty input');
       return;
     }
 
-    // Check basic content filter
     if (contentFilterError) {
-      console.log('Content filter error present, not submitting');
+      console.log('❌ Content filter error present');
       return;
     }
 
-    console.log('Processing answer...');
-    handleNext();
-  }, [currentData, userInput, contentFilterError, handleNext]);
+    console.log('✅ Processing answer...');
+    moveToNextQuestion();
+  }, [currentData, userInput, contentFilterError, moveToNextQuestion]);
 
   const calculateScore = useCallback(() => {
     const totalScore = answers.reduce((sum, answer) => sum + answer.result.score, 0);
@@ -518,22 +572,20 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   }, [answers]);
 
   const restartTest = useCallback(() => {
-    console.log('Restarting test');
+    console.log('🔄 Restarting test');
     setCurrentSentence(0);
     setUserInput('');
     setTimeLeft(60);
-    setPlayCount(0);
     setShowResults(false);
     setAnswers([]);
-    setIsPlaying(false);
     setHasStarted(false);
-    setAudioError(false);
     setContentFilterError(null);
+    resetAudioState();
     
-    // Generate new random sentences in proper order
+    // Generate new random sentences
     const newSentences = generateTestSentences();
     setTestSentences(newSentences);
-  }, []);
+  }, [resetAudioState]);
 
   const getResultDisplay = useCallback((result) => {
     switch(result.type) {
@@ -549,92 +601,131 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   }, []);
 
   // ==============================================
-  // EFFECTS
+  // EFFECTS - REWRITTEN WITH BETTER LOGIC
   // ==============================================
   
   // Generate test sentences on mount
   useEffect(() => {
-    console.log('Component mounted, generating test sentences');
+    console.log('🎲 Component mounted, generating test sentences');
     const sentences = generateTestSentences();
     setTestSentences(sentences);
   }, []);
 
-  // FIXED: Timer countdown - removed dependencies that were causing timer to pause
+  // Timer countdown - FIXED: No dependencies that cause interference
   useEffect(() => {
-    if (hasStarted && timeLeft > 0 && !showResults) {
-      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && hasStarted && !showResults) {
-      console.log('Timer expired, moving to next');
-      handleNext();
-    }
-  }, [timeLeft, hasStarted, showResults]); // REMOVED handleNext dependency to prevent timer interference
+    if (!hasStarted || showResults || timeLeft <= 0) return;
 
-  // FIXED: Audio event listeners - added better state management
+    const timer = setTimeout(() => {
+      setTimeLeft(prev => {
+        const newTime = prev - 1;
+        if (newTime === 0) {
+          // Timer expired - move to next question
+          setTimeout(() => moveToNextQuestion(), 100);
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [hasStarted, showResults, timeLeft]); // Minimal dependencies
+
+  // NEW: Audio element management - COMPLETELY REWRITTEN
   useEffect(() => {
     if (!audioRef.current || !currentData) return;
 
+    console.log('🎵 Setting up audio for:', currentData.audioFile);
     const audio = audioRef.current;
     
-    // FIXED: Reset playing state when new audio loads
-    setIsPlaying(false);
+    // CRITICAL: Reset state immediately when audio element changes
+    resetAudioState();
     
-    const handleLoadError = () => {
-      console.log('Audio load error');
-      setAudioError(true);
-      setIsPlaying(false);
-    };
-
-    const handleCanPlay = () => {
-      console.log('Audio can play');
-      setAudioError(false);
-    };
-    
-    const handleEnded = () => {
-      console.log('Audio ended');
-      setIsPlaying(false);
-    };
-
-    const handlePause = () => {
-      console.log('Audio paused');
-      setIsPlaying(false);
-    };
-
-    const handlePlay = () => {
-      console.log('Audio started playing');
-      setIsPlaying(true);
-    };
-
-    // FIXED: Also handle load events to ensure state is correct
-    const handleLoadStart = () => {
-      console.log('Audio load started');
-      setIsPlaying(false);
-    };
-
-    const handleLoadedData = () => {
-      console.log('Audio loaded data');
-      setIsPlaying(false);
+    // Define all event handlers
+    const handlers = {
+      loadstart: () => {
+        console.log('🔄 Audio loadstart');
+        updateAudioState({ isLoaded: false, isPlaying: false, hasError: false });
+      },
+      
+      loadeddata: () => {
+        console.log('✅ Audio loadeddata');
+        updateAudioState({ isLoaded: true, hasError: false });
+      },
+      
+      canplay: () => {
+        console.log('✅ Audio canplay');
+        updateAudioState({ isLoaded: true, hasError: false });
+      },
+      
+      play: () => {
+        console.log('▶️ Audio play event');
+        updateAudioState({ isPlaying: true });
+      },
+      
+      pause: () => {
+        console.log('⏸️ Audio pause event');
+        updateAudioState({ isPlaying: false });
+      },
+      
+      ended: () => {
+        console.log('⏹️ Audio ended event');
+        updateAudioState({ isPlaying: false });
+      },
+      
+      error: (e) => {
+        console.error('❌ Audio error event:', e);
+        updateAudioState({ 
+          isPlaying: false, 
+          hasError: true,
+          isLoaded: false 
+        });
+      }
     };
 
     // Add all event listeners
-    audio.addEventListener('error', handleLoadError);
-    audio.addEventListener('canplay', handleCanPlay);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('pause', handlePause);
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('loadstart', handleLoadStart);
-    audio.addEventListener('loadeddata', handleLoadedData);
+    Object.entries(handlers).forEach(([event, handler]) => {
+      audio.addEventListener(event, handler);
+    });
+
+    // Cleanup function
+    return () => {
+      Object.entries(handlers).forEach(([event, handler]) => {
+        audio.removeEventListener(event, handler);
+      });
+    };
+  }, [currentData, resetAudioState, updateAudioState]);
+
+  // NEW: Auto-play logic - COMPLETELY REWRITTEN
+  useEffect(() => {
+    // Only auto-play if:
+    // - Exercise has started
+    // - We have current data
+    // - Audio is loaded and has no error
+    // - Haven't played this audio yet
+    // - Not currently playing
+    if (!hasStarted || 
+        !currentData || 
+        !audioState.isLoaded || 
+        audioState.hasError || 
+        audioState.playCount > 0 || 
+        audioState.isPlaying) {
+      return;
+    }
+
+    console.log('⏰ Setting up auto-play timer');
+    
+    // Wait a bit longer for first question to ensure everything is ready
+    const delay = currentSentence === 0 ? 2000 : 1000;
+    
+    const autoPlayTimer = setTimeout(() => {
+      console.log('🔄 Auto-play timer triggered');
+      playAudio();
+    }, delay);
 
     return () => {
-      audio.removeEventListener('error', handleLoadError);
-      audio.removeEventListener('canplay', handleCanPlay);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('loadstart', handleLoadStart);
-      audio.removeEventListener('loadeddata', handleLoadedData);
+      console.log('❌ Clearing auto-play timer');
+      clearTimeout(autoPlayTimer);
     };
-  }, [currentData]);
+  }, [hasStarted, currentData, audioState, currentSentence, playAudio]);
 
   // Focus input when appropriate
   useEffect(() => {
@@ -643,37 +734,20 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     }
   }, [hasStarted, currentSentence, showResults]);
 
-  // Auto-play audio with delay
+  // Enter key handler
   useEffect(() => {
-    if (hasStarted && currentData && !audioError && playCount === 0) {
-      console.log('Auto-playing audio for new sentence');
-      // FIXED: Reset playing state before auto-play to prevent stuck state
-      setIsPlaying(false);
-      const autoPlayTimer = setTimeout(() => {
-        playAudio();
-      }, 1000);
-      return () => clearTimeout(autoPlayTimer);
-    }
-  }, [currentSentence, hasStarted, audioError, playCount, playAudio]);
+    if (!hasStarted || showResults) return;
 
-  // FIXED: Enter key handler
-  useEffect(() => {
     const handleKeyPress = (e) => {
-      console.log('Key pressed:', e.key);
-      
-      if (e.key === 'Enter' && hasStarted && !showResults && userInput.trim() && !contentFilterError) {
+      if (e.key === 'Enter' && userInput.trim() && !contentFilterError) {
         e.preventDefault();
-        console.log('Enter key - calling handleSubmit');
+        console.log('⌨️ Enter key pressed - submitting');
         handleSubmit();
       }
     };
 
-    if (hasStarted && !showResults) {
-      document.addEventListener('keypress', handleKeyPress);
-      return () => {
-        document.removeEventListener('keypress', handleKeyPress);
-      };
-    }
+    document.addEventListener('keypress', handleKeyPress);
+    return () => document.removeEventListener('keypress', handleKeyPress);
   }, [hasStarted, showResults, userInput, contentFilterError, handleSubmit]);
 
   // ==============================================
@@ -949,35 +1023,52 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           </div>
 
           <div className="audio-section">
-            <audio ref={audioRef} preload="auto" key={currentData?.audioFile}>
+            <audio ref={audioRef} preload="auto" key={`${currentData?.audioFile}-${currentSentence}`}>
               <source src={`/${currentData?.audioFile}`} type="audio/mpeg" />
               Your browser does not support the audio element.
             </audio>
             
             <div className="audio-controls">
               <button 
-                className={`play-btn ${isPlaying ? 'playing' : ''}`}
+                className={`play-btn ${audioState.isPlaying ? 'playing' : ''}`}
                 onClick={playAudio}
-                disabled={playCount >= 3 || isPlaying}
+                disabled={audioState.playCount >= 3 || audioState.isPlaying || audioState.hasError}
               >
                 <span className="play-icon">
-                  {isPlaying ? '🔊' : '▶️'}
+                  {audioState.isPlaying ? '🔊' : '▶️'}
                 </span>
                 <span className="play-text">
-                  {isPlaying ? 'Playing...' : 'Play Audio'}
+                  {audioState.isPlaying ? 'Playing...' : 'Play Audio'}
                 </span>
               </button>
               
               <div className="play-counter">
-                Plays remaining: {3 - playCount}
+                Plays remaining: {3 - audioState.playCount}
               </div>
             </div>
 
-            {audioError && (
+            {audioState.hasError && (
               <div className="audio-error">
                 ⚠️ Audio file not found: {currentData?.audioFile}
                 <br />
                 <small>Please ensure the file exists in the public/audio/listen-and-type/ folder</small>
+              </div>
+            )}
+
+            {/* Debug info (remove in production) */}
+            {process.env.NODE_ENV === 'development' && (
+              <div style={{ 
+                fontSize: '0.8em', 
+                color: '#666', 
+                marginTop: '10px',
+                padding: '8px',
+                background: '#f0f0f0',
+                borderRadius: '4px'
+              }}>
+                🐛 Audio Debug: Playing: {audioState.isPlaying ? 'Yes' : 'No'} | 
+                Loaded: {audioState.isLoaded ? 'Yes' : 'No'} | 
+                Error: {audioState.hasError ? 'Yes' : 'No'} | 
+                Plays: {audioState.playCount}/3
               </div>
             )}
           </div>
@@ -1025,7 +1116,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           <div className="navigation-section">
             <button 
               className="btn btn-secondary"
-              onClick={handleNext}
+              onClick={moveToNextQuestion}
             >
               {currentSentence + 1 === testSentences.length ? 'Finish Test' : 'Skip Question'}
             </button>
