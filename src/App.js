@@ -1,4 +1,4 @@
-// src/App.js - Complete file with Listen and Type only
+// src/App.js - Complete file with streamlined article flow
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import SplashPage from './components/SplashPage';
@@ -166,7 +166,7 @@ function App() {
         setCurrentScreen('standard-vocabulary');
         break;
       case 'article-vocabulary':
-        setCurrentScreen('article-selection');
+        setCurrentScreen('article-selection'); // Go directly to article selection
         break;
       case 'real-fake-words':
         setCurrentScreen('real-fake-words');
@@ -193,9 +193,8 @@ function App() {
   };
 
   const handleArticleSelection = (articleType) => {
-    // Navigate to reading exercise with specific article type
-    setCurrentScreen('reading');
-    // Note: We'll need to pass the article type to ReadingExercise if needed
+    // Set the current screen to the specific article quiz
+    setCurrentScreen(articleType);
   };
 
   const renderCurrentScreen = () => {
@@ -233,6 +232,24 @@ function App() {
             onBack={goBack}
             onLogoClick={goToLanding}
             onSelectArticle={handleArticleSelection}
+          />
+        );
+      
+      case 'octopus-quiz':
+        return (
+          <ReadingExercise 
+            onBack={() => setCurrentScreen('article-selection')} 
+            onLogoClick={goToLanding}
+            initialView="octopus-quiz"
+          />
+        );
+      
+      case 'smuggling-quiz':
+        return (
+          <ReadingExercise 
+            onBack={() => setCurrentScreen('article-selection')} 
+            onLogoClick={goToLanding}
+            initialView="smuggling-quiz"
           />
         );
       
