@@ -194,9 +194,9 @@ function RealFakeWordsExercise({ onBack, onLogoClick }) {
   const renderInstructions = () => (
     <div className="exercise-page">
       <ClickableLogo onLogoClick={onLogoClick} />
-      <h1>🎯 Real or Fake Words</h1>
       
       <div className="quiz-container">
+        <h1>🎯 Real or Fake Words</h1>
         <div className="instructions-container">
           <div className="instructions-header">
             <h2>📖 How to Play</h2>
@@ -317,9 +317,9 @@ function RealFakeWordsExercise({ onBack, onLogoClick }) {
   const renderLoading = () => (
     <div className="exercise-page">
       <ClickableLogo onLogoClick={onLogoClick} />
-      <h1>🎯 Real or Fake Words</h1>
       
       <div className="quiz-container">
+        <h1>🎯 Real or Fake Words</h1>
         <div className="loading">
           <p>🎲 Generating your test...</p>
           <p><small>Selecting {GAME_CONFIG.TOTAL_QUESTIONS} random words...</small></p>
@@ -331,9 +331,10 @@ function RealFakeWordsExercise({ onBack, onLogoClick }) {
   const renderGame = () => (
     <div className="exercise-page">
       <ClickableLogo onLogoClick={onLogoClick} />
-      <h1>🎯 Real or Fake Words</h1>
 
       <div className="quiz-container">
+        <h1>🎯 Real or Fake Words</h1>
+
         <div className="timer-display" style={{ color: timerColor }}>
           ⏱️ {formatTime(timeLeft)} for this question
         </div>
@@ -414,9 +415,9 @@ function RealFakeWordsExercise({ onBack, onLogoClick }) {
   const renderResults = () => (
     <div className="exercise-page scrollable-page">
       <ClickableLogo onLogoClick={onLogoClick} />
-      <h1>🎯 Real or Fake Words Results</h1>
       
       <div className="quiz-container">
+        <h1>🎯 Real or Fake Words Results</h1>
         <div className="results">
           <h2>🎉 Test Complete!</h2>
           <div className="score-display">{score}/{GAME_CONFIG.TOTAL_QUESTIONS}</div>
