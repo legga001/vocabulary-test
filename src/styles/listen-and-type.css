@@ -235,6 +235,82 @@
   box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.1);
 }
 
+/* Enhanced input validation styles */
+.typing-input.error {
+  border-color: #e53e3e;
+  background-color: #fff5f5;
+}
+
+.typing-input.warning {
+  border-color: #d69e2e;
+  background-color: #fffbeb;
+}
+
+/* ==============================================
+   6. CONTENT FILTER ERROR STYLES
+   ============================================== */
+.content-filter-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 4px solid;
+  animation: slideInError 0.3s ease-out;
+}
+
+.content-filter-error.high {
+  background: #fff5f5;
+  border-color: #e53e3e;
+  color: #c53030;
+}
+
+.content-filter-error.medium {
+  background: #fffbeb;
+  border-color: #d69e2e;
+  color: #b7791f;
+}
+
+.content-filter-error.low {
+  background: #e6f4ff;
+  border-color: #4c51bf;
+  color: #3c4fe0;
+}
+
+.filter-error-icon {
+  font-size: 1.3em;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.filter-error-content {
+  flex: 1;
+}
+
+.filter-error-title {
+  font-weight: 700;
+  font-size: 1em;
+  margin-bottom: 4px;
+}
+
+.filter-error-message {
+  font-size: 0.9em;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .input-info {
   margin-top: 15px;
   padding: 12px 15px;
@@ -250,8 +326,18 @@
   line-height: 1.4;
 }
 
+.submit-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.keyboard-hint {
+  margin-top: 10px;
+  color: #666;
+}
+
 /* ==============================================
-   6. NAVIGATION SECTION
+   7. NAVIGATION SECTION
    ============================================== */
 .navigation-section {
   text-align: center;
@@ -259,7 +345,7 @@
 }
 
 /* ==============================================
-   7. INSTRUCTIONS STYLES
+   8. INSTRUCTIONS STYLES
    ============================================== */
 .instructions-container {
   background: white;
@@ -336,7 +422,7 @@
 }
 
 /* ==============================================
-   8. LOADING MESSAGE
+   9. LOADING MESSAGE
    ============================================== */
 .loading-message {
   text-align: center;
@@ -351,7 +437,7 @@
 }
 
 /* ==============================================
-   9. RESULTS STYLES
+   10. RESULTS STYLES
    ============================================== */
 .score-breakdown {
   display: grid;
@@ -532,7 +618,7 @@
 }
 
 /* ==============================================
-   10. MISTAKE HIGHLIGHTING SYSTEM
+   11. MISTAKE HIGHLIGHTING SYSTEM
    ============================================== */
 .user-answer-analysis {
   margin-bottom: 10px;
@@ -664,7 +750,7 @@
 }
 
 /* ==============================================
-   11. CUSTOM SCROLLBAR
+   12. CUSTOM SCROLLBAR
    ============================================== */
 .results-list::-webkit-scrollbar {
   width: 8px;
@@ -685,7 +771,7 @@
 }
 
 /* ==============================================
-   12. RESPONSIVE DESIGN
+   13. RESPONSIVE DESIGN
    ============================================== */
 
 /* Large desktops */
@@ -845,98 +931,17 @@
     font-size: 0.9em;
     padding: 10px;
   }
-}
-/* ==============================================
-   ADD THIS TO THE END OF: src/styles/listen-and-type.css
-   CONTENT FILTER ERROR STYLES
-   ============================================== */
 
-.content-filter-error {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-top: 15px;
-  padding: 15px;
-  border-radius: 10px;
-  border-left: 4px solid;
-  animation: slideInError 0.3s ease-out;
-}
-
-.content-filter-error.high {
-  background: #fff5f5;
-  border-color: #e53e3e;
-  color: #c53030;
-}
-
-.content-filter-error.medium {
-  background: #fffbeb;
-  border-color: #d69e2e;
-  color: #b7791f;
-}
-
-.content-filter-error.low {
-  background: #e6f4ff;
-  border-color: #4c51bf;
-  color: #3c4fe0;
-}
-
-.filter-error-icon {
-  font-size: 1.3em;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.filter-error-content {
-  flex: 1;
-}
-
-.filter-error-title {
-  font-weight: 700;
-  font-size: 1em;
-  margin-bottom: 4px;
-}
-
-.filter-error-message {
-  font-size: 0.9em;
-  line-height: 1.4;
-  opacity: 0.9;
-}
-
-.content-warning {
-  text-align: center;
-  margin-top: 8px;
-  color: #d69e2e;
-  font-weight: 600;
-}
-
-@keyframes slideInError {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
+  .content-filter-error {
+    padding: 12px;
+    gap: 10px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .filter-error-title {
+    font-size: 0.9em;
   }
-}
 
-/* Enhanced input validation styles */
-.typing-input.error {
-  border-color: #e53e3e;
-  background-color: #fff5f5;
-}
-
-.typing-input.warning {
-  border-color: #d69e2e;
-  background-color: #fffbeb;
-}
-
-.submit-section {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.keyboard-hint {
-  margin-top: 10px;
-  color: #666;
+  .filter-error-message {
+    font-size: 0.8em;
+  }
 }
