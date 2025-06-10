@@ -1,4 +1,4 @@
-// src/components/ArticleSelection.js - Updated with ClickableLogo and responsive grey box
+// src/components/ArticleSelection.js - Rewritten with responsive grey box and streamlined flow
 import React from 'react';
 import ClickableLogo from './ClickableLogo';
 import { getReadingArticleInfo } from '../readingVocabularyData';
