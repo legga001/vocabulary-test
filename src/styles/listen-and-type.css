@@ -846,3 +846,97 @@
     padding: 10px;
   }
 }
+/* ==============================================
+   ADD THIS TO THE END OF: src/styles/listen-and-type.css
+   CONTENT FILTER ERROR STYLES
+   ============================================== */
+
+.content-filter-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 4px solid;
+  animation: slideInError 0.3s ease-out;
+}
+
+.content-filter-error.high {
+  background: #fff5f5;
+  border-color: #e53e3e;
+  color: #c53030;
+}
+
+.content-filter-error.medium {
+  background: #fffbeb;
+  border-color: #d69e2e;
+  color: #b7791f;
+}
+
+.content-filter-error.low {
+  background: #e6f4ff;
+  border-color: #4c51bf;
+  color: #3c4fe0;
+}
+
+.filter-error-icon {
+  font-size: 1.3em;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.filter-error-content {
+  flex: 1;
+}
+
+.filter-error-title {
+  font-weight: 700;
+  font-size: 1em;
+  margin-bottom: 4px;
+}
+
+.filter-error-message {
+  font-size: 0.9em;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.content-warning {
+  text-align: center;
+  margin-top: 8px;
+  color: #d69e2e;
+  font-weight: 600;
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced input validation styles */
+.typing-input.error {
+  border-color: #e53e3e;
+  background-color: #fff5f5;
+}
+
+.typing-input.warning {
+  border-color: #d69e2e;
+  background-color: #fffbeb;
+}
+
+.submit-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.keyboard-hint {
+  margin-top: 10px;
+  color: #666;
+}
