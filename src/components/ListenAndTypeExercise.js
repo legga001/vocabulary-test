@@ -468,7 +468,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       setUserInput('');
       setTimeLeft(60);
       setPlayCount(0);
-      setIsPlaying(false);
+      setIsPlaying(false); // FIXED: Explicitly reset playing state
       setContentFilterError(null);
     } else {
       // Test completed
@@ -559,7 +559,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     setTestSentences(sentences);
   }, []);
 
-  // Timer countdown
+  // FIXED: Timer countdown - removed dependencies that were causing timer to pause
   useEffect(() => {
     if (hasStarted && timeLeft > 0 && !showResults) {
       const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
@@ -568,18 +568,21 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       console.log('Timer expired, moving to next');
       handleNext();
     }
-  }, [timeLeft, hasStarted, showResults, handleNext]);
+  }, [timeLeft, hasStarted, showResults]); // REMOVED handleNext dependency to prevent timer interference
 
-  // FIXED: Audio event listeners
+  // FIXED: Audio event listeners - added better state management
   useEffect(() => {
     if (!audioRef.current || !currentData) return;
 
     const audio = audioRef.current;
     
+    // FIXED: Reset playing state when new audio loads
+    setIsPlaying(false);
+    
     const handleLoadError = () => {
       console.log('Audio load error');
       setAudioError(true);
-      setIsPlaying(false); // FIXED: Reset playing state on error
+      setIsPlaying(false);
     };
 
     const handleCanPlay = () => {
@@ -602,12 +605,25 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       setIsPlaying(true);
     };
 
+    // FIXED: Also handle load events to ensure state is correct
+    const handleLoadStart = () => {
+      console.log('Audio load started');
+      setIsPlaying(false);
+    };
+
+    const handleLoadedData = () => {
+      console.log('Audio loaded data');
+      setIsPlaying(false);
+    };
+
     // Add all event listeners
     audio.addEventListener('error', handleLoadError);
     audio.addEventListener('canplay', handleCanPlay);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('play', handlePlay);
+    audio.addEventListener('loadstart', handleLoadStart);
+    audio.addEventListener('loadeddata', handleLoadedData);
 
     return () => {
       audio.removeEventListener('error', handleLoadError);
@@ -615,6 +631,8 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('loadstart', handleLoadStart);
+      audio.removeEventListener('loadeddata', handleLoadedData);
     };
   }, [currentData]);
 
@@ -629,7 +647,11 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   useEffect(() => {
     if (hasStarted && currentData && !audioError && playCount === 0) {
       console.log('Auto-playing audio for new sentence');
-      const autoPlayTimer = setTimeout(playAudio, 1000);
+      // FIXED: Reset playing state before auto-play to prevent stuck state
+      setIsPlaying(false);
+      const autoPlayTimer = setTimeout(() => {
+        playAudio();
+      }, 1000);
       return () => clearTimeout(autoPlayTimer);
     }
   }, [currentSentence, hasStarted, audioError, playCount, playAudio]);
