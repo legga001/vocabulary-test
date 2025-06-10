@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
-import { filterUserInput } from '../utils/contentFilter';
 
 // ==============================================
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS - Moved outside component for efficiency
 // ==============================================
 
 // Generate test sentences in proper order: A2 → B1 → B2 → C1
@@ -39,11 +38,9 @@ const generateTestSentences = () => {
     }
   });
 
-  // Log the generated sequence for verification
   console.log('Generated test sequence:', testSentences.map(s => ({
     order: s.id,
     level: s.level,
-    audio: s.audioFile,
     preview: s.correctText.substring(0, 25) + '...'
   })));
 
@@ -350,6 +347,29 @@ const checkAnswer = (userInput, correctText) => {
   return { type: 'incorrect', score: 0, highlights: highlights };
 };
 
+// Simple content filter (less strict than original)
+const checkBasicContentFilter = (text) => {
+  if (!text || typeof text !== 'string') return { isAllowed: true, error: null };
+  
+  // Only block extremely obvious inappropriate content
+  const obviouslyInappropriate = ['fuck', 'shit', 'bitch', 'damn'].some(word => 
+    text.toLowerCase().includes(word)
+  );
+  
+  if (obviouslyInappropriate) {
+    return {
+      isAllowed: false,
+      error: {
+        title: 'Language Filter Active',
+        message: 'Please use appropriate language for this educational exercise.',
+        severity: 'medium'
+      }
+    };
+  }
+  
+  return { isAllowed: true, error: null };
+};
+
 // ==============================================
 // MAIN COMPONENT
 // ==============================================
@@ -371,151 +391,63 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   const audioRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Get current sentence data
-  const currentData = testSentences[currentSentence] || null;
+  // Memoised current sentence data
+  const currentData = useMemo(() => testSentences[currentSentence] || null, [testSentences, currentSentence]);
 
   // ==============================================
-  // EFFECTS
-  // ==============================================
-  
-  // Generate test sentences on mount
-  useEffect(() => {
-    const sentences = generateTestSentences();
-    setTestSentences(sentences);
-  }, []);
-
-  // Timer countdown
-  useEffect(() => {
-    if (hasStarted && timeLeft > 0 && !showResults) {
-      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && hasStarted && !showResults) {
-      handleNext();
-    }
-  }, [timeLeft, hasStarted, showResults]);
-
-  // Audio event listeners
-  useEffect(() => {
-    if (!audioRef.current || !currentData) return;
-
-    const audio = audioRef.current;
-    
-    const handleLoadError = () => {
-      setAudioError(true);
-      console.warn(`Audio file ${currentData.audioFile} not found`);
-    };
-
-    const handleCanPlay = () => setAudioError(false);
-    const handleEnded = () => setIsPlaying(false);
-
-    audio.addEventListener('error', handleLoadError);
-    audio.addEventListener('canplay', handleCanPlay);
-    audio.addEventListener('ended', handleEnded);
-
-    return () => {
-      audio.removeEventListener('error', handleLoadError);
-      audio.removeEventListener('canplay', handleCanPlay);
-      audio.removeEventListener('ended', handleEnded);
-    };
-  }, [currentData]);
-
-  // Focus input when appropriate
-  useEffect(() => {
-    if (hasStarted && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [hasStarted, currentSentence]);
-
-  // Auto-play audio with delay
-  useEffect(() => {
-    if (hasStarted && currentData && !audioError && playCount === 0) {
-      const autoPlayTimer = setTimeout(playAudio, 1000);
-      return () => clearTimeout(autoPlayTimer);
-    }
-  }, [currentSentence, hasStarted, audioError, playCount]);
-
-  // Handle Enter key press to submit answer
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key === 'Enter' && hasStarted && !showResults && userInput.trim() && !contentFilterError) {
-        e.preventDefault();
-        handleSubmit();
-      }
-    };
-
-    if (hasStarted && !showResults) {
-      document.addEventListener('keypress', handleKeyPress);
-      return () => {
-        document.removeEventListener('keypress', handleKeyPress);
-      };
-    }
-  }, [hasStarted, showResults, userInput, contentFilterError]);
-
-  // ==============================================
-  // HANDLERS
+  // OPTIMISED HANDLERS WITH useCallback
   // ==============================================
   
-  const formatTime = (seconds) => {
+  const formatTime = useCallback((seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  }, []);
 
-  const playAudio = () => {
-    if (playCount >= 3 || !audioRef.current || audioError) return;
+  const playAudio = useCallback(() => {
+    console.log('Play audio clicked, playCount:', playCount);
+    
+    if (playCount >= 3 || !audioRef.current || audioError) {
+      console.log('Cannot play audio - limit reached or error');
+      return;
+    }
     
     setIsPlaying(true);
     audioRef.current.currentTime = 0;
     
     audioRef.current.play()
-      .then(() => setPlayCount(prev => prev + 1))
+      .then(() => {
+        console.log('Audio play successful');
+        setPlayCount(prev => prev + 1);
+      })
       .catch(error => {
         console.error('Audio play error:', error);
         setAudioError(true);
         setIsPlaying(false);
       });
-  };
+  }, [playCount, audioError]);
 
-  const startExercise = () => {
+  const startExercise = useCallback(() => {
+    console.log('Starting exercise');
     setHasStarted(true);
     setTimeLeft(60);
-  };
+  }, []);
 
-  // NEW: Content filter input handler
-  const handleInputChange = (value) => {
+  const handleInputChange = useCallback((value) => {
     setUserInput(value);
     
-    // Check content filter as user types
+    // Simple content filter check
     if (value.trim().length > 0) {
-      const filterResult = filterUserInput(value);
-      if (!filterResult.isAllowed) {
-        setContentFilterError(filterResult.error);
-      } else {
-        setContentFilterError(null);
-      }
+      const filterResult = checkBasicContentFilter(value);
+      setContentFilterError(filterResult.isAllowed ? null : filterResult.error);
     } else {
       setContentFilterError(null);
     }
-  };
+  }, []);
 
-  // UPDATED: Submit handler with content filter
-  const handleSubmit = () => {
-    if (!currentData || !userInput.trim()) return;
-
-    // Check content filter before processing
-    const filterResult = filterUserInput(userInput);
+  const handleNext = useCallback(() => {
+    console.log('Moving to next question');
     
-    if (!filterResult.isAllowed) {
-      setContentFilterError(filterResult.error);
-      return; // Stop here - don't process inappropriate content
-    }
-
-    // Clear any filter errors and continue normally
-    setContentFilterError(null);
-    handleNext();
-  };
-
-  const handleNext = () => {
     if (!currentData) return;
 
     const result = checkAnswer(userInput, currentData.correctText);
@@ -537,14 +469,34 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       setTimeLeft(60);
       setPlayCount(0);
       setIsPlaying(false);
-      setContentFilterError(null); // Clear content filter error
+      setContentFilterError(null);
     } else {
       // Test completed
       setShowResults(true);
     }
-  };
+  }, [currentData, userInput, timeLeft, currentSentence, testSentences.length]);
 
-  const calculateScore = () => {
+  const handleSubmit = useCallback(() => {
+    console.log('Submit button clicked');
+    console.log('User input:', userInput);
+    console.log('Content filter error:', contentFilterError);
+    
+    if (!currentData || !userInput.trim()) {
+      console.log('No current data or empty input');
+      return;
+    }
+
+    // Check basic content filter
+    if (contentFilterError) {
+      console.log('Content filter error present, not submitting');
+      return;
+    }
+
+    console.log('Processing answer...');
+    handleNext();
+  }, [currentData, userInput, contentFilterError, handleNext]);
+
+  const calculateScore = useCallback(() => {
     const totalScore = answers.reduce((sum, answer) => sum + answer.result.score, 0);
     const maxScore = answers.length;
     const percentage = Math.round((totalScore / maxScore) * 100);
@@ -563,9 +515,10 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       partial,
       incorrect
     };
-  };
+  }, [answers]);
 
-  const restartTest = () => {
+  const restartTest = useCallback(() => {
+    console.log('Restarting test');
     setCurrentSentence(0);
     setUserInput('');
     setTimeLeft(60);
@@ -580,13 +533,9 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     // Generate new random sentences in proper order
     const newSentences = generateTestSentences();
     setTestSentences(newSentences);
-  };
+  }, []);
 
-  // ==============================================
-  // RENDER HELPER FUNCTIONS
-  // ==============================================
-  
-  const getResultDisplay = (result) => {
+  const getResultDisplay = useCallback((result) => {
     switch(result.type) {
       case 'perfect':
         return { emoji: '💯', label: 'Perfect!', className: 'perfect' };
@@ -597,7 +546,113 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       default:
         return { emoji: '❌', label: 'Incorrect', className: 'incorrect' };
     }
-  };
+  }, []);
+
+  // ==============================================
+  // EFFECTS
+  // ==============================================
+  
+  // Generate test sentences on mount
+  useEffect(() => {
+    console.log('Component mounted, generating test sentences');
+    const sentences = generateTestSentences();
+    setTestSentences(sentences);
+  }, []);
+
+  // Timer countdown
+  useEffect(() => {
+    if (hasStarted && timeLeft > 0 && !showResults) {
+      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (timeLeft === 0 && hasStarted && !showResults) {
+      console.log('Timer expired, moving to next');
+      handleNext();
+    }
+  }, [timeLeft, hasStarted, showResults, handleNext]);
+
+  // FIXED: Audio event listeners
+  useEffect(() => {
+    if (!audioRef.current || !currentData) return;
+
+    const audio = audioRef.current;
+    
+    const handleLoadError = () => {
+      console.log('Audio load error');
+      setAudioError(true);
+      setIsPlaying(false); // FIXED: Reset playing state on error
+    };
+
+    const handleCanPlay = () => {
+      console.log('Audio can play');
+      setAudioError(false);
+    };
+    
+    const handleEnded = () => {
+      console.log('Audio ended');
+      setIsPlaying(false);
+    };
+
+    const handlePause = () => {
+      console.log('Audio paused');
+      setIsPlaying(false);
+    };
+
+    const handlePlay = () => {
+      console.log('Audio started playing');
+      setIsPlaying(true);
+    };
+
+    // Add all event listeners
+    audio.addEventListener('error', handleLoadError);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('play', handlePlay);
+
+    return () => {
+      audio.removeEventListener('error', handleLoadError);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('play', handlePlay);
+    };
+  }, [currentData]);
+
+  // Focus input when appropriate
+  useEffect(() => {
+    if (hasStarted && inputRef.current && !showResults) {
+      inputRef.current.focus();
+    }
+  }, [hasStarted, currentSentence, showResults]);
+
+  // Auto-play audio with delay
+  useEffect(() => {
+    if (hasStarted && currentData && !audioError && playCount === 0) {
+      console.log('Auto-playing audio for new sentence');
+      const autoPlayTimer = setTimeout(playAudio, 1000);
+      return () => clearTimeout(autoPlayTimer);
+    }
+  }, [currentSentence, hasStarted, audioError, playCount, playAudio]);
+
+  // FIXED: Enter key handler
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      console.log('Key pressed:', e.key);
+      
+      if (e.key === 'Enter' && hasStarted && !showResults && userInput.trim() && !contentFilterError) {
+        e.preventDefault();
+        console.log('Enter key - calling handleSubmit');
+        handleSubmit();
+      }
+    };
+
+    if (hasStarted && !showResults) {
+      document.addEventListener('keypress', handleKeyPress);
+      return () => {
+        document.removeEventListener('keypress', handleKeyPress);
+      };
+    }
+  }, [hasStarted, showResults, userInput, contentFilterError, handleSubmit]);
 
   // ==============================================
   // RENDER CONDITIONS
