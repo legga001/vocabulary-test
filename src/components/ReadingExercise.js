@@ -1,133 +1,132 @@
-// src/components/ReadingExercise.js - Rewritten with streamlined article flow
-import React, { useState, useEffect } from 'react';
+// src/components/ReadingExercise.js - Rewritten for efficiency and clean syntax
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
-import { questions as staticQuestions } from '../questionsData';
-import { correctMessages } from '../questionsData';
+import { questions as staticQuestions, correctMessages } from '../questionsData';
 import AnswerReview from './AnswerReview';
 import ArticleSelection from './ArticleSelection';
 import RealFakeWordsExercise from './RealFakeWordsExercise';
 import LetterInput from './LetterInput';
+import ClickableLogo from './ClickableLogo';
 import { processSentence, extractVisibleLetters } from '../utils/quizHelpers';
 
-// Function to get alternative spellings (British vs American)
-const getAlternativeSpellings = (word) => {
-  const spellingMap = {
-    // American to British
-    'analyze': ['analyse'],
-    'realize': ['realise'],
-    'organize': ['organise'],
-    'recognize': ['recognise'],
-    'criticize': ['criticise'],
-    'apologize': ['apologise'],
-    'optimize': ['optimise'],
-    'minimize': ['minimise'],
-    'maximize': ['maximise'],
-    'centralize': ['centralise'],
-    'normalize': ['normalise'],
-    'categorize': ['categorise'],
-    'memorize': ['memorise'],
-    'authorize': ['authorise'],
-    'modernize': ['modernise'],
-    'utilize': ['utilise'],
-    'fertilize': ['fertilise'],
-    'sterilize': ['sterilise'],
-    'stabilize': ['stabilise'],
-    'summarize': ['summarise'],
-    // British to American
-    'analyse': ['analyze'],
-    'realise': ['realize'],
-    'organise': ['organize'],
-    'recognise': ['recognize'],
-    'criticise': ['criticize'],
-    'apologise': ['apologize'],
-    'optimise': ['optimize'],
-    'minimise': ['minimize'],
-    'maximise': ['maximize'],
-    'centralise': ['centralize'],
-    'normalise': ['normalize'],
-    'categorise': ['categorize'],
-    'memorise': ['memorize'],
-    'authorise': ['authorize'],
-    'modernise': ['modernize'],
-    'utilise': ['utilize'],
-    'fertilise': ['fertilize'],
-    'sterilise': ['sterilize'],
-    'stabilise': ['stabilize'],
-    'summarise': ['summarize'],
-    // Color/colour variations
-    'color': ['colour'],
-    'colour': ['color'],
-    'colors': ['colours'],
-    'colours': ['colors'],
-    'colored': ['coloured'],
-    'coloured': ['colored'],
-    'coloring': ['colouring'],
-    'colouring': ['coloring'],
-    // Honor/honour variations
-    'honor': ['honour'],
-    'honour': ['honor'],
-    'honors': ['honours'],
-    'honours': ['honors'],
-    'honored': ['honoured'],
-    'honoured': ['honored'],
-    'honoring': ['honouring'],
-    'honouring': ['honoring'],
-    // Center/centre variations
-    'center': ['centre'],
-    'centre': ['center'],
-    'centers': ['centres'],
-    'centres': ['centers'],
-    'centered': ['centred'],
-    'centred': ['centered'],
-    'centering': ['centring'],
-    'centring': ['centering'],
-    // Theater/theatre variations
-    'theater': ['theatre'],
-    'theatre': ['theater'],
-    'theaters': ['theatres'],
-    'theatres': ['theaters'],
-    // Meter/metre variations
-    'meter': ['metre'],
-    'metre': ['meter'],
-    'meters': ['metres'],
-    'metres': ['meters']
-  };
-  
-  const normalizedWord = word.toLowerCase();
-  return spellingMap[normalizedWord] || [];
+// Constants
+const INITIAL_ANSWERS = new Array(10).fill('');
+const INITIAL_CHECKED = new Array(10).fill(false);
+const INITIAL_FEEDBACK = { show: false, type: '', message: '' };
+
+// British/American spelling variations map
+const SPELLING_VARIATIONS = {
+  'analyze': ['analyse'], 'realize': ['realise'], 'organize': ['organise'],
+  'recognize': ['recognise'], 'criticize': ['criticise'], 'apologize': ['apologise'],
+  'optimize': ['optimise'], 'minimize': ['minimise'], 'maximize': ['maximise'],
+  'centralize': ['centralise'], 'normalize': ['normalise'], 'categorize': ['categorise'],
+  'memorize': ['memorise'], 'authorize': ['authorise'], 'modernize': ['modernise'],
+  'utilize': ['utilise'], 'fertilize': ['fertilise'], 'sterilize': ['sterilise'],
+  'stabilize': ['stabilise'], 'summarize': ['summarise'],
+  // Reverse mappings
+  'analyse': ['analyze'], 'realise': ['realize'], 'organise': ['organize'],
+  'recognise': ['recognize'], 'criticise': ['criticize'], 'apologise': ['apologize'],
+  'optimise': ['optimize'], 'minimise': ['minimize'], 'maximise': ['maximize'],
+  'centralise': ['centralize'], 'normalise': ['normalize'], 'categorise': ['categorize'],
+  'memorise': ['memorize'], 'authorise': ['authorize'], 'modernise': ['modernize'],
+  'utilise': ['utilize'], 'fertilise': ['fertilize'], 'sterilise': ['sterilize'],
+  'stabilise': ['stabilize'], 'summarise': ['summarize'],
+  // Color/colour variations
+  'color': ['colour'], 'colours': ['colors'], 'colored': ['coloured'], 'coloring': ['colouring'],
+  'colour': ['color'], 'colors': ['colours'], 'coloured': ['colored'], 'colouring': ['coloring'],
+  // Honor/honour variations
+  'honor': ['honour'], 'honors': ['honours'], 'honored': ['honoured'], 'honoring': ['honouring'],
+  'honour': ['honor'], 'honours': ['honors'], 'honoured': ['honored'], 'honouring': ['honoring'],
+  // Center/centre variations
+  'center': ['centre'], 'centers': ['centres'], 'centered': ['centred'], 'centering': ['centring'],
+  'centre': ['center'], 'centres': ['centers'], 'centred': ['centered'], 'centring': ['centering'],
+  // Theater/theatre variations
+  'theater': ['theatre'], 'theaters': ['theatres'], 'theatre': ['theater'], 'theatres': ['theaters'],
+  // Meter/metre variations
+  'meter': ['metre'], 'meters': ['metres'], 'metre': ['meter'], 'metres': ['meters']
 };
 
 function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
+  // State management
   const [currentView, setCurrentView] = useState(initialView);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
-  const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
-  const [feedback, setFeedback] = useState({ show: false, type: '', message: '' });
+  const [userAnswers, setUserAnswers] = useState(INITIAL_ANSWERS);
+  const [checkedQuestions, setCheckedQuestions] = useState(INITIAL_CHECKED);
+  const [feedback, setFeedback] = useState(INITIAL_FEEDBACK);
   const [showResults, setShowResults] = useState(false);
 
-  // Determine if we came directly from landing page
+  // Derived state
   const isDirectFromLanding = initialView !== 'selection';
 
-  // Get article info for displays
-  const octopusArticleInfo = getReadingArticleInfo();
-  const smugglingArticleInfo = getArticleInfo();
+  // Memoised article information
+  const { octopusArticleInfo, smugglingArticleInfo } = useMemo(() => ({
+    octopusArticleInfo: getReadingArticleInfo(),
+    smugglingArticleInfo: getArticleInfo()
+  }), []);
 
-  // Get questions based on current quiz type
-  const getQuestionsForCurrentQuiz = () => {
-    if (currentView === 'octopus-quiz') return getReadingVocabularyQuestions();
-    if (currentView === 'smuggling-quiz') return getArticleQuestions();
-    if (currentView === 'standard-quiz') return staticQuestions;
-    return [];
-  };
+  // Memoised questions based on current quiz type
+  const questions = useMemo(() => {
+    switch (currentView) {
+      case 'octopus-quiz': return getReadingVocabularyQuestions();
+      case 'smuggling-quiz': return getArticleQuestions();
+      case 'standard-quiz': return staticQuestions;
+      default: return [];
+    }
+  }, [currentView]);
 
-  const questions = getQuestionsForCurrentQuiz();
-  const question = questions[currentQuestion];
+  // Current question data
+  const currentQuestionData = questions[currentQuestion];
   const progress = ((currentQuestion) / 10) * 100;
 
-  // Add Enter key listener for checking answers (only during quiz)
+  // Get alternative spellings function
+  const getAlternativeSpellings = useCallback((word) => {
+    const normalizedWord = word.toLowerCase();
+    return SPELLING_VARIATIONS[normalizedWord] || [];
+  }, []);
+
+  // Reset quiz state function
+  const resetQuizState = useCallback(() => {
+    setCurrentQuestion(0);
+    setUserAnswers(INITIAL_ANSWERS);
+    setCheckedQuestions(INITIAL_CHECKED);
+    setFeedback(INITIAL_FEEDBACK);
+    setShowResults(false);
+  }, []);
+
+  // Navigation functions
+  const navigationHandlers = useMemo(() => ({
+    goToArticleSelection: () => setCurrentView('article-selection'),
+    startStandardQuiz: () => {
+      setCurrentView('standard-quiz');
+      resetQuizState();
+    },
+    startWordRecognition: () => {
+      setCurrentView('real-fake-words');
+      resetQuizState();
+    },
+    startArticleQuiz: (articleType) => {
+      setCurrentView(articleType);
+      resetQuizState();
+    },
+    backToSelection: () => {
+      if (isDirectFromLanding) {
+        onBack();
+      } else {
+        setCurrentView('selection');
+        resetQuizState();
+      }
+    },
+    backToArticleSelection: () => {
+      setCurrentView('article-selection');
+      resetQuizState();
+    }
+  }), [isDirectFromLanding, onBack, resetQuizState]);
+
+  // Enter key handler for checking answers
   useEffect(() => {
-    if (currentView !== 'selection' && currentView !== 'article-selection' && currentView !== 'real-fake-words' && !showResults) {
+    if (currentView !== 'selection' && currentView !== 'article-selection' && 
+        currentView !== 'real-fake-words' && !showResults) {
       const handleKeyPress = (e) => {
         if (e.key === 'Enter' && userAnswers[currentQuestion] && !checkedQuestions[currentQuestion]) {
           checkAnswer();
@@ -135,140 +134,94 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       };
 
       document.addEventListener('keypress', handleKeyPress);
-      return () => {
-        document.removeEventListener('keypress', handleKeyPress);
-      };
+      return () => document.removeEventListener('keypress', handleKeyPress);
     }
   }, [userAnswers, currentQuestion, checkedQuestions, currentView, showResults]);
 
-  // Navigation functions
-  const goToArticleSelection = () => {
-    setCurrentView('article-selection');
-  };
-
-  const startStandardQuiz = () => {
-    setCurrentView('standard-quiz');
-    resetQuizState();
-  };
-
-  const startWordRecognition = () => {
-    setCurrentView('real-fake-words');
-    resetQuizState();
-  };
-
-  const startArticleQuiz = (articleType) => {
-    setCurrentView(articleType);
-    resetQuizState();
-  };
-
-  const resetQuizState = () => {
-    setCurrentQuestion(0);
-    setUserAnswers(new Array(10).fill(''));
-    setCheckedQuestions(new Array(10).fill(false));
-    setFeedback({ show: false, type: '', message: '' });
-    setShowResults(false);
-  };
-
-  const backToSelection = () => {
-    if (isDirectFromLanding) {
-      onBack();
-    } else {
-      setCurrentView('selection');
-      resetQuizState();
-    }
-  };
-
-  const backToArticleSelection = () => {
-    setCurrentView('article-selection');
-    resetQuizState();
-  };
-
-  // Show the Real/Fake Words exercise
-  if (currentView === 'real-fake-words') {
-    return <RealFakeWordsExercise onBack={backToSelection} onLogoClick={onLogoClick} />;
-  }
-
-  // Quiz logic
-  const checkAnswer = () => {
+  // Answer checking logic
+  const checkAnswer = useCallback(() => {
     const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
-    const correctAnswer = question.answer.toLowerCase();
-    
-    // Check for alternative spellings (British vs American)
-    const alternativeAnswers = getAlternativeSpellings(question.answer);
+    const correctAnswer = currentQuestionData.answer.toLowerCase();
+    const alternativeAnswers = getAlternativeSpellings(currentQuestionData.answer);
     const isCorrect = userAnswer === correctAnswer || alternativeAnswers.includes(userAnswer);
 
     if (isCorrect) {
       const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
       setFeedback({ show: true, type: 'correct', message: randomMessage });
       
-      // Only disable input after correct answer
-      const newChecked = [...checkedQuestions];
-      newChecked[currentQuestion] = true;
-      setCheckedQuestions(newChecked);
+      setCheckedQuestions(prev => {
+        const newChecked = [...prev];
+        newChecked[currentQuestion] = true;
+        return newChecked;
+      });
     } else {
-      setFeedback({ show: true, type: 'incorrect', message: `💡 Hint: ${question.hint}` });
-      // Don't disable input for incorrect answers - allow retry
+      setFeedback({ 
+        show: true, 
+        type: 'incorrect', 
+        message: `💡 Hint: ${currentQuestionData.hint}` 
+      });
     }
-  };
+  }, [userAnswers, currentQuestion, currentQuestionData, getAlternativeSpellings]);
 
-  const updateAnswer = (value) => {
-    const newAnswers = [...userAnswers];
-    newAnswers[currentQuestion] = value;
-    setUserAnswers(newAnswers);
-  };
+  // Answer update handler
+  const updateAnswer = useCallback((value) => {
+    setUserAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[currentQuestion] = value;
+      return newAnswers;
+    });
+  }, [currentQuestion]);
 
-  const previousQuestion = () => {
+  // Navigation handlers
+  const previousQuestion = useCallback(() => {
     if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
-      setFeedback({ show: false, type: '', message: '' });
+      setCurrentQuestion(prev => prev - 1);
+      setFeedback(INITIAL_FEEDBACK);
     }
-  };
+  }, [currentQuestion]);
 
-  const nextQuestion = () => {
+  const nextQuestion = useCallback(() => {
     if (currentQuestion === 9) {
       setShowResults(true);
     } else {
-      setCurrentQuestion(currentQuestion + 1);
-      setFeedback({ show: false, type: '', message: '' });
-      // Small delay to allow component to re-render before focus
-      setTimeout(() => {
-        // Focus will be handled by LetterInput component's useEffect
-      }, 50);
+      setCurrentQuestion(prev => prev + 1);
+      setFeedback(INITIAL_FEEDBACK);
     }
-  };
+  }, [currentQuestion]);
 
-  const calculateScore = () => {
-    let score = 0;
-    for (let i = 0; i < 10; i++) {
-      if (userAnswers && userAnswers[i]) {
-        const userAnswer = userAnswers[i].toLowerCase().trim();
-        const correctAnswer = questions[i].answer.toLowerCase();
-        const alternativeAnswers = getAlternativeSpellings(questions[i].answer);
-        
-        if (userAnswer === correctAnswer || alternativeAnswers.includes(userAnswer)) {
-          score++;
-        }
+  // Score calculation
+  const calculateScore = useCallback(() => {
+    return userAnswers.slice(0, 10).reduce((score, answer, index) => {
+      if (!answer) return score;
+      
+      const userAnswer = answer.toLowerCase().trim();
+      const correctAnswer = questions[index].answer.toLowerCase();
+      const alternativeAnswers = getAlternativeSpellings(questions[index].answer);
+      
+      if (userAnswer === correctAnswer || alternativeAnswers.includes(userAnswer)) {
+        return score + 1;
       }
-    }
-    return score;
-  };
+      return score;
+    }, 0);
+  }, [userAnswers, questions, getAlternativeSpellings]);
 
-  // Article Selection View
+  // Render Real/Fake Words exercise
+  if (currentView === 'real-fake-words') {
+    return <RealFakeWordsExercise onBack={navigationHandlers.backToSelection} onLogoClick={onLogoClick} />;
+  }
+
+  // Render Article Selection
   if (currentView === 'article-selection') {
     return (
       <ArticleSelection 
-        onBack={backToSelection}
+        onBack={navigationHandlers.backToSelection}
         onLogoClick={onLogoClick}
-        onSelectArticle={(articleId) => {
-          // Directly start the quiz for the selected article
-          setCurrentView(articleId);
-          resetQuizState();
-        }}
+        onSelectArticle={navigationHandlers.startArticleQuiz}
       />
     );
   }
 
-  // Results view
+  // Render Results
   if (showResults) {
     const score = calculateScore();
     const isArticleTest = currentView === 'octopus-quiz' || currentView === 'smuggling-quiz';
@@ -276,15 +229,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
 
     return (
       <div className="exercise-page scrollable-page">
-        <div className="logo-container">
-          <img 
-            src="/purple_fox_transparent.png" 
-            alt="Mr. Fox English" 
-            className="app-logo"
-            onClick={onLogoClick}
-            style={{ cursor: 'pointer' }}
-          />
-        </div>
+        <ClickableLogo onLogoClick={onLogoClick} />
         
         <div className="quiz-container">
           <h1>📖 Reading Exercise Results</h1>
@@ -309,34 +254,15 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
               {isArticleTest && ' This helps you learn words in context from real news stories.'}
             </div>
             
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px', flexWrap: 'wrap' }}>
-              <button 
-                className="btn btn-primary" 
-                onClick={() => {
-                  // Reset to quiz state for same article type
-                  resetQuizState();
-                }}
-              >
-                🔄 Try Again
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
+              <button className="btn btn-primary" onClick={navigationHandlers.backToSelection}>
+                {isDirectFromLanding ? 'Back to Main Menu' : 'Try Another Test'}
               </button>
-              <button 
-                className="btn btn-secondary" 
-                onClick={() => {
-                  if (currentView === 'octopus-quiz' || currentView === 'smuggling-quiz') {
-                    setCurrentView('article-selection');
-                    resetQuizState();
-                  } else if (isDirectFromLanding) {
-                    onBack();
-                  } else {
-                    backToSelection();
-                  }
-                }}
-              >
-                ← Back to {
-                  (currentView === 'octopus-quiz' || currentView === 'smuggling-quiz') ? 'Article Selection' :
-                  isDirectFromLanding ? 'Main Menu' : 'Reading Options'
-                }
-              </button>
+              {!isDirectFromLanding && (
+                <button className="btn btn-secondary" onClick={onBack}>
+                  ← Back to Exercises
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -344,13 +270,9 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     );
   }
 
-  // Quiz view
+  // Render Quiz Interface
   if (currentView !== 'selection') {
-    // Process the current sentence
-    const processedData = processSentence(question.sentence, question.answer);
-    const visibleLetters = extractVisibleLetters(question.sentence);
-
-    // Get article info for current quiz
+    const processedData = processSentence(currentQuestionData.sentence, currentQuestionData.answer);
     const getCurrentArticleInfo = () => {
       if (currentView === 'octopus-quiz') return octopusArticleInfo;
       if (currentView === 'smuggling-quiz') return smugglingArticleInfo;
@@ -361,7 +283,6 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
 
     return (
       <div className="exercise-page">
-        {/* Article Link Button - Only show for article-based tests */}
         {currentArticleInfo && (
           <div className="article-link-header">
             <button 
@@ -393,7 +314,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
 
           <div className="question-header">
             <div className="question-number">Question {currentQuestion + 1}</div>
-            <div className="level-badge">{question.level}</div>
+            <div className="level-badge">{currentQuestionData.level}</div>
           </div>
 
           <div className="question-section">
@@ -401,7 +322,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
               {processedData.beforeGap}
               <div className="letter-input-wrapper">
                 <LetterInput
-                  word={question.answer}
+                  word={currentQuestionData.answer}
                   value={userAnswers[currentQuestion]}
                   onChange={updateAnswer}
                   disabled={checkedQuestions[currentQuestion]}
@@ -412,10 +333,9 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
               {processedData.afterGap}
             </div>
 
-            {/* Show context for article-based questions */}
-            {question.context && (
+            {currentQuestionData.context && (
               <div className="question-context">
-                <small>📰 {question.context}</small>
+                <small>📰 {currentQuestionData.context}</small>
               </div>
             )}
           </div>
@@ -450,23 +370,9 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
           <div className="quiz-footer">
             <button 
               className="btn btn-secondary btn-small" 
-              onClick={() => {
-                // If we're in an article quiz, go back to article selection
-                // Otherwise go to appropriate parent screen
-                if (currentView === 'octopus-quiz' || currentView === 'smuggling-quiz') {
-                  setCurrentView('article-selection');
-                  resetQuizState();
-                } else if (isDirectFromLanding) {
-                  onBack();
-                } else {
-                  backToSelection();
-                }
-              }}
+              onClick={currentArticleInfo ? navigationHandlers.backToArticleSelection : navigationHandlers.backToSelection}
             >
-              ← Back to {
-                (currentView === 'octopus-quiz' || currentView === 'smuggling-quiz') ? 'Article Selection' :
-                isDirectFromLanding ? 'Main Menu' : 'Reading Options'
-              }
+              ← Back to {isDirectFromLanding ? 'Main Menu' : (currentArticleInfo ? 'Article Selection' : 'Reading Options')}
             </button>
           </div>
         </div>
@@ -474,18 +380,10 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     );
   }
 
-  // Main Selection view (Reading page)
+  // Render Main Selection View
   return (
     <div className="exercise-page">
-      <div className="logo-container">
-        <img 
-          src="/purple_fox_transparent.png" 
-          alt="Mr. Fox English" 
-          className="app-logo"
-          onClick={onLogoClick}
-          style={{ cursor: 'pointer' }}
-        />
-      </div>
+      <ClickableLogo onLogoClick={onLogoClick} />
       
       <h1>📖 Reading Exercises</h1>
       
@@ -494,8 +392,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       </div>
 
       <div className="reading-main-options">
-        {/* Standard Vocabulary Test */}
-        <div className="reading-main-card" onClick={startStandardQuiz}>
+        <div className="reading-main-card" onClick={navigationHandlers.startStandardQuiz}>
           <div className="card-icon">📚</div>
           <h3>Standard Vocabulary</h3>
           <p>General vocabulary across different CEFR levels (A2-C1)</p>
@@ -507,8 +404,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
           <div className="card-arrow">→</div>
         </div>
 
-        {/* Article-Based Tests */}
-        <div className="reading-main-card" onClick={goToArticleSelection}>
+        <div className="reading-main-card" onClick={navigationHandlers.goToArticleSelection}>
           <div className="card-icon">📰</div>
           <h3>Article-Based Vocabulary</h3>
           <p>Vocabulary from current BBC news articles</p>
@@ -520,8 +416,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
           <div className="card-arrow">→</div>
         </div>
 
-        {/* Real or Fake Words */}
-        <div className="reading-main-card featured-card" onClick={startWordRecognition}>
+        <div className="reading-main-card featured-card" onClick={navigationHandlers.startWordRecognition}>
           <div className="new-badge">✨ NEW</div>
           <div className="card-icon">🎯</div>
           <h3>Real or Fake Words</h3>
@@ -536,7 +431,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       </div>
 
       <div className="reading-info">
-        <h3>💡 Why Practise Reading Vocabulary?</h3>
+        <h3>💡 Why Practice Reading Vocabulary?</h3>
         <p>Building vocabulary through reading helps you understand context, improve comprehension, and learn how words are used naturally in English. Word recognition exercises train your brain to quickly identify real English words from fake ones.</p>
       </div>
 
