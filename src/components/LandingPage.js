@@ -1,7 +1,129 @@
-// src/components/LandingPage.js - Complete with Listen and Type only
-import React, { useEffect, useState } from 'react';
+// src/components/LandingPage.js - Rewritten with efficiency improvements and title fix
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+
+// Constants moved outside component for better performance
+const CATEGORIES = [
+  { id: 'ALL', name: 'ALL', icon: '📚' },
+  { id: 'READING', name: 'READING', icon: '📖' },
+  { id: 'WRITING', name: 'WRITING', icon: '✍️' },
+  { id: 'LISTENING', name: 'LISTENING', icon: '🎧' },
+  { id: 'SPEAKING', name: 'SPEAKING', icon: '🎤' }
+];
+
+const EXERCISES = [
+  // READING EXERCISES
+  {
+    type: 'standard-vocabulary',
+    category: 'READING',
+    icon: '📖',
+    title: 'Standard Vocabulary',
+    subtitle: 'Fill in the gaps',
+    progress: '6/10',
+    isActive: true
+  },
+  {
+    type: 'article-vocabulary', 
+    category: 'READING', 
+    icon: '📰',
+    title: 'Article-Based Vocab',
+    subtitle: 'Real news stories',
+    progress: '3/8',
+    isActive: true
+  },
+  {
+    type: 'real-fake-words',
+    category: 'READING',
+    icon: '🎯',
+    title: 'Real or Fake Words',
+    subtitle: 'Quick recognition',
+    progress: '2/5',
+    isActive: true,
+    isNew: true
+  },
+  
+  // LISTENING EXERCISES
+  {
+    type: 'listen-and-type',
+    category: 'LISTENING',
+    icon: '🎧',
+    title: 'Listen and Type',
+    subtitle: 'Type what you hear',
+    progress: '0/10',
+    isActive: true,
+    isNew: true,
+    isDET: true
+  },
+  {
+    type: 'listening',
+    category: 'LISTENING',
+    icon: '🔊',
+    title: 'Audio Comprehension',
+    subtitle: 'Listen and answer',
+    progress: '0/7',
+    isActive: false
+  },
+  {
+    type: 'listening',
+    category: 'LISTENING',
+    icon: '🎵',
+    title: 'Pronunciation Practice',
+    subtitle: 'Listen and repeat',
+    progress: '0/5',
+    isActive: false
+  },
+  
+  // WRITING EXERCISES
+  {
+    type: 'writing',
+    category: 'WRITING',
+    icon: '✍️',
+    title: 'Grammar Practice',
+    subtitle: 'Sentence building',
+    progress: '0/6',
+    isActive: false
+  },
+  {
+    type: 'writing',
+    category: 'WRITING',
+    icon: '📝',
+    title: 'Essay Writing',
+    subtitle: 'Structured responses',
+    progress: '0/4',
+    isActive: false
+  },
+  
+  // SPEAKING EXERCISES
+  {
+    type: 'speaking',
+    category: 'SPEAKING',
+    icon: '🎤',
+    title: 'Conversation Practice',
+    subtitle: 'Speaking prompts',
+    progress: '0/6',
+    isActive: false
+  },
+  {
+    type: 'speaking',
+    category: 'SPEAKING',
+    icon: '🗣️',
+    title: 'Pronunciation Check',
+    subtitle: 'Voice analysis',
+    progress: '0/4',
+    isActive: false
+  }
+];
+
+const MENU_ITEMS = [
+  { id: 'home', icon: '🏠', text: 'HOME', action: null, isActive: true },
+  { id: 'practice', icon: '🎯', text: 'PRACTICE', action: null, isActive: true },
+  { id: 'progress', icon: '📊', text: 'MY PROGRESS', action: 'progress', isActive: true }, // Fixed: made active
+  { id: 'settings', icon: '⚙️', text: 'SETTINGS', action: null, isActive: false },
+  { id: 'language', icon: '🌐', text: 'SITE LANGUAGE', action: null, isActive: false },
+  { id: 'logout', icon: '↗️', text: 'LOG OUT', action: null, isActive: false }
+];
 
 function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitioning }) {
+  // State management
   const [showExercises, setShowExercises] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -16,149 +138,122 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     }
   }, [isTransitioning]);
 
-  const categories = [
-    { id: 'ALL', name: 'ALL', icon: '📚' },
-    { id: 'READING', name: 'READING', icon: '📖' },
-    { id: 'WRITING', name: 'WRITING', icon: '✍️' },
-    { id: 'LISTENING', name: 'LISTENING', icon: '🎧' },
-    { id: 'SPEAKING', name: 'SPEAKING', icon: '🎤' }
-  ];
+  // Memoized filtered exercises for performance
+  const filteredExercises = useMemo(() => {
+    if (selectedCategory === 'ALL') return EXERCISES;
+    return EXERCISES.filter(ex => ex.category === selectedCategory);
+  }, [selectedCategory]);
 
-  const exercises = [
-    // READING EXERCISES
-    {
-      type: 'standard-vocabulary',
-      category: 'READING',
-      icon: '📖',
-      title: 'Standard Vocabulary',
-      subtitle: 'Fill in the gaps',
-      progress: '6/10',
-      isActive: true
-    },
-    {
-      type: 'article-vocabulary', 
-      category: 'READING', 
-      icon: '📰',
-      title: 'Article-Based Vocab',
-      subtitle: 'Real news stories',
-      progress: '3/8',
-      isActive: true
-    },
-    {
-      type: 'real-fake-words',
-      category: 'READING',
-      icon: '🎯',
-      title: 'Real or Fake Words',
-      subtitle: 'Quick recognition',
-      progress: '2/5',
-      isActive: true,
-      isNew: true
-    },
-    
-    // LISTENING EXERCISES
-    {
-      type: 'listen-and-type',
-      category: 'LISTENING',
-      icon: '🎧',
-      title: 'Listen and Type',
-      subtitle: 'Type what you hear',
-      progress: '0/10',
-      isActive: true,
-      isNew: true,
-      isDET: true
-    },
-    {
-      type: 'listening',
-      category: 'LISTENING',
-      icon: '🔊',
-      title: 'Audio Comprehension',
-      subtitle: 'Listen and answer',
-      progress: '0/7',
-      isActive: false
-    },
-    {
-      type: 'listening',
-      category: 'LISTENING',
-      icon: '🎵',
-      title: 'Pronunciation Practice',
-      subtitle: 'Listen and repeat',
-      progress: '0/5',
-      isActive: false
-    },
-    
-    // WRITING EXERCISES
-    {
-      type: 'writing',
-      category: 'WRITING',
-      icon: '✍️',
-      title: 'Grammar Practice',
-      subtitle: 'Sentence building',
-      progress: '0/6',
-      isActive: false
-    },
-    {
-      type: 'writing',
-      category: 'WRITING',
-      icon: '📝',
-      title: 'Essay Writing',
-      subtitle: 'Structured responses',
-      progress: '0/4',
-      isActive: false
-    },
-    
-    // SPEAKING EXERCISES
-    {
-      type: 'speaking',
-      category: 'SPEAKING',
-      icon: '🎤',
-      title: 'Conversation Practice',
-      subtitle: 'Speaking prompts',
-      progress: '0/6',
-      isActive: false
-    },
-    {
-      type: 'speaking',
-      category: 'SPEAKING',
-      icon: '🗣️',
-      title: 'Pronunciation Check',
-      subtitle: 'Voice analysis',
-      progress: '0/4',
-      isActive: false
-    }
-  ];
+  // Event handlers with useCallback for performance
+  const toggleMobileMenu = useCallback(() => {
+    setShowMobileMenu(prev => !prev);
+  }, []);
 
-  const getFilteredExercises = () => {
-    if (selectedCategory === 'ALL') return exercises;
-    return exercises.filter(ex => ex.category === selectedCategory);
-  };
-
-  const toggleMobileMenu = () => {
-    setShowMobileMenu(!showMobileMenu);
-  };
-
-  const closeMobileMenu = () => {
+  const closeMobileMenu = useCallback(() => {
     setShowMobileMenu(false);
-  };
+  }, []);
 
-  const handleMenuItemClick = (action) => {
+  const handleMenuItemClick = useCallback((action) => {
     closeMobileMenu();
     if (action === 'progress') onProgress();
-  };
+  }, [onProgress, closeMobileMenu]);
 
-  const handleExerciseClick = (exercise) => {
+  const handleCategoryChange = useCallback((categoryId) => {
+    setSelectedCategory(categoryId);
+  }, []);
+
+  const handleExerciseClick = useCallback((exercise) => {
     if (exercise.isActive) {
       onSelectExercise(exercise.type);
     }
-  };
+  }, [onSelectExercise]);
 
-  const menuItems = [
-    { id: 'home', icon: '🏠', text: 'HOME', action: null, isActive: true },
-    { id: 'practice', icon: '🎯', text: 'PRACTICE', action: null, isActive: true },
-    { id: 'progress', icon: '📊', text: 'MY PROGRESS', action: 'progress', isActive: false },
-    { id: 'settings', icon: '⚙️', text: 'SETTINGS', action: null, isActive: false },
-    { id: 'language', icon: '🌐', text: 'SITE LANGUAGE', action: null, isActive: false },
-    { id: 'logout', icon: '↗️', text: 'LOG OUT', action: null, isActive: false }
-  ];
+  // Calculate progress percentage for exercises
+  const calculateProgress = useCallback((progressStr) => {
+    const [current, total] = progressStr.split('/').map(Number);
+    return (current / total) * 100;
+  }, []);
+
+  // Render menu items
+  const renderMenuItem = useCallback((item, index, isMobile = false) => {
+    const className = isMobile ? 'mobile-menu-item' : 'desktop-sidebar-item';
+    const iconClassName = isMobile ? 'mobile-menu-icon' : 'sidebar-icon';
+    const textClassName = isMobile ? 'mobile-menu-text' : 'sidebar-text';
+    
+    return (
+      <div key={item.id}>
+        <div 
+          className={`${className} ${item.isActive ? 'active' : ''}`}
+          onClick={() => item.action && handleMenuItemClick(item.action)}
+          style={{ cursor: item.action ? 'pointer' : 'default' }}
+        >
+          <span className={iconClassName}>{item.icon}</span>
+          <span className={textClassName}>{item.text}</span>
+        </div>
+        {index === 2 && <div className={isMobile ? 'mobile-menu-divider' : 'sidebar-divider'}></div>}
+      </div>
+    );
+  }, [handleMenuItemClick]);
+
+  // Render category tabs
+  const renderCategoryTabs = () => (
+    <div className="categories-tabs">
+      {CATEGORIES.map((category) => (
+        <button
+          key={category.id}
+          className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
+          onClick={() => handleCategoryChange(category.id)}
+        >
+          {category.name}
+        </button>
+      ))}
+    </div>
+  );
+
+  // Render exercise item
+  const renderExerciseItem = useCallback((exercise, index) => {
+    const progressPercentage = calculateProgress(exercise.progress);
+    
+    return (
+      <div
+        key={`${exercise.category}-${index}`}
+        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''}`}
+        onClick={() => handleExerciseClick(exercise)}
+        style={{
+          animationDelay: `${index * 0.1}s`
+        }}
+      >
+        <div className="exercise-icon-container">
+          <div className={`exercise-icon ${exercise.isActive ? 'active' : 'disabled'}`}>
+            {exercise.icon}
+          </div>
+          {exercise.isNew && <div className="new-badge">NEW</div>}
+          {exercise.isDET && <div className="det-badge">DET</div>}
+        </div>
+        
+        <div className="exercise-content">
+          <h4 className="exercise-title">{exercise.title}</h4>
+          <p className="exercise-subtitle">{exercise.subtitle}</p>
+          
+          {exercise.isActive && (
+            <div className="exercise-progress">
+              <div className="progress-bar-small">
+                <div 
+                  className="progress-fill-small" 
+                  style={{ width: `${progressPercentage}%` }}
+                ></div>
+              </div>
+              <span className="progress-text-small">{exercise.progress}</span>
+            </div>
+          )}
+          
+          {!exercise.isActive && (
+            <div className="coming-soon-small">Coming soon</div>
+          )}
+        </div>
+      </div>
+    );
+  }, [calculateProgress, handleExerciseClick]);
 
   return (
     <div className={`landing-duolingo ${isTransitioning === false ? 'fade-in' : ''}`}>
@@ -176,19 +271,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
         </div>
         
         <div className="desktop-sidebar-content">
-          {menuItems.map((item, index) => (
-            <div key={item.id}>
-              <div 
-                className={`desktop-sidebar-item ${item.isActive ? 'active' : ''}`}
-                onClick={() => item.action && handleMenuItemClick(item.action)}
-                style={{ cursor: item.action ? 'pointer' : 'default' }}
-              >
-                <span className="sidebar-icon">{item.icon}</span>
-                <span className="sidebar-text">{item.text}</span>
-              </div>
-              {index === 2 && <div className="sidebar-divider"></div>}
-            </div>
-          ))}
+          {MENU_ITEMS.map((item, index) => renderMenuItem(item, index, false))}
         </div>
       </div>
 
@@ -202,6 +285,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
                 alt="Mr. Fox English" 
                 className="mobile-menu-logo-img"
               />
+              {/* FIXED: Proper capitalization */}
               <span className="mobile-menu-title">Mr. Fox English</span>
             </div>
             <button className="mobile-menu-close" onClick={closeMobileMenu}>
@@ -210,18 +294,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           </div>
           
           <div className="mobile-menu-content">
-            {menuItems.map((item, index) => (
-              <div key={item.id}>
-                <div 
-                  className={`mobile-menu-item ${item.isActive ? 'active' : ''}`}
-                  onClick={() => item.action && handleMenuItemClick(item.action)}
-                >
-                  <span className="mobile-menu-icon">{item.icon}</span>
-                  <span className="mobile-menu-text">{item.text}</span>
-                </div>
-                {index === 2 && <div className="mobile-menu-divider"></div>}
-              </div>
-            ))}
+            {MENU_ITEMS.map((item, index) => renderMenuItem(item, index, true))}
           </div>
         </div>
       )}
@@ -242,7 +315,8 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
             alt="Mr. Fox English" 
             className="header-logo-img"
           />
-          <span className="header-title">mr. fox english</span>
+          {/* FIXED: Proper capitalization */}
+          <span className="header-title">Mr. Fox English</span>
         </div>
         
         <div className="header-right">
@@ -269,60 +343,14 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
         {/* Categories Tabs */}
         <div className="categories-section">
           <h3>Skill practice</h3>
-          <div className="categories-tabs">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(category.id)}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
+          {renderCategoryTabs()}
         </div>
 
         {/* Exercises List */}
         <div className="exercises-list">
-          {showExercises && getFilteredExercises().map((exercise, index) => (
-            <div
-              key={`${exercise.category}-${index}`}
-              className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''}`}
-              onClick={() => handleExerciseClick(exercise)}
-              style={{
-                animationDelay: `${index * 0.1}s`
-              }}
-            >
-              <div className="exercise-icon-container">
-                <div className={`exercise-icon ${exercise.isActive ? 'active' : 'disabled'}`}>
-                  {exercise.icon}
-                </div>
-                {exercise.isNew && <div className="new-badge">NEW</div>}
-                {exercise.isDET && <div className="det-badge">DET</div>}
-              </div>
-              
-              <div className="exercise-content">
-                <h4 className="exercise-title">{exercise.title}</h4>
-                <p className="exercise-subtitle">{exercise.subtitle}</p>
-                
-                {exercise.isActive && (
-                  <div className="exercise-progress">
-                    <div className="progress-bar-small">
-                      <div 
-                        className="progress-fill-small" 
-                        style={{ width: `${(parseInt(exercise.progress) / parseInt(exercise.progress.split('/')[1])) * 100}%` }}
-                      ></div>
-                    </div>
-                    <span className="progress-text-small">{exercise.progress}</span>
-                  </div>
-                )}
-                
-                {!exercise.isActive && (
-                  <div className="coming-soon-small">Coming soon</div>
-                )}
-              </div>
-            </div>
-          ))}
+          {showExercises && filteredExercises.map((exercise, index) => 
+            renderExerciseItem(exercise, index)
+          )}
         </div>
       </div>
     </div>
