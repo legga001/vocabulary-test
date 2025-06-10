@@ -694,37 +694,95 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     };
   }, [currentData, resetAudioState, updateAudioState]);
 
-  // NEW: Auto-play logic - COMPLETELY REWRITTEN
+  // NEW: Backup auto-play when audio becomes ready (especially for first question)
+  useEffect(() => {
+    // Trigger auto-play when audio becomes loaded (backup mechanism)
+    if (hasStarted && 
+        currentData && 
+        audioState.isLoaded && 
+        !audioState.hasError && 
+        audioState.playCount === 0 && 
+        !audioState.isPlaying) {
+      
+      console.log('🔄 Audio just became ready - triggering backup auto-play');
+      
+      // Small delay to ensure everything is settled
+      const backupTimer = setTimeout(() => {
+        if (audioState.playCount === 0 && !audioState.isPlaying) {
+          console.log('✅ Executing backup auto-play');
+          playAudio();
+        }
+      }, 200);
+      
+      return () => clearTimeout(backupTimer);
+    }
+  }, [audioState.isLoaded, audioState.hasError, audioState.playCount, audioState.isPlaying, hasStarted, currentData, playAudio]);
+
+  // NEW: Auto-play logic - FIXED for first question
   useEffect(() => {
     // Only auto-play if:
     // - Exercise has started
     // - We have current data
-    // - Audio is loaded and has no error
     // - Haven't played this audio yet
     // - Not currently playing
     if (!hasStarted || 
         !currentData || 
-        !audioState.isLoaded || 
-        audioState.hasError || 
         audioState.playCount > 0 || 
         audioState.isPlaying) {
       return;
     }
 
-    console.log('⏰ Setting up auto-play timer');
+    console.log('⏰ Setting up auto-play timer for question', currentSentence + 1);
+    console.log('Audio state for auto-play:', audioState);
     
-    // Wait a bit longer for first question to ensure everything is ready
-    const delay = currentSentence === 0 ? 2000 : 1000;
+    // FIXED: For first question, wait for audio to be loaded OR use longer delay
+    const isFirstQuestion = currentSentence === 0;
     
-    const autoPlayTimer = setTimeout(() => {
-      console.log('🔄 Auto-play timer triggered');
-      playAudio();
-    }, delay);
+    if (isFirstQuestion) {
+      // For first question, wait for audio to load OR use a longer timeout
+      const attemptAutoPlay = () => {
+        console.log('🎯 Attempting auto-play for first question');
+        console.log('Audio loaded:', audioState.isLoaded, 'Has error:', audioState.hasError);
+        
+        if (audioState.hasError) {
+          console.log('❌ Audio has error, skipping auto-play');
+          return;
+        }
+        
+        // Try to play regardless of loaded state (browser will handle it)
+        playAudio();
+      };
+      
+      if (audioState.isLoaded && !audioState.hasError) {
+        // Audio is ready, play immediately
+        console.log('✅ Audio ready, auto-playing immediately');
+        const timer = setTimeout(attemptAutoPlay, 500);
+        return () => clearTimeout(timer);
+      } else {
+        // Audio not ready, wait longer
+        console.log('⏳ Audio not ready, waiting longer for first question');
+        const timer = setTimeout(attemptAutoPlay, 3000); // Wait 3 seconds for first question
+        return () => clearTimeout(timer);
+      }
+    } else {
+      // For other questions, use normal logic
+      console.log('⏰ Setting up auto-play for question', currentSentence + 1);
+      
+      if (audioState.hasError) {
+        console.log('❌ Audio has error, skipping auto-play');
+        return;
+      }
+      
+      const autoPlayTimer = setTimeout(() => {
+        console.log('🔄 Auto-play timer triggered for question', currentSentence + 1);
+        playAudio();
+      }, 1000);
 
-    return () => {
-      console.log('❌ Clearing auto-play timer');
-      clearTimeout(autoPlayTimer);
-    };
+      return () => {
+        console.log('❌ Clearing auto-play timer');
+        clearTimeout(autoPlayTimer);
+      };
+    }
   }, [hasStarted, currentData, audioState, currentSentence, playAudio]);
 
   // Focus input when appropriate
