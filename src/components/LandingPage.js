@@ -258,23 +258,36 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     
     // Add debug logging for speaking exercise
     if (exercise.type === 'speak-and-record') {
-      console.log('Rendering speaking exercise:', {
+      console.log('🎤 RENDERING SPEAKING EXERCISE:', {
         type: exercise.type,
         isActive: exercise.isActive,
         category: exercise.category,
-        index: index
+        index: index,
+        title: exercise.title
       });
     }
+    
+    // FIXED: Added debugging classes and data attributes for speaking exercise
+    const speakingDebugClass = exercise.type === 'speak-and-record' ? 'speaking-debug' : '';
     
     return (
       <div
         key={`${exercise.category}-${exercise.type}-${index}`}
-        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''}`}
+        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''} ${speakingDebugClass}`}
         onClick={() => handleExerciseClick(exercise)}
-        style={{ animationDelay: `${index * 0.1}s` }}
+        style={{ 
+          animationDelay: `${index * 0.1}s`,
+          // FIXED: Force visibility for speaking exercise
+          display: 'flex !important',
+          visibility: 'visible !important'
+        }}
         role={exercise.isActive ? 'button' : 'text'}
         tabIndex={exercise.isActive ? 0 : -1}
         aria-label={`${exercise.title}: ${exercise.subtitle}${exercise.isActive ? ', clickable' : ', coming soon'}`}
+        // FIXED: Added data attributes for debugging
+        data-type={exercise.type}
+        data-category={exercise.category}
+        data-title={exercise.title}
         onKeyDown={(e) => {
           if (exercise.isActive && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
