@@ -1,6 +1,6 @@
 /* ==============================================
-   LANDING.CSS - Landing page (Duolingo style) - FIXED FOR SPEAKING EXERCISE
-   Fixed title capitalisation and ensured all exercises are visible
+   LANDING.CSS - Landing page with Daily Target styling
+   Updated to show daily targets instead of overall progress
    ============================================== */
 
 .landing-duolingo {
@@ -338,19 +338,18 @@
 }
 
 /* ==============================================
-   EXERCISES LIST - FIXED TO ENSURE ALL EXERCISES SHOW
+   EXERCISES LIST - UPDATED FOR DAILY TARGETS
    ============================================== */
 .exercises-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  /* FIXED: Ensure the container is visible and not hidden */
   visibility: visible !important;
   opacity: 1 !important;
 }
 
 .exercise-item {
-  display: flex !important; /* FIXED: Force display */
+  display: flex !important;
   align-items: center;
   gap: 15px;
   background: white;
@@ -363,17 +362,8 @@
   opacity: 0;
   transform: translateY(20px);
   animation: exerciseItemFadeIn 0.6s ease-out forwards;
-  will-change: transform; /* GPU acceleration */
-  /* FIXED: Ensure speaking exercises are not hidden */
+  will-change: transform;
   visibility: visible !important;
-}
-
-/* FIXED: Ensure speaking exercise items are always visible */
-.exercise-item[data-category="SPEAKING"],
-.exercise-item.speaking-exercise {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
 }
 
 .exercise-item.active:hover {
@@ -397,10 +387,10 @@
   border-radius: 12px 12px 0 0;
 }
 
-/* FIXED: Ensure NEW speaking exercises are properly displayed */
-.exercise-item.new-exercise {
-  display: flex !important;
-  visibility: visible !important;
+/* NEW: Target met styling */
+.exercise-item.target-met {
+  border: 2px solid #48bb78;
+  background: linear-gradient(135deg, #f0fff4, #ffffff);
 }
 
 .exercise-icon-container {
@@ -445,7 +435,6 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  /* FIXED: Ensure badges are visible */
   z-index: 10;
   display: block !important;
 }
@@ -462,9 +451,28 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  /* FIXED: Ensure badges are visible */
   z-index: 10;
   display: block !important;
+}
+
+/* NEW: Target met badge */
+.target-met-badge {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  background: #48bb78;
+  color: white;
+  font-size: 0.8em;
+  padding: 4px;
+  border-radius: 50%;
+  font-weight: 700;
+  z-index: 10;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(72, 187, 120, 0.3);
 }
 
 .exercise-content {
@@ -485,13 +493,14 @@
   margin: 0 0 8px 0;
 }
 
-.exercise-progress {
+/* NEW: Daily target progress styling */
+.exercise-daily-target {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.progress-bar-small {
+.daily-target-bar {
   flex: 1;
   height: 8px;
   background: #e5e5e5;
@@ -499,18 +508,24 @@
   overflow: hidden;
 }
 
-.progress-fill-small {
+.daily-target-fill {
   height: 100%;
   background: linear-gradient(90deg, #48bb78, #38a169);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
 
-.progress-text-small {
+.daily-target-text {
   font-size: 0.8em;
   color: #777;
   font-weight: 600;
-  min-width: 30px;
+  min-width: 100px;
+  white-space: nowrap;
+}
+
+.target-completed {
+  color: #38a169 !important;
+  font-weight: 700;
 }
 
 .coming-soon-small {
@@ -644,23 +659,165 @@
 }
 
 /* ==============================================
-   FIXED: FORCE VISIBILITY FOR DEBUGGING
+   RESPONSIVE DESIGN
    ============================================== */
-/* Temporary debugging styles - remove in production */
-.exercise-item[data-type="speak-and-record"] {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  background: #e6ffe6 !important; /* Light green background for debugging */
-  border: 2px solid #00ff00 !important; /* Green border for debugging */
+
+/* Large desktops */
+@media (min-width: 1200px) {
+  .desktop-sidebar {
+    width: 320px;
+  }
+  
+  .main-content-area {
+    margin-left: 320px;
+    width: calc(100vw - 320px);
+    max-width: none;
+  }
+  
+  .sidebar-title {
+    font-size: 1.4em;
+  }
+  
+  .desktop-sidebar-item {
+    padding: 18px 30px;
+  }
+  
+  .sidebar-text {
+    font-size: 1em;
+  }
 }
 
-/* FIXED: Ensure no CSS is accidentally hiding speaking exercises */
-.exercise-item:not(.disabled) {
-  display: flex !important;
+/* Mobile and tablet */
+@media (max-width: 1024px) {
+  .desktop-sidebar {
+    display: none;
+  }
+  
+  .mobile-header {
+    display: flex;
+  }
+  
+  body {
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .App {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .landing-duolingo {
+    position: relative;
+    height: auto;
+    min-height: 100vh;
+    display: block;
+  }
+  
+  .main-content-area {
+    margin-left: 0;
+    width: 100%;
+    padding-top: 80px;
+    height: auto;
+    overflow: visible;
+    background: transparent;
+  }
+  
+  .App:not(.splash-mode) {
+    padding: 15px;
+    margin: 15px;
+    max-width: calc(100vw - 30px);
+    min-height: calc(100vh - 30px);
+  }
 }
 
-/* FIXED: Override any potential display:none rules */
-.exercises-list > * {
-  display: flex !important;
+/* Tablet specific */
+@media (max-width: 768px) {
+  .main-content-area {
+    padding: 80px 15px 15px 15px;
+  }
+  
+  .mobile-header {
+    padding: 12px 15px;
+  }
+  
+  .exercise-item {
+    padding: 15px;
+  }
+  
+  .exercise-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5em;
+  }
+  
+  .daily-target-text {
+    font-size: 0.75em;
+    min-width: 80px;
+  }
+}
+
+/* Mobile phones */
+@media (max-width: 480px) {
+  .App:not(.splash-mode) {
+    padding: 12px;
+    margin: 12px;
+    max-width: calc(100vw - 24px);
+    min-height: calc(100vh - 24px);
+  }
+  
+  .main-content-area {
+    padding: 70px 10px 10px 10px;
+  }
+  
+  .mobile-header {
+    padding: 10px;
+  }
+  
+  .header-logo-img {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .header-title {
+    font-size: 1em;
+  }
+  
+  .exercise-item {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .exercise-icon {
+    width: 45px;
+    height: 45px;
+    font-size: 1.3em;
+  }
+  
+  .categories-tabs {
+    padding: 3px;
+  }
+  
+  .category-tab {
+    padding: 8px 10px;
+    font-size: 0.75em;
+  }
+  
+  .daily-target-text {
+    font-size: 0.7em;
+    min-width: 70px;
+  }
+  
+  .target-met-badge {
+    width: 18px;
+    height: 18px;
+    font-size: 0.7em;
+  }
 }
