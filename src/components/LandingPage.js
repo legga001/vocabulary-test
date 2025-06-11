@@ -1,4 +1,4 @@
-// src/components/LandingPage.js - Reordered exercises with speaking after listening
+// src/components/LandingPage.js - Daily targets with reset functionality
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 
 // Constants for better performance - moved outside component
@@ -10,7 +10,7 @@ const CATEGORIES = Object.freeze([
   { id: 'SPEAKING', name: 'SPEAKING', icon: '🎤' }
 ]);
 
-// REORDERED: Moved speaking exercise to appear right after listen-and-type
+// UPDATED: Exercises with daily targets instead of overall progress
 const EXERCISES = Object.freeze([
   // READING EXERCISES
   {
@@ -19,7 +19,7 @@ const EXERCISES = Object.freeze([
     icon: '📖',
     title: 'Standard Vocabulary',
     subtitle: 'Fill in the gaps',
-    progress: '6/10',
+    dailyTarget: 3, // Quick exercises: 3 times per day
     isActive: true
   },
   {
@@ -28,7 +28,7 @@ const EXERCISES = Object.freeze([
     icon: '📰',
     title: 'Article-Based Vocab',
     subtitle: 'Real news stories',
-    progress: '3/8',
+    dailyTarget: 1, // Article exercises: 1 time per day
     isActive: true
   },
   {
@@ -37,7 +37,7 @@ const EXERCISES = Object.freeze([
     icon: '🎯',
     title: 'Real or Fake Words',
     subtitle: 'Quick recognition',
-    progress: '2/5',
+    dailyTarget: 2, // Quick exercises: 2 times per day
     isActive: true,
     isNew: true
   },
@@ -49,20 +49,20 @@ const EXERCISES = Object.freeze([
     icon: '🎧',
     title: 'Listen and Type',
     subtitle: 'Type what you hear',
-    progress: '0/10',
+    dailyTarget: 2, // Moderate exercises: 2 times per day
     isActive: true,
     isNew: true,
     isDET: true
   },
   
-  // SPEAKING EXERCISES - MOVED HERE: Right after listen-and-type
+  // SPEAKING EXERCISES - Right after listen-and-type
   {
     type: 'speak-and-record',
     category: 'SPEAKING',
     icon: '🎤',
     title: 'Speak and Record',
     subtitle: 'Pronunciation practice',
-    progress: '0/10',
+    dailyTarget: 2, // Moderate exercises: 2 times per day
     isActive: true,
     isNew: true
   },
@@ -74,7 +74,7 @@ const EXERCISES = Object.freeze([
     icon: '🔊',
     title: 'Audio Comprehension',
     subtitle: 'Listen and answer',
-    progress: '0/7',
+    dailyTarget: 2,
     isActive: false
   },
   {
@@ -83,7 +83,7 @@ const EXERCISES = Object.freeze([
     icon: '🎵',
     title: 'Pronunciation Practice',
     subtitle: 'Listen and repeat',
-    progress: '0/5',
+    dailyTarget: 3,
     isActive: false
   },
   
@@ -94,7 +94,7 @@ const EXERCISES = Object.freeze([
     icon: '🗣️',
     title: 'Conversation Practice',
     subtitle: 'Speaking prompts',
-    progress: '0/6',
+    dailyTarget: 2,
     isActive: false
   },
   {
@@ -103,7 +103,7 @@ const EXERCISES = Object.freeze([
     icon: '🎙️',
     title: 'Pronunciation Check',
     subtitle: 'Voice analysis',
-    progress: '0/4',
+    dailyTarget: 3,
     isActive: false
   },
   
@@ -114,7 +114,7 @@ const EXERCISES = Object.freeze([
     icon: '✍️',
     title: 'Grammar Practice',
     subtitle: 'Sentence building',
-    progress: '0/6',
+    dailyTarget: 3,
     isActive: false
   },
   {
@@ -123,7 +123,7 @@ const EXERCISES = Object.freeze([
     icon: '📝',
     title: 'Essay Writing',
     subtitle: 'Structured responses',
-    progress: '0/4',
+    dailyTarget: 1, // Longer exercises: 1 time per day
     isActive: false
   }
 ]);
@@ -137,11 +137,67 @@ const MENU_ITEMS = Object.freeze([
   { id: 'logout', icon: '↗️', text: 'LOG OUT', action: null, isActive: false }
 ]);
 
+// Daily target tracking functions
+const DAILY_TARGETS_KEY = 'mrFoxEnglishDailyTargets';
+
+const getTodayString = () => {
+  return new Date().toDateString();
+};
+
+const getDailyTargetData = () => {
+  try {
+    const saved = localStorage.getItem(DAILY_TARGETS_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      const today = getTodayString();
+      
+      // If data is from today, return it, otherwise reset
+      if (data.date === today) {
+        return data.targets;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading daily targets:', error);
+  }
+  
+  // Return empty targets if no data or new day
+  return {};
+};
+
+const saveDailyTargetData = (targets) => {
+  try {
+    const dataToSave = {
+      date: getTodayString(),
+      targets: targets
+    };
+    localStorage.setItem(DAILY_TARGETS_KEY, JSON.stringify(dataToSave));
+  } catch (error) {
+    console.error('Error saving daily targets:', error);
+  }
+};
+
+const incrementDailyTarget = (exerciseType) => {
+  const currentTargets = getDailyTargetData();
+  const newTargets = {
+    ...currentTargets,
+    [exerciseType]: (currentTargets[exerciseType] || 0) + 1
+  };
+  saveDailyTargetData(newTargets);
+  return newTargets;
+};
+
 function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitioning }) {
   // State management
   const [showExercises, setShowExercises] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [dailyTargets, setDailyTargets] = useState({});
+
+  // Load daily targets on component mount
+  useEffect(() => {
+    const targets = getDailyTargetData();
+    setDailyTargets(targets);
+  }, []);
 
   // Trigger exercise animations after component mounts
   useEffect(() => {
@@ -172,16 +228,23 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     return categoryExercises;
   }, [selectedCategory]);
 
-  // Memoised progress calculations
-  const exerciseProgressData = useMemo(() => {
+  // Memoised exercises with daily target progress
+  const exercisesWithTargets = useMemo(() => {
     return filteredExercises.map(exercise => {
-      const [current, total] = exercise.progress.split('/').map(Number);
+      const completed = dailyTargets[exercise.type] || 0;
+      const target = exercise.dailyTarget;
+      const progressPercentage = Math.min((completed / target) * 100, 100);
+      const isTargetMet = completed >= target;
+      
       return {
         ...exercise,
-        progressPercentage: (current / total) * 100
+        completed,
+        target,
+        progressPercentage,
+        isTargetMet
       };
     });
-  }, [filteredExercises]);
+  }, [filteredExercises, dailyTargets]);
 
   // Event handlers with useCallback for performance
   const handleMobileMenuToggle = useCallback(() => {
@@ -207,6 +270,10 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
   const handleExerciseClick = useCallback((exercise) => {
     console.log('Exercise clicked:', exercise.type, 'isActive:', exercise.isActive);
     if (exercise.isActive) {
+      // Increment daily target when exercise is started
+      const newTargets = incrementDailyTarget(exercise.type);
+      setDailyTargets(newTargets);
+      
       onSelectExercise(exercise.type);
     }
   }, [onSelectExercise]);
@@ -259,8 +326,6 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
   ), [selectedCategory, handleCategoryChange]);
 
   const renderExerciseItem = useCallback((exercise, index) => {
-    const exerciseData = exerciseProgressData.find(e => e.type === exercise.type) || exercise;
-    
     // Add debug logging for speaking exercise
     if (exercise.type === 'speak-and-record') {
       console.log('🎤 RENDERING SPEAKING EXERCISE:', {
@@ -269,14 +334,16 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
         category: exercise.category,
         index: index,
         title: exercise.title,
-        position: `Position ${index + 1} in filtered list`
+        position: `Position ${index + 1} in filtered list`,
+        dailyTarget: exercise.target,
+        completed: exercise.completed
       });
     }
     
     return (
       <div
         key={`${exercise.category}-${exercise.type}-${index}`}
-        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''}`}
+        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''} ${exercise.isTargetMet ? 'target-met' : ''}`}
         onClick={() => handleExerciseClick(exercise)}
         style={{ 
           animationDelay: `${index * 0.1}s`
@@ -300,6 +367,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           </div>
           {exercise.isNew && <div className="new-badge">NEW</div>}
           {exercise.isDET && <div className="det-badge">DET</div>}
+          {exercise.isTargetMet && <div className="target-met-badge">✓</div>}
         </div>
         
         <div className="exercise-content">
@@ -307,14 +375,22 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           <p className="exercise-subtitle">{exercise.subtitle}</p>
           
           {exercise.isActive ? (
-            <div className="exercise-progress">
-              <div className="progress-bar-small">
+            <div className="exercise-daily-target">
+              <div className="daily-target-bar">
                 <div 
-                  className="progress-fill-small" 
-                  style={{ width: `${exerciseData.progressPercentage}%` }}
+                  className="daily-target-fill" 
+                  style={{ width: `${exercise.progressPercentage}%` }}
                 ></div>
               </div>
-              <span className="progress-text-small">{exercise.progress}</span>
+              <span className="daily-target-text">
+                {exercise.isTargetMet ? (
+                  <span className="target-completed">
+                    🎯 Daily target met! ({exercise.completed}/{exercise.target})
+                  </span>
+                ) : (
+                  <>Daily target: {exercise.completed}/{exercise.target}</>
+                )}
+              </span>
             </div>
           ) : (
             <div className="coming-soon-small">Coming soon</div>
@@ -322,24 +398,27 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
         </div>
       </div>
     );
-  }, [exerciseProgressData, handleExerciseClick]);
+  }, [handleExerciseClick]);
 
   // Add debug logging for filtered exercises
   useEffect(() => {
-    console.log('📋 Current exercise order:', filteredExercises.map((e, index) => ({
+    console.log('📋 Current exercise order with targets:', exercisesWithTargets.map((e, index) => ({
       position: index + 1,
       type: e.type,
       category: e.category,
       isActive: e.isActive,
-      title: e.title
+      title: e.title,
+      dailyTarget: e.target,
+      completed: e.completed,
+      targetMet: e.isTargetMet
     })));
     
     // Specifically log speaking exercise position
-    const speakingIndex = filteredExercises.findIndex(e => e.type === 'speak-and-record');
+    const speakingIndex = exercisesWithTargets.findIndex(e => e.type === 'speak-and-record');
     if (speakingIndex !== -1) {
-      console.log(`🎤 Speaking exercise is at position ${speakingIndex + 1} out of ${filteredExercises.length}`);
+      console.log(`🎤 Speaking exercise is at position ${speakingIndex + 1} out of ${exercisesWithTargets.length}`);
     }
-  }, [filteredExercises]);
+  }, [exercisesWithTargets]);
 
   return (
     <div className={`landing-duolingo ${isTransitioning === false ? 'fade-in' : ''}`}>
@@ -448,25 +527,25 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           {/* Debug information (remove in production) */}
           {process.env.NODE_ENV === 'development' && (
             <div style={{
-              background: '#e6ffe6',
+              background: '#fff3cd',
               padding: '10px',
               margin: '10px 0',
               borderRadius: '5px',
               fontSize: '0.8em',
               fontFamily: 'monospace',
-              border: '1px solid #00aa00'
+              border: '1px solid #ffeaa7'
             }}>
-              <strong>🎤 Speaking Exercise Debug:</strong><br />
+              <strong>🎯 Daily Targets Debug (Resets each day):</strong><br />
+              Today: {getTodayString()}<br />
               Category: "{selectedCategory}" | 
-              Exercises: {filteredExercises.length} | 
-              Speaking position: {filteredExercises.findIndex(e => e.type === 'speak-and-record') + 1} | 
-              ShowExercises: {showExercises ? 'true' : 'false'}
+              Exercises: {exercisesWithTargets.length} | 
+              Speaking position: {exercisesWithTargets.findIndex(e => e.type === 'speak-and-record') + 1}
               <br />
-              <strong>Order:</strong> {filteredExercises.slice(0, 6).map((e, i) => `${i + 1}.${e.type.split('-')[0]}`).join(' → ')}
+              <strong>Targets met:</strong> {exercisesWithTargets.filter(e => e.isTargetMet && e.isActive).length} of {exercisesWithTargets.filter(e => e.isActive).length} active exercises
             </div>
           )}
           
-          {showExercises && filteredExercises.map((exercise, index) => 
+          {showExercises && exercisesWithTargets.map((exercise, index) => 
             renderExerciseItem(exercise, index)
           )}
         </section>
