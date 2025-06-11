@@ -1,4 +1,4 @@
-// src/components/LandingPage.js - Fixed to show speaking exercise
+// src/components/LandingPage.js - Reordered exercises with speaking after listening
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 
 // Constants for better performance - moved outside component
@@ -10,6 +10,7 @@ const CATEGORIES = Object.freeze([
   { id: 'SPEAKING', name: 'SPEAKING', icon: '🎤' }
 ]);
 
+// REORDERED: Moved speaking exercise to appear right after listen-and-type
 const EXERCISES = Object.freeze([
   // READING EXERCISES
   {
@@ -53,6 +54,20 @@ const EXERCISES = Object.freeze([
     isNew: true,
     isDET: true
   },
+  
+  // SPEAKING EXERCISES - MOVED HERE: Right after listen-and-type
+  {
+    type: 'speak-and-record',
+    category: 'SPEAKING',
+    icon: '🎤',
+    title: 'Speak and Record',
+    subtitle: 'Pronunciation practice',
+    progress: '0/10',
+    isActive: true,
+    isNew: true
+  },
+  
+  // REMAINING LISTENING EXERCISES (Coming Soon)
   {
     type: 'listening',
     category: 'LISTENING',
@@ -72,17 +87,7 @@ const EXERCISES = Object.freeze([
     isActive: false
   },
   
-  // SPEAKING EXERCISES - FIXED: Moved to appear earlier in the list
-  {
-    type: 'speak-and-record',
-    category: 'SPEAKING',
-    icon: '🎤',
-    title: 'Speak and Record',
-    subtitle: 'Pronunciation practice',
-    progress: '0/10',
-    isActive: true,
-    isNew: true
-  },
+  // REMAINING SPEAKING EXERCISES (Coming Soon)
   {
     type: 'speaking',
     category: 'SPEAKING',
@@ -149,7 +154,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     return () => clearTimeout(timer);
   }, [isTransitioning]);
 
-  // FIXED: Improved filtered exercises with better ALL category handling
+  // Improved filtered exercises with better ALL category handling
   const filteredExercises = useMemo(() => {
     console.log('Filtering exercises for category:', selectedCategory);
     console.log('Total exercises available:', EXERCISES.length);
@@ -263,28 +268,22 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
         isActive: exercise.isActive,
         category: exercise.category,
         index: index,
-        title: exercise.title
+        title: exercise.title,
+        position: `Position ${index + 1} in filtered list`
       });
     }
-    
-    // FIXED: Added debugging classes and data attributes for speaking exercise
-    const speakingDebugClass = exercise.type === 'speak-and-record' ? 'speaking-debug' : '';
     
     return (
       <div
         key={`${exercise.category}-${exercise.type}-${index}`}
-        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''} ${speakingDebugClass}`}
+        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''}`}
         onClick={() => handleExerciseClick(exercise)}
         style={{ 
-          animationDelay: `${index * 0.1}s`,
-          // FIXED: Force visibility for speaking exercise
-          display: 'flex !important',
-          visibility: 'visible !important'
+          animationDelay: `${index * 0.1}s`
         }}
         role={exercise.isActive ? 'button' : 'text'}
         tabIndex={exercise.isActive ? 0 : -1}
         aria-label={`${exercise.title}: ${exercise.subtitle}${exercise.isActive ? ', clickable' : ', coming soon'}`}
-        // FIXED: Added data attributes for debugging
         data-type={exercise.type}
         data-category={exercise.category}
         data-title={exercise.title}
@@ -327,12 +326,19 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
 
   // Add debug logging for filtered exercises
   useEffect(() => {
-    console.log('Current filtered exercises:', filteredExercises.map(e => ({
+    console.log('📋 Current exercise order:', filteredExercises.map((e, index) => ({
+      position: index + 1,
       type: e.type,
       category: e.category,
       isActive: e.isActive,
       title: e.title
     })));
+    
+    // Specifically log speaking exercise position
+    const speakingIndex = filteredExercises.findIndex(e => e.type === 'speak-and-record');
+    if (speakingIndex !== -1) {
+      console.log(`🎤 Speaking exercise is at position ${speakingIndex + 1} out of ${filteredExercises.length}`);
+    }
   }, [filteredExercises]);
 
   return (
@@ -442,18 +448,21 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           {/* Debug information (remove in production) */}
           {process.env.NODE_ENV === 'development' && (
             <div style={{
-              background: '#f0f0f0',
+              background: '#e6ffe6',
               padding: '10px',
               margin: '10px 0',
               borderRadius: '5px',
               fontSize: '0.8em',
-              fontFamily: 'monospace'
+              fontFamily: 'monospace',
+              border: '1px solid #00aa00'
             }}>
-              Debug: Category="{selectedCategory}", 
-              Exercises={filteredExercises.length}, 
-              ShowExercises={showExercises ? 'true' : 'false'}
+              <strong>🎤 Speaking Exercise Debug:</strong><br />
+              Category: "{selectedCategory}" | 
+              Exercises: {filteredExercises.length} | 
+              Speaking position: {filteredExercises.findIndex(e => e.type === 'speak-and-record') + 1} | 
+              ShowExercises: {showExercises ? 'true' : 'false'}
               <br />
-              Speaking exercise present: {filteredExercises.some(e => e.type === 'speak-and-record') ? 'YES' : 'NO'}
+              <strong>Order:</strong> {filteredExercises.slice(0, 6).map((e, i) => `${i + 1}.${e.type.split('-')[0]}`).join(' → ')}
             </div>
           )}
           
