@@ -1,4 +1,4 @@
-// src/components/SpeakingExercise.js - Fixed version with proper error handling
+// src/components/SpeakingExercise.js - Fixed version with proper data handling
 import React, { useState, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
@@ -9,42 +9,53 @@ import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
 
 // Generate test sentences in proper order: A2 → B1 → B2 → C1
 const generateSpeakingTest = () => {
+  console.log('🎲 Starting sentence generation...');
+  console.log('Available sentence pools:', Object.keys(SENTENCE_POOLS));
+  console.log('Test structure:', TEST_STRUCTURE);
+
   const testSentences = [];
   let sentenceCounter = 1;
 
   // Process each level in the correct order
   TEST_STRUCTURE.forEach(({ level, count }) => {
-    // Create a copy and shuffle only within this level
-    const availableSentences = [...SENTENCE_POOLS[level]];
+    console.log(`📚 Processing level ${level}, need ${count} sentences`);
     
-    // Fisher-Yates shuffle for randomness within the level
-    for (let i = availableSentences.length - 1; i > 0; i--) {
+    const availableSentences = SENTENCE_POOLS[level];
+    if (!availableSentences || availableSentences.length === 0) {
+      console.error(`❌ No sentences available for level ${level}`);
+      return;
+    }
+    
+    console.log(`Found ${availableSentences.length} sentences for level ${level}`);
+    
+    // Create a copy and shuffle only within this level
+    const shuffled = [...availableSentences];
+    
+    // Fisher-Yates shuffle
+    for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [availableSentences[i], availableSentences[j]] = [availableSentences[j], availableSentences[i]];
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     
     // Take the required number of sentences from this level
-    for (let i = 0; i < count && i < availableSentences.length; i++) {
-      const selectedSentence = availableSentences[i];
+    for (let i = 0; i < count && i < shuffled.length; i++) {
+      const selectedSentence = shuffled[i];
       
-      testSentences.push({
+      const processedSentence = {
         id: sentenceCounter,
         level: level,
         audioFile: selectedSentence.audioFile,
         correctText: selectedSentence.correctText,
-        difficulty: selectedSentence.difficulty
-      });
+        difficulty: selectedSentence.difficulty || `${level} level sentence`
+      };
       
+      console.log(`✅ Added sentence ${sentenceCounter}:`, processedSentence);
+      testSentences.push(processedSentence);
       sentenceCounter++;
     }
   });
 
-  console.log('Generated speaking test:', testSentences.map(s => ({
-    order: s.id,
-    level: s.level,
-    text: s.correctText
-  })));
-
+  console.log(`🎯 Generated ${testSentences.length} total sentences for speaking test`);
   return testSentences;
 };
 
@@ -95,7 +106,6 @@ const calculateAccuracy = (spokenText, correctText) => {
   const maxLength = Math.max(spoken.length, correct.length);
   if (maxLength === 0) return 100; // Both empty
   
-  const differences = Math.abs(spoken.length - correct.length);
   let charMatches = 0;
   const minLength = Math.min(spoken.length, correct.length);
   
@@ -144,14 +154,27 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [currentAccuracy, setCurrentAccuracy] = useState(0);
-  const [errorMessage, setErrorMessage] = useState(''); // NEW: Error state
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isInitialised, setIsInitialised] = useState(false);
 
   // Refs
   const recognitionRef = useRef(null);
   const audioRef = useRef(null);
 
-  // Get current sentence data
-  const currentData = testSentences[currentSentence] || null;
+  // Get current sentence data with better validation
+  const currentData = testSentences && testSentences.length > 0 && currentSentence >= 0 && currentSentence < testSentences.length 
+    ? testSentences[currentSentence] 
+    : null;
+
+  // Debug current data
+  useEffect(() => {
+    console.log('🔍 Current data check:', {
+      currentSentence,
+      totalSentences: testSentences.length,
+      currentData: currentData,
+      hasCurrentData: !!currentData
+    });
+  }, [currentSentence, testSentences, currentData]);
 
   // ==============================================
   // EFFECTS
@@ -161,13 +184,29 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   useEffect(() => {
     console.log('🚀 Initialising speaking exercise...');
     
+    // Check if SENTENCE_POOLS and TEST_STRUCTURE are available
+    if (!SENTENCE_POOLS || !TEST_STRUCTURE) {
+      console.error('❌ Missing sentence data imports');
+      setErrorMessage('Missing sentence data. Please check the imports.');
+      return;
+    }
+    
     try {
       const sentences = generateSpeakingTest();
+      
+      if (!sentences || sentences.length === 0) {
+        console.error('❌ No sentences generated');
+        setErrorMessage('Failed to generate test sentences');
+        return;
+      }
+      
+      console.log('✅ Setting test sentences:', sentences);
       setTestSentences(sentences);
-      console.log('✅ Test sentences generated:', sentences.length);
+      setIsInitialised(true);
+      
     } catch (error) {
       console.error('❌ Error generating test sentences:', error);
-      setErrorMessage('Failed to generate test sentences');
+      setErrorMessage('Failed to generate test sentences: ' + error.message);
       return;
     }
     
@@ -185,7 +224,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         recognitionRef.current.interimResults = false;
         recognitionRef.current.lang = 'en-GB'; // British English
         
-        // Event handlers with proper error handling
+        // Event handlers
         recognitionRef.current.onresult = (event) => {
           console.log('🎙️ Speech recognition result received');
           
@@ -198,15 +237,23 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               setIsRecording(false);
               setErrorMessage(''); // Clear any previous errors
               
-              // Calculate accuracy with error handling
-              if (currentData && currentData.correctText) {
-                const accuracy = calculateAccuracy(transcript, currentData.correctText);
+              // Get current data at the time of processing
+              const currentTestData = testSentences[currentSentence];
+              console.log('🎯 Processing with data:', currentTestData);
+              
+              if (currentTestData && currentTestData.correctText) {
+                const accuracy = calculateAccuracy(transcript, currentTestData.correctText);
                 setCurrentAccuracy(accuracy);
                 setShowFeedback(true);
                 console.log('✅ Accuracy calculated successfully:', accuracy);
               } else {
-                console.error('❌ No current data available for accuracy calculation');
-                setErrorMessage('Error: No sentence data available');
+                console.error('❌ No current test data available for accuracy calculation');
+                console.log('Debug info:', {
+                  testSentences: testSentences.length,
+                  currentSentence,
+                  currentTestData
+                });
+                setErrorMessage('Error: No sentence data available for processing');
               }
             } else {
               console.error('❌ No speech recognition results');
@@ -216,7 +263,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           } catch (error) {
             console.error('❌ Error processing speech result:', error);
             setSpokenText('Error processing speech. Please try again.');
-            setErrorMessage('Error processing speech result');
+            setErrorMessage('Error processing speech result: ' + error.message);
           } finally {
             setIsRecording(false);
           }
@@ -261,13 +308,13 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       } catch (error) {
         console.error('❌ Error setting up speech recognition:', error);
         setSpeechSupported(false);
-        setErrorMessage('Failed to initialise speech recognition');
+        setErrorMessage('Failed to initialise speech recognition: ' + error.message);
       }
     } else {
       console.log('❌ Speech recognition not supported');
       setSpeechSupported(false);
     }
-  }, []);
+  }, []); // Empty dependency array - only run once
 
   // Timer countdown
   useEffect(() => {
@@ -291,6 +338,14 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
   const startExercise = () => {
     console.log('🚀 Starting exercise');
+    console.log('Available sentences:', testSentences.length);
+    console.log('First sentence:', testSentences[0]);
+    
+    if (testSentences.length === 0) {
+      setErrorMessage('No sentences available to start the exercise');
+      return;
+    }
+    
     setHasStarted(true);
     setTimeLeft(45);
     setErrorMessage('');
@@ -298,6 +353,9 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
   const startRecording = () => {
     console.log('🎙️ Starting recording...');
+    console.log('Current sentence index:', currentSentence);
+    console.log('Total sentences:', testSentences.length);
+    console.log('Current data:', currentData);
     
     if (!speechSupported || !recognitionRef.current) {
       console.error('❌ Speech recognition not available');
@@ -307,9 +365,17 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     
     if (!currentData) {
       console.error('❌ No current sentence data');
-      setErrorMessage('No sentence data available');
+      console.log('Debug info:', {
+        testSentences: testSentences.length,
+        currentSentence,
+        isInitialised,
+        hasStarted
+      });
+      setErrorMessage('No sentence data available - please restart the exercise');
       return;
     }
+    
+    console.log('✅ Starting recording for sentence:', currentData.correctText);
     
     setIsRecording(true);
     setSpokenText('');
@@ -330,14 +396,14 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         } catch (startError) {
           console.error('❌ Error starting recognition:', startError);
           setIsRecording(false);
-          setErrorMessage('Failed to start speech recognition');
+          setErrorMessage('Failed to start speech recognition: ' + startError.message);
         }
       }, 100);
       
     } catch (error) {
       console.error('❌ Error in startRecording:', error);
       setIsRecording(false);
-      setErrorMessage('Error starting recording');
+      setErrorMessage('Error starting recording: ' + error.message);
     }
   };
 
@@ -350,7 +416,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         console.log('✅ Speech recognition stopped');
       } catch (error) {
         console.error('❌ Error stopping recognition:', error);
-        setErrorMessage('Error stopping recording');
+        setErrorMessage('Error stopping recording: ' + error.message);
       }
     }
     
@@ -420,7 +486,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       }
     } catch (error) {
       console.error('❌ Error in handleNext:', error);
-      setErrorMessage('Error moving to next question');
+      setErrorMessage('Error moving to next question: ' + error.message);
     }
   };
 
@@ -460,9 +526,10 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     try {
       const newSentences = generateSpeakingTest();
       setTestSentences(newSentences);
+      setIsInitialised(true);
     } catch (error) {
       console.error('❌ Error generating new sentences:', error);
-      setErrorMessage('Error restarting test');
+      setErrorMessage('Error restarting test: ' + error.message);
     }
   };
 
@@ -471,7 +538,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   // ==============================================
 
   // Loading state
-  if (testSentences.length === 0 && !errorMessage) {
+  if (!isInitialised || (testSentences.length === 0 && !errorMessage)) {
     return (
       <div className="speaking-container">
         <div className="speaking-quiz-container">
@@ -482,6 +549,24 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           <div className="loading-message">
             <p>🎲 Preparing your speaking test...</p>
             <p><small>Generating sentences in difficulty order: A2 → B1 → B2 → C1</small></p>
+            
+            {/* Debug info for loading */}
+            {process.env.NODE_ENV === 'development' && (
+              <div style={{
+                background: '#f0f0f0',
+                padding: '10px',
+                margin: '10px 0',
+                borderRadius: '5px',
+                fontSize: '0.8em',
+                textAlign: 'left'
+              }}>
+                <strong>Debug Info:</strong><br />
+                Initialised: {isInitialised ? 'Yes' : 'No'}<br />
+                Sentences: {testSentences.length}<br />
+                SENTENCE_POOLS available: {SENTENCE_POOLS ? 'Yes' : 'No'}<br />
+                TEST_STRUCTURE available: {TEST_STRUCTURE ? 'Yes' : 'No'}
+              </div>
+            )}
           </div>
 
           <button className="btn btn-secondary" onClick={onBack}>
@@ -504,6 +589,24 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           <div className="error-message">
             <h3>⚠️ Error</h3>
             <p>{errorMessage}</p>
+            
+            {/* Debug info for errors */}
+            {process.env.NODE_ENV === 'development' && (
+              <div style={{
+                background: '#f0f0f0',
+                padding: '10px',
+                margin: '10px 0',
+                borderRadius: '5px',
+                fontSize: '0.8em',
+                textAlign: 'left'
+              }}>
+                <strong>Debug Info:</strong><br />
+                SENTENCE_POOLS: {JSON.stringify(Object.keys(SENTENCE_POOLS || {}))}<br />
+                TEST_STRUCTURE: {JSON.stringify(TEST_STRUCTURE || [])}<br />
+                Current Sentences: {testSentences.length}
+              </div>
+            )}
+            
             <button className="btn btn-primary" onClick={() => window.location.reload()}>
               Refresh Page
             </button>
@@ -706,6 +809,24 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                 <h4>🎤 Microphone Required</h4>
                 <p>Please allow microphone access when prompted by your browser.</p>
               </div>
+              
+              {/* Debug info for instructions */}
+              {process.env.NODE_ENV === 'development' && (
+                <div style={{
+                  background: '#e6ffe6',
+                  padding: '10px',
+                  margin: '10px 0',
+                  borderRadius: '5px',
+                  fontSize: '0.8em',
+                  textAlign: 'left'
+                }}>
+                  <strong>✅ Ready to Start - Debug Info:</strong><br />
+                  Total sentences available: {testSentences.length}<br />
+                  First sentence: {testSentences[0]?.correctText}<br />
+                  Speech recognition: {speechSupported ? 'Supported' : 'Not supported'}<br />
+                  Current data available: {currentData ? 'Yes' : 'No'}
+                </div>
+              )}
             </div>
             
             <button className="btn btn-primary btn-large" onClick={startExercise}>
@@ -739,11 +860,34 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           <button className="close-btn" onClick={onBack}>✕</button>
         </div>
 
+        {/* Debug info for main interface */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{
+            background: currentData ? '#e6ffe6' : '#ffe6e6',
+            padding: '10px',
+            margin: '10px 0',
+            borderRadius: '5px',
+            fontSize: '0.8em',
+            textAlign: 'left'
+          }}>
+            <strong>🔍 Main Interface Debug:</strong><br />
+            Current sentence index: {currentSentence}<br />
+            Total sentences: {testSentences.length}<br />
+            Current data: {currentData ? '✅ Available' : '❌ Missing'}<br />
+            {currentData && (
+              <>
+                Current text: "{currentData.correctText}"<br />
+                Current level: {currentData.level}
+              </>
+            )}
+          </div>
+        )}
+
         {/* Main content */}
         <div className="speaking-main">
           <div className="level-indicator">
-            <span className="level-badge">{currentData?.level}</span>
-            <span className="level-description">{currentData?.difficulty}</span>
+            <span className="level-badge">{currentData?.level || 'Unknown'}</span>
+            <span className="level-description">{currentData?.difficulty || 'Loading...'}</span>
           </div>
 
           <div className="speaking-instruction">
@@ -754,7 +898,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           <div className="character-section">
             <div className="character">🎭</div>
             <div className="speech-bubble">
-              "{currentData?.correctText}"
+              "{currentData?.correctText || 'Loading sentence...'}"
             </div>
           </div>
 
@@ -763,6 +907,9 @@ function SpeakingExercise({ onBack, onLogoClick }) {
             <div className="error-message" style={{ margin: '20px 0', padding: '15px' }}>
               <h4>⚠️ Error</h4>
               <p>{errorMessage}</p>
+              <button className="btn btn-secondary btn-small" onClick={() => setErrorMessage('')}>
+                Clear Error
+              </button>
             </div>
           )}
 
@@ -772,7 +919,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               <button 
                 className={`record-btn ${isRecording ? 'recording' : ''}`}
                 onClick={isRecording ? stopRecording : startRecording}
-                disabled={timeLeft === 0}
+                disabled={timeLeft === 0 || !currentData}
               >
                 <span className="record-icon">
                   {isRecording ? '⏹️' : '🎤'}
