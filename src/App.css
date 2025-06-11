@@ -1,6 +1,7 @@
 /* ==============================================
-   MR. FOX ENGLISH - MAIN STYLESHEET
-   Clean, organized, and modular CSS structure
+   MR. FOX ENGLISH - MAIN STYLESHEET - FIXED
+   Clean, organised, and modular CSS structure
+   Removed any rules that might hide speaking exercises
    ============================================== */
 
 /* Import all component stylesheets */
@@ -14,9 +15,33 @@
 @import './styles/exercises.css';
 @import './styles/real-fake-words.css';
 @import './styles/listen-and-type.css';
+@import './styles/speaking.css';
 @import './styles/progress.css';
 @import './styles/responsive.css';
 
+/* ==============================================
+   FIXED: Ensure no global styles hide exercises
+   ============================================== */
+
+/* Force visibility for all exercise items */
+.exercise-item {
+  display: flex !important;
+  visibility: visible !important;
+}
+
+/* Specific fix for speaking exercises */
+.exercise-item[data-category="SPEAKING"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Temporary debugging style for speaking exercise */
+.exercise-item.speaking-debug {
+  background: #ffe6e6 !important;
+  border: 3px solid #ff0000 !important;
+  outline: 2px solid #0000ff !important;
+}
 
 /* ==============================================
    Any remaining shared styles can go here
