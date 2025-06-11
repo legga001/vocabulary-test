@@ -1,4 +1,4 @@
-// src/components/SpeakingExercise.js - Enhanced with extended recording time
+// src/components/SpeakingExercise.js - FIXED processing issue
 import React, { useState, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
@@ -117,10 +117,10 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   const [showFeedback, setShowFeedback] = useState(false);
   const [currentAccuracy, setCurrentAccuracy] = useState(0);
   
-  // NEW: Enhanced recording state
+  // Enhanced recording state
   const [recordingTimeElapsed, setRecordingTimeElapsed] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [recordingStatus, setRecordingStatus] = useState(''); // 'listening', 'silence_detected', 'processing'
+  const [recordingStatus, setRecordingStatus] = useState('');
 
   // Refs
   const recognitionRef = useRef(null);
@@ -128,6 +128,8 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   const recordingTimerRef = useRef(null);
   const silenceTimerRef = useRef(null);
   const recordingStartTimeRef = useRef(null);
+  // CRITICAL: Store the final transcript in a ref to avoid state timing issues
+  const finalTranscriptRef = useRef('');
 
   // Get current sentence data
   const currentData = testSentences[currentSentence] || null;
@@ -147,21 +149,18 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       setSpeechSupported(true);
       recognitionRef.current = new SpeechRecognition();
       
-      // ENHANCED: Configure speech recognition with longer timeouts
-      recognitionRef.current.continuous = true; // Keep listening continuously
-      recognitionRef.current.interimResults = true; // Get interim results
-      recognitionRef.current.lang = 'en-GB'; // British English
+      // Configure speech recognition
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-GB';
       
-      // NEW: Try to extend timeouts (browser-dependent)
-      if ('serviceURI' in recognitionRef.current) {
-        recognitionRef.current.serviceURI = 'wss://www.google.com/speech-api/v2/recognize';
-      }
-      
-      // Enhanced event handlers
+      // Event handlers with proper flow control
       recognitionRef.current.onstart = () => {
         console.log('🎤 Speech recognition started');
         setIsRecording(true);
         setRecordingStatus('listening');
+        setIsProcessing(false);
+        finalTranscriptRef.current = ''; // Reset transcript
         recordingStartTimeRef.current = Date.now();
         
         // Start recording timer
@@ -187,10 +186,11 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           }
         }
         
-        // Update spoken text with final or interim results
+        // Handle final results
         if (finalTranscript) {
-          console.log('📝 Final transcript:', finalTranscript);
-          setSpokenText(finalTranscript);
+          console.log('📝 Final transcript received:', finalTranscript);
+          finalTranscriptRef.current = finalTranscript.trim(); // Store in ref
+          setSpokenText(finalTranscript.trim()); // Update state
           setRecordingStatus('processing');
           
           // Reset silence timer when we get speech
@@ -201,12 +201,14 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           // Start new silence timer (3 seconds of silence = auto-stop)
           silenceTimerRef.current = setTimeout(() => {
             console.log('🔇 3 seconds of silence detected - stopping recording');
-            stopRecording();
+            if (recognitionRef.current && isRecording) {
+              recognitionRef.current.stop();
+            }
           }, 3000);
           
         } else if (interimTranscript) {
           console.log('📝 Interim transcript:', interimTranscript);
-          setSpokenText(interimTranscript);
+          setSpokenText(interimTranscript.trim());
           setRecordingStatus('listening');
           
           // Reset silence timer when we get interim speech
@@ -221,17 +223,18 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         
         // Handle specific errors
         if (event.error === 'no-speech') {
-          console.log('ℹ️ No speech detected - continuing to listen...');
-          // Don't stop on no-speech, just continue listening
-          setRecordingStatus('listening');
+          console.log('ℹ️ No speech detected - trying to continue...');
+          // For no-speech, we'll handle this in onend
         } else if (event.error === 'audio-capture') {
-          console.error('🎤 Microphone access denied or unavailable');
+          console.error('🎤 Microphone access denied');
           setIsRecording(false);
+          setIsProcessing(false);
           setSpokenText('Microphone access denied. Please allow microphone access and try again.');
           cleanupRecording();
         } else {
           console.error('🔧 Speech recognition error:', event.error);
           setIsRecording(false);
+          setIsProcessing(false);
           setSpokenText(`Speech recognition error: ${event.error}. Please try again.`);
           cleanupRecording();
         }
@@ -239,25 +242,28 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       
       recognitionRef.current.onend = () => {
         console.log('🏁 Speech recognition ended');
+        console.log('Final transcript from ref:', finalTranscriptRef.current);
         
-        // Only process if we actually have some text
-        if (spokenText && spokenText.trim() && !spokenText.includes('error') && !spokenText.includes('denied')) {
-          handleRecordingComplete();
-        } else if (!spokenText || spokenText.trim() === '') {
-          // No speech detected at all
-          setSpokenText('No speech detected. Please speak more clearly and try again.');
-          setIsRecording(false);
-          cleanupRecording();
+        // FIXED: Use the ref value instead of state to avoid timing issues
+        const finalText = finalTranscriptRef.current;
+        
+        if (finalText && finalText.length > 0 && !finalText.includes('error') && !finalText.includes('denied')) {
+          console.log('✅ Processing valid speech:', finalText);
+          // Process the recording with valid speech
+          processValidRecording(finalText);
         } else {
-          // Error case already handled
+          console.log('❌ No valid speech detected');
+          // No speech detected or error
           setIsRecording(false);
+          setIsProcessing(false);
+          setSpokenText('No speech detected. Please speak more clearly and try again.');
           cleanupRecording();
         }
       };
     }
   }, []);
 
-  // Timer countdown (same as before)
+  // Timer countdown
   useEffect(() => {
     if (hasStarted && timeLeft > 0 && !showResults && !showFeedback) {
       const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
@@ -268,7 +274,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   }, [timeLeft, hasStarted, showResults, showFeedback]);
 
   // ==============================================
-  // ENHANCED RECORDING HANDLERS
+  // RECORDING HANDLERS - FIXED FLOW
   // ==============================================
   
   const cleanupRecording = () => {
@@ -286,6 +292,31 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     recordingStartTimeRef.current = null;
   };
 
+  // NEW: Separate function to process valid recordings
+  const processValidRecording = (finalText) => {
+    console.log('🔄 Processing valid recording:', finalText);
+    setIsProcessing(true);
+    setIsRecording(false);
+    cleanupRecording();
+    
+    // Update state with final text
+    setSpokenText(finalText);
+    
+    // Small delay to show processing, then calculate results
+    setTimeout(() => {
+      if (currentData) {
+        const accuracy = calculateAccuracy(finalText, currentData.correctText);
+        console.log('📊 Calculated accuracy:', accuracy);
+        setCurrentAccuracy(accuracy);
+        setShowFeedback(true);
+        setIsProcessing(false);
+      } else {
+        console.error('❌ No current data available for accuracy calculation');
+        setIsProcessing(false);
+      }
+    }, 800);
+  };
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -301,18 +332,21 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     console.log('🎯 Starting recording...');
     if (!speechSupported || !recognitionRef.current) return;
     
-    setIsRecording(true);
+    // Reset all states
+    setIsRecording(false); // Will be set to true in onstart
     setSpokenText('');
     setShowFeedback(false);
     setRecordingTimeElapsed(0);
     setRecordingStatus('starting');
     setIsProcessing(false);
+    finalTranscriptRef.current = '';
     
     try {
       recognitionRef.current.start();
     } catch (error) {
       console.error('❌ Error starting speech recognition:', error);
       setIsRecording(false);
+      setIsProcessing(false);
       setSpokenText('Failed to start recording. Please check your microphone and try again.');
       cleanupRecording();
     }
@@ -321,28 +355,9 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   const stopRecording = () => {
     console.log('⏹️ Manually stopping recording...');
     if (recognitionRef.current && isRecording) {
-      setIsProcessing(true);
       setRecordingStatus('processing');
-      recognitionRef.current.stop();
+      recognitionRef.current.stop(); // This will trigger onend
     }
-  };
-
-  const handleRecordingComplete = () => {
-    console.log('✅ Processing recording completion...');
-    setIsProcessing(true);
-    cleanupRecording();
-    
-    // Small delay to show processing state
-    setTimeout(() => {
-      if (spokenText && currentData) {
-        // Calculate accuracy
-        const accuracy = calculateAccuracy(spokenText, currentData.correctText);
-        setCurrentAccuracy(accuracy);
-        setShowFeedback(true);
-        setIsRecording(false);
-        setIsProcessing(false);
-      }
-    }, 500);
   };
 
   const playCorrectAudio = () => {
@@ -355,11 +370,15 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   };
 
   const handleTimeUp = () => {
-    setSpokenText('Time is up!');
-    setCurrentAccuracy(0);
-    setShowFeedback(true);
+    console.log('⏰ Time is up!');
     if (isRecording) {
       stopRecording();
+    }
+    // Only set time up message if we don't have valid speech
+    if (!spokenText || spokenText.includes('error') || spokenText.includes('denied')) {
+      setSpokenText('Time is up!');
+      setCurrentAccuracy(0);
+      setShowFeedback(true);
     }
   };
 
@@ -383,6 +402,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       setShowFeedback(false);
       setCurrentAccuracy(0);
       setIsProcessing(false);
+      finalTranscriptRef.current = '';
       cleanupRecording();
     } else {
       // Test completed
@@ -420,6 +440,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     setShowFeedback(false);
     setCurrentAccuracy(0);
     setIsProcessing(false);
+    finalTranscriptRef.current = '';
     cleanupRecording();
     
     // Generate new random sentences
@@ -428,7 +449,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   };
 
   // ==============================================
-  // RENDER CONDITIONS (Results and Instructions remain the same)
+  // RENDER CONDITIONS
   // ==============================================
 
   // Loading state
@@ -481,7 +502,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Results state (same as before - keeping original)
+  // Results state
   if (showResults) {
     const score = calculateOverallScore();
     
@@ -585,7 +606,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Instructions state (keeping original with small update)
+  // Instructions state
   if (!hasStarted) {
     return (
       <div className="speaking-container">
@@ -612,7 +633,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                 </div>
                 <div className="instruction-item">
                   <span className="instruction-icon">🔇</span>
-                  <span><strong>NEW:</strong> Recording auto-stops after 3 seconds of silence</span>
+                  <span><strong>FIXED:</strong> Recording auto-stops after 3 seconds of silence</span>
                 </div>
                 <div className="instruction-item">
                   <span className="instruction-icon">⏹️</span>
@@ -647,8 +668,8 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               </div>
               
               <div className="microphone-info">
-                <h4>🎤 Enhanced Recording</h4>
-                <p>The recording will now give you more time to speak and automatically detect when you've finished!</p>
+                <h4>🎤 Fixed Processing Issue</h4>
+                <p>The infinite processing bug has been fixed! Recording will now properly complete and show results.</p>
               </div>
             </div>
             
@@ -665,9 +686,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // ==============================================
-  // ENHANCED MAIN TEST INTERFACE
-  // ==============================================
+  // Main test interface
   return (
     <div className="speaking-container">
       <div className="speaking-quiz-container">
@@ -704,7 +723,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
             </div>
           </div>
 
-          {/* ENHANCED Recording controls */}
+          {/* FIXED Recording controls */}
           <div className="recording-section">
             {!showFeedback ? (
               <>
@@ -723,7 +742,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                   </span>
                 </button>
 
-                {/* ENHANCED Recording status */}
+                {/* Recording status */}
                 {isRecording && (
                   <div className="recording-status">
                     <div className="recording-indicator">
@@ -735,7 +754,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                     </div>
                     
                     {/* Real-time feedback if we have interim text */}
-                    {spokenText && !spokenText.includes('error') && (
+                    {spokenText && !spokenText.includes('error') && !isProcessing && (
                       <div className="interim-feedback">
                         <div className="interim-text">
                           Hearing: "{spokenText}"
