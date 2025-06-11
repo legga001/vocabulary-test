@@ -480,11 +480,19 @@ function SpeakingExercise({ onBack, onLogoClick }) {
             recognitionRef.current.stop();
           }
           
-          // Calculate accuracy with current sentence
+          // Calculate accuracy ONLY for current sentence (not affected by previous questions)
           if (currentData && currentData.correctText) {
-            console.log('🎯 Calculating accuracy with:', currentData.correctText);
-            const accuracy = calculateAccuracy(finalTranscript, currentData.correctText);
-            setCurrentAccuracy(accuracy);
+            console.log('🎯 Calculating accuracy for CURRENT question only:');
+            console.log('Current sentence:', currentData.correctText);
+            console.log('User just said:', finalTranscript);
+            
+            // Calculate accuracy for THIS question only - completely independent
+            const thisQuestionAccuracy = calculateAccuracy(finalTranscript, currentData.correctText);
+            
+            console.log('📊 THIS question accuracy:', thisQuestionAccuracy + '%');
+            
+            // Set the accuracy for display - this should ONLY be for current question
+            setCurrentAccuracy(thisQuestionAccuracy);
             setShowFeedback(true);
           } else {
             console.error('❌ No current data for accuracy calculation');
@@ -742,14 +750,18 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   }, [currentData]);
 
   const handleTimeUp = useCallback(() => {
-    console.log('⏰ Time is up!');
+    console.log('⏰ Time is up for question', currentSentence + 1);
     if (isRecording && recognitionRef.current) {
       recognitionRef.current.stop();
     }
     setSpokenText('Time is up!');
+    
+    // Set accuracy to 0 for timeout - this is ONLY for this question
     setCurrentAccuracy(0);
     setShowFeedback(true);
-  }, [isRecording]);
+    
+    console.log('📊 Timeout - accuracy set to 0% for THIS question only');
+  }, [isRecording, currentSentence]);
 
   const handleNext = useCallback(() => {
     console.log('➡️ Moving to next question...');
@@ -759,24 +771,31 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       return;
     }
 
+    // Store the result for THIS question only
     const answerData = {
       sentence: currentData,
       spokenText: spokenText || 'No speech detected',
-      accuracy: currentAccuracy,
+      accuracy: currentAccuracy, // This should be the accuracy for THIS question only
       timeTaken: 45 - timeLeft
     };
     
+    console.log('💾 Saving result for question', currentSentence + 1, ':', answerData);
     setAnswers(prev => [...prev, answerData]);
 
     if (currentSentence + 1 < testSentences.length) {
+      // Move to next sentence and RESET all states
       setCurrentSentence(prev => prev + 1);
       setSpokenText('');
       setInterimText('');
       setTimeLeft(45);
       setIsRecording(false);
       setShowFeedback(false);
+      
+      // CRITICAL: Reset accuracy to 0 for new question
       setCurrentAccuracy(0);
       setErrorMessage('');
+      
+      console.log('🔄 Reset for question', currentSentence + 2, '- accuracy reset to 0');
     } else {
       setShowResults(true);
     }
@@ -1289,10 +1308,10 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                       fontSize: '0.8em',
                       textAlign: 'left'
                     }}>
-                      <strong>🔧 Word Analysis:</strong><br />
+                      <strong>🔧 Word Analysis (Question {currentSentence + 1} ONLY):</strong><br />
                       Target: {getWordsArray(currentData.correctText).join(' | ')}<br />
                       Spoken: {getWordsArray(spokenText).join(' | ')}<br />
-                      Score: {currentAccuracy}% (Word-based accuracy)
+                      Score: {currentAccuracy}% (THIS question only - not affected by previous questions)
                     </div>
                   )}
                 </div>
