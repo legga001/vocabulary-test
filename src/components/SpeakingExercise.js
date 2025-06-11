@@ -73,8 +73,8 @@ const normaliseText = (text) => {
     // Handle common speech recognition errors
     .replace(/\bthree\b/g, '3')
     .replace(/\bseven\b/g, '7')
-    .replace(/\bto\b/g, 'two') // Handle "to" vs "two" confusion
-    .replace(/\btwo\b/g, 'to')   // Then swap back - this handles both directions
+    // Note: Removed the problematic to/two swapping logic that was causing confusion
+    // Now handled properly in the areWordsEquivalent function
     // Normalize multiple spaces to single space
     .replace(/\s+/g, ' ')
     .trim();
@@ -237,7 +237,7 @@ const calculateWordAccuracy = (spokenText, correctText) => {
   if (spokenWords.length === correctWords.length) {
     let perfectMatches = 0;
     for (let i = 0; i < correctWords.length; i++) {
-      if (areWordsSimilar(spokenWords[i], correctWords[i])) {
+      if (areWordsEquivalent(spokenWords[i], correctWords[i])) {
         perfectMatches++;
       }
     }
