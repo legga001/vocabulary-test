@@ -1,6 +1,6 @@
 /* ==============================================
-   SPEAKING.CSS - Speaking Exercise Styles
-   Clean design matching the screenshot layout
+   SPEAKING.CSS - Enhanced Speaking Exercise Styles
+   Updated with new recording status indicators
    ============================================== */
 
 /* ==============================================
@@ -195,15 +195,16 @@
 }
 
 /* ==============================================
-   5. RECORDING SECTION
+   5. ENHANCED RECORDING SECTION
    ============================================== */
 .recording-section {
   margin: 40px 0;
-  min-height: 200px;
+  min-height: 250px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 20px;
 }
 
 .record-btn {
@@ -239,7 +240,7 @@
 .record-btn.recording {
   background: linear-gradient(135deg, #48bb78, #38a169);
   box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
-  animation: pulse 2s infinite;
+  animation: recordingPulse 2s infinite;
 }
 
 .record-icon {
@@ -247,16 +248,79 @@
   line-height: 1;
 }
 
+/* NEW: Enhanced recording status indicators */
+.recording-status {
+  background: #f0fff4;
+  border: 2px solid #48bb78;
+  border-radius: 15px;
+  padding: 20px;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  animation: fadeInUp 0.3s ease-out;
+}
+
 .recording-indicator {
-  margin-top: 20px;
+  font-size: 1.2em;
+  font-weight: 700;
+  color: #e53e3e;
+  margin-bottom: 15px;
+  animation: recordingBlink 1.5s infinite;
+}
+
+.recording-instructions {
+  margin-bottom: 15px;
+}
+
+.recording-instructions p {
+  margin: 5px 0;
+  color: #38a169;
+  font-weight: 600;
+}
+
+.recording-instructions small {
+  color: #666;
+  font-style: italic;
+}
+
+/* NEW: Interim feedback during recording */
+.interim-feedback {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.interim-text {
+  color: #4a5568;
+  font-style: italic;
+  font-size: 1em;
+  line-height: 1.4;
+}
+
+/* NEW: Processing indicator */
+.processing-indicator {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 15px;
+  padding: 20px;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.processing-text {
   font-size: 1.1em;
   font-weight: 600;
-  color: #e53e3e;
-  animation: pulse 1.5s infinite;
+  color: #856404;
+  animation: processingDots 1.5s infinite;
 }
 
 /* ==============================================
-   6. FEEDBACK SECTION
+   6. FEEDBACK SECTION (Enhanced)
    ============================================== */
 .feedback-section {
   background: #c6f6d5;
@@ -265,6 +329,7 @@
   padding: 25px;
   width: 100%;
   max-width: 600px;
+  animation: fadeInScale 0.5s ease-out;
 }
 
 .accuracy-display {
@@ -438,22 +503,22 @@
 }
 
 .microphone-info {
-  background: #fff3cd;
+  background: #e6fffa;
   padding: 15px;
   border-radius: 10px;
   text-align: center;
   margin-bottom: 25px;
-  border: 1px solid #ffeaa7;
+  border: 1px solid #81e6d9;
 }
 
 .microphone-info h4 {
-  color: #d69e2e;
+  color: #2c7a7b;
   margin-bottom: 8px;
   font-size: 1.1em;
 }
 
 .microphone-info p {
-  color: #d69e2e;
+  color: #2c7a7b;
   margin: 0;
   font-size: 0.95em;
 }
@@ -704,12 +769,47 @@
 }
 
 /* ==============================================
-   12. ANIMATIONS
+   12. ENHANCED ANIMATIONS
    ============================================== */
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+@keyframes recordingPulse {
+  0% { transform: scale(1); box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3); }
+  50% { transform: scale(1.05); box-shadow: 0 8px 20px rgba(72, 187, 120, 0.5); }
+  100% { transform: scale(1); box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3); }
+}
+
+@keyframes recordingBlink {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+@keyframes processingDots {
+  0% { content: "🧠 Processing your speech..."; }
+  33% { content: "🧠 Processing your speech."; }
+  66% { content: "🧠 Processing your speech.."; }
+  100% { content: "🧠 Processing your speech..."; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ==============================================
@@ -761,6 +861,12 @@
   .sample-controls {
     flex-direction: column;
     gap: 12px;
+  }
+
+  .recording-status,
+  .processing-indicator {
+    max-width: 400px;
+    padding: 15px;
   }
 }
 
@@ -863,5 +969,19 @@
 
   .accuracy-score {
     font-size: 2.5em;
+  }
+
+  .recording-status,
+  .processing-indicator {
+    max-width: 350px;
+    padding: 15px;
+  }
+
+  .recording-instructions p {
+    font-size: 0.9em;
+  }
+
+  .interim-feedback {
+    padding: 12px;
   }
 }
