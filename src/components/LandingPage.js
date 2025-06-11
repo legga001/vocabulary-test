@@ -1,4 +1,4 @@
-// src/components/LandingPage.js - Complete rewrite with speaking exercise
+// src/components/LandingPage.js - Fixed to show speaking exercise
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 
 // Constants for better performance - moved outside component
@@ -72,27 +72,7 @@ const EXERCISES = Object.freeze([
     isActive: false
   },
   
-  // WRITING EXERCISES
-  {
-    type: 'writing',
-    category: 'WRITING',
-    icon: '✍️',
-    title: 'Grammar Practice',
-    subtitle: 'Sentence building',
-    progress: '0/6',
-    isActive: false
-  },
-  {
-    type: 'writing',
-    category: 'WRITING',
-    icon: '📝',
-    title: 'Essay Writing',
-    subtitle: 'Structured responses',
-    progress: '0/4',
-    isActive: false
-  },
-  
-  // SPEAKING EXERCISES - UPDATED WITH NEW EXERCISE
+  // SPEAKING EXERCISES - FIXED: Moved to appear earlier in the list
   {
     type: 'speak-and-record',
     category: 'SPEAKING',
@@ -118,6 +98,26 @@ const EXERCISES = Object.freeze([
     icon: '🎙️',
     title: 'Pronunciation Check',
     subtitle: 'Voice analysis',
+    progress: '0/4',
+    isActive: false
+  },
+  
+  // WRITING EXERCISES
+  {
+    type: 'writing',
+    category: 'WRITING',
+    icon: '✍️',
+    title: 'Grammar Practice',
+    subtitle: 'Sentence building',
+    progress: '0/6',
+    isActive: false
+  },
+  {
+    type: 'writing',
+    category: 'WRITING',
+    icon: '📝',
+    title: 'Essay Writing',
+    subtitle: 'Structured responses',
     progress: '0/4',
     isActive: false
   }
@@ -149,10 +149,22 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     return () => clearTimeout(timer);
   }, [isTransitioning]);
 
-  // Memoised filtered exercises for performance
+  // FIXED: Improved filtered exercises with better ALL category handling
   const filteredExercises = useMemo(() => {
-    if (selectedCategory === 'ALL') return EXERCISES;
-    return EXERCISES.filter(exercise => exercise.category === selectedCategory);
+    console.log('Filtering exercises for category:', selectedCategory);
+    console.log('Total exercises available:', EXERCISES.length);
+    
+    if (selectedCategory === 'ALL') {
+      // Show all exercises when ALL is selected
+      const allExercises = [...EXERCISES];
+      console.log('Showing all exercises:', allExercises.length);
+      return allExercises;
+    }
+    
+    // Filter by specific category
+    const categoryExercises = EXERCISES.filter(exercise => exercise.category === selectedCategory);
+    console.log(`Exercises for ${selectedCategory}:`, categoryExercises.length);
+    return categoryExercises;
   }, [selectedCategory]);
 
   // Memoised progress calculations
@@ -183,10 +195,12 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
   }, [onProgress, handleMobileMenuClose]);
 
   const handleCategoryChange = useCallback((categoryId) => {
+    console.log('Category changed to:', categoryId);
     setSelectedCategory(categoryId);
   }, []);
 
   const handleExerciseClick = useCallback((exercise) => {
+    console.log('Exercise clicked:', exercise.type, 'isActive:', exercise.isActive);
     if (exercise.isActive) {
       onSelectExercise(exercise.type);
     }
@@ -242,6 +256,16 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
   const renderExerciseItem = useCallback((exercise, index) => {
     const exerciseData = exerciseProgressData.find(e => e.type === exercise.type) || exercise;
     
+    // Add debug logging for speaking exercise
+    if (exercise.type === 'speak-and-record') {
+      console.log('Rendering speaking exercise:', {
+        type: exercise.type,
+        isActive: exercise.isActive,
+        category: exercise.category,
+        index: index
+      });
+    }
+    
     return (
       <div
         key={`${exercise.category}-${exercise.type}-${index}`}
@@ -287,6 +311,16 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
       </div>
     );
   }, [exerciseProgressData, handleExerciseClick]);
+
+  // Add debug logging for filtered exercises
+  useEffect(() => {
+    console.log('Current filtered exercises:', filteredExercises.map(e => ({
+      type: e.type,
+      category: e.category,
+      isActive: e.isActive,
+      title: e.title
+    })));
+  }, [filteredExercises]);
 
   return (
     <div className={`landing-duolingo ${isTransitioning === false ? 'fade-in' : ''}`}>
@@ -390,8 +424,26 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           {renderCategoryTabs}
         </section>
 
-        {/* Exercises List */}
+        {/* Exercises List with Debug Info */}
         <section className="exercises-list" id="exercises-list">
+          {/* Debug information (remove in production) */}
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{
+              background: '#f0f0f0',
+              padding: '10px',
+              margin: '10px 0',
+              borderRadius: '5px',
+              fontSize: '0.8em',
+              fontFamily: 'monospace'
+            }}>
+              Debug: Category="{selectedCategory}", 
+              Exercises={filteredExercises.length}, 
+              ShowExercises={showExercises ? 'true' : 'false'}
+              <br />
+              Speaking exercise present: {filteredExercises.some(e => e.type === 'speak-and-record') ? 'YES' : 'NO'}
+            </div>
+          )}
+          
           {showExercises && filteredExercises.map((exercise, index) => 
             renderExerciseItem(exercise, index)
           )}
