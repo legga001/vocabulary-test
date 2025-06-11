@@ -1,4 +1,4 @@
-// src/components/SpeakingExercise.js - Fixed for iPad and data handling issues
+// src/components/SpeakingExercise.js - Fixed speech recognition with proper audio capture
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
@@ -10,9 +10,7 @@ import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
 // Generate test sentences in proper order: A2 → B1 → B2 → C1
 const generateSpeakingTest = () => {
   console.log('🎲 Starting sentence generation...');
-  console.log('Available sentence pools:', Object.keys(SENTENCE_POOLS));
-  console.log('Test structure:', TEST_STRUCTURE);
-
+  
   const testSentences = [];
   let sentenceCounter = 1;
 
@@ -26,43 +24,36 @@ const generateSpeakingTest = () => {
       return;
     }
     
-    console.log(`Found ${availableSentences.length} sentences for level ${level}`);
-    
-    // Create a copy and shuffle only within this level
+    // Create a copy and shuffle
     const shuffled = [...availableSentences];
-    
-    // Fisher-Yates shuffle
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     
-    // Take the required number of sentences from this level
+    // Take required sentences
     for (let i = 0; i < count && i < shuffled.length; i++) {
       const selectedSentence = shuffled[i];
       
-      const processedSentence = {
+      testSentences.push({
         id: sentenceCounter,
         level: level,
         audioFile: selectedSentence.audioFile,
         correctText: selectedSentence.correctText,
         difficulty: selectedSentence.difficulty || `${level} level sentence`
-      };
+      });
       
-      console.log(`✅ Added sentence ${sentenceCounter}:`, processedSentence);
-      testSentences.push(processedSentence);
       sentenceCounter++;
     }
   });
 
-  console.log(`🎯 Generated ${testSentences.length} total sentences for speaking test`);
+  console.log(`🎯 Generated ${testSentences.length} total sentences`);
   return testSentences;
 };
 
 // Basic text normalisation for comparison
 const normaliseText = (text) => {
   if (!text || typeof text !== 'string') return '';
-  
   return text
     .toLowerCase()
     .replace(/[.,!?;:'"()-]/g, '')
@@ -74,37 +65,21 @@ const normaliseText = (text) => {
 const calculateAccuracy = (spokenText, correctText) => {
   console.log('🎯 Calculating accuracy:', { spokenText, correctText });
   
-  // Handle null/undefined values
-  if (!spokenText || !correctText) {
-    console.log('❌ Missing text for accuracy calculation');
-    return 0;
-  }
+  if (!spokenText || !correctText) return 0;
   
-  // Ensure both are strings
   const spoken = normaliseText(String(spokenText));
   const correct = normaliseText(String(correctText));
   
-  console.log('📝 Normalised texts:', { spoken, correct });
+  if (spoken === correct) return 100;
   
-  // Perfect match
-  if (spoken === correct) {
-    console.log('✅ Perfect match!');
-    return 100;
-  }
-  
-  // Split into words for comparison
   const spokenWords = spoken.split(' ').filter(word => word.length > 0);
   const correctWords = correct.split(' ').filter(word => word.length > 0);
   
-  console.log('📚 Word comparison:', { spokenWords, correctWords });
-  
-  // Calculate word accuracy
   const matchingWords = spokenWords.filter(word => correctWords.includes(word));
   const wordAccuracy = correctWords.length > 0 ? (matchingWords.length / correctWords.length) * 100 : 0;
   
-  // Simple character similarity
   const maxLength = Math.max(spoken.length, correct.length);
-  if (maxLength === 0) return 100; // Both empty
+  if (maxLength === 0) return 100;
   
   let charMatches = 0;
   const minLength = Math.min(spoken.length, correct.length);
@@ -114,18 +89,9 @@ const calculateAccuracy = (spokenText, correctText) => {
   }
   
   const charAccuracy = ((charMatches / maxLength) * 100);
-  
-  // Return the better of the two methods
   const finalAccuracy = Math.round(Math.max(wordAccuracy, charAccuracy));
   
-  console.log('📊 Accuracy calculation:', {
-    wordAccuracy: Math.round(wordAccuracy),
-    charAccuracy: Math.round(charAccuracy),
-    finalAccuracy,
-    matchingWords: matchingWords.length,
-    totalWords: correctWords.length
-  });
-  
+  console.log('📊 Accuracy result:', finalAccuracy);
   return finalAccuracy;
 };
 
@@ -138,7 +104,7 @@ const getAccuracyLevel = (accuracy) => {
   return { level: 'Try Again', emoji: '🔄', color: '#e53e3e' };
 };
 
-// Detect if running on iPad/iOS
+// Detect iOS
 const isIOSDevice = () => {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -162,216 +128,218 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   const [currentAccuracy, setCurrentAccuracy] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const [isInitialised, setIsInitialised] = useState(false);
-  const [microphonePermission, setMicrophonePermission] = useState('unknown'); // 'granted', 'denied', 'unknown'
+  const [microphoneStatus, setMicrophoneStatus] = useState('unknown'); // 'granted', 'denied', 'unknown'
   const [isIOS, setIsIOS] = useState(false);
+  const [speechRecognitionReady, setSpeechRecognitionReady] = useState(false);
+  const [interimText, setInterimText] = useState(''); // Show real-time speech
 
   // Refs
   const recognitionRef = useRef(null);
   const audioRef = useRef(null);
-  const currentSentenceRef = useRef(0); // CRITICAL FIX: Use ref to avoid stale closure issues
-  const testSentencesRef = useRef([]); // CRITICAL FIX: Ref for sentence data
+  const microphoneStreamRef = useRef(null);
 
-  // Update refs whenever state changes
-  useEffect(() => {
-    currentSentenceRef.current = currentSentence;
-  }, [currentSentence]);
-
-  useEffect(() => {
-    testSentencesRef.current = testSentences;
-  }, [testSentences]);
-
-  // Get current sentence data with better validation
-  const getCurrentData = useCallback(() => {
-    const sentences = testSentencesRef.current;
-    const index = currentSentenceRef.current;
-    
-    if (!sentences || sentences.length === 0 || index < 0 || index >= sentences.length) {
-      return null;
-    }
-    
-    return sentences[index];
-  }, []);
+  // Get current sentence data
+  const currentData = testSentences && testSentences.length > 0 && currentSentence >= 0 && currentSentence < testSentences.length 
+    ? testSentences[currentSentence] 
+    : null;
 
   // ==============================================
-  // MICROPHONE PERMISSION HANDLING (iOS FIX)
+  // MICROPHONE AND SPEECH RECOGNITION SETUP
   // ==============================================
   
-  const checkMicrophonePermission = useCallback(async () => {
-    console.log('🎤 Checking microphone permission...');
-    
-    if (!navigator.permissions) {
-      console.log('Permissions API not available, assuming granted');
-      setMicrophonePermission('granted');
-      return true;
-    }
-
-    try {
-      const permission = await navigator.permissions.query({ name: 'microphone' });
-      console.log('Microphone permission status:', permission.state);
-      setMicrophonePermission(permission.state);
-      
-      // Listen for permission changes
-      permission.onchange = () => {
-        console.log('Microphone permission changed to:', permission.state);
-        setMicrophonePermission(permission.state);
-      };
-      
-      return permission.state === 'granted';
-    } catch (error) {
-      console.log('Error checking microphone permission:', error);
-      setMicrophonePermission('unknown');
-      return true; // Assume granted if we can't check
-    }
-  }, []);
-
-  // Request microphone permission explicitly (iOS fix)
-  const requestMicrophonePermission = useCallback(async () => {
-    console.log('🎤 Requesting microphone permission...');
+  // Test microphone access
+  const testMicrophoneAccess = useCallback(async () => {
+    console.log('🎤 Testing microphone access...');
     
     try {
-      // On iOS, we need to request permission by actually trying to access the microphone
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log('✅ Microphone permission granted');
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        }
+      });
       
-      // Stop the stream immediately - we just needed permission
-      stream.getTracks().forEach(track => track.stop());
+      console.log('✅ Microphone access granted');
+      microphoneStreamRef.current = stream;
+      setMicrophoneStatus('granted');
       
-      setMicrophonePermission('granted');
+      // Test audio levels
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      source.connect(analyser);
+      
+      console.log('🔊 Audio context created successfully');
+      
       return true;
     } catch (error) {
-      console.error('❌ Microphone permission denied:', error);
-      setMicrophonePermission('denied');
-      setErrorMessage('Microphone access is required for this exercise. Please allow microphone access and try again.');
+      console.error('❌ Microphone access error:', error);
+      setMicrophoneStatus('denied');
+      setErrorMessage(`Microphone access denied: ${error.message}`);
       return false;
     }
   }, []);
 
-  // ==============================================
-  // SPEECH RECOGNITION SETUP
-  // ==============================================
-  
+  // Setup speech recognition with enhanced error handling
   const setupSpeechRecognition = useCallback(() => {
     console.log('🎙️ Setting up speech recognition...');
     
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      console.log('❌ Speech recognition not supported');
+      console.error('❌ Speech recognition not supported');
+      setErrorMessage('Speech recognition is not supported in this browser');
       return false;
     }
 
     try {
+      // Clean up any existing recognition
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+          recognitionRef.current = null;
+        } catch (e) {
+          console.log('Cleaned up previous recognition');
+        }
+      }
+
       recognitionRef.current = new SpeechRecognition();
       
-      // Configure speech recognition
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
+      // Enhanced configuration
+      recognitionRef.current.continuous = true; // Keep listening
+      recognitionRef.current.interimResults = true; // Show real-time results
       recognitionRef.current.lang = 'en-GB'; // British English
+      recognitionRef.current.maxAlternatives = 1;
       
-      // CRITICAL FIX: Use the ref values in the event handlers to avoid stale closures
+      // Event handlers with better logging
+      recognitionRef.current.onstart = () => {
+        console.log('▶️ Speech recognition STARTED');
+        setIsRecording(true);
+        setInterimText('');
+        setSpokenText('');
+        setErrorMessage('');
+      };
+      
       recognitionRef.current.onresult = (event) => {
         console.log('🎙️ Speech recognition result received');
+        console.log('Event results:', event.results);
         
-        try {
-          if (event.results && event.results.length > 0 && event.results[0].length > 0) {
-            const transcript = event.results[0][0].transcript;
-            console.log('📝 Transcript:', transcript);
-            
-            setSpokenText(transcript);
-            setIsRecording(false);
-            setErrorMessage(''); // Clear any previous errors
-            
-            // CRITICAL FIX: Get current data using refs to avoid stale closure
-            const currentIndex = currentSentenceRef.current;
-            const sentences = testSentencesRef.current;
-            
-            console.log('🔍 Processing with current index:', currentIndex);
-            console.log('🔍 Total sentences available:', sentences.length);
-            
-            if (sentences && sentences.length > 0 && currentIndex >= 0 && currentIndex < sentences.length) {
-              const currentTestData = sentences[currentIndex];
-              console.log('🎯 Found current test data:', currentTestData);
-              
-              if (currentTestData && currentTestData.correctText) {
-                const accuracy = calculateAccuracy(transcript, currentTestData.correctText);
-                setCurrentAccuracy(accuracy);
-                setShowFeedback(true);
-                console.log('✅ Accuracy calculated successfully:', accuracy);
-              } else {
-                console.error('❌ Current test data missing correctText');
-                setErrorMessage('Error: Sentence data is incomplete');
-              }
-            } else {
-              console.error('❌ Invalid sentence index or empty sentences array');
-              console.log('Debug info:', {
-                currentIndex,
-                sentencesLength: sentences ? sentences.length : 0,
-                sentences: sentences ? sentences.map(s => s.correctText) : 'null'
-              });
-              setErrorMessage('Error: Cannot find current sentence data');
-            }
+        let interimTranscript = '';
+        let finalTranscript = '';
+        
+        // Process all results
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          const transcript = result[0].transcript;
+          
+          if (result.isFinal) {
+            finalTranscript += transcript;
+            console.log('📝 Final transcript:', transcript);
           } else {
-            console.error('❌ No speech recognition results');
-            setSpokenText('No speech detected. Please try again.');
-            setErrorMessage('No speech detected');
+            interimTranscript += transcript;
+            console.log('📝 Interim transcript:', transcript);
           }
-        } catch (error) {
-          console.error('❌ Error processing speech result:', error);
-          setSpokenText('Error processing speech. Please try again.');
-          setErrorMessage('Error processing speech result: ' + error.message);
-        } finally {
-          setIsRecording(false);
+        }
+        
+        // Update interim text for real-time display
+        if (interimTranscript) {
+          setInterimText(interimTranscript);
+        }
+        
+        // If we have a final result, process it
+        if (finalTranscript) {
+          console.log('✅ Processing final transcript:', finalTranscript);
+          setSpokenText(finalTranscript);
+          setInterimText('');
+          
+          // Stop recording and process result
+          if (recognitionRef.current) {
+            recognitionRef.current.stop();
+          }
+          
+          // Calculate accuracy with current sentence
+          if (currentData && currentData.correctText) {
+            console.log('🎯 Calculating accuracy with:', currentData.correctText);
+            const accuracy = calculateAccuracy(finalTranscript, currentData.correctText);
+            setCurrentAccuracy(accuracy);
+            setShowFeedback(true);
+          } else {
+            console.error('❌ No current data for accuracy calculation');
+            setErrorMessage('No sentence data available for comparison');
+          }
         }
       };
       
       recognitionRef.current.onerror = (event) => {
         console.error('❌ Speech recognition error:', event.error);
         setIsRecording(false);
+        setInterimText('');
         
-        // Handle iOS-specific permission issues
-        if (event.error === 'not-allowed' && isIOS) {
-          setErrorMessage('Microphone access denied. Please go to Settings > Safari > Microphone and allow access, then refresh the page.');
-        } else {
-          setErrorMessage(`Speech recognition error: ${event.error}`);
-        }
-        
-        // Set appropriate message based on error type
+        let errorMsg = '';
         switch (event.error) {
           case 'no-speech':
-            setSpokenText('No speech detected. Please try again.');
+            errorMsg = 'No speech detected. Please try speaking louder and clearer.';
             break;
-          case 'network':
-            setSpokenText('Network error. Please check your connection.');
+          case 'audio-capture':
+            errorMsg = 'Microphone not accessible. Please check your microphone connection.';
             break;
           case 'not-allowed':
-            setSpokenText('Microphone access denied. Please allow microphone access.');
+            errorMsg = isIOS 
+              ? 'Microphone access denied. Please go to Settings > Safari > Microphone and allow access.'
+              : 'Microphone access denied. Please allow microphone access and try again.';
+            break;
+          case 'network':
+            errorMsg = 'Network error. Please check your internet connection.';
             break;
           case 'service-not-allowed':
-            setSpokenText('Speech service not available. Please try again.');
+            errorMsg = 'Speech recognition service not available.';
+            break;
+          case 'bad-grammar':
+            errorMsg = 'Speech recognition grammar error.';
+            break;
+          case 'language-not-supported':
+            errorMsg = 'Language not supported by speech recognition.';
             break;
           default:
-            setSpokenText('Speech recognition failed. Please try again.');
+            errorMsg = `Speech recognition error: ${event.error}`;
         }
+        
+        setErrorMessage(errorMsg);
+        setSpokenText(`Error: ${event.error}`);
       };
       
       recognitionRef.current.onend = () => {
-        console.log('🛑 Speech recognition ended');
+        console.log('🛑 Speech recognition ENDED');
         setIsRecording(false);
+        setInterimText('');
       };
       
-      recognitionRef.current.onstart = () => {
-        console.log('▶️ Speech recognition started');
-        setErrorMessage(''); // Clear errors when starting
+      recognitionRef.current.onspeechstart = () => {
+        console.log('🗣️ Speech detected!');
       };
       
-      console.log('✅ Speech recognition configured successfully');
+      recognitionRef.current.onspeechend = () => {
+        console.log('🤐 Speech ended');
+      };
+      
+      recognitionRef.current.onsoundstart = () => {
+        console.log('🔊 Sound detected');
+      };
+      
+      recognitionRef.current.onsoundend = () => {
+        console.log('🔇 Sound ended');
+      };
+      
+      setSpeechRecognitionReady(true);
+      console.log('✅ Speech recognition setup complete');
       return true;
       
     } catch (error) {
       console.error('❌ Error setting up speech recognition:', error);
-      setErrorMessage('Failed to initialise speech recognition: ' + error.message);
+      setErrorMessage(`Failed to setup speech recognition: ${error.message}`);
       return false;
     }
-  }, [isIOS]);
+  }, [currentData, isIOS]);
 
   // ==============================================
   // EFFECTS
@@ -381,36 +349,31 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   useEffect(() => {
     console.log('🚀 Initialising speaking exercise...');
     
-    // Detect iOS
+    // Detect device
     const iosDetected = isIOSDevice();
     setIsIOS(iosDetected);
-    console.log('Device detected:', iosDetected ? 'iOS' : 'Other');
+    console.log('Device:', iosDetected ? 'iOS' : 'Other');
     
-    // Check if SENTENCE_POOLS and TEST_STRUCTURE are available
+    // Generate test sentences
     if (!SENTENCE_POOLS || !TEST_STRUCTURE) {
-      console.error('❌ Missing sentence data imports');
-      setErrorMessage('Missing sentence data. Please check the imports.');
+      setErrorMessage('Missing sentence data imports');
       return;
     }
     
     try {
       const sentences = generateSpeakingTest();
-      
       if (!sentences || sentences.length === 0) {
-        console.error('❌ No sentences generated');
         setErrorMessage('Failed to generate test sentences');
         return;
       }
       
-      console.log('✅ Setting test sentences:', sentences);
       setTestSentences(sentences);
-      testSentencesRef.current = sentences; // Update ref immediately
       setIsInitialised(true);
+      console.log('✅ Test sentences ready');
       
     } catch (error) {
-      console.error('❌ Error generating test sentences:', error);
-      setErrorMessage('Failed to generate test sentences: ' + error.message);
-      return;
+      console.error('❌ Error in initial setup:', error);
+      setErrorMessage(`Setup error: ${error.message}`);
     }
     
     // Check speech recognition support
@@ -423,10 +386,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       console.log('❌ Speech recognition not supported');
     }
     
-    // Check microphone permission
-    checkMicrophonePermission();
-    
-  }, []); // Empty dependency array - only run once
+  }, []);
 
   // Timer countdown
   useEffect(() => {
@@ -437,6 +397,22 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       handleTimeUp();
     }
   }, [timeLeft, hasStarted, showResults, showFeedback]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.log('Cleanup: recognition already stopped');
+        }
+      }
+      if (microphoneStreamRef.current) {
+        microphoneStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
 
   // ==============================================
   // HANDLERS
@@ -449,127 +425,88 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   };
 
   const startExercise = useCallback(async () => {
-    console.log('🚀 Starting exercise');
-    console.log('Available sentences:', testSentences.length);
-    console.log('First sentence:', testSentences[0]);
+    console.log('🚀 Starting exercise...');
     
     if (testSentences.length === 0) {
-      setErrorMessage('No sentences available to start the exercise');
+      setErrorMessage('No sentences available');
       return;
     }
     
-    // For iOS devices, request microphone permission first
-    if (isIOS && microphonePermission !== 'granted') {
-      console.log('🎤 Requesting microphone permission for iOS...');
-      const permissionGranted = await requestMicrophonePermission();
-      if (!permissionGranted) {
-        return; // Don't start if permission denied
-      }
+    // Test microphone first
+    console.log('🎤 Testing microphone access...');
+    const micWorking = await testMicrophoneAccess();
+    if (!micWorking) {
+      console.error('❌ Microphone test failed');
+      return;
     }
     
     // Setup speech recognition
-    const recognitionSetup = setupSpeechRecognition();
-    if (!recognitionSetup) {
-      setErrorMessage('Failed to setup speech recognition');
+    console.log('🎙️ Setting up speech recognition...');
+    const speechSetup = setupSpeechRecognition();
+    if (!speechSetup) {
+      console.error('❌ Speech recognition setup failed');
       return;
     }
     
     setHasStarted(true);
     setTimeLeft(45);
     setErrorMessage('');
-  }, [testSentences, isIOS, microphonePermission, requestMicrophonePermission, setupSpeechRecognition]);
-
-  const startRecording = useCallback(async () => {
-    console.log('🎙️ Starting recording...');
+    console.log('✅ Exercise started successfully');
     
-    const currentData = getCurrentData();
-    console.log('Current data for recording:', currentData);
+  }, [testSentences.length, testMicrophoneAccess, setupSpeechRecognition]);
+
+  const startRecording = useCallback(() => {
+    console.log('🎙️ Start recording button clicked');
+    console.log('Current data:', currentData);
+    console.log('Speech recognition ready:', speechRecognitionReady);
+    console.log('Recognition ref:', !!recognitionRef.current);
     
     if (!speechSupported || !recognitionRef.current) {
-      console.error('❌ Speech recognition not available');
       setErrorMessage('Speech recognition not available');
       return;
     }
     
     if (!currentData) {
-      console.error('❌ No current sentence data');
-      console.log('Debug info:', {
-        testSentences: testSentences.length,
-        currentSentence,
-        isInitialised,
-        hasStarted
-      });
-      setErrorMessage('No sentence data available - please restart the exercise');
+      setErrorMessage('No sentence data available');
       return;
     }
     
-    // For iOS, check permission again before each recording
-    if (isIOS && microphonePermission !== 'granted') {
-      console.log('🎤 Re-requesting microphone permission for iOS...');
-      const permissionGranted = await requestMicrophonePermission();
-      if (!permissionGranted) {
-        return;
-      }
+    if (microphoneStatus !== 'granted') {
+      setErrorMessage('Microphone access required. Please grant permission.');
+      return;
     }
     
-    console.log('✅ Starting recording for sentence:', currentData.correctText);
-    
-    setIsRecording(true);
-    setSpokenText('');
-    setShowFeedback(false);
     setErrorMessage('');
+    setSpokenText('');
+    setInterimText('');
+    setShowFeedback(false);
     
     try {
-      // Stop any existing recognition
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-      
-      // Small delay before starting new recognition
-      setTimeout(() => {
-        try {
-          if (recognitionRef.current) {
-            recognitionRef.current.start();
-            console.log('✅ Speech recognition started successfully');
-          }
-        } catch (startError) {
-          console.error('❌ Error starting recognition:', startError);
-          setIsRecording(false);
-          setErrorMessage('Failed to start speech recognition: ' + startError.message);
-        }
-      }, 100);
-      
+      console.log('🎯 Starting speech recognition...');
+      recognitionRef.current.start();
+      console.log('✅ Speech recognition start command sent');
     } catch (error) {
-      console.error('❌ Error in startRecording:', error);
+      console.error('❌ Error starting recognition:', error);
+      setErrorMessage(`Failed to start recording: ${error.message}`);
       setIsRecording(false);
-      setErrorMessage('Error starting recording: ' + error.message);
     }
-  }, [speechSupported, getCurrentData, isIOS, microphonePermission, requestMicrophonePermission, currentSentence, testSentences]);
+  }, [speechSupported, currentData, microphoneStatus, speechRecognitionReady]);
 
   const stopRecording = useCallback(() => {
-    console.log('🛑 Stopping recording...');
+    console.log('🛑 Stop recording button clicked');
     
     if (recognitionRef.current && isRecording) {
       try {
         recognitionRef.current.stop();
-        console.log('✅ Speech recognition stopped');
+        console.log('✅ Speech recognition stop command sent');
       } catch (error) {
         console.error('❌ Error stopping recognition:', error);
-        setErrorMessage('Error stopping recording: ' + error.message);
       }
     }
-    
-    setIsRecording(false);
   }, [isRecording]);
 
   const playCorrectAudio = useCallback(() => {
-    console.log('🔊 Playing correct audio...');
-    
-    const currentData = getCurrentData();
-    if (!audioRef.current || !currentData) {
-      console.error('❌ No audio ref or current data');
-      return;
-    }
+    if (!audioRef.current || !currentData) return;
     
     try {
       audioRef.current.currentTime = 0;
@@ -579,57 +516,48 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     } catch (error) {
       console.error('❌ Error in playCorrectAudio:', error);
     }
-  }, [getCurrentData]);
+  }, [currentData]);
 
   const handleTimeUp = useCallback(() => {
     console.log('⏰ Time is up!');
+    if (isRecording && recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
     setSpokenText('Time is up!');
     setCurrentAccuracy(0);
     setShowFeedback(true);
-  }, []);
+  }, [isRecording]);
 
   const handleNext = useCallback(() => {
     console.log('➡️ Moving to next question...');
     
-    const currentData = getCurrentData();
     if (!currentData) {
-      console.error('❌ No current data for handleNext');
+      setErrorMessage('No current data for next question');
       return;
     }
 
-    try {
-      // Store the result with error handling
-      const answerData = {
-        sentence: currentData,
-        spokenText: spokenText || 'No speech detected',
-        accuracy: currentAccuracy,
-        timeTaken: 45 - timeLeft
-      };
-      
-      console.log('💾 Storing answer:', answerData);
-      
-      setAnswers(prev => [...prev, answerData]);
+    const answerData = {
+      sentence: currentData,
+      spokenText: spokenText || 'No speech detected',
+      accuracy: currentAccuracy,
+      timeTaken: 45 - timeLeft
+    };
+    
+    setAnswers(prev => [...prev, answerData]);
 
-      if (currentSentence + 1 < testSentences.length) {
-        // Move to next sentence
-        console.log(`📝 Moving to question ${currentSentence + 2}`);
-        setCurrentSentence(prev => prev + 1);
-        setSpokenText('');
-        setTimeLeft(45);
-        setIsRecording(false);
-        setShowFeedback(false);
-        setCurrentAccuracy(0);
-        setErrorMessage('');
-      } else {
-        // Test completed
-        console.log('🏁 Test completed!');
-        setShowResults(true);
-      }
-    } catch (error) {
-      console.error('❌ Error in handleNext:', error);
-      setErrorMessage('Error moving to next question: ' + error.message);
+    if (currentSentence + 1 < testSentences.length) {
+      setCurrentSentence(prev => prev + 1);
+      setSpokenText('');
+      setInterimText('');
+      setTimeLeft(45);
+      setIsRecording(false);
+      setShowFeedback(false);
+      setCurrentAccuracy(0);
+      setErrorMessage('');
+    } else {
+      setShowResults(true);
     }
-  }, [getCurrentData, spokenText, currentAccuracy, timeLeft, currentSentence, testSentences.length]);
+  }, [currentData, spokenText, currentAccuracy, timeLeft, currentSentence, testSentences.length]);
 
   const calculateOverallScore = useCallback(() => {
     if (answers.length === 0) return { average: 0, total: 0 };
@@ -652,9 +580,15 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
   const restartTest = useCallback(() => {
     console.log('🔄 Restarting test...');
+    
+    // Stop any ongoing recording
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
+    }
+    
     setCurrentSentence(0);
-    currentSentenceRef.current = 0;
     setSpokenText('');
+    setInterimText('');
     setTimeLeft(45);
     setShowResults(false);
     setAnswers([]);
@@ -663,21 +597,17 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     setShowFeedback(false);
     setCurrentAccuracy(0);
     setErrorMessage('');
+    setSpeechRecognitionReady(false);
     
-    // Generate new random sentences
+    // Generate new sentences
     try {
       const newSentences = generateSpeakingTest();
       setTestSentences(newSentences);
-      testSentencesRef.current = newSentences;
       setIsInitialised(true);
     } catch (error) {
-      console.error('❌ Error generating new sentences:', error);
-      setErrorMessage('Error restarting test: ' + error.message);
+      setErrorMessage(`Error restarting: ${error.message}`);
     }
-  }, []);
-
-  // Get current data for rendering
-  const currentData = getCurrentData();
+  }, [isRecording]);
 
   // ==============================================
   // RENDER CONDITIONS
@@ -685,6 +615,116 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
   // Loading state
   if (!isInitialised || (testSentences.length === 0 && !errorMessage)) {
+    return (
+      <div className="speaking-container">
+        <div className="speaking-quiz-container">
+          <ClickableLogo onLogoClick={onLogoClick} />
+          
+          <h1>🎤 Speaking Practice</h1>
+          
+          <div className="loading-message">
+            <p>🎲 Preparing your speaking test...</p>
+            <p><small>Setting up microphone and speech recognition...</small></p>
+            
+            {process.env.NODE_ENV === 'development' && (
+              <div style={{
+                background: '#f0f0f0',
+                padding: '10px',
+                margin: '10px 0',
+                borderRadius: '5px',
+                fontSize: '0.8em',
+                textAlign: 'left'
+              }}>
+                <strong>🔧 Debug Info:</strong><br />
+                Device: {isIOS ? 'iOS' : 'Other'}<br />
+                Initialised: {isInitialised ? 'Yes' : 'No'}<br />
+                Sentences: {testSentences.length}<br />
+                Speech Supported: {speechSupported ? 'Yes' : 'No'}<br />
+                Microphone Status: {microphoneStatus}<br />
+                Recognition Ready: {speechRecognitionReady ? 'Yes' : 'No'}
+              </div>
+            )}
+          </div>
+
+          <button className="btn btn-secondary" onClick={onBack}>
+            ← Back to Exercises
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (errorMessage && testSentences.length === 0) {
+    return (
+      <div className="speaking-container">
+        <div className="speaking-quiz-container">
+          <ClickableLogo onLogoClick={onLogoClick} />
+          
+          <h1>🎤 Speaking Practice</h1>
+          
+          <div className="error-message">
+            <h3>⚠️ Setup Error</h3>
+            <p>{errorMessage}</p>
+            
+            {isIOS && microphoneStatus === 'denied' && (
+              <div style={{ marginTop: '15px', padding: '15px', background: '#fff3cd', borderRadius: '8px' }}>
+                <strong>📱 iPad/iPhone Help:</strong>
+                <ol style={{ textAlign: 'left', marginTop: '10px' }}>
+                  <li>Go to Settings → Safari → Microphone</li>
+                  <li>Select "Allow"</li>
+                  <li>Refresh this page</li>
+                  <li>Grant permission when prompted</li>
+                </ol>
+              </div>
+            )}
+            
+            <button className="btn btn-primary" onClick={() => window.location.reload()}>
+              🔄 Refresh Page
+            </button>
+          </div>
+
+          <button className="btn btn-secondary" onClick={onBack}>
+            ← Back to Exercises
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Speech not supported
+  if (!speechSupported) {
+    return (
+      <div className="speaking-container">
+        <div className="speaking-quiz-container">
+          <ClickableLogo onLogoClick={onLogoClick} />
+          
+          <h1>🎤 Speaking Practice</h1>
+          
+          <div className="error-message">
+            <h3>⚠️ Speech Recognition Not Available</h3>
+            <p>Your browser doesn't support speech recognition.</p>
+            <p><strong>Supported browsers:</strong></p>
+            <ul style={{ textAlign: 'left' }}>
+              <li>✅ Google Chrome (recommended)</li>
+              <li>✅ Microsoft Edge</li>
+              <li>✅ Safari (newer versions)</li>
+              <li>❌ Firefox (limited support)</li>
+            </ul>
+          </div>
+
+          <button className="btn btn-secondary" onClick={onBack}>
+            ← Back to Exercises
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Results state
+  if (showResults) {
+    const score = calculateOverallScore();
+    
     return (
       <div className="speaking-container">
         <div className="speaking-quiz-container">
@@ -839,32 +879,32 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               </div>
               
               <div className="microphone-info">
-                <h4>🎤 Microphone Required</h4>
-                <p>Please allow microphone access when prompted by your browser.</p>
+                <h4>🎤 Microphone Setup</h4>
+                <p>This exercise will test your microphone and request permission.</p>
                 {isIOS && (
-                  <p style={{ fontSize: '0.9em', fontStyle: 'italic', color: '#d69e2e' }}>
-                    📱 iPad/iPhone: You may need to grant permission for each question in Safari.
+                  <p style={{ fontSize: '0.9em', color: '#d69e2e', fontWeight: '600' }}>
+                    📱 iPad/iPhone: Grant microphone permission when prompted by Safari.
                   </p>
                 )}
               </div>
               
-              {/* Debug info for instructions */}
+              {/* Enhanced debug info */}
               {process.env.NODE_ENV === 'development' && (
                 <div style={{
-                  background: '#e6ffe6',
+                  background: microphoneStatus === 'granted' ? '#e6ffe6' : '#ffe6e6',
                   padding: '10px',
                   margin: '10px 0',
                   borderRadius: '5px',
                   fontSize: '0.8em',
                   textAlign: 'left'
                 }}>
-                  <strong>✅ Ready to Start - Debug Info:</strong><br />
+                  <strong>🔧 System Check:</strong><br />
                   Device: {isIOS ? 'iOS' : 'Other'}<br />
-                  Total sentences available: {testSentences.length}<br />
-                  First sentence: {testSentences[0]?.correctText}<br />
-                  Speech recognition: {speechSupported ? 'Supported' : 'Not supported'}<br />
-                  Current data available: {currentData ? 'Yes' : 'No'}<br />
-                  Microphone permission: {microphonePermission}
+                  Sentences: {testSentences.length} ready<br />
+                  Speech Recognition: {speechSupported ? '✅ Supported' : '❌ Not supported'}<br />
+                  Microphone: {microphoneStatus === 'granted' ? '✅ Granted' : microphoneStatus === 'denied' ? '❌ Denied' : '⏳ Not tested'}<br />
+                  Recognition Ready: {speechRecognitionReady ? '✅ Ready' : '⏳ Not setup'}<br />
+                  Current Data: {currentData ? '✅ Available' : '❌ Missing'}
                 </div>
               )}
             </div>
@@ -900,36 +940,28 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           <button className="close-btn" onClick={onBack}>✕</button>
         </div>
 
-        {/* Debug info for main interface */}
+        {/* Real-time status display */}
         {process.env.NODE_ENV === 'development' && (
           <div style={{
-            background: currentData ? '#e6ffe6' : '#ffe6e6',
-            padding: '10px',
-            margin: '10px 0',
-            borderRadius: '5px',
-            fontSize: '0.8em',
-            textAlign: 'left'
+            background: isRecording ? '#e6ffe6' : '#f0f0f0',
+            padding: '8px',
+            margin: '8px 0',
+            borderRadius: '4px',
+            fontSize: '0.75em',
+            textAlign: 'center'
           }}>
-            <strong>🔍 Main Interface Debug:</strong><br />
-            Device: {isIOS ? 'iOS' : 'Other'}<br />
-            Current sentence index: {currentSentence}<br />
-            Total sentences: {testSentences.length}<br />
-            Current data: {currentData ? '✅ Available' : '❌ Missing'}<br />
-            {currentData && (
-              <>
-                Current text: "{currentData.correctText}"<br />
-                Current level: {currentData.level}
-              </>
-            )}
-            Microphone permission: {microphonePermission}
+            🔧 <strong>Live Status:</strong> Recording: {isRecording ? '🔴 ON' : '⚫ OFF'} | 
+            Mic: {microphoneStatus} | 
+            Speech Ready: {speechRecognitionReady ? '✅' : '❌'} | 
+            Current Data: {currentData ? '✅' : '❌'}
           </div>
         )}
 
         {/* Main content */}
         <div className="speaking-main">
           <div className="level-indicator">
-            <span className="level-badge">{currentData?.level || 'Unknown'}</span>
-            <span className="level-description">{currentData?.difficulty || 'Loading...'}</span>
+            <span className="level-badge">{currentData?.level || 'Loading'}</span>
+            <span className="level-description">{currentData?.difficulty || 'Preparing...'}</span>
           </div>
 
           <div className="speaking-instruction">
@@ -944,16 +976,43 @@ function SpeakingExercise({ onBack, onLogoClick }) {
             </div>
           </div>
 
+          {/* Real-time speech display */}
+          {(isRecording || interimText || spokenText) && (
+            <div style={{
+              background: '#f0f2ff',
+              border: '2px solid #4c51bf',
+              borderRadius: '10px',
+              padding: '15px',
+              margin: '20px 0',
+              textAlign: 'center'
+            }}>
+              <h4 style={{ margin: '0 0 10px 0', color: '#4c51bf' }}>
+                {isRecording ? '🎤 Listening...' : '📝 You said:'}
+              </h4>
+              <div style={{
+                fontSize: '1.1em',
+                fontWeight: '600',
+                color: '#2d3748',
+                minHeight: '1.5em'
+              }}>
+                {isRecording && interimText ? (
+                  <span style={{ color: '#666', fontStyle: 'italic' }}>"{interimText}"</span>
+                ) : spokenText ? (
+                  <span>"{spokenText}"</span>
+                ) : isRecording ? (
+                  <span style={{ color: '#999' }}>Speak now...</span>
+                ) : (
+                  <span style={{ color: '#999' }}>Click record to start</span>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Error display */}
           {errorMessage && (
             <div className="error-message" style={{ margin: '20px 0', padding: '15px' }}>
               <h4>⚠️ Error</h4>
               <p>{errorMessage}</p>
-              {isIOS && errorMessage.includes('Microphone') && (
-                <div style={{ marginTop: '10px', fontSize: '0.9em' }}>
-                  <strong>iPad/iPhone Users:</strong> Go to Settings → Safari → Microphone → Allow
-                </div>
-              )}
               <button className="btn btn-secondary btn-small" onClick={() => setErrorMessage('')}>
                 Clear Error
               </button>
@@ -966,7 +1025,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               <button 
                 className={`record-btn ${isRecording ? 'recording' : ''}`}
                 onClick={isRecording ? stopRecording : startRecording}
-                disabled={timeLeft === 0 || !currentData}
+                disabled={timeLeft === 0 || !currentData || microphoneStatus !== 'granted'}
               >
                 <span className="record-icon">
                   {isRecording ? '⏹️' : '🎤'}
@@ -1019,121 +1078,22 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               🔴 Recording... Speak clearly!
             </div>
           )}
+          
+          {microphoneStatus !== 'granted' && (
+            <div style={{
+              background: '#fff3cd',
+              padding: '10px',
+              borderRadius: '5px',
+              margin: '10px 0',
+              fontSize: '0.9em'
+            }}>
+              🎤 Microphone access required to record your voice
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-export default SpeakingExercise;Speaking Practice</h1>
-          
-          <div className="loading-message">
-            <p>🎲 Preparing your speaking test...</p>
-            <p><small>Generating sentences in difficulty order: A2 → B1 → B2 → C1</small></p>
-            
-            {/* Debug info for loading */}
-            {process.env.NODE_ENV === 'development' && (
-              <div style={{
-                background: '#f0f0f0',
-                padding: '10px',
-                margin: '10px 0',
-                borderRadius: '5px',
-                fontSize: '0.8em',
-                textAlign: 'left'
-              }}>
-                <strong>Debug Info:</strong><br />
-                Device: {isIOS ? 'iOS' : 'Other'}<br />
-                Initialised: {isInitialised ? 'Yes' : 'No'}<br />
-                Sentences: {testSentences.length}<br />
-                SENTENCE_POOLS available: {SENTENCE_POOLS ? 'Yes' : 'No'}<br />
-                TEST_STRUCTURE available: {TEST_STRUCTURE ? 'Yes' : 'No'}<br />
-                Microphone permission: {microphonePermission}
-              </div>
-            )}
-          </div>
-
-          <button className="btn btn-secondary" onClick={onBack}>
-            ← Back to Exercises
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (errorMessage && testSentences.length === 0) {
-    return (
-      <div className="speaking-container">
-        <div className="speaking-quiz-container">
-          <ClickableLogo onLogoClick={onLogoClick} />
-          
-          <h1>🎤 Speaking Practice</h1>
-          
-          <div className="error-message">
-            <h3>⚠️ Error</h3>
-            <p>{errorMessage}</p>
-            
-            {/* iOS-specific help */}
-            {isIOS && microphonePermission === 'denied' && (
-              <div style={{ marginTop: '15px', padding: '10px', background: '#fff3cd', borderRadius: '5px' }}>
-                <strong>📱 iPad/iPhone Users:</strong>
-                <ol style={{ textAlign: 'left', marginTop: '10px' }}>
-                  <li>Go to Settings → Safari → Microphone</li>
-                  <li>Select "Allow" or "Ask"</li>
-                  <li>Refresh this page</li>
-                  <li>Grant microphone permission when prompted</li>
-                </ol>
-              </div>
-            )}
-            
-            <button className="btn btn-primary" onClick={() => window.location.reload()}>
-              Refresh Page
-            </button>
-          </div>
-
-          <button className="btn btn-secondary" onClick={onBack}>
-            ← Back to Exercises
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Speech not supported
-  if (!speechSupported) {
-    return (
-      <div className="speaking-container">
-        <div className="speaking-quiz-container">
-          <ClickableLogo onLogoClick={onLogoClick} />
-          
-          <h1>🎤 Speaking Practice</h1>
-          
-          <div className="error-message">
-            <h3>⚠️ Speech Recognition Not Available</h3>
-            <p>Sorry, your browser doesn't support speech recognition.</p>
-            <p>Please try using:</p>
-            <ul>
-              <li>Google Chrome (recommended)</li>
-              <li>Microsoft Edge</li>
-              <li>Safari (on newer versions)</li>
-            </ul>
-          </div>
-
-          <button className="btn btn-secondary" onClick={onBack}>
-            ← Back to Exercises
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Results state
-  if (showResults) {
-    const score = calculateOverallScore();
-    
-    return (
-      <div className="speaking-container">
-        <div className="speaking-quiz-container">
-          <ClickableLogo onLogoClick={onLogoClick} />
-          
-          <h1>🎤
+export default SpeakingExercise;
