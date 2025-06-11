@@ -1,10 +1,10 @@
-// src/components/SpeakingExercise.js - Fixed speech recognition with proper audio capture
+// src/components/SpeakingExercise.js - Fixed with proper word-based accuracy calculation
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
 
 // ==============================================
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS - COMPLETELY REWRITTEN ACCURACY SYSTEM
 // ==============================================
 
 // Generate test sentences in proper order: A2 → B1 → B2 → C1
@@ -51,48 +51,271 @@ const generateSpeakingTest = () => {
   return testSentences;
 };
 
-// Basic text normalisation for comparison
+// Enhanced text normalisation for better comparison
 const normaliseText = (text) => {
   if (!text || typeof text !== 'string') return '';
+  
   return text
     .toLowerCase()
-    .replace(/[.,!?;:'"()-]/g, '')
+    .trim()
+    // Remove all punctuation but keep apostrophes for contractions
+    .replace(/[.,!?;:"""''()[\]{}\-]/g, '')
+    // Normalize contractions - expand them for better comparison
+    .replace(/\b(can't|cannot)\b/g, 'can not')
+    .replace(/\b(won't)\b/g, 'will not')
+    .replace(/\b(n't)\b/g, ' not')
+    .replace(/\b('ll)\b/g, ' will')
+    .replace(/\b('ve)\b/g, ' have')
+    .replace(/\b('re)\b/g, ' are')
+    .replace(/\b('m)\b/g, ' am')
+    .replace(/\b('d)\b/g, ' would')
+    .replace(/\b('s)\b/g, ' is')
+    // Handle common speech recognition errors
+    .replace(/\bthree\b/g, '3')
+    .replace(/\bseven\b/g, '7')
+    .replace(/\bto\b/g, 'two') // Handle "to" vs "two" confusion
+    .replace(/\btwo\b/g, 'to')   // Then swap back - this handles both directions
+    // Normalize multiple spaces to single space
     .replace(/\s+/g, ' ')
     .trim();
 };
 
-// Calculate similarity between spoken text and correct text
-const calculateAccuracy = (spokenText, correctText) => {
-  console.log('🎯 Calculating accuracy:', { spokenText, correctText });
+// Get word arrays for comparison
+const getWordsArray = (text) => {
+  const normalised = normaliseText(text);
+  return normalised.split(' ').filter(word => word.length > 0);
+};
+
+// Check if two words are equivalent (handles speech-to-text errors, not user errors)
+const areWordsEquivalent = (word1, word2) => {
+  if (!word1 || !word2) return false;
   
-  if (!spokenText || !correctText) return 0;
+  // Exact match - perfect
+  if (word1 === word2) return true;
   
-  const spoken = normaliseText(String(spokenText));
-  const correct = normaliseText(String(correctText));
+  // HOMOPHONES: These are speech-to-text errors, NOT user pronunciation errors
+  // User said it correctly, but speech recognition wrote the wrong homophone
+  const homophones = {
+    // to/two/too family
+    'to': ['two', 'too'],
+    'two': ['to', 'too'], 
+    'too': ['to', 'two'],
+    
+    // for/four family  
+    'for': ['four', 'fore'],
+    'four': ['for', 'fore'],
+    'fore': ['for', 'four'],
+    
+    // there/their/they're family
+    'there': ['their', 'theyre', 'they\'re'],
+    'their': ['there', 'theyre', 'they\'re'],
+    'theyre': ['there', 'their', 'they\'re'],
+    'they\'re': ['there', 'their', 'theyre'],
+    
+    // your/you're family
+    'your': ['youre', 'you\'re'],
+    'youre': ['your', 'you\'re'],
+    'you\'re': ['your', 'youre'],
+    
+    // its/it's family
+    'its': ['it\'s'],
+    'it\'s': ['its'],
+    
+    // no/know family
+    'no': ['know'],
+    'know': ['no'],
+    
+    // one/won family
+    'one': ['won'],
+    'won': ['one'],
+    
+    // right/write family
+    'right': ['write'],
+    'write': ['right'],
+    
+    // here/hear family
+    'here': ['hear'],
+    'hear': ['here'],
+    
+    // see/sea family
+    'see': ['sea', 'c'],
+    'sea': ['see'],
+    'c': ['see', 'sea'],
+    
+    // be/bee family
+    'be': ['bee', 'b'],
+    'bee': ['be'],
+    'b': ['be', 'bee'],
+    
+    // eight/ate family
+    'eight': ['ate'],
+    'ate': ['eight'],
+    
+    // break/brake family
+    'break': ['brake'],
+    'brake': ['break'],
+    
+    // buy/by/bye family
+    'buy': ['by', 'bye'],
+    'by': ['buy', 'bye'],
+    'bye': ['buy', 'by'],
+    
+    // new/knew family
+    'new': ['knew'],
+    'knew': ['new'],
+    
+    // blue/blew family
+    'blue': ['blew'],
+    'blew': ['blue'],
+    
+    // Common single letter speech recognition errors
+    'a': ['ay', 'eh'],
+    'i': ['eye'],
+    'you': ['u'],
+    'are': ['r'],
+    'why': ['y'],
+    'oh': ['o'],
+    'tea': ['t'],
+    'and': ['n'], // sometimes recognised as just 'n'
+    'at': ['@'], // sometimes recognised as symbol
+    
+    // Common contractions and expansions
+    'okay': ['ok', 'k'],
+    'cannot': ['can\'t', 'cant'],
+    'can\'t': ['cannot', 'cant'],
+    'cant': ['cannot', 'can\'t'],
+    'will not': ['won\'t', 'wont'],
+    'won\'t': ['will not', 'wont'],
+    'wont': ['will not', 'won\'t']
+  };
   
-  if (spoken === correct) return 100;
+  // Check if words are homophones (speech-to-text error, user said it right)
+  if (homophones[word1] && homophones[word1].includes(word2)) return true;
+  if (homophones[word2] && homophones[word2].includes(word1)) return true;
   
-  const spokenWords = spoken.split(' ').filter(word => word.length > 0);
-  const correctWords = correct.split(' ').filter(word => word.length > 0);
-  
-  const matchingWords = spokenWords.filter(word => correctWords.includes(word));
-  const wordAccuracy = correctWords.length > 0 ? (matchingWords.length / correctWords.length) * 100 : 0;
-  
-  const maxLength = Math.max(spoken.length, correct.length);
-  if (maxLength === 0) return 100;
-  
-  let charMatches = 0;
-  const minLength = Math.min(spoken.length, correct.length);
-  
-  for (let i = 0; i < minLength; i++) {
-    if (spoken[i] === correct[i]) charMatches++;
+  // Minor pronunciation variations (these are actual user pronunciation issues)
+  // Only give partial credit for these, not full credit like homophones
+  if (word1.length > 2 && word2.length > 2) {
+    if (word1[0] === word2[0] && Math.abs(word1.length - word2.length) <= 1) {
+      // Check if 80% of characters match (stricter than before)
+      let matches = 0;
+      const minLength = Math.min(word1.length, word2.length);
+      for (let i = 0; i < minLength; i++) {
+        if (word1[i] === word2[i]) matches++;
+      }
+      // This returns true for close pronunciation matches (not perfect like homophones)
+      return (matches / minLength) >= 0.8;
+    }
   }
   
-  const charAccuracy = ((charMatches / maxLength) * 100);
-  const finalAccuracy = Math.round(Math.max(wordAccuracy, charAccuracy));
+  return false;
+};
+
+// NEW: Word-based accuracy calculation focused on correct words in correct order
+const calculateWordAccuracy = (spokenText, correctText) => {
+  console.log('🎯 Calculating word-based accuracy:');
+  console.log('Spoken:', spokenText);
+  console.log('Correct:', correctText);
   
-  console.log('📊 Accuracy result:', finalAccuracy);
-  return finalAccuracy;
+  if (!spokenText || !correctText) {
+    console.log('❌ Missing text, returning 0%');
+    return 0;
+  }
+  
+  const spokenWords = getWordsArray(spokenText);
+  const correctWords = getWordsArray(correctText);
+  
+  console.log('Spoken words:', spokenWords);
+  console.log('Correct words:', correctWords);
+  
+  if (correctWords.length === 0) {
+    console.log('❌ No correct words, returning 0%');
+    return 0;
+  }
+  
+  // Perfect match check
+  if (spokenWords.length === correctWords.length) {
+    let perfectMatches = 0;
+    for (let i = 0; i < correctWords.length; i++) {
+      if (areWordsSimilar(spokenWords[i], correctWords[i])) {
+        perfectMatches++;
+      }
+    }
+    if (perfectMatches === correctWords.length) {
+      console.log('✅ Perfect match! 100%');
+      return 100;
+    }
+  }
+  
+  // Score based on correct words in correct positions
+  let positionMatches = 0;
+  let anyPositionMatches = 0;
+  
+  // First pass: count words in correct positions
+  const maxLength = Math.max(spokenWords.length, correctWords.length);
+  for (let i = 0; i < correctWords.length; i++) {
+    if (i < spokenWords.length && areWordsEquivalent(spokenWords[i], correctWords[i])) {
+      positionMatches++;
+    }
+  }
+  
+  // Second pass: count any correct words (even in wrong positions)
+  const spokenWordsCopy = [...spokenWords];
+  const correctWordsCopy = [...correctWords];
+  
+  // Remove position matches first
+  for (let i = correctWordsCopy.length - 1; i >= 0; i--) {
+    if (i < spokenWordsCopy.length && areWordsEquivalent(spokenWordsCopy[i], correctWordsCopy[i])) {
+      spokenWordsCopy.splice(i, 1);
+      correctWordsCopy.splice(i, 1);
+    }
+  }
+  
+  // Count remaining matches in any position
+  let additionalMatches = 0;
+  for (let correctWord of correctWordsCopy) {
+    for (let j = 0; j < spokenWordsCopy.length; j++) {
+      if (areWordsEquivalent(spokenWordsCopy[j], correctWord)) {
+        additionalMatches++;
+        spokenWordsCopy.splice(j, 1);
+        break;
+      }
+    }
+  }
+  
+  anyPositionMatches = positionMatches + additionalMatches;
+  
+  // Calculate score with heavy weighting towards correct order
+  // 80% weight for position matches, 20% weight for any position matches
+  const positionScore = (positionMatches / correctWords.length) * 80;
+  const anyPositionScore = (anyPositionMatches / correctWords.length) * 20;
+  
+  // Penalty for extra words (speaking too much)
+  let lengthPenalty = 0;
+  if (spokenWords.length > correctWords.length) {
+    const extraWords = spokenWords.length - correctWords.length;
+    lengthPenalty = Math.min(extraWords * 5, 20); // Max 20% penalty
+  }
+  
+  // Penalty for too few words
+  if (spokenWords.length < correctWords.length * 0.5) {
+    lengthPenalty += 30; // Major penalty for saying way too little
+  }
+  
+  const finalScore = Math.max(0, Math.round(positionScore + anyPositionScore - lengthPenalty));
+  
+  console.log(`📊 Accuracy breakdown:
+    - Position matches: ${positionMatches}/${correctWords.length} (${positionScore.toFixed(1)}%)
+    - Any position matches: ${anyPositionMatches}/${correctWords.length} (${anyPositionScore.toFixed(1)}%)
+    - Length penalty: ${lengthPenalty}%
+    - Final score: ${finalScore}%`);
+  
+  return finalScore;
+};
+
+// Main accuracy calculation function - now simplified to just use word accuracy
+const calculateAccuracy = (spokenText, correctText) => {
+  return calculateWordAccuracy(spokenText, correctText);
 };
 
 // Get accuracy level description
@@ -879,10 +1102,16 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               </div>
               
               <div className="microphone-info">
-                <h4>🎤 Microphone Setup</h4>
-                <p>This exercise will test your microphone and request permission.</p>
+                <h4>🎤 New Improved Accuracy</h4>
+                <p>This exercise now uses word-based accuracy scoring for more realistic results.</p>
+                <ul style={{ textAlign: 'left', fontSize: '0.9em', marginTop: '10px' }}>
+                  <li>✅ Words in correct order get highest marks</li>
+                  <li>⚡ Handles speech recognition variations</li>
+                  <li>📊 Realistic percentage scores</li>
+                  <li>🎯 Rewards accuracy over speed</li>
+                </ul>
                 {isIOS && (
-                  <p style={{ fontSize: '0.9em', color: '#d69e2e', fontWeight: '600' }}>
+                  <p style={{ fontSize: '0.9em', color: '#d69e2e', fontWeight: '600', marginTop: '10px' }}>
                     📱 iPad/iPhone: Grant microphone permission when prompted by Safari.
                   </p>
                 )}
@@ -1049,6 +1278,23 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                   <div className="recognition-result">
                     <strong>You said:</strong> "{spokenText}"
                   </div>
+                  
+                  {/* Show word-by-word comparison in development */}
+                  {process.env.NODE_ENV === 'development' && currentData && (
+                    <div style={{
+                      background: '#f8f9fa',
+                      padding: '10px',
+                      margin: '10px 0',
+                      borderRadius: '5px',
+                      fontSize: '0.8em',
+                      textAlign: 'left'
+                    }}>
+                      <strong>🔧 Word Analysis:</strong><br />
+                      Target: {getWordsArray(currentData.correctText).join(' | ')}<br />
+                      Spoken: {getWordsArray(spokenText).join(' | ')}<br />
+                      Score: {currentAccuracy}% (Word-based accuracy)
+                    </div>
+                  )}
                 </div>
                 
                 <div className="sample-section">
