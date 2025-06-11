@@ -1,4 +1,4 @@
-// src/utils/progressDataManager.js - Complete rewrite with all functions
+// src/utils/progressDataManager.js - Complete rewrite with all functions including missing ones
 // Manages long-term user progress data in localStorage
 
 // Constants
@@ -19,7 +19,8 @@ const DEFAULT_PROGRESS_DATA = Object.freeze({
     'B1-B2': 0,
     'B2-C1': 0,
     'C1-C2': 0
-  }
+  },
+  startDate: new Date().toISOString()
 });
 
 // Quiz type display mappings
@@ -29,6 +30,9 @@ const QUIZ_TYPE_MAPPINGS = Object.freeze({
   'speak-and-record': { display: 'Speaking Practice', icon: '🎤' },
   'listen-and-type': { display: 'Listen & Type', icon: '🎧' },
   standard: { display: 'Standard Vocabulary', icon: '📚' },
+  'octopus-quiz': { display: 'Octopus Article', icon: '📰' },
+  'smuggling-quiz': { display: 'Smuggling Article', icon: '📰' },
+  'standard-vocabulary': { display: 'Standard Vocabulary', icon: '📚' },
   default: { display: 'Vocabulary Test', icon: '📚' }
 });
 
@@ -196,6 +200,11 @@ export const recordTestResult = (testData) => {
   progressData.levelProgress[level] = (progressData.levelProgress[level] || 0) + 1;
   progressData.lastTestDate = completedAt.toISOString();
 
+  // Ensure start date is set
+  if (!progressData.startDate) {
+    progressData.startDate = completedAt.toISOString();
+  }
+
   // Save and return updated data
   saveProgressData(progressData);
   return progressData;
@@ -244,33 +253,41 @@ export const getExercisePerformance = () => {
     
     if (!exerciseStats[exerciseType]) {
       exerciseStats[exerciseType] = {
-        totalTests: 0,
+        displayName: exerciseType,
+        icon: test.quizTypeIcon || '📚',
+        attempts: 0,
         totalScore: 0,
         averageScore: 0,
         bestScore: 0,
+        totalTime: 0,
         recentScores: [],
-        icon: test.quizTypeIcon || '📚',
-        trend: 'stable'
+        improvement: 'new'
       };
     }
     
     const stat = exerciseStats[exerciseType];
-    stat.totalTests++;
+    stat.attempts++;
     
     // Normalise score to 10-point scale for consistency
     const normalizedScore = test.totalQuestions === 20 ? test.score / 2 : test.score;
-    stat.totalScore += normalizedScore;
-    stat.averageScore = Math.round(stat.totalScore / stat.totalTests);
+    const scorePercentage = Math.round((normalizedScore / 10) * 100);
     
-    if (normalizedScore > stat.bestScore) {
-      stat.bestScore = normalizedScore;
+    stat.totalScore += scorePercentage;
+    stat.averageScore = Math.round(stat.totalScore / stat.attempts);
+    
+    if (scorePercentage > stat.bestScore) {
+      stat.bestScore = scorePercentage;
+    }
+    
+    if (test.timeSpent) {
+      stat.totalTime += test.timeSpent;
     }
     
     // Keep track of recent scores for trend analysis
     stat.recentScores.push({
-      score: normalizedScore,
+      score: scorePercentage,
       date: test.date,
-      percentage: test.percentage
+      normalizedScore: normalizedScore
     });
     
     // Keep only last 10 scores for trend analysis
@@ -289,12 +306,12 @@ export const getExercisePerformance = () => {
         const recentAvg = recent5.reduce((sum, s) => sum + s.score, 0) / recent5.length;
         const olderAvg = older5.reduce((sum, s) => sum + s.score, 0) / older5.length;
         
-        if (recentAvg > olderAvg + 0.5) {
-          stat.trend = 'improving';
-        } else if (recentAvg < olderAvg - 0.5) {
-          stat.trend = 'declining';
+        if (recentAvg > olderAvg + 5) {
+          stat.improvement = 'improving';
+        } else if (recentAvg < olderAvg - 5) {
+          stat.improvement = 'declining';
         } else {
-          stat.trend = 'stable';
+          stat.improvement = 'stable';
         }
       }
     }
@@ -353,6 +370,18 @@ export const getProgressStats = () => {
     return testDate > weekAgo;
   }).length;
 
+  // Calculate total time spent
+  const totalTimeSpent = Object.values(progressData.dailyStats).reduce((total, day) => 
+    total + (day.timeSpent || 0), 0
+  );
+
+  // Find favourite exercise type
+  const exercisePerformance = getExercisePerformance();
+  const exerciseEntries = Object.entries(exercisePerformance);
+  const favouriteExercise = exerciseEntries.length > 0
+    ? exerciseEntries.reduce((a, b) => a[1].attempts > b[1].attempts ? a : b)[0]
+    : 'None yet';
+
   return {
     totalTests: progressData.totalTests,
     currentStreak: progressData.streak,
@@ -362,8 +391,216 @@ export const getProgressStats = () => {
     mostCommonLevel,
     trend,
     lastTestDate: progressData.lastTestDate,
-    testsThisWeek
+    testsThisWeek,
+    totalTimeSpent: Math.round(totalTimeSpent / 60), // Convert to minutes
+    favouriteExercise,
+    startDate: progressData.startDate || new Date().toISOString()
   };
+};
+
+// ==============================================
+// LEARNING INSIGHTS FUNCTION - MISSING FUNCTION ADDED
+// ==============================================
+
+export const getLearningInsights = () => {
+  const progressData = getProgressData();
+  const exercisePerformance = getExercisePerformance();
+  
+  // Find strongest skill (highest average score)
+  const exerciseEntries = Object.entries(exercisePerformance);
+  const strongestSkill = exerciseEntries.length > 0
+    ? exerciseEntries.reduce((a, b) => a[1].averageScore > b[1].averageScore ? a : b)
+    : null;
+
+  // Find most improved skill
+  const improvingSkills = exerciseEntries.filter(([, data]) => data.improvement === 'improving');
+  const mostImproved = improvingSkills.length > 0 ? improvingSkills[0] : null;
+
+  // Recommended challenge (lowest performing active skill)
+  const challenges = [
+    { displayName: 'Speaking Practice', icon: '🎤', reason: 'Improve your pronunciation skills' },
+    { displayName: 'Listen & Type', icon: '🎧', reason: 'Enhance listening comprehension' },
+    { displayName: 'Word Recognition', icon: '🎯', reason: 'Build vocabulary faster' },
+    { displayName: 'Article-Based', icon: '📰', reason: 'Learn from real news stories' }
+  ];
+  
+  const lowestPerforming = exerciseEntries.length > 0
+    ? exerciseEntries.reduce((a, b) => a[1].averageScore < b[1].averageScore ? a : b)
+    : null;
+
+  const recommendedChallenge = lowestPerforming 
+    ? { displayName: lowestPerforming[0], icon: lowestPerforming[1].icon, reason: 'Focus on your weakest area' }
+    : challenges[Math.floor(Math.random() * challenges.length)];
+
+  // Words to review (from wrong answers)
+  const wordsToReview = [];
+  const wrongAnswers = {};
+
+  progressData.testHistory.forEach(test => {
+    if (test.userAnswers) {
+      test.userAnswers.forEach(answer => {
+        if (!answer.isCorrect && answer.answer) {
+          const word = answer.answer.toLowerCase().trim();
+          if (word && word.length > 2) {
+            if (!wrongAnswers[word]) {
+              wrongAnswers[word] = {
+                word: word,
+                count: 0,
+                exercises: new Set()
+              };
+            }
+            wrongAnswers[word].count++;
+            wrongAnswers[word].exercises.add(test.quizTypeDisplay);
+          }
+        }
+      });
+    }
+  });
+
+  // Convert to array and get top 5 most missed words
+  const sortedWords = Object.values(wrongAnswers)
+    .filter(wordData => wordData.count > 1)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
+    .map(wordData => ({
+      word: wordData.word,
+      count: wordData.count,
+      exercises: Array.from(wordData.exercises)
+    }));
+
+  return {
+    strongestSkill: strongestSkill ? {
+      displayName: strongestSkill[0],
+      icon: strongestSkill[1].icon,
+      average: strongestSkill[1].averageScore
+    } : null,
+    mostImproved: mostImproved ? {
+      displayName: mostImproved[0],
+      icon: mostImproved[1].icon,
+      improvement: mostImproved[1].improvement
+    } : null,
+    recommendedChallenge,
+    wordsToReview: sortedWords
+  };
+};
+
+// ==============================================
+// ACHIEVEMENTS FUNCTION - MISSING FUNCTION ADDED
+// ==============================================
+
+export const getAchievements = () => {
+  const progressData = getProgressData();
+  const achievements = [];
+
+  // First Test Achievement
+  if (progressData.totalTests >= 1) {
+    achievements.push({
+      id: 'first_test',
+      title: 'First Steps',
+      description: 'Completed your first test',
+      icon: '🎯',
+      earnedDate: progressData.testHistory[progressData.testHistory.length - 1]?.date || new Date().toISOString()
+    });
+  }
+
+  // Streak Achievements
+  if (progressData.bestStreak >= 3) {
+    achievements.push({
+      id: 'streak_3',
+      title: 'Getting Started',
+      description: 'Maintained a 3-day streak',
+      icon: '🔥',
+      earnedDate: progressData.lastTestDate
+    });
+  }
+
+  if (progressData.bestStreak >= 7) {
+    achievements.push({
+      id: 'streak_7',
+      title: 'Week Warrior',
+      description: 'Maintained a 7-day streak',
+      icon: '💪',
+      earnedDate: progressData.lastTestDate
+    });
+  }
+
+  if (progressData.bestStreak >= 30) {
+    achievements.push({
+      id: 'streak_30',
+      title: 'Month Master',
+      description: 'Maintained a 30-day streak',
+      icon: '👑',
+      earnedDate: progressData.lastTestDate
+    });
+  }
+
+  // Test Count Achievements
+  if (progressData.totalTests >= 10) {
+    achievements.push({
+      id: 'tests_10',
+      title: 'Dedicated Learner',
+      description: 'Completed 10 tests',
+      icon: '📚',
+      earnedDate: progressData.testHistory[progressData.testHistory.length - 10]?.date || new Date().toISOString()
+    });
+  }
+
+  if (progressData.totalTests >= 50) {
+    achievements.push({
+      id: 'tests_50',
+      title: 'Study Enthusiast',
+      description: 'Completed 50 tests',
+      icon: '🌟',
+      earnedDate: progressData.testHistory[progressData.testHistory.length - 50]?.date || new Date().toISOString()
+    });
+  }
+
+  if (progressData.totalTests >= 100) {
+    achievements.push({
+      id: 'tests_100',
+      title: 'Century Club',
+      description: 'Completed 100 tests',
+      icon: '💯',
+      earnedDate: progressData.testHistory[progressData.testHistory.length - 100]?.date || new Date().toISOString()
+    });
+  }
+
+  // Perfect Score Achievements
+  const perfectScores = progressData.testHistory.filter(test => test.percentage === 100);
+  if (perfectScores.length >= 1) {
+    achievements.push({
+      id: 'perfect_1',
+      title: 'Perfect Score',
+      description: 'Achieved 100% on a test',
+      icon: '🎯',
+      earnedDate: perfectScores[0].date
+    });
+  }
+
+  if (perfectScores.length >= 5) {
+    achievements.push({
+      id: 'perfect_5',
+      title: 'Perfectionist',
+      description: 'Achieved 100% on 5 tests',
+      icon: '⭐',
+      earnedDate: perfectScores[4].date
+    });
+  }
+
+  // Level Achievements
+  const levelCounts = progressData.levelProgress;
+  if (levelCounts['C1-C2'] >= 5) {
+    achievements.push({
+      id: 'advanced_level',
+      title: 'Advanced Speaker',
+      description: 'Scored at C1-C2 level 5 times',
+      icon: '🎓',
+      earnedDate: progressData.lastTestDate
+    });
+  }
+
+  // Sort by earned date (most recent first)
+  return achievements.sort((a, b) => new Date(b.earnedDate) - new Date(a.earnedDate));
 };
 
 // ==============================================
