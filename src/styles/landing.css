@@ -1,6 +1,6 @@
 /* ==============================================
-   LANDING.CSS - Landing page (Duolingo style) - REWRITTEN
-   Fixed title capitalization and optimized for performance
+   LANDING.CSS - Landing page (Duolingo style) - FIXED FOR SPEAKING EXERCISE
+   Fixed title capitalisation and ensured all exercises are visible
    ============================================== */
 
 .landing-duolingo {
@@ -20,7 +20,7 @@
 }
 
 /* ==============================================
-   DESKTOP SIDEBAR - Optimized for performance
+   DESKTOP SIDEBAR - Optimised for performance
    ============================================== */
 .desktop-sidebar {
   width: 280px;
@@ -58,7 +58,6 @@
   font-size: 1.3em;
   font-weight: 700;
   color: #4c51bf;
-  /* FIXED: Removed text-transform: lowercase */
   letter-spacing: -0.02em;
 }
 
@@ -107,7 +106,7 @@
 }
 
 /* ==============================================
-   MOBILE HEADER - Optimized layout
+   MOBILE HEADER - Optimised layout
    ============================================== */
 .mobile-header {
   display: none;
@@ -144,7 +143,6 @@
   font-size: 1.2em;
   font-weight: 700;
   color: #4c51bf;
-  /* FIXED: Removed text-transform: lowercase */
   letter-spacing: -0.02em;
 }
 
@@ -195,7 +193,6 @@
   font-size: 1.3em;
   font-weight: 700;
   color: #4c51bf;
-  /* FIXED: Ensure proper capitalization */
   text-transform: none;
   letter-spacing: -0.02em;
 }
@@ -285,7 +282,7 @@
 }
 
 /* ==============================================
-   CATEGORIES SECTION - Optimized tabs
+   CATEGORIES SECTION - Optimised tabs
    ============================================== */
 .categories-section {
   margin-bottom: 25px;
@@ -341,16 +338,19 @@
 }
 
 /* ==============================================
-   EXERCISES LIST - Performance optimized
+   EXERCISES LIST - FIXED TO ENSURE ALL EXERCISES SHOW
    ============================================== */
 .exercises-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  /* FIXED: Ensure the container is visible and not hidden */
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .exercise-item {
-  display: flex;
+  display: flex !important; /* FIXED: Force display */
   align-items: center;
   gap: 15px;
   background: white;
@@ -364,6 +364,16 @@
   transform: translateY(20px);
   animation: exerciseItemFadeIn 0.6s ease-out forwards;
   will-change: transform; /* GPU acceleration */
+  /* FIXED: Ensure speaking exercises are not hidden */
+  visibility: visible !important;
+}
+
+/* FIXED: Ensure speaking exercise items are always visible */
+.exercise-item[data-category="SPEAKING"],
+.exercise-item.speaking-exercise {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .exercise-item.active:hover {
@@ -385,6 +395,12 @@
   height: 3px;
   background: linear-gradient(135deg, #f093fb, #f5576c);
   border-radius: 12px 12px 0 0;
+}
+
+/* FIXED: Ensure NEW speaking exercises are properly displayed */
+.exercise-item.new-exercise {
+  display: flex !important;
+  visibility: visible !important;
 }
 
 .exercise-icon-container {
@@ -429,6 +445,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  /* FIXED: Ensure badges are visible */
+  z-index: 10;
+  display: block !important;
 }
 
 .det-badge {
@@ -443,6 +462,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  /* FIXED: Ensure badges are visible */
+  z-index: 10;
+  display: block !important;
 }
 
 .exercise-content {
@@ -619,4 +641,26 @@
 
 .mobile-menu-close:hover { 
   background: #f0f0f0; 
+}
+
+/* ==============================================
+   FIXED: FORCE VISIBILITY FOR DEBUGGING
+   ============================================== */
+/* Temporary debugging styles - remove in production */
+.exercise-item[data-type="speak-and-record"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: #e6ffe6 !important; /* Light green background for debugging */
+  border: 2px solid #00ff00 !important; /* Green border for debugging */
+}
+
+/* FIXED: Ensure no CSS is accidentally hiding speaking exercises */
+.exercise-item:not(.disabled) {
+  display: flex !important;
+}
+
+/* FIXED: Override any potential display:none rules */
+.exercises-list > * {
+  display: flex !important;
 }
