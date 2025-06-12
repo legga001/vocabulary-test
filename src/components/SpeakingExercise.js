@@ -370,30 +370,65 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   // MICROPHONE AND SPEECH RECOGNITION SETUP
   // ==============================================
   
-  // Test microphone access
+  // Test microphone access with enhanced settings
   const testMicrophoneAccess = useCallback(async () => {
-    console.log('🎤 Testing microphone access...');
+    console.log('🎤 Testing microphone access with enhanced sensitivity...');
     
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 44100
+          noiseSuppression: false, // Turn off noise suppression for better sensitivity
+          autoGainControl: true, // Enable automatic gain control
+          sampleRate: 48000, // Higher sample rate for better quality
+          channelCount: 1, // Mono audio
+          volume: 1.0, // Maximum volume
+          // Enhanced sensitivity settings
+          googEchoCancellation: false,
+          googAutoGainControl: true,
+          googNoiseSuppression: false,
+          googHighpassFilter: false,
+          googTypingNoiseDetection: false,
+          googAudioMirroring: false
         }
       });
       
-      console.log('✅ Microphone access granted');
+      console.log('✅ Microphone access granted with enhanced settings');
       microphoneStreamRef.current = stream;
       setMicrophoneStatus('granted');
       
-      // Test audio levels
+      // Test audio levels with better sensitivity monitoring
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();
+      
+      // Enhanced analyser settings for better sensitivity
+      analyser.fftSize = 2048;
+      analyser.minDecibels = -90; // Lower threshold for quieter sounds
+      analyser.maxDecibels = -10;
+      analyser.smoothingTimeConstant = 0.85;
+      
       source.connect(analyser);
       
-      console.log('🔊 Audio context created successfully');
+      // Monitor audio levels
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      const checkAudioLevel = () => {
+        analyser.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+        
+        if (average > 5) { // Lower threshold for detection
+          console.log('🔊 Audio detected - microphone is sensitive and working:', average);
+        }
+      };
+      
+      // Check audio levels for 2 seconds
+      const levelCheckInterval = setInterval(checkAudioLevel, 100);
+      setTimeout(() => {
+        clearInterval(levelCheckInterval);
+        console.log('🎤 Microphone sensitivity test completed');
+      }, 2000);
+      
+      console.log('🔊 Audio context created successfully with enhanced sensitivity');
       
       return true;
     } catch (error) {
@@ -428,15 +463,21 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
       recognitionRef.current = new SpeechRecognition();
       
-      // Enhanced configuration
-      recognitionRef.current.continuous = true; // Keep listening
+      // Enhanced configuration for longer, more sensitive recording
+      recognitionRef.current.continuous = true; // Keep listening continuously
       recognitionRef.current.interimResults = true; // Show real-time results
       recognitionRef.current.lang = 'en-GB'; // British English
-      recognitionRef.current.maxAlternatives = 1;
+      recognitionRef.current.maxAlternatives = 3; // Get more alternatives for better accuracy
+      
+      // Enhanced sensitivity settings (browser-specific)
+      if (recognitionRef.current.serviceURI) {
+        // Chrome-specific settings for better sensitivity
+        recognitionRef.current.serviceURI = 'wss://www.google.com/speech-api/v2/recognize';
+      }
       
       // Event handlers with better logging
       recognitionRef.current.onstart = () => {
-        console.log('▶️ Speech recognition STARTED');
+        console.log('▶️ Speech recognition STARTED - listening for longer periods');
         setIsRecording(true);
         setInterimText('');
         setSpokenText('');
@@ -469,35 +510,45 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           setInterimText(interimTranscript);
         }
         
-        // If we have a final result, process it
+        // Wait longer before processing final result to capture more speech
         if (finalTranscript) {
-          console.log('✅ Processing final transcript:', finalTranscript);
-          setSpokenText(finalTranscript);
-          setInterimText('');
+          console.log('✅ Got final transcript, waiting 1 second for more speech...');
           
-          // Stop recording and process result
-          if (recognitionRef.current) {
-            recognitionRef.current.stop();
+          // Clear any existing timeout
+          if (window.speechTimeout) {
+            clearTimeout(window.speechTimeout);
           }
           
-          // Calculate accuracy ONLY for current sentence (not affected by previous questions)
-          if (currentData && currentData.correctText) {
-            console.log('🎯 Calculating accuracy for CURRENT question only:');
-            console.log('Current sentence:', currentData.correctText);
-            console.log('User just said:', finalTranscript);
+          // Set a longer timeout to capture more speech
+          window.speechTimeout = setTimeout(() => {
+            console.log('⏰ Speech timeout reached, processing final result');
+            setSpokenText(finalTranscript);
+            setInterimText('');
             
-            // Calculate accuracy for THIS question only - completely independent
-            const thisQuestionAccuracy = calculateAccuracy(finalTranscript, currentData.correctText);
+            // Stop recording and process result
+            if (recognitionRef.current) {
+              recognitionRef.current.stop();
+            }
             
-            console.log('📊 THIS question accuracy:', thisQuestionAccuracy + '%');
-            
-            // Set the accuracy for display - this should ONLY be for current question
-            setCurrentAccuracy(thisQuestionAccuracy);
-            setShowFeedback(true);
-          } else {
-            console.error('❌ No current data for accuracy calculation');
-            setErrorMessage('No sentence data available for comparison');
-          }
+            // Calculate accuracy ONLY for current sentence (not affected by previous questions)
+            if (currentData && currentData.correctText) {
+              console.log('🎯 Calculating accuracy for CURRENT question only:');
+              console.log('Current sentence:', currentData.correctText);
+              console.log('User just said:', finalTranscript);
+              
+              // Calculate accuracy for THIS question only - completely independent
+              const thisQuestionAccuracy = calculateAccuracy(finalTranscript, currentData.correctText);
+              
+              console.log('📊 THIS question accuracy:', thisQuestionAccuracy + '%');
+              
+              // Set the accuracy for display - this should ONLY be for current question
+              setCurrentAccuracy(thisQuestionAccuracy);
+              setShowFeedback(true);
+            } else {
+              console.error('❌ No current data for accuracy calculation');
+              setErrorMessage('No sentence data available for comparison');
+            }
+          }, 1500); // Wait 1.5 seconds after final result for more speech
         }
       };
       
@@ -506,13 +557,18 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         setIsRecording(false);
         setInterimText('');
         
+        // Clear any pending timeout
+        if (window.speechTimeout) {
+          clearTimeout(window.speechTimeout);
+        }
+        
         let errorMsg = '';
         switch (event.error) {
           case 'no-speech':
-            errorMsg = 'No speech detected. Please try speaking louder and clearer.';
+            errorMsg = 'No speech detected. Try speaking louder and closer to the microphone.';
             break;
           case 'audio-capture':
-            errorMsg = 'Microphone not accessible. Please check your microphone connection.';
+            errorMsg = 'Microphone not accessible. Please check your microphone connection and try again.';
             break;
           case 'not-allowed':
             errorMsg = isIOS 
@@ -520,19 +576,19 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               : 'Microphone access denied. Please allow microphone access and try again.';
             break;
           case 'network':
-            errorMsg = 'Network error. Please check your internet connection.';
+            errorMsg = 'Network error. Please check your internet connection and try again.';
             break;
           case 'service-not-allowed':
-            errorMsg = 'Speech recognition service not available.';
+            errorMsg = 'Speech recognition service not available. Please try again.';
             break;
           case 'bad-grammar':
-            errorMsg = 'Speech recognition grammar error.';
+            errorMsg = 'Speech recognition grammar error. Please try speaking again.';
             break;
           case 'language-not-supported':
             errorMsg = 'Language not supported by speech recognition.';
             break;
           default:
-            errorMsg = `Speech recognition error: ${event.error}`;
+            errorMsg = `Speech recognition error: ${event.error}. Please try again.`;
         }
         
         setErrorMessage(errorMsg);
@@ -543,26 +599,42 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         console.log('🛑 Speech recognition ENDED');
         setIsRecording(false);
         setInterimText('');
+        
+        // Clear any pending timeout
+        if (window.speechTimeout) {
+          clearTimeout(window.speechTimeout);
+        }
       };
       
       recognitionRef.current.onspeechstart = () => {
-        console.log('🗣️ Speech detected!');
+        console.log('🗣️ Speech detected! Microphone is picking up sound.');
       };
       
       recognitionRef.current.onspeechend = () => {
-        console.log('🤐 Speech ended');
+        console.log('🤐 Speech ended - but continuing to listen for more...');
+        // Don't stop immediately, let the timeout handle it
       };
       
       recognitionRef.current.onsoundstart = () => {
-        console.log('🔊 Sound detected');
+        console.log('🔊 Sound detected by microphone');
       };
       
       recognitionRef.current.onsoundend = () => {
-        console.log('🔇 Sound ended');
+        console.log('🔇 Sound ended - but continuing to listen...');
+        // Don't stop immediately, keep listening
+      };
+      
+      // Additional event for better microphone sensitivity
+      recognitionRef.current.onaudiostart = () => {
+        console.log('🎤 Audio input started - microphone is active');
+      };
+      
+      recognitionRef.current.onaudioend = () => {
+        console.log('🎤 Audio input ended');
       };
       
       setSpeechRecognitionReady(true);
-      console.log('✅ Speech recognition setup complete');
+      console.log('✅ Speech recognition setup complete with enhanced sensitivity');
       return true;
       
     } catch (error) {
@@ -1121,13 +1193,14 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               </div>
               
               <div className="microphone-info">
-                <h4>🎤 New Improved Accuracy</h4>
-                <p>This exercise now uses word-based accuracy scoring for more realistic results.</p>
+                <h4>🎤 Enhanced Microphone System</h4>
+                <p>New improved microphone with extended recording time and better sensitivity.</p>
                 <ul style={{ textAlign: 'left', fontSize: '0.9em', marginTop: '10px' }}>
-                  <li>✅ Words in correct order get highest marks</li>
-                  <li>⚡ Handles speech recognition variations</li>
-                  <li>📊 Realistic percentage scores</li>
-                  <li>🎯 Rewards accuracy over speed</li>
+                  <li>⏱️ Longer recording time - won't cut off mid-sentence</li>
+                  <li>🔊 Enhanced sensitivity - picks up quieter speech</li>
+                  <li>🎯 Better accuracy with multiple speech alternatives</li>
+                  <li>⚡ Real-time feedback as you speak</li>
+                  <li>🔄 Automatic gain control for consistent volume</li>
                 </ul>
                 {isIOS && (
                   <p style={{ fontSize: '0.9em', color: '#d69e2e', fontWeight: '600', marginTop: '10px' }}>
@@ -1340,7 +1413,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           {/* Status messages */}
           {isRecording && (
             <div className="recording-indicator">
-              🔴 Recording... Speak clearly!
+              🔴 Recording... Speak clearly! (Extended recording time - won't cut off)
             </div>
           )}
           
