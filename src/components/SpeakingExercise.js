@@ -279,7 +279,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       recognitionRef.current.lang = 'en-GB'; // British English
       recognitionRef.current.maxAlternatives = 1; // Only need one result
       
-      // IMPROVED: Better event handlers with silence detection
+      // FIXED: Better event handlers with improved silence detection
       recognitionRef.current.onresult = (event) => {
         console.log('🎤 Speech recognition result received');
         
@@ -299,20 +299,30 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           }
         }
         
-        // Update the current spoken text
-        if (finalTranscript) {
-          setSpokenText(prev => (prev + ' ' + finalTranscript).trim());
+        // Update the current spoken text (use both final and interim for better UX)
+        const currentTranscript = finalTranscript || interimTranscript;
+        if (currentTranscript) {
+          if (finalTranscript) {
+            setSpokenText(prev => (prev + ' ' + finalTranscript).trim());
+          } else {
+            // For interim results, show preview but don't store permanently yet
+            setSpokenText(prev => {
+              const parts = prev.split(' ');
+              // Remove any previous interim results and add new one
+              return (prev + ' ' + interimTranscript).trim();
+            });
+          }
           setHasReceivedSpeech(true);
           
-          // Reset silence counter when we get speech
+          // Reset silence counter when we get ANY speech (final or interim)
           if (silenceTimer) {
             clearTimeout(silenceTimer);
             setSilenceTimer(null);
           }
           
-          // Start new silence timer for auto-stop (3 seconds)
+          // Start new silence timer for auto-stop (2 seconds - reduced from 3)
           const newTimer = setTimeout(() => {
-            console.log('🤫 3 seconds of silence detected - stopping recording');
+            console.log('🤫 2 seconds of silence detected - stopping recording');
             if (recognitionRef.current && isRecording) {
               try {
                 recognitionRef.current.stop();
@@ -320,7 +330,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                 console.error('Error stopping recognition after silence:', error);
               }
             }
-          }, 3000);
+          }, 2000);
           setSilenceTimer(newTimer);
         }
       };
@@ -356,9 +366,10 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         }
       };
       
-      // IMPROVED: Better onend handler
+      // FIXED: Better onend handler that properly processes results
       recognitionRef.current.onend = () => {
         console.log('🏁 Speech recognition ended');
+        console.log('Current spoken text at end:', spokenText);
         
         // Clear silence timer
         if (silenceTimer) {
@@ -368,14 +379,26 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         
         setIsRecording(false);
         
-        // Process the final result
-        if (spokenText.trim()) {
-          console.log('🎯 Processing final speech result:', spokenText);
-          processRecordingResult(spokenText);
-        } else if (isManualStop) {
-          handleManualStopResult();
-        } else if (!hasReceivedSpeech) {
-          handleNoSpeechDetected();
+        // CRITICAL FIX: Use the current state immediately, not from closure
+        const currentSpokenText = spokenText;
+        
+        // Process the final result if we have speech
+        if (currentSpokenText && currentSpokenText.trim() && hasReceivedSpeech) {
+          console.log('🎯 Processing final speech result:', currentSpokenText);
+          // Use setTimeout to ensure state is properly updated
+          setTimeout(() => {
+            processRecordingResult(currentSpokenText);
+          }, 100);
+        } else if (isManualStop && currentSpokenText && currentSpokenText.trim()) {
+          console.log('🛑 Processing manual stop result:', currentSpokenText);
+          setTimeout(() => {
+            processRecordingResult(currentSpokenText);
+          }, 100);
+        } else {
+          console.log('❌ No usable speech found');
+          setTimeout(() => {
+            handleNoSpeechDetected();
+          }, 100);
         }
       };
 
@@ -426,11 +449,20 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
   const handleManualStopResult = () => {
     console.log('🛑 Processing manual stop');
+    console.log('Current spokenText state:', spokenText);
+    
+    // Get the current spoken text from state
+    const currentSpokenText = spokenText;
     
     // If we have some spoken text already, use it
-    if (spokenText && spokenText.trim()) {
-      processRecordingResult(spokenText);
+    if (currentSpokenText && currentSpokenText.trim()) {
+      console.log('✅ Found speech for manual stop:', currentSpokenText);
+      // Use setTimeout to ensure proper state processing
+      setTimeout(() => {
+        processRecordingResult(currentSpokenText);
+      }, 100);
     } else {
+      console.log('❌ No speech captured before manual stop');
       // No speech was captured before manual stop
       setSpokenText('Recording stopped before speech was detected.');
       setCurrentAccuracy(0);
@@ -439,7 +471,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     }
   };
 
-  // NEW: Separate function to process recording results
+  // IMPROVED: Process recording result with better state handling
   const processRecordingResult = (finalSpokenText) => {
     console.log('🎯 Processing recording result:', finalSpokenText);
     
@@ -448,8 +480,15 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       return;
     }
     
+    // Ensure we have actual text to process
+    if (!finalSpokenText || !finalSpokenText.trim()) {
+      console.log('❌ No speech text to process');
+      handleNoSpeechDetected();
+      return;
+    }
+    
     // Calculate accuracy with detailed word matching
-    const result = calculateAccuracyWithDetails(finalSpokenText, currentData.correctText);
+    const result = calculateAccuracyWithDetails(finalSpokenText.trim(), currentData.correctText);
     
     console.log('📊 Accuracy result:', result);
     
@@ -895,7 +934,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                 <h4>🎤 Microphone Required</h4>
                 <p>Please allow microphone access when prompted by your browser.</p>
                 <p style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
-                  💡 New: Recording continues until 3 seconds of silence for better capture!
+                  💡 New: Recording continues until 2 seconds of silence for better capture!
                 </p>
               </div>
             </div>
@@ -1061,7 +1100,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               🔴 Recording... Speak clearly!
               {hasReceivedSpeech && (
                 <div style={{ fontSize: '0.8em', marginTop: '5px' }}>
-                  ✅ Speech detected - will stop after 3 seconds of silence
+                  ✅ Speech detected - will stop after 2 seconds of silence
                 </div>
               )}
             </div>
