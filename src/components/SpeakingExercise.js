@@ -1,4 +1,4 @@
-// src/components/SpeakingExercise.js - FIXED: Speech Recognition and Button Stopping
+// src/components/SpeakingExercise.js - FIXED: Proper grading, longer recording, visual feedback
 import React, { useState, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
@@ -48,47 +48,173 @@ const generateSpeakingTest = () => {
   return testSentences;
 };
 
-// Basic text normalisation for comparison
+// IMPROVED: Better text normalisation for comparison
 const normaliseText = (text) => {
+  if (!text) return '';
+  
   return text
     .toLowerCase()
-    .replace(/[.,!?;:'"()-]/g, '')
+    // Remove punctuation but keep apostrophes in contractions
+    .replace(/[.,!?;:"()-]/g, '')
+    // Normalise contractions
+    .replace(/won't/g, 'will not')
+    .replace(/can't/g, 'cannot')
+    .replace(/n't/g, ' not')
+    .replace(/'ll/g, ' will')
+    .replace(/'re/g, ' are')
+    .replace(/'ve/g, ' have')
+    .replace(/'d/g, ' would')
+    .replace(/'m/g, ' am')
+    // Handle multiple spaces
     .replace(/\s+/g, ' ')
     .trim();
 };
 
-// Calculate similarity between spoken text and correct text
-const calculateAccuracy = (spokenText, correctText) => {
-  if (!spokenText || !correctText) return 0;
+// FIXED: Much better accuracy calculation with detailed word matching
+const calculateAccuracyWithDetails = (spokenText, correctText) => {
+  console.log('🧮 Calculating accuracy...');
+  console.log('Spoken:', spokenText);
+  console.log('Correct:', correctText);
+  
+  if (!spokenText || !correctText) {
+    console.log('❌ Empty text provided');
+    return {
+      accuracy: 0,
+      wordMatches: [],
+      correctWords: correctText ? correctText.split(' ') : [],
+      spokenWords: []
+    };
+  }
   
   const spoken = normaliseText(spokenText);
   const correct = normaliseText(correctText);
   
-  // Perfect match
-  if (spoken === correct) return 100;
+  console.log('Normalised spoken:', spoken);
+  console.log('Normalised correct:', correct);
   
-  // Split into words for comparison
-  const spokenWords = spoken.split(' ');
-  const correctWords = correct.split(' ');
-  
-  // Calculate word accuracy
-  const matchingWords = spokenWords.filter(word => correctWords.includes(word));
-  const wordAccuracy = (matchingWords.length / correctWords.length) * 100;
-  
-  // Simple character similarity
-  const maxLength = Math.max(spoken.length, correct.length);
-  const differences = Math.abs(spoken.length - correct.length);
-  let charMatches = 0;
-  const minLength = Math.min(spoken.length, correct.length);
-  
-  for (let i = 0; i < minLength; i++) {
-    if (spoken[i] === correct[i]) charMatches++;
+  // Perfect match gets 100%
+  if (spoken === correct) {
+    const words = correct.split(' ');
+    const wordMatches = words.map(word => ({ word, isCorrect: true }));
+    console.log('🎯 Perfect match! 100%');
+    return {
+      accuracy: 100,
+      wordMatches,
+      correctWords: words,
+      spokenWords: words
+    };
   }
   
-  const charAccuracy = ((charMatches / maxLength) * 100);
+  // Split into words for detailed comparison
+  const spokenWords = spoken.split(' ').filter(word => word.length > 0);
+  const correctWords = correct.split(' ').filter(word => word.length > 0);
   
-  // Return the better of the two methods
-  return Math.round(Math.max(wordAccuracy, charAccuracy));
+  console.log('Spoken words:', spokenWords);
+  console.log('Correct words:', correctWords);
+  
+  // Advanced word matching with position consideration
+  const wordMatches = [];
+  let correctCount = 0;
+  
+  // First pass: exact position matches
+  const usedSpokenIndices = new Set();
+  const usedCorrectIndices = new Set();
+  
+  for (let i = 0; i < correctWords.length; i++) {
+    const correctWord = correctWords[i];
+    
+    if (i < spokenWords.length && spokenWords[i] === correctWord) {
+      wordMatches.push({ word: correctWord, isCorrect: true });
+      correctCount++;
+      usedSpokenIndices.add(i);
+      usedCorrectIndices.add(i);
+    } else {
+      wordMatches.push({ word: correctWord, isCorrect: false });
+    }
+  }
+  
+  // Second pass: find matches in different positions
+  for (let i = 0; i < correctWords.length; i++) {
+    if (usedCorrectIndices.has(i)) continue;
+    
+    const correctWord = correctWords[i];
+    
+    for (let j = 0; j < spokenWords.length; j++) {
+      if (usedSpokenIndices.has(j)) continue;
+      
+      const spokenWord = spokenWords[j];
+      
+      // Exact match
+      if (spokenWord === correctWord) {
+        wordMatches[i] = { word: correctWord, isCorrect: true };
+        correctCount++;
+        usedSpokenIndices.add(j);
+        usedCorrectIndices.add(i);
+        break;
+      }
+      
+      // Fuzzy match for similar words (account for speech recognition errors)
+      if (correctWord.length > 3 && spokenWord.length > 3) {
+        const similarity = calculateStringSimilarity(spokenWord, correctWord);
+        if (similarity > 0.8) {
+          wordMatches[i] = { word: correctWord, isCorrect: true };
+          correctCount++;
+          usedSpokenIndices.add(j);
+          usedCorrectIndices.add(i);
+          break;
+        }
+      }
+    }
+  }
+  
+  // Calculate accuracy
+  const accuracy = correctWords.length > 0 ? Math.round((correctCount / correctWords.length) * 100) : 0;
+  
+  console.log(`✅ Matched ${correctCount}/${correctWords.length} words`);
+  console.log(`📊 Accuracy: ${accuracy}%`);
+  
+  return {
+    accuracy,
+    wordMatches,
+    correctWords,
+    spokenWords
+  };
+};
+
+// Helper function for string similarity (Levenshtein-based)
+const calculateStringSimilarity = (str1, str2) => {
+  const matrix = [];
+  const n = str1.length;
+  const m = str2.length;
+
+  if (n === 0) return m === 0 ? 1 : 0;
+  if (m === 0) return 0;
+
+  // Initialize matrix
+  for (let i = 0; i <= n; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= m; j++) {
+    matrix[0][j] = j;
+  }
+
+  // Fill matrix
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      if (str1[i - 1] === str2[j - 1]) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+
+  const maxLength = Math.max(n, m);
+  return (maxLength - matrix[n][m]) / maxLength;
 };
 
 // Get accuracy level description
@@ -116,9 +242,14 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [currentAccuracy, setCurrentAccuracy] = useState(0);
+  const [currentWordMatches, setCurrentWordMatches] = useState([]);
 
   // NEW: Track if we're manually stopping vs automatic stop
   const [isManualStop, setIsManualStop] = useState(false);
+  
+  // NEW: For managing longer recording periods
+  const [silenceTimer, setSilenceTimer] = useState(null);
+  const [hasReceivedSpeech, setHasReceivedSpeech] = useState(false);
 
   // Refs
   const recognitionRef = useRef(null);
@@ -142,42 +273,75 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       setSpeechSupported(true);
       recognitionRef.current = new SpeechRecognition();
       
-      // Configure speech recognition
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
+      // IMPROVED: Configure speech recognition for better recording
+      recognitionRef.current.continuous = true; // Keep listening
+      recognitionRef.current.interimResults = true; // Get partial results
       recognitionRef.current.lang = 'en-GB'; // British English
+      recognitionRef.current.maxAlternatives = 1; // Only need one result
       
-      // FIXED: Better event handlers with proper state management
+      // IMPROVED: Better event handlers with silence detection
       recognitionRef.current.onresult = (event) => {
         console.log('🎤 Speech recognition result received');
-        console.log('Event results:', event.results);
         
-        if (event.results && event.results.length > 0) {
-          const transcript = event.results[0][0].transcript;
-          console.log('📝 Transcript:', transcript);
+        let finalTranscript = '';
+        let interimTranscript = '';
+        
+        // Process all results
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
           
-          setSpokenText(transcript);
-          setIsRecording(false);
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+            console.log('✅ Final transcript:', transcript);
+          } else {
+            interimTranscript += transcript;
+            console.log('⏳ Interim transcript:', transcript);
+          }
+        }
+        
+        // Update the current spoken text
+        if (finalTranscript) {
+          setSpokenText(prev => (prev + ' ' + finalTranscript).trim());
+          setHasReceivedSpeech(true);
           
-          // Calculate accuracy immediately
-          const accuracy = calculateAccuracy(transcript, currentData?.correctText);
-          console.log('📊 Calculated accuracy:', accuracy);
-          setCurrentAccuracy(accuracy);
-          setShowFeedback(true);
-        } else {
-          console.warn('⚠️ No speech results found');
-          handleNoSpeechDetected();
+          // Reset silence counter when we get speech
+          if (silenceTimer) {
+            clearTimeout(silenceTimer);
+            setSilenceTimer(null);
+          }
+          
+          // Start new silence timer for auto-stop (3 seconds)
+          const newTimer = setTimeout(() => {
+            console.log('🤫 3 seconds of silence detected - stopping recording');
+            if (recognitionRef.current && isRecording) {
+              try {
+                recognitionRef.current.stop();
+              } catch (error) {
+                console.error('Error stopping recognition after silence:', error);
+              }
+            }
+          }, 3000);
+          setSilenceTimer(newTimer);
         }
       };
       
-      // FIXED: Better error handling
+      // IMPROVED: Better error handling
       recognitionRef.current.onerror = (event) => {
         console.error('❌ Speech recognition error:', event.error);
+        
+        // Clear silence timer
+        if (silenceTimer) {
+          clearTimeout(silenceTimer);
+          setSilenceTimer(null);
+        }
+        
         setIsRecording(false);
         
         // Handle different error types
         if (event.error === 'no-speech') {
-          handleNoSpeechDetected();
+          if (!hasReceivedSpeech) {
+            handleNoSpeechDetected();
+          }
         } else if (event.error === 'aborted') {
           // This is normal when manually stopping
           if (isManualStop) {
@@ -187,29 +351,55 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         } else {
           setSpokenText('Speech recognition failed. Please try again.');
           setCurrentAccuracy(0);
+          setCurrentWordMatches([]);
           setShowFeedback(true);
         }
       };
       
-      // FIXED: Better onend handler
+      // IMPROVED: Better onend handler
       recognitionRef.current.onend = () => {
         console.log('🏁 Speech recognition ended');
+        
+        // Clear silence timer
+        if (silenceTimer) {
+          clearTimeout(silenceTimer);
+          setSilenceTimer(null);
+        }
+        
         setIsRecording(false);
         
-        // If we manually stopped and haven't processed yet, handle it
-        if (isManualStop && !showFeedback) {
-          console.log('🔄 Processing manual stop result');
+        // Process the final result
+        if (spokenText.trim()) {
+          console.log('🎯 Processing final speech result:', spokenText);
+          processRecordingResult(spokenText);
+        } else if (isManualStop) {
           handleManualStopResult();
+        } else if (!hasReceivedSpeech) {
+          handleNoSpeechDetected();
         }
       };
 
-      // NEW: onstart handler for better state tracking
+      // IMPROVED: onstart handler
       recognitionRef.current.onstart = () => {
         console.log('▶️ Speech recognition started');
         setIsRecording(true);
-        setIsManualStop(false); // Reset manual stop flag
+        setIsManualStop(false);
+        setHasReceivedSpeech(false);
+        
+        // Clear any existing silence timer
+        if (silenceTimer) {
+          clearTimeout(silenceTimer);
+          setSilenceTimer(null);
+        }
       };
     }
+
+    // Cleanup function
+    return () => {
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+      }
+    };
   }, []);
 
   // Timer countdown
@@ -223,13 +413,14 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   }, [timeLeft, hasStarted, showResults, showFeedback]);
 
   // ==============================================
-  // NEW: HELPER FUNCTIONS FOR SPEECH HANDLING
+  // HELPER FUNCTIONS FOR SPEECH HANDLING
   // ==============================================
 
   const handleNoSpeechDetected = () => {
     console.log('🔇 No speech detected');
     setSpokenText('No speech detected. Please try again.');
     setCurrentAccuracy(0);
+    setCurrentWordMatches([]);
     setShowFeedback(true);
   };
 
@@ -238,19 +429,37 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     
     // If we have some spoken text already, use it
     if (spokenText && spokenText.trim()) {
-      const accuracy = calculateAccuracy(spokenText, currentData?.correctText);
-      setCurrentAccuracy(accuracy);
-      setShowFeedback(true);
+      processRecordingResult(spokenText);
     } else {
       // No speech was captured before manual stop
       setSpokenText('Recording stopped before speech was detected.');
       setCurrentAccuracy(0);
+      setCurrentWordMatches([]);
       setShowFeedback(true);
     }
   };
 
+  // NEW: Separate function to process recording results
+  const processRecordingResult = (finalSpokenText) => {
+    console.log('🎯 Processing recording result:', finalSpokenText);
+    
+    if (!currentData) {
+      console.error('❌ No current data available');
+      return;
+    }
+    
+    // Calculate accuracy with detailed word matching
+    const result = calculateAccuracyWithDetails(finalSpokenText, currentData.correctText);
+    
+    console.log('📊 Accuracy result:', result);
+    
+    setCurrentAccuracy(result.accuracy);
+    setCurrentWordMatches(result.wordMatches);
+    setShowFeedback(true);
+  };
+
   // ==============================================
-  // HANDLERS - FIXED AND IMPROVED
+  // HANDLERS - IMPROVED
   // ==============================================
   
   const formatTime = (seconds) => {
@@ -275,6 +484,14 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     setShowFeedback(false);
     setIsManualStop(false);
     setCurrentAccuracy(0);
+    setCurrentWordMatches([]);
+    setHasReceivedSpeech(false);
+    
+    // Clear any existing silence timer
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      setSilenceTimer(null);
+    }
     
     try {
       recognitionRef.current.start();
@@ -284,11 +501,17 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     }
   };
 
-  // FIXED: Improved stop recording function
+  // IMPROVED: Better stop recording function
   const stopRecording = () => {
     if (recognitionRef.current && isRecording) {
       console.log('🛑 Manually stopping recording');
-      setIsManualStop(true); // Mark as manual stop
+      setIsManualStop(true);
+      
+      // Clear silence timer
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        setSilenceTimer(null);
+      }
       
       try {
         recognitionRef.current.stop();
@@ -310,21 +533,35 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
   const handleTimeUp = () => {
     console.log('⏰ Time is up');
-    setSpokenText('Time is up!');
-    setCurrentAccuracy(0);
-    setShowFeedback(true);
+    
+    // Clear silence timer
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      setSilenceTimer(null);
+    }
     
     // Stop any ongoing recording
     if (isRecording && recognitionRef.current) {
       try {
+        setIsManualStop(true);
         recognitionRef.current.stop();
       } catch (error) {
         console.error('Error stopping recognition on timeout:', error);
       }
     }
+    
+    // If we have spoken text, process it; otherwise show timeout message
+    if (spokenText && spokenText.trim()) {
+      processRecordingResult(spokenText);
+    } else {
+      setSpokenText('Time is up!');
+      setCurrentAccuracy(0);
+      setCurrentWordMatches([]);
+      setShowFeedback(true);
+    }
   };
 
-  // FIXED: Better next handler with proper state reset
+  // IMPROVED: Better next handler with proper result storage
   const handleNext = () => {
     if (!currentData) return;
 
@@ -332,11 +569,12 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     console.log('Current spoken text:', spokenText);
     console.log('Current accuracy:', currentAccuracy);
 
-    // Store the result
+    // Store the result with detailed information
     setAnswers(prev => [...prev, {
       sentence: currentData,
       spokenText: spokenText,
       accuracy: currentAccuracy,
+      wordMatches: currentWordMatches,
       timeTaken: 45 - timeLeft
     }]);
 
@@ -344,13 +582,21 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       // Move to next sentence
       setCurrentSentence(prev => prev + 1);
       
-      // FIXED: Complete state reset for next question
+      // Complete state reset for next question
       setSpokenText('');
       setTimeLeft(45);
       setIsRecording(false);
       setShowFeedback(false);
       setCurrentAccuracy(0);
-      setIsManualStop(false); // Reset manual stop flag
+      setCurrentWordMatches([]);
+      setIsManualStop(false);
+      setHasReceivedSpeech(false);
+      
+      // Clear any remaining silence timer
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        setSilenceTimer(null);
+      }
       
       console.log('✅ State reset for next question');
     } else {
@@ -388,7 +634,15 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     setHasStarted(false);
     setShowFeedback(false);
     setCurrentAccuracy(0);
+    setCurrentWordMatches([]);
     setIsManualStop(false);
+    setHasReceivedSpeech(false);
+    
+    // Clear silence timer
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      setSilenceTimer(null);
+    }
     
     // Generate new random sentences
     const newSentences = generateSpeakingTest();
@@ -523,6 +777,33 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                         <div className="result-status">
                           <strong>{accuracyInfo.level}</strong>
                         </div>
+                        
+                        {/* NEW: Visual word-by-word feedback */}
+                        {answer.wordMatches && answer.wordMatches.length > 0 && (
+                          <div className="word-feedback">
+                            <div className="word-feedback-label"><strong>Word Analysis:</strong></div>
+                            <div className="word-feedback-container">
+                              {answer.wordMatches.map((match, wordIndex) => (
+                                <span 
+                                  key={wordIndex}
+                                  className={`word-feedback-item ${match.isCorrect ? 'correct' : 'incorrect'}`}
+                                  style={{
+                                    backgroundColor: match.isCorrect ? '#d4edda' : '#f8d7da',
+                                    color: match.isCorrect ? '#155724' : '#721c24',
+                                    padding: '2px 6px',
+                                    borderRadius: '3px',
+                                    margin: '2px',
+                                    fontSize: '0.9em',
+                                    display: 'inline-block'
+                                  }}
+                                >
+                                  {match.word}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
                         <div className="correct-text">
                           <strong>Target:</strong> "{answer.sentence.correctText}"
                         </div>
@@ -579,12 +860,12 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                   <span>You have 45 seconds per sentence</span>
                 </div>
                 <div className="instruction-item">
-                  <span className="instruction-icon">🎯</span>
-                  <span>Aim for clear pronunciation and natural pacing</span>
+                  <span className="instruction-icon">🤫</span>
+                  <span>Recording stops after 3 seconds of silence (or manually)</span>
                 </div>
                 <div className="instruction-item">
-                  <span className="instruction-icon">🛑</span>
-                  <span>You can stop recording manually or let it stop automatically</span>
+                  <span className="instruction-icon">🎯</span>
+                  <span>Aim for clear pronunciation and natural pacing</span>
                 </div>
                 <div className="instruction-item">
                   <span className="instruction-icon">🔊</span>
@@ -592,7 +873,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                 </div>
                 <div className="instruction-item">
                   <span className="instruction-icon">📊</span>
-                  <span>Get instant feedback on your pronunciation accuracy</span>
+                  <span>Get detailed word-by-word feedback on your pronunciation</span>
                 </div>
               </div>
               
@@ -613,6 +894,9 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               <div className="microphone-info">
                 <h4>🎤 Microphone Required</h4>
                 <p>Please allow microphone access when prompted by your browser.</p>
+                <p style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+                  💡 New: Recording continues until 3 seconds of silence for better capture!
+                </p>
               </div>
             </div>
             
@@ -669,18 +953,30 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           {/* Recording controls */}
           <div className="recording-section">
             {!showFeedback ? (
-              <button 
-                className={`record-btn ${isRecording ? 'recording' : ''}`}
-                onClick={isRecording ? stopRecording : startRecording}
-                disabled={timeLeft === 0}
-              >
-                <span className="record-icon">
-                  {isRecording ? '⏹️' : '🎤'}
-                </span>
-                <span className="record-text">
-                  {isRecording ? 'Stop Recording' : 'Start Recording'}
-                </span>
-              </button>
+              <div className="recording-controls">
+                <button 
+                  className={`record-btn ${isRecording ? 'recording' : ''}`}
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={timeLeft === 0}
+                >
+                  <span className="record-icon">
+                    {isRecording ? '⏹️' : '🎤'}
+                  </span>
+                  <span className="record-text">
+                    {isRecording ? 'Stop Recording' : 'Start Recording'}
+                  </span>
+                </button>
+                
+                {/* NEW: Recording info */}
+                {isRecording && (
+                  <div className="recording-info">
+                    <p>🎙️ Recording active - speak clearly!</p>
+                    <p style={{ fontSize: '0.8em', color: '#666' }}>
+                      Will stop after 3 seconds of silence
+                    </p>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="feedback-section">
                 <div className="accuracy-display">
@@ -692,14 +988,54 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                   </div>
                 </div>
                 
+                {/* NEW: Visual word-by-word feedback */}
+                {currentWordMatches.length > 0 && (
+                  <div className="word-analysis-section">
+                    <div className="word-analysis-header">Word-by-word analysis:</div>
+                    <div className="word-analysis-container">
+                      {currentWordMatches.map((match, index) => (
+                        <span 
+                          key={index}
+                          className={`word-analysis-item ${match.isCorrect ? 'correct' : 'incorrect'}`}
+                          style={{
+                            backgroundColor: match.isCorrect ? '#d4edda' : '#f8d7da',
+                            color: match.isCorrect ? '#155724' : '#721c24',
+                            border: `1px solid ${match.isCorrect ? '#c3e6cb' : '#f5c6cb'}`,
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            margin: '3px',
+                            fontSize: '0.95em',
+                            display: 'inline-block',
+                            fontWeight: '500'
+                          }}
+                          title={match.isCorrect ? 'Correct pronunciation' : 'Needs improvement'}
+                        >
+                          {match.word} {match.isCorrect ? '✓' : '✗'}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="word-analysis-legend">
+                      <span style={{ color: '#155724', fontSize: '0.8em' }}>
+                        ✓ = Correctly pronounced
+                      </span>
+                      <span style={{ color: '#721c24', fontSize: '0.8em', marginLeft: '15px' }}>
+                        ✗ = Needs practice
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="feedback-text">
                   <div className="recognition-result">
                     <strong>You said:</strong> "{spokenText}"
                   </div>
+                  <div className="target-text">
+                    <strong>Target:</strong> "{currentData?.correctText}"
+                  </div>
                 </div>
                 
                 <div className="sample-section">
-                  <div className="sample-header">Nice! Review the sample:</div>
+                  <div className="sample-header">Review the sample pronunciation:</div>
                   <div className="sample-controls">
                     <audio ref={audioRef} preload="auto">
                       <source src={`/${currentData?.audioFile}`} type="audio/mpeg" />
@@ -707,11 +1043,11 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                     
                     <button className="sample-btn" onClick={playCorrectAudio}>
                       <span className="sample-icon">🔊</span>
-                      <span className="sample-text">SAMPLE</span>
+                      <span className="sample-text">PLAY SAMPLE</span>
                     </button>
                     
                     <button className="continue-btn" onClick={handleNext}>
-                      CONTINUE
+                      CONTINUE →
                     </button>
                   </div>
                 </div>
@@ -723,10 +1059,23 @@ function SpeakingExercise({ onBack, onLogoClick }) {
           {isRecording && (
             <div className="recording-indicator">
               🔴 Recording... Speak clearly!
+              {hasReceivedSpeech && (
+                <div style={{ fontSize: '0.8em', marginTop: '5px' }}>
+                  ✅ Speech detected - will stop after 3 seconds of silence
+                </div>
+              )}
             </div>
           )}
 
-          {/* NEW: Debug info for troubleshooting (remove in production) */}
+          {/* NEW: Real-time speech preview (optional) */}
+          {isRecording && spokenText && (
+            <div className="speech-preview">
+              <div className="speech-preview-label">Current speech:</div>
+              <div className="speech-preview-text">"{spokenText}"</div>
+            </div>
+          )}
+
+          {/* DEBUG: Development info */}
           {process.env.NODE_ENV === 'development' && (
             <div style={{
               position: 'fixed',
@@ -738,12 +1087,17 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               borderRadius: '5px',
               fontSize: '0.8em',
               fontFamily: 'monospace',
-              zIndex: 9999
+              zIndex: 9999,
+              maxWidth: '300px'
             }}>
-              🐛 Debug: Recording: {isRecording ? 'Yes' : 'No'} | 
-              Manual Stop: {isManualStop ? 'Yes' : 'No'} | 
-              Feedback: {showFeedback ? 'Yes' : 'No'} | 
-              Speech: "{spokenText}"
+              🐛 Debug:<br/>
+              Recording: {isRecording ? 'Yes' : 'No'}<br/>
+              Manual Stop: {isManualStop ? 'Yes' : 'No'}<br/>
+              Has Speech: {hasReceivedSpeech ? 'Yes' : 'No'}<br/>
+              Feedback: {showFeedback ? 'Yes' : 'No'}<br/>
+              Accuracy: {currentAccuracy}%<br/>
+              Words Matched: {currentWordMatches.length}<br/>
+              Speech: "{spokenText.slice(0, 50)}{spokenText.length > 50 ? '...' : ''}"
             </div>
           )}
         </div>
