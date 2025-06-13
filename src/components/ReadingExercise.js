@@ -1,6 +1,7 @@
-// src/components/ReadingExercise.js - Rewritten for efficiency and clean syntax
+// src/components/ReadingExercise.js - Updated with Air India article support
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
+import { getAirIndiaVocabularyQuestions, getAirIndiaArticleInfo } from '../airIndiaVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
 import { questions as staticQuestions, correctMessages } from '../questionsData';
 import AnswerReview from './AnswerReview';
@@ -60,9 +61,10 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   const isDirectFromLanding = initialView !== 'selection';
 
   // Memoised article information
-  const { octopusArticleInfo, smugglingArticleInfo } = useMemo(() => ({
+  const { octopusArticleInfo, smugglingArticleInfo, airIndiaArticleInfo } = useMemo(() => ({
     octopusArticleInfo: getReadingArticleInfo(),
-    smugglingArticleInfo: getArticleInfo()
+    smugglingArticleInfo: getArticleInfo(),
+    airIndiaArticleInfo: getAirIndiaArticleInfo()
   }), []);
 
   // Memoised questions based on current quiz type
@@ -70,6 +72,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     switch (currentView) {
       case 'octopus-quiz': return getReadingVocabularyQuestions();
       case 'smuggling-quiz': return getArticleQuestions();
+      case 'air-india-quiz': return getAirIndiaVocabularyQuestions();
       case 'standard-quiz': return staticQuestions;
       default: return [];
     }
@@ -224,8 +227,16 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   // Render Results
   if (showResults) {
     const score = calculateScore();
-    const isArticleTest = currentView === 'octopus-quiz' || currentView === 'smuggling-quiz';
-    const currentArticleInfo = currentView === 'octopus-quiz' ? octopusArticleInfo : smugglingArticleInfo;
+    const isArticleTest = ['octopus-quiz', 'smuggling-quiz', 'air-india-quiz'].includes(currentView);
+    
+    const getCurrentArticleInfo = () => {
+      if (currentView === 'octopus-quiz') return octopusArticleInfo;
+      if (currentView === 'smuggling-quiz') return smugglingArticleInfo;
+      if (currentView === 'air-india-quiz') return airIndiaArticleInfo;
+      return null;
+    };
+
+    const currentArticleInfo = getCurrentArticleInfo();
 
     return (
       <div className="exercise-page scrollable-page">
@@ -273,9 +284,11 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   // Render Quiz Interface
   if (currentView !== 'selection') {
     const processedData = processSentence(currentQuestionData.sentence, currentQuestionData.answer);
+    
     const getCurrentArticleInfo = () => {
       if (currentView === 'octopus-quiz') return octopusArticleInfo;
       if (currentView === 'smuggling-quiz') return smugglingArticleInfo;
+      if (currentView === 'air-india-quiz') return airIndiaArticleInfo;
       return null;
     };
 
