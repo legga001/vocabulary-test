@@ -1,4 +1,4 @@
-// src/App.js - Complete rewrite with speaking exercise support
+// src/App.js - Updated with Air India quiz support
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import SplashPage from './components/SplashPage';
@@ -34,7 +34,9 @@ function App() {
         const thirtySeconds = 30 * 1000;
         const now = Date.now();
         
-        if (parsedState.timestamp && (now - parsedState.timestamp) < thirtySeconds) {
+        if (parsedState.timestamp && 
+            (now - parsedState.timestamp) < thirtySeconds) {
+          
           // This is likely a page refresh - restore the previous screen
           setCurrentScreen(parsedState.currentScreen || 'landing');
           console.log('Page refresh detected - restored to:', parsedState.currentScreen);
@@ -153,7 +155,7 @@ function App() {
     setCurrentScreen('landing');
   };
 
-  // Main exercise selection handler - UPDATED WITH SPEAKING SUPPORT
+  // Main exercise selection handler - WITH SPEAKING SUPPORT
   const handleSelectExercise = (exerciseType) => {
     switch(exerciseType) {
       // Direct exercise navigation
@@ -169,7 +171,7 @@ function App() {
       case 'listen-and-type':
         setCurrentScreen('listen-and-type');
         break;
-      case 'speak-and-record':  // NEW: Speaking exercise
+      case 'speak-and-record':  // Speaking exercise
         setCurrentScreen('speak-and-record');
         break;
       // Traditional navigation (for non-active exercises)
@@ -195,7 +197,7 @@ function App() {
     setCurrentScreen(articleType);
   };
 
-  // Main render function - UPDATED WITH SPEAKING SUPPORT
+  // Main render function - WITH AIR INDIA SUPPORT
   const renderCurrentScreen = () => {
     switch(currentScreen) {
       case 'splash':
@@ -252,6 +254,15 @@ function App() {
           />
         );
       
+      case 'air-india-quiz':  // NEW: Air India quiz case
+        return (
+          <ReadingExercise 
+            onBack={() => setCurrentScreen('article-selection')} 
+            onLogoClick={goToLanding}
+            initialView="air-india-quiz"
+          />
+        );
+      
       case 'real-fake-words':
         return (
           <RealFakeWordsExercise 
@@ -268,7 +279,7 @@ function App() {
           />
         );
       
-      case 'speak-and-record':  // NEW: Speaking exercise case
+      case 'speak-and-record':  // Speaking exercise case
         return (
           <SpeakingExercise 
             onBack={goBack} 
