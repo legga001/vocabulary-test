@@ -1,16 +1,26 @@
-// src/components/ArticleSelection.js - Rewritten with responsive grey box and streamlined flow
+// src/components/ArticleSelection.js - Updated with Air India article
 import React from 'react';
 import ClickableLogo from './ClickableLogo';
 import { getReadingArticleInfo } from '../readingVocabularyData';
+import { getAirIndiaArticleInfo } from '../airIndiaVocabularyData';
 import { getArticleInfo } from '../articleQuestions';
 
 function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
   // Get all articles and sort by date (most recent first)
   const octopusArticle = getReadingArticleInfo();
   const smugglingArticle = getArticleInfo();
+  const airIndiaArticle = getAirIndiaArticleInfo();
 
   // Create articles array with all necessary info
   const articles = [
+    {
+      id: 'air-india-quiz',
+      title: airIndiaArticle.title,
+      date: airIndiaArticle.date,
+      summary: airIndiaArticle.summary,
+      url: airIndiaArticle.url,
+      excerpt: airIndiaArticle.excerpt || null
+    },
     {
       id: 'octopus-quiz',
       title: octopusArticle.title,
