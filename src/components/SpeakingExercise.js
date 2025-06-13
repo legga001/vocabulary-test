@@ -246,12 +246,10 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
   const [silenceTimer, setSilenceTimer] = useState(null);
   const [hasReceivedSpeech, setHasReceivedSpeech] = useState(false);
 
-  // FIXED: Track accumulated speech properly
-  const [accumulatedTranscript, setAccumulatedTranscript] = useState('');
-
   // Refs
   const recognitionRef = useRef(null);
   const audioRef = useRef(null);
+  const accumulatedTranscriptRef = useRef('');
 
   // Get current sentence data
   const currentData = testSentences[currentSentence] || null;
@@ -298,26 +296,18 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
           }
         }
         
-        // FIXED: Handle transcript accumulation properly
+        // FIXED: Handle transcript accumulation properly using ref
         if (finalTranscript) {
-          // For final results, add to accumulated transcript
-          setAccumulatedTranscript(prev => {
-            const newAccumulated = (prev + ' ' + finalTranscript).trim();
-            console.log('📝 Updated accumulated transcript:', newAccumulated);
-            return newAccumulated;
-          });
+          // For final results, add to accumulated transcript ref
+          accumulatedTranscriptRef.current = (accumulatedTranscriptRef.current + ' ' + finalTranscript).trim();
+          console.log('📝 Updated accumulated transcript:', accumulatedTranscriptRef.current);
           
           // Update display with accumulated transcript
-          setSpokenText(prev => {
-            const newText = (accumulatedTranscript + ' ' + finalTranscript).trim();
-            console.log('🔄 Updated spoken text:', newText);
-            return newText;
-          });
-          
+          setSpokenText(accumulatedTranscriptRef.current);
           setHasReceivedSpeech(true);
         } else if (interimTranscript) {
           // For interim results, show preview without permanently storing
-          const previewText = (accumulatedTranscript + ' ' + interimTranscript).trim();
+          const previewText = (accumulatedTranscriptRef.current + ' ' + interimTranscript).trim();
           setSpokenText(previewText);
           console.log('👁️ Interim preview:', previewText);
           setHasReceivedSpeech(true);
@@ -377,7 +367,7 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
       // FIXED: Better onend handler that properly processes results
       recognitionRef.current.onend = () => {
         console.log('🏁 Speech recognition ended');
-        console.log('Final accumulated transcript:', accumulatedTranscript);
+        console.log('Final accumulated transcript:', accumulatedTranscriptRef.current);
         
         // Clear silence timer
         if (silenceTimer) {
@@ -388,7 +378,7 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
         setIsRecording(false);
         
         // Process the final result using accumulated transcript
-        const finalText = accumulatedTranscript.trim();
+        const finalText = accumulatedTranscriptRef.current.trim();
         
         if (finalText && hasReceivedSpeech) {
           console.log('🎯 Processing final speech result:', finalText);
@@ -414,7 +404,7 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
         setIsRecording(true);
         setIsManualStop(false);
         setHasReceivedSpeech(false);
-        setAccumulatedTranscript(''); // Reset accumulated transcript
+        accumulatedTranscriptRef.current = ''; // Reset accumulated transcript
         setSpokenText(''); // Reset display text
         
         // Clear any existing silence timer
@@ -457,10 +447,10 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
 
   const handleManualStopResult = () => {
     console.log('🛑 Processing manual stop');
-    console.log('Current accumulated transcript:', accumulatedTranscript);
+    console.log('Current accumulated transcript:', accumulatedTranscriptRef.current);
     
     // Use the accumulated transcript for manual stop
-    const finalText = accumulatedTranscript.trim();
+    const finalText = accumulatedTranscriptRef.current.trim();
     
     if (finalText) {
       console.log('✅ Found speech for manual stop:', finalText);
@@ -537,7 +527,7 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
     try {
       // Clear previous results
       setSpokenText('');
-      setAccumulatedTranscript('');
+      accumulatedTranscriptRef.current = '';
       setShowFeedback(false);
       
       // Start recording
@@ -564,7 +554,7 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
         setIsRecording(false);
         
         // Process current accumulated transcript if available
-        const finalText = accumulatedTranscript.trim();
+        const finalText = accumulatedTranscriptRef.current.trim();
         if (finalText) {
           processRecordingResult(finalText);
         } else {
@@ -591,7 +581,7 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
       setCurrentSentence(prev => prev + 1);
       setTimeLeft(45);
       setSpokenText('');
-      setAccumulatedTranscript('');
+      accumulatedTranscriptRef.current = '';
       setShowFeedback(false);
       setCurrentAccuracy(0);
       setCurrentWordMatches([]);
@@ -649,7 +639,7 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
     setHasStarted(false);
     setCurrentSentence(0);
     setSpokenText('');
-    setAccumulatedTranscript('');
+    accumulatedTranscriptRef.current = '';
     setIsRecording(false);
     setTimeLeft(45);
     setShowResults(false);
