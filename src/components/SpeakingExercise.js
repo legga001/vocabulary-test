@@ -812,4 +812,179 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
               <div className="microphone-info">
                 <h4>🎤 Microphone Required</h4>
                 <p>Please allow microphone access when prompted by your browser.</p>
-                <p
+                <p style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+                  💡 Fixed: Recording now properly captures speech without word duplication!
+                </p>
+              </div>
+            </div>
+            
+            <button className="btn btn-primary btn-large" onClick={startExercise}>
+              🎤 Start Speaking Practice
+            </button>
+          </div>
+
+          <button className="btn btn-secondary" onClick={onBack}>
+            ← Back to Exercises
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Main test interface
+  return (
+    <div className="speaking-container">
+      <div className="speaking-quiz-container">
+        {/* Header with timer */}
+        <div className="speaking-header">
+          <div className="timer-section">
+            <span className="timer-icon">⏱️</span>
+            <span className="timer-text" style={{ color: timeLeft <= 10 ? '#e53e3e' : '#4c51bf' }}>
+              {formatTime(timeLeft)} for this question
+            </span>
+          </div>
+          <div className="progress-section">
+            Question {currentSentence + 1} of {testSentences.length}
+          </div>
+          <button className="close-btn" onClick={onBack}>✕</button>
+        </div>
+
+        {/* Main content */}
+        <div className="speaking-main">
+          <div className="level-indicator">
+            <span className="level-badge">{currentData?.level}</span>
+            <span className="level-description">{currentData?.difficulty}</span>
+          </div>
+
+          <div className="speaking-instruction">
+            <h2>Record yourself saying the statement below</h2>
+          </div>
+
+          {/* Character with speech bubble */}
+          <div className="character-section">
+            <div className="character">🎭</div>
+            <div className="speech-bubble">
+              "{currentData?.correctText}"
+            </div>
+          </div>
+
+          {/* Recording controls */}
+          <div className="recording-section">
+            {!showFeedback ? (
+              <div className="recording-controls">
+                <button 
+                  className={`record-btn ${isRecording ? 'recording' : ''}`}
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={timeLeft === 0}
+                >
+                  <span className="record-icon">
+                    {isRecording ? '⏹️' : '🎤'}
+                  </span>
+                  <span className="record-text">
+                    {isRecording ? 'STOP RECORDING' : 'START RECORDING'}
+                  </span>
+                </button>
+                
+                {spokenText && (
+                  <div className="interim-feedback">
+                    <div className="current-speech">
+                      <strong>Current speech:</strong> "{spokenText}"
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="feedback-container">
+                <div className="accuracy-score" style={{ color: currentAccuracy >= 80 ? '#22c55e' : currentAccuracy >= 60 ? '#f59e0b' : '#ef4444' }}>
+                  {currentAccuracy}%
+                </div>
+                
+                {currentWordMatches.length > 0 && (
+                  <div className="word-analysis">
+                    <div className="word-analysis-title">Word-by-word Analysis:</div>
+                    <div className="word-matches">
+                      {currentWordMatches.map((match, index) => (
+                        <span 
+                          key={index}
+                          style={{
+                            backgroundColor: `${match.isCorrect ? '#c3e6cb' : '#f5c6cb'}`,
+                            color: `${match.isCorrect ? '#155724' : '#721c24'}`,
+                            border: `1px solid ${match.isCorrect ? '#c3e6cb' : '#f5c6cb'}`,
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            margin: '3px',
+                            fontSize: '0.95em',
+                            display: 'inline-block',
+                            fontWeight: '500'
+                          }}
+                          title={match.isCorrect ? 'Correct pronunciation' : 'Needs improvement'}
+                        >
+                          {match.word} {match.isCorrect ? '✓' : '✗'}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="word-analysis-legend">
+                      <span style={{ color: '#155724', fontSize: '0.8em' }}>
+                        ✓ = Correctly pronounced
+                      </span>
+                      <span style={{ color: '#721c24', fontSize: '0.8em', marginLeft: '15px' }}>
+                        ✗ = Needs practice
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="feedback-text">
+                  <div className="recognition-result">
+                    <strong>You said:</strong> "{spokenText}"
+                  </div>
+                  <div className="target-text">
+                    <strong>Target:</strong> "{currentData?.correctText}"
+                  </div>
+                </div>
+                
+                <div className="sample-section">
+                  <div className="sample-header">Review the sample pronunciation:</div>
+                  <div className="sample-controls">
+                    <audio ref={audioRef} preload="auto">
+                      <source src={`/${currentData?.audioFile}`} type="audio/mpeg" />
+                    </audio>
+                    
+                    <button className="sample-btn" onClick={playCorrectAudio}>
+                      <span className="sample-icon">🔊</span>
+                      <span className="sample-text">PLAY SAMPLE</span>
+                    </button>
+                    
+                    <button className="continue-btn" onClick={handleNext}>
+                      CONTINUE →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Status messages */}
+          {isRecording && (
+            <div className="recording-indicator">
+              🔴 Recording... Speak clearly!
+            </div>
+          )}
+          
+          {isRecording && (
+            <div className="recording-instructions">
+              <p>💡 Recording will stop automatically after 2 seconds of silence</p>
+              {hasReceivedSpeech && (
+                <div style={{ fontSize: '0.8em', marginTop: '5px' }}>
+                  ✅ Speech detected - will stop after 2 seconds of silence
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SpeakingExercise;
