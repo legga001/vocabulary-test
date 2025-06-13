@@ -306,11 +306,18 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
           setSpokenText(accumulatedTranscriptRef.current);
           setHasReceivedSpeech(true);
         } else if (interimTranscript) {
-          // For interim results, show preview without permanently storing
+          // For interim results, show preview AND store as backup
           const previewText = (accumulatedTranscriptRef.current + ' ' + interimTranscript).trim();
           setSpokenText(previewText);
           console.log('👁️ Interim preview:', previewText);
           setHasReceivedSpeech(true);
+          
+          // IMPORTANT: Also store interim results as backup in case final results don't come
+          // This helps when speech recognition doesn't provide final results
+          if (!accumulatedTranscriptRef.current || accumulatedTranscriptRef.current.length < previewText.length) {
+            // Only update if the interim text is longer (more complete)
+            console.log('💾 Storing interim as backup:', previewText);
+          }
         }
         
         // Reset silence counter when we get ANY speech (final or interim)
@@ -368,6 +375,7 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
       recognitionRef.current.onend = () => {
         console.log('🏁 Speech recognition ended');
         console.log('Final accumulated transcript:', accumulatedTranscriptRef.current);
+        console.log('Current spoken text state:', spokenText);
         
         // Clear silence timer
         if (silenceTimer) {
@@ -377,21 +385,32 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
         
         setIsRecording(false);
         
-        // Process the final result using accumulated transcript
+        // IMPROVED: Use the best available text - either accumulated final or current display text
         const finalText = accumulatedTranscriptRef.current.trim();
+        const displayText = spokenText.trim();
         
-        if (finalText && hasReceivedSpeech) {
-          console.log('🎯 Processing final speech result:', finalText);
+        // Choose the best text to process (prefer final, but use display if it's longer/more complete)
+        let textToProcess = finalText;
+        if (!finalText && displayText) {
+          textToProcess = displayText;
+          console.log('📝 Using display text as no final transcript available:', displayText);
+        } else if (displayText.length > finalText.length) {
+          textToProcess = displayText;
+          console.log('📝 Using display text as it is more complete:', displayText);
+        }
+        
+        if (textToProcess && hasReceivedSpeech) {
+          console.log('🎯 Processing speech result:', textToProcess);
           setTimeout(() => {
-            processRecordingResult(finalText);
+            processRecordingResult(textToProcess);
           }, 100);
-        } else if (isManualStop && finalText) {
-          console.log('🛑 Processing manual stop result:', finalText);
+        } else if (isManualStop && textToProcess) {
+          console.log('🛑 Processing manual stop result:', textToProcess);
           setTimeout(() => {
-            processRecordingResult(finalText);
+            processRecordingResult(textToProcess);
           }, 100);
         } else {
-          console.log('❌ No usable speech found');
+          console.log('❌ No usable speech found - Final:', finalText, 'Display:', displayText);
           setTimeout(() => {
             handleNoSpeechDetected();
           }, 100);
@@ -448,14 +467,25 @@ const SpeakingExercise = ({ onBack, onLogoClick }) => {
   const handleManualStopResult = () => {
     console.log('🛑 Processing manual stop');
     console.log('Current accumulated transcript:', accumulatedTranscriptRef.current);
+    console.log('Current spoken text state:', spokenText);
     
-    // Use the accumulated transcript for manual stop
+    // Use the best available text - prefer accumulated but fall back to display text
     const finalText = accumulatedTranscriptRef.current.trim();
+    const displayText = spokenText.trim();
     
-    if (finalText) {
-      console.log('✅ Found speech for manual stop:', finalText);
+    let textToProcess = finalText;
+    if (!finalText && displayText) {
+      textToProcess = displayText;
+      console.log('📝 Using display text for manual stop:', displayText);
+    } else if (displayText.length > finalText.length) {
+      textToProcess = displayText;
+      console.log('📝 Using longer display text for manual stop:', displayText);
+    }
+    
+    if (textToProcess) {
+      console.log('✅ Found speech for manual stop:', textToProcess);
       setTimeout(() => {
-        processRecordingResult(finalText);
+        processRecordingResult(textToProcess);
       }, 100);
     } else {
       console.log('❌ No speech captured before manual stop');
