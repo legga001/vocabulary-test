@@ -49,7 +49,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   const [isRecording, setIsRecording] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [confidence, setConfidence] = useState(0);
-  const [playCount, setPlayCount] = useState(0);
   const [feedback, setFeedback] = useState(null);
   const [testStartTime, setTestStartTime] = useState(null);
   const [recordingStartTime, setRecordingStartTime] = useState(null);
@@ -210,34 +209,27 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     setGameState(GAME_STATES.PLAYING);
     setCurrentIndex(0);
     setResults([]);
-    setPlayCount(0);
   }, [loadSentences, initSpeechRecognition]);
 
-  // Play current audio
-  const playCurrentAudio = useCallback(() => {
-    if (!currentSentence?.audioFile) {
+  // Play audio for results page
+  const playAudioForSentence = useCallback((audioFile) => {
+    if (!audioFile) {
       setFeedback({ type: 'error', message: 'Audio file not available' });
       return;
     }
 
-    if (playCount >= 3) {
-      setFeedback({ type: 'warning', message: 'Maximum 3 plays per sentence' });
-      return;
-    }
-
-    console.log('🔊 Playing audio:', currentSentence.audioFile);
-    const audio = new Audio(`/${currentSentence.audioFile}`);
+    console.log('🔊 Playing audio:', audioFile);
+    const audio = new Audio(`/${audioFile}`);
     
     audio.play()
       .then(() => {
-        setPlayCount(prev => prev + 1);
-        setFeedback({ type: 'info', message: `Audio played (${playCount + 1}/3)` });
+        console.log('Audio played successfully');
       })
       .catch(error => {
         console.error('Error playing audio:', error);
         setFeedback({ type: 'error', message: 'Error playing audio file' });
       });
-  }, [currentSentence, playCount]);
+  }, []);
 
   // Start recording
   const startRecording = useCallback(() => {
@@ -362,7 +354,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     setTimeout(() => {
       if (currentIndex + 1 < sentences.length) {
         setCurrentIndex(prev => prev + 1);
-        setPlayCount(0);
         setCurrentTranscript('');
         setConfidence(0);
         setGameState(GAME_STATES.PLAYING);
@@ -392,7 +383,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     
     if (currentIndex + 1 < sentences.length) {
       setCurrentIndex(prev => prev + 1);
-      setPlayCount(0);
       setCurrentTranscript('');
       setConfidence(0);
     } else {
@@ -438,7 +428,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     console.log('🔄 Restarting exercise');
     setCurrentIndex(0);
     setResults([]);
-    setPlayCount(0);
     setCurrentTranscript('');
     setConfidence(0);
     setFeedback(null);
@@ -553,13 +542,8 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                 </div>
                 
                 <div className="instruction-item">
-                  <span className="instruction-icon">🔊</span>
-                  <span>Listen to the sample pronunciation (up to 3 times)</span>
-                </div>
-                
-                <div className="instruction-item">
                   <span className="instruction-icon">🎤</span>
-                  <span>Click "Start Recording" and speak clearly</span>
+                  <span>Click "Start Recording" and speak the sentence clearly</span>
                 </div>
                 
                 <div className="instruction-item">
@@ -652,9 +636,20 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                   <div key={index} className={`result-item ${result.score >= 70 ? 'success' : result.score >= 50 ? 'warning' : 'error'}`}>
                     <div className="result-header">
                       <h4>Sentence {index + 1} ({result.level}): {result.score}%</h4>
-                      {result.duration > 0 && (
-                        <span className="duration">⏱️ {result.duration.toFixed(1)}s</span>
-                      )}
+                      <div className="result-actions">
+                        {result.duration > 0 && (
+                          <span className="duration">⏱️ {result.duration.toFixed(1)}s</span>
+                        )}
+                        {sentences[index]?.audioFile && (
+                          <button 
+                            className="btn btn-small btn-secondary audio-play-btn"
+                            onClick={() => playAudioForSentence(sentences[index].audioFile)}
+                            title="Play sample pronunciation"
+                          >
+                            🔊 Play
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <p><strong>Target:</strong> "{result.target}"</p>
                     <p><strong>You said:</strong> "{result.spoken || '(Skipped)'}"</p>
@@ -706,16 +701,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               <div className="target-sentence">
                 "{currentSentence.text}"
               </div>
-            </div>
-
-            <div className="audio-controls">
-              <button 
-                className="btn btn-secondary"
-                onClick={playCurrentAudio}
-                disabled={playCount >= 3}
-              >
-                🔊 Listen to Sample ({playCount}/3)
-              </button>
             </div>
 
             {isRecording && (
