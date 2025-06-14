@@ -1,858 +1,686 @@
-// src/components/SpeakingExercise.js - Complete rewrite as proper React component
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import ClickableLogo from './ClickableLogo';
-import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
-import { recordTestResult } from '../utils/progressDataManager';
+// src/utils/progressDataManager.js - Updated to include daily target increment
+const PROGRESS_DATA_KEY = 'mrFoxEnglishProgressData';
+const MAX_HISTORY_DAYS = 100; // Keep last 100 test results
 
-// Game states for better state management
-const GAME_STATES = {
-  CHECKING: 'checking',
-  INSTRUCTIONS: 'instructions', 
-  PLAYING: 'playing',
-  RECORDING: 'recording',
-  FEEDBACK: 'feedback',
-  RESULTS: 'results',
-  ERROR: 'error'
+// Quiz type display mappings for better UX
+const QUIZ_TYPE_MAPPINGS = {
+  'standard-vocabulary': { display: 'Standard Vocabulary', icon: '📖' },
+  'article-vocabulary': { display: 'Article Vocabulary', icon: '📰' },
+  'real-fake-words': { display: 'Real or Fake Words', icon: '🎯' },
+  'listen-and-type': { display: 'Listen and Type', icon: '🎧' },
+  'speak-and-record': { display: 'Speak and Record', icon: '🎤' },
+  'default': { display: 'Vocabulary Practice', icon: '📚' }
 };
 
-// Enhanced homophones map for British English
-const HOMOPHONES = {
-  'to': ['too', 'two'], 'too': ['to', 'two'], 'two': ['to', 'too'],
-  'there': ['their', 'theyre'], 'their': ['there', 'theyre'], 'theyre': ['there', 'their'],
-  'your': ['youre'], 'youre': ['your'],
-  'its': ['it\'s'], 'it\'s': ['its'],
-  'where': ['wear', 'ware'], 'wear': ['where', 'ware'],
-  'here': ['hear'], 'hear': ['here'],
-  'no': ['know'], 'know': ['no'],
-  'right': ['write', 'rite'], 'write': ['right', 'rite'],
-  'peace': ['piece'], 'piece': ['peace'],
-  'break': ['brake'], 'brake': ['break'],
-  'would': ['wood'], 'wood': ['would'],
-  'weather': ['whether'], 'whether': ['weather'],
-  'for': ['four', 'fore'], 'four': ['for', 'fore'], 'fore': ['for', 'four'],
-  'been': ['bean'], 'bean': ['been'],
-  'by': ['buy', 'bye'], 'buy': ['by', 'bye'], 'bye': ['by', 'buy'],
-  'hour': ['our'], 'our': ['hour'],
-  'week': ['weak'], 'weak': ['week'],
-  'allowed': ['aloud'], 'aloud': ['allowed'],
-  'threw': ['through'], 'through': ['threw'],
-  'mail': ['male'], 'male': ['mail'],
-  'principal': ['principle'], 'principle': ['principal']
+// Default progress data structure
+const DEFAULT_PROGRESS_DATA = {
+  totalTests: 0,
+  streak: 0,
+  bestStreak: 0,
+  lastTestDate: null,
+  startDate: null,
+  testHistory: [],
+  dailyStats: {},
+  levelProgress: {
+    'A1-A2': 0,
+    'A2-B1': 0,
+    'B1-B2': 0,
+    'B2-C1': 0,
+    'C1-C2': 0
+  }
 };
 
-function SpeakingExercise({ onBack, onLogoClick }) {
-  // DEPLOYMENT TEST: This should appear in console if new version is deployed
-  console.log('🚀 SpeakingExercise v2.0 - NEW VERSION LOADED');
-  
-  // Core state
-  const [gameState, setGameState] = useState(GAME_STATES.CHECKING);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [sentences, setSentences] = useState([]);
-  const [results, setResults] = useState([]);
-  const [isRecording, setIsRecording] = useState(false);
-  const [currentTranscript, setCurrentTranscript] = useState('');
-  const [confidence, setConfidence] = useState(0);
-  const [feedback, setFeedback] = useState(null);
-  const [testStartTime, setTestStartTime] = useState(null);
-  const [recordingStartTime, setRecordingStartTime] = useState(null);
+// ==============================================
+// DAILY TARGET INTEGRATION FUNCTIONS
+// ==============================================
 
-  // Refs
-  const recognitionRef = useRef(null);
-
-  // Current sentence data
-  const currentSentence = sentences[currentIndex];
-  const progress = sentences.length > 0 ? ((currentIndex + 1) / sentences.length) * 100 : 0;
-
-  // Check for speech recognition support and permissions
-  const checkSpeechRecognition = useCallback(async () => {
-    console.log('🎤 Checking speech recognition support...');
+// Direct implementation of daily target increment (more reliable than imports)
+const incrementDailyTargetDirect = (exerciseType) => {
+  try {
+    const DAILY_TARGETS_KEY = 'mrFoxEnglishDailyTargets';
+    const getTodayString = () => new Date().toDateString();
     
-    // Check if Speech Recognition is supported
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      console.log('❌ Speech recognition not supported');
-      setGameState(GAME_STATES.ERROR);
-      setFeedback({
-        type: 'error',
-        title: 'Browser Not Supported',
-        message: 'Your browser doesn\'t support speech recognition. Please use Chrome, Edge, or Safari.'
-      });
-      return;
-    }
-
-    // Check microphone permissions
-    try {
-      console.log('🎤 Checking microphone permissions...');
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(track => track.stop()); // Clean up
-      
-      console.log('✅ Microphone access granted');
-      setGameState(GAME_STATES.INSTRUCTIONS);
-      setFeedback({
-        type: 'success',
-        message: 'Microphone ready! You can start the exercise.'
-      });
-    } catch (error) {
-      console.log('❌ Microphone access denied:', error);
-      setGameState(GAME_STATES.ERROR);
-      setFeedback({
-        type: 'error',
-        title: 'Microphone Access Required',
-        message: 'Please allow microphone access to use this exercise. Refresh the page and try again.'
-      });
-    }
-  }, []);
-
-  // Initialise speech recognition
-  const initSpeechRecognition = useCallback(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return null;
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-GB'; // British English
-
-    recognition.onstart = () => {
-      console.log('🎤 Speech recognition started');
-      setIsRecording(true);
-      setRecordingStartTime(Date.now());
-      setCurrentTranscript('');
-      setConfidence(0);
-    };
-
-    recognition.onresult = (event) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        const resultConfidence = event.results[i][0].confidence || 0;
-
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-          setConfidence(resultConfidence);
-        } else {
-          interimTranscript += transcript;
-        }
+    // Load current targets
+    const saved = localStorage.getItem(DAILY_TARGETS_KEY);
+    let currentTargets = {};
+    
+    if (saved) {
+      const data = JSON.parse(saved);
+      const today = getTodayString();
+      if (data.date === today) {
+        currentTargets = data.targets;
       }
-
-      const fullTranscript = finalTranscript + interimTranscript;
-      setCurrentTranscript(fullTranscript);
+    }
+    
+    // Increment the specific exercise type
+    const newTargets = {
+      ...currentTargets,
+      [exerciseType]: (currentTargets[exerciseType] || 0) + 1
     };
-
-    recognition.onerror = (event) => {
-      console.error('❌ Speech recognition error:', event.error);
-      setIsRecording(false);
-      
-      let errorMessage = 'Speech recognition error. ';
-      switch (event.error) {
-        case 'no-speech':
-          errorMessage += 'No speech detected. Please speak louder.';
-          break;
-        case 'audio-capture':
-          errorMessage += 'Microphone error. Please check your microphone.';
-          break;
-        case 'not-allowed':
-          errorMessage += 'Microphone access denied. Please allow access and refresh.';
-          break;
-        default:
-          errorMessage += `Error: ${event.error}`;
-      }
-      
-      setFeedback({ type: 'error', message: errorMessage });
+    
+    // Save updated targets
+    const dataToSave = {
+      date: getTodayString(),
+      targets: newTargets
     };
-
-    recognition.onend = () => {
-      console.log('🎤 Speech recognition ended');
-      if (isRecording) {
-        stopRecording();
-      }
-    };
-
-    return recognition;
-  }, [isRecording]);
-
-  // Load test sentences
-  const loadSentences = useCallback(() => {
-    console.log('📚 Loading sentences for speaking test...');
-    const testSentences = [];
     
-    TEST_STRUCTURE.forEach(({ level, count }) => {
-      const levelSentences = SENTENCE_POOLS[level];
-      if (!levelSentences) {
-        console.warn(`No sentences found for level ${level}`);
-        return;
-      }
-      
-      // Shuffle and select sentences
-      const shuffled = [...levelSentences].sort(() => Math.random() - 0.5);
-      const selected = shuffled.slice(0, Math.min(count, shuffled.length));
-      
-      selected.forEach(sentence => {
-        testSentences.push({
-          text: sentence.correctText,
-          level: level,
-          audioFile: sentence.audioFile,
-          difficulty: sentence.difficulty
-        });
-      });
-    });
+    localStorage.setItem(DAILY_TARGETS_KEY, JSON.stringify(dataToSave));
     
-    console.log(`✅ Loaded ${testSentences.length} sentences`);
-    setSentences(testSentences);
-    setTestStartTime(Date.now());
-  }, []);
-
-  // Start the exercise
-  const startExercise = useCallback(() => {
-    console.log('🚀 Starting speaking exercise');
-    loadSentences();
-    recognitionRef.current = initSpeechRecognition();
-    setGameState(GAME_STATES.PLAYING);
-    setCurrentIndex(0);
-    setResults([]);
-  }, [loadSentences, initSpeechRecognition]);
-
-  // Play audio for results page
-  const playAudioForSentence = useCallback((audioFile) => {
-    if (!audioFile) {
-      setFeedback({ type: 'error', message: 'Audio file not available' });
-      return;
-    }
-
-    console.log('🔊 Playing audio:', audioFile);
-    const audio = new Audio(`/${audioFile}`);
+    // Trigger storage event to update UI immediately
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: DAILY_TARGETS_KEY,
+      newValue: JSON.stringify(dataToSave)
+    }));
     
-    audio.play()
-      .then(() => {
-        console.log('Audio played successfully');
-      })
-      .catch(error => {
-        console.error('Error playing audio:', error);
-        setFeedback({ type: 'error', message: 'Error playing audio file' });
-      });
-  }, []);
+    console.log(`✅ Daily target incremented for ${exerciseType}: ${newTargets[exerciseType]}`);
+    return newTargets;
+  } catch (error) {
+    console.error('Error incrementing daily target:', error);
+    return null;
+  }
+};
 
-  // Restart current recording
-  const restartRecording = useCallback(() => {
-    console.log('🔄 Restarting recording for current sentence');
-    
-    // Stop current recording if active
-    if (recognitionRef.current && isRecording) {
-      recognitionRef.current.stop();
-    }
-    
-    // Reset transcript and state
-    setCurrentTranscript('');
-    setConfidence(0);
-    setIsRecording(false);
-    setFeedback({ type: 'info', message: 'Recording restarted - try again!' });
-    setGameState(GAME_STATES.PLAYING);
-  }, [isRecording]);
-  const startRecording = useCallback(() => {
-    if (!recognitionRef.current) {
-      recognitionRef.current = initSpeechRecognition();
-    }
+// ==============================================
+// DATA LOADING/SAVING FUNCTIONS
+// ==============================================
 
-    if (!recognitionRef.current) {
-      setFeedback({ type: 'error', message: 'Speech recognition not available' });
-      return;
-    }
-
-    console.log('🎤 Starting recording...');
-    setGameState(GAME_STATES.RECORDING);
-    
-    try {
-      recognitionRef.current.start();
-    } catch (error) {
-      console.error('Error starting recording:', error);
-      setIsRecording(false);
-      setFeedback({ type: 'error', message: 'Failed to start recording' });
-    }
-  }, [initSpeechRecognition]);
-
-  // Stop recording
-  const stopRecording = useCallback(() => {
-    console.log('🛑 Stopping recording for sentence:', currentIndex + 1);
-    setIsRecording(false);
-    
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-    
-    // Process the recording
-    const recordingDuration = recordingStartTime ? (Date.now() - recordingStartTime) / 1000 : 0;
-    console.log('📝 Processing transcript:', currentTranscript, 'Duration:', recordingDuration);
-    processRecording(currentTranscript.trim(), recordingDuration);
-  }, [currentTranscript, recordingStartTime, currentIndex, processRecording]);
-
-  // Calculate detailed score with forgiving algorithm
-  const calculateScore = useCallback((spoken, target) => {
-    const normalise = (text) => {
-      return text.toLowerCase()
-        .replace(/[.,!?;:'"]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-    };
-
-    const spokenWords = normalise(spoken).split(' ').filter(word => word.length > 0);
-    const targetWords = normalise(target).split(' ').filter(word => word.length > 0);
-    
-    // If no speech detected, return 0
-    if (spokenWords.length === 0) {
+// Load progress data with error handling
+const getProgressData = () => {
+  try {
+    const saved = localStorage.getItem(PROGRESS_DATA_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
       return {
-        percentage: 0,
-        matchedWords: 0,
-        totalWords: targetWords.length
+        ...DEFAULT_PROGRESS_DATA,
+        ...data,
+        levelProgress: {
+          ...DEFAULT_PROGRESS_DATA.levelProgress,
+          ...(data.levelProgress || {})
+        }
+      };
+    }
+  } catch (error) {
+    console.error('Error loading progress data:', error);
+  }
+  
+  // Return default structure if no data or error
+  return { ...DEFAULT_PROGRESS_DATA };
+};
+
+// Save progress data with error handling
+const saveProgressData = (data) => {
+  try {
+    localStorage.setItem(PROGRESS_DATA_KEY, JSON.stringify(data));
+    return true;
+  } catch (error) {
+    console.error('Error saving progress data:', error);
+    return false;
+  }
+};
+
+// ==============================================
+// UTILITY FUNCTIONS
+// ==============================================
+
+// Get user's estimated level based on score and total questions
+const getScoreLevel = (score, totalQuestions = 10) => {
+  const percentage = Math.round((score / totalQuestions) * 100);
+  if (percentage <= 25) return 'A1-A2';
+  if (percentage <= 50) return 'A2-B1';
+  if (percentage <= 70) return 'B1-B2';
+  if (percentage <= 85) return 'B2-C1';
+  return 'C1-C2';
+};
+
+// Get display information for quiz types
+const getQuizTypeInfo = (type) => {
+  return QUIZ_TYPE_MAPPINGS[type] || QUIZ_TYPE_MAPPINGS.default;
+};
+
+// Calculate streak based on dates
+const calculateStreak = (lastTestDate, today) => {
+  if (!lastTestDate) return 1; // First test
+  
+  const lastDate = new Date(lastTestDate).toDateString();
+  const todayStr = today.toDateString();
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+  
+  if (lastDate === todayStr) {
+    return 0; // Same day, don't increment
+  } else if (lastDate === yesterday) {
+    return 1; // Consecutive day, increment by 1
+  } else {
+    return 'reset'; // Streak broken, reset to 1
+  }
+};
+
+// ==============================================
+// MAIN RECORDING FUNCTION
+// ==============================================
+
+// Record a completed test
+export const recordTestResult = (testData) => {
+  const {
+    quizType,
+    score,
+    totalQuestions = 10,
+    completedAt = new Date(),
+    timeSpent = null,
+    userAnswers = []
+  } = testData;
+
+  const progressData = getProgressData();
+  const today = new Date();
+  const todayStr = today.toDateString();
+  const level = getScoreLevel(score, totalQuestions);
+  const quizTypeInfo = getQuizTypeInfo(quizType);
+
+  console.log('📊 Recording test result:', quizType, 'Score:', score, 'Total:', totalQuestions);
+
+  // Create test record
+  const testRecord = {
+    id: Date.now(),
+    date: completedAt.toISOString(),
+    quizType,
+    quizTypeDisplay: quizTypeInfo.display,
+    quizTypeIcon: quizTypeInfo.icon,
+    score,
+    totalQuestions,
+    percentage: Math.round((score / totalQuestions) * 100),
+    level,
+    timeSpent,
+    userAnswers: userAnswers.map(answer => ({ 
+      answer: answer.answer || answer.word || '', 
+      isCorrect: answer.correct || false 
+    }))
+  };
+
+  // Update test history
+  progressData.testHistory.unshift(testRecord);
+  
+  // Keep only recent history to prevent storage bloat
+  if (progressData.testHistory.length > MAX_HISTORY_DAYS) {
+    progressData.testHistory = progressData.testHistory.slice(0, MAX_HISTORY_DAYS);
+  }
+
+  // Update total tests count
+  progressData.totalTests += 1;
+
+  // Update daily stats
+  if (!progressData.dailyStats[todayStr]) {
+    progressData.dailyStats[todayStr] = {
+      testsCompleted: 0,
+      totalScore: 0,
+      averageScore: 0,
+      timeSpent: 0
+    };
+  }
+
+  const dailyStat = progressData.dailyStats[todayStr];
+  dailyStat.testsCompleted += 1;
+  
+  // Calculate score out of 10 for consistency in daily averages
+  const normalizedScore = totalQuestions === 20 ? score / 2 : score;
+  dailyStat.totalScore += normalizedScore;
+  dailyStat.averageScore = Math.round(dailyStat.totalScore / dailyStat.testsCompleted);
+  
+  if (timeSpent) dailyStat.timeSpent += timeSpent;
+
+  // Update streak
+  const streakChange = calculateStreak(progressData.lastTestDate, today);
+  
+  if (streakChange === 'reset') {
+    progressData.streak = 1;
+  } else if (streakChange === 1) {
+    progressData.streak += 1;
+  }
+  // If streakChange === 0, don't change streak (same day)
+
+  // Update best streak
+  if (progressData.streak > progressData.bestStreak) {
+    progressData.bestStreak = progressData.streak;
+  }
+
+  // Update level progress
+  progressData.levelProgress[level] = (progressData.levelProgress[level] || 0) + 1;
+  progressData.lastTestDate = completedAt.toISOString();
+
+  // Ensure start date is set
+  if (!progressData.startDate) {
+    progressData.startDate = completedAt.toISOString();
+  }
+
+  // Save progress data first
+  saveProgressData(progressData);
+
+  // UPDATED: Increment daily target directly after successful completion
+  try {
+    const result = incrementDailyTargetDirect(quizType);
+    if (result) {
+      console.log(`✅ Test result recorded and daily target incremented for: ${quizType}`);
+    } else {
+      console.warn(`⚠️ Test recorded but daily target increment failed for: ${quizType}`);
+    }
+  } catch (error) {
+    console.error('Error incrementing daily target:', error);
+  }
+
+  return progressData;
+};
+
+// ==============================================
+// DATA RETRIEVAL FUNCTIONS
+// ==============================================
+
+// Get recent test history (last N tests)
+export const getRecentTests = (limit = 10) => {
+  const progressData = getProgressData();
+  return progressData.testHistory.slice(0, limit);
+};
+
+// Get daily stats for chart (last N days)
+export const getDailyStatsForChart = (days = 30) => {
+  const progressData = getProgressData();
+  const chartData = [];
+  
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    const dateStr = date.toDateString();
+    const dailyStat = progressData.dailyStats[dateStr];
+    
+    chartData.push({
+      date: date.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' }),
+      fullDate: dateStr,
+      testsCompleted: dailyStat?.testsCompleted || 0,
+      averageScore: dailyStat?.averageScore || 0,
+      timeSpent: dailyStat?.timeSpent || 0
+    });
+  }
+  
+  return chartData;
+};
+
+// Get exercise performance data for analytics
+export const getExercisePerformance = () => {
+  const progressData = getProgressData();
+  const exerciseStats = {};
+  
+  // Analyse performance by exercise type
+  progressData.testHistory.forEach(test => {
+    const exerciseType = test.quizTypeDisplay || 'Standard Vocabulary';
+    
+    if (!exerciseStats[exerciseType]) {
+      exerciseStats[exerciseType] = {
+        displayName: exerciseType,
+        icon: test.quizTypeIcon || '📚',
+        attempts: 0,
+        totalScore: 0,
+        averageScore: 0,
+        bestScore: 0,
+        totalTime: 0,
+        recentScores: [],
+        improvement: 'new'
       };
     }
     
-    // Create a set of target words for easy lookup
-    const targetWordSet = new Set(targetWords);
-    const targetWordMap = new Map();
+    const stat = exerciseStats[exerciseType];
+    stat.attempts++;
     
-    // Count occurrences of each target word
-    targetWords.forEach(word => {
-      targetWordMap.set(word, (targetWordMap.get(word) || 0) + 1);
+    // Normalise score to 10-point scale for consistency
+    const normalizedScore = test.totalQuestions === 20 ? test.score / 2 : test.score;
+    const scorePercentage = Math.round((normalizedScore / 10) * 100);
+    
+    stat.totalScore += scorePercentage;
+    stat.averageScore = Math.round(stat.totalScore / stat.attempts);
+    
+    if (scorePercentage > stat.bestScore) {
+      stat.bestScore = scorePercentage;
+    }
+    
+    if (test.timeSpent) {
+      stat.totalTime += test.timeSpent;
+    }
+    
+    // Keep track of recent scores for trend analysis
+    stat.recentScores.push({
+      score: scorePercentage,
+      date: test.date,
+      normalizedScore: normalizedScore
     });
     
-    // Count how many target words are present in spoken words
-    let correctWordsFound = 0;
-    const spokenWordMap = new Map();
-    
-    // Count occurrences of each spoken word
-    spokenWords.forEach(word => {
-      spokenWordMap.set(word, (spokenWordMap.get(word) || 0) + 1);
-    });
-    
-    // For each target word, check if it appears in spoken words
-    targetWordMap.forEach((targetCount, word) => {
-      const spokenCount = spokenWordMap.get(word) || 0;
+    // Keep only last 10 scores for trend analysis
+    if (stat.recentScores.length > 10) {
+      stat.recentScores = stat.recentScores.slice(-10);
+    }
+  });
+  
+  // Calculate trends for each exercise type
+  Object.values(exerciseStats).forEach(stat => {
+    if (stat.recentScores.length >= 5) {
+      const recent5 = stat.recentScores.slice(-5);
+      const older5 = stat.recentScores.slice(-10, -5);
       
-      // Count the minimum of target and spoken occurrences
-      const matchedCount = Math.min(targetCount, spokenCount);
-      correctWordsFound += matchedCount;
-      
-      // Also check homophones
-      if (matchedCount === 0 && HOMOPHONES[word]) {
-        for (const homophone of HOMOPHONES[word]) {
-          const homophoneCount = spokenWordMap.get(homophone) || 0;
-          if (homophoneCount > 0) {
-            correctWordsFound += Math.min(targetCount, homophoneCount);
-            break; // Only count one homophone match per target word
-          }
+      if (older5.length >= 3) {
+        const recentAvg = recent5.reduce((sum, s) => sum + s.score, 0) / recent5.length;
+        const olderAvg = older5.reduce((sum, s) => sum + s.score, 0) / older5.length;
+        
+        if (recentAvg > olderAvg + 5) {
+          stat.improvement = 'improving';
+        } else if (recentAvg < olderAvg - 5) {
+          stat.improvement = 'declining';
+        } else {
+          stat.improvement = 'stable';
         }
       }
-    });
-    
-    // Calculate percentage based on target words found
-    // This is much more forgiving - focuses on content rather than exact order
-    const basePercentage = (correctWordsFound / targetWords.length) * 100;
-    
-    // Apply slight penalty for excessive repetition or extra words
-    const lengthRatio = spokenWords.length / targetWords.length;
-    let lengthPenalty = 0;
-    
-    if (lengthRatio > 2) {
-      // Significant penalty for very long responses (more than double length)
-      lengthPenalty = 15;
-    } else if (lengthRatio > 1.5) {
-      // Moderate penalty for somewhat long responses
-      lengthPenalty = 10;
-    } else if (lengthRatio > 1.2) {
-      // Small penalty for slightly long responses
-      lengthPenalty = 5;
     }
-    
-    const finalPercentage = Math.max(0, Math.min(100, Math.round(basePercentage - lengthPenalty)));
-    
-    return {
-      percentage: finalPercentage,
-      matchedWords: correctWordsFound,
-      totalWords: targetWords.length
-    };
-  }, []);
+  });
+  
+  return exerciseStats;
+};
 
-  // Process recording result
-  const processRecording = useCallback((transcript, duration) => {
-    console.log('🎙️ Processing recording:', transcript, 'duration:', duration);
-    
-    if (!transcript) {
-      console.log('⚠️ No transcript detected');
-      setFeedback({ type: 'warning', message: 'No speech detected. Try again!' });
-      setGameState(GAME_STATES.PLAYING);
-      return;
-    }
-
-    const scoreData = calculateScore(transcript, currentSentence.text);
-    console.log('📊 Score calculated:', scoreData);
-    
-    // Store result
-    const result = {
-      target: currentSentence.text,
-      spoken: transcript,
-      score: scoreData.percentage,
-      level: currentSentence.level,
-      duration: duration,
-      confidence: confidence,
-      matchedWords: scoreData.matchedWords,
-      totalWords: scoreData.totalWords
-    };
-    
-    console.log('💾 Storing result:', result);
-    setResults(prev => {
-      const newResults = [...prev, result];
-      console.log('📋 Total results so far:', newResults.length);
-      return newResults;
-    });
-    
-    // Show feedback
-    let feedbackMessage = '';
-    let feedbackType = 'info';
-    
-    if (scoreData.percentage >= 90) {
-      feedbackMessage = `Excellent! ${scoreData.percentage}% accuracy 🌟`;
-      feedbackType = 'success';
-    } else if (scoreData.percentage >= 70) {
-      feedbackMessage = `Good job! ${scoreData.percentage}% accuracy 👍`;
-      feedbackType = 'success';
-    } else if (scoreData.percentage >= 50) {
-      feedbackMessage = `Not bad! ${scoreData.percentage}% accuracy 📈`;
-      feedbackType = 'warning';
-    } else {
-      feedbackMessage = `Keep practising! ${scoreData.percentage}% accuracy 💪`;
-      feedbackType = 'error';
-    }
-    
-    setFeedback({ type: feedbackType, message: feedbackMessage });
-    setGameState(GAME_STATES.FEEDBACK);
-    
-    console.log(`🔄 Question ${currentIndex + 1} of ${sentences.length} completed`);
-    
-    // Auto-advance after delay
-    setTimeout(() => {
-      if (currentIndex + 1 < sentences.length) {
-        console.log('➡️ Moving to next question');
-        setCurrentIndex(prev => prev + 1);
-        setCurrentTranscript('');
-        setConfidence(0);
-        setFeedback(null); // Clear feedback for next question
-        setGameState(GAME_STATES.PLAYING);
-      } else {
-        console.log('🏁 All questions completed, calling finishExercise');
-        finishExercise();
-      }
-    }, 3000);
-  }, [calculateScore, currentSentence, confidence, currentIndex, sentences.length, finishExercise]);
-
-  // Skip current sentence
-  const skipSentence = useCallback(() => {
-    console.log('⏭️ Skipping sentence', currentIndex + 1);
-    
-    const result = {
-      target: currentSentence.text,
-      spoken: '',
-      score: 0,
-      level: currentSentence.level,
-      duration: 0,
-      confidence: 0,
-      matchedWords: 0,
-      totalWords: currentSentence.text.split(' ').length
-    };
-    
-    setResults(prev => {
-      const newResults = [...prev, result];
-      console.log('📋 Results after skip:', newResults.length);
-      return newResults;
-    });
-    setFeedback({ type: 'info', message: 'Sentence skipped' });
-    
-    if (currentIndex + 1 < sentences.length) {
-      console.log('➡️ Moving to next question after skip');
-      setCurrentIndex(prev => prev + 1);
-      setCurrentTranscript('');
-      setConfidence(0);
-      setFeedback(null); // Clear feedback for next question
-    } else {
-      console.log('🏁 All questions completed after skip, calling finishExercise');
-      finishExercise();
-    }
-  }, [currentSentence, currentIndex, sentences.length, finishExercise]);
-
-  // Finish exercise and show results
-  const finishExercise = useCallback(() => {
-    console.log('🏁 Finishing exercise - ENTRY POINT');
-    
-    // SIMPLIFIED: Call recordTestResult immediately with basic data
-    try {
-      console.log('🎯 DIRECT TEST: Calling recordTestResult with simple data');
-      
-      recordTestResult({
-        quizType: 'speak-and-record',
-        score: 7, // Fixed score for testing
-        totalQuestions: 10,
-        completedAt: new Date(),
-        timeSpent: 60,
-        userAnswers: [
-          { answer: 'test', correct: true, score: 80, level: 'A2' }
-        ]
-      });
-      
-      console.log('✅ DIRECT TEST: recordTestResult called successfully');
-      
-    } catch (error) {
-      console.error('❌ DIRECT TEST ERROR:', error);
-      console.error('❌ Error stack:', error.stack);
-    }
-    
-    console.log('🎯 Setting game state to RESULTS');
-    setGameState(GAME_STATES.RESULTS);
-  }, []);
-
-  // Restart exercise
-  const restartExercise = useCallback(() => {
-    console.log('🔄 Restarting exercise');
-    setCurrentIndex(0);
-    setResults([]);
-    setCurrentTranscript('');
-    setConfidence(0);
-    setFeedback(null);
-    startExercise();
-  }, [startExercise]);
-
-  // Check speech recognition on component mount
-  useEffect(() => {
-    checkSpeechRecognition();
-    return () => {
-      // Cleanup
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, [checkSpeechRecognition]);
-
-  // Calculate final results
-  const finalResults = useMemo(() => {
-    if (results.length === 0) return null;
-    
-    const totalScore = results.reduce((sum, r) => sum + r.score, 0) / results.length;
-    const completedSentences = results.filter(r => r.spoken).length;
-    const testDuration = testStartTime ? Math.round((Date.now() - testStartTime) / 1000) : 0;
-    
-    // Level breakdown
-    const levelScores = {};
-    results.forEach(result => {
-      if (!levelScores[result.level]) {
-        levelScores[result.level] = { total: 0, count: 0 };
-      }
-      levelScores[result.level].total += result.score;
-      levelScores[result.level].count++;
-    });
-    
-    const levelAverages = {};
-    Object.entries(levelScores).forEach(([level, data]) => {
-      levelAverages[level] = data.count > 0 ? Math.round(data.total / data.count) : 0;
-    });
-    
-    return {
-      totalScore: Math.round(totalScore),
-      completedSentences,
-      totalSentences: sentences.length,
-      testDuration,
-      levelAverages
-    };
-  }, [results, sentences.length, testStartTime]);
-
-  // Format duration
-  const formatDuration = useCallback((seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}m ${secs}s`;
-  }, []);
-
-  // Render error state
-  if (gameState === GAME_STATES.ERROR) {
-    return (
-      <div className="exercise-page">
-        <ClickableLogo onLogoClick={onLogoClick} />
-        
-        <div className="quiz-container">
-          <h1>🎤 Speaking Exercise</h1>
-          
-          <div className="error-state">
-            <div className="error-icon">⚠️</div>
-            <h2>{feedback?.title || 'Error'}</h2>
-            <p>{feedback?.message}</p>
-            
-            <div className="browser-support">
-              <h3>Supported Browsers:</h3>
-              <ul>
-                <li>✅ Google Chrome (recommended)</li>
-                <li>✅ Microsoft Edge</li>
-                <li>✅ Safari (Mac/iOS)</li>
-                <li>❌ Firefox (limited support)</li>
-              </ul>
-            </div>
-            
-            <div style={{ marginTop: '20px' }}>
-              <button className="btn btn-primary" onClick={checkSpeechRecognition}>
-                🔄 Try Again
-              </button>
-              <button className="btn btn-secondary" onClick={onBack} style={{ marginLeft: '10px' }}>
-                ← Back to Exercises
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Render instructions
-  if (gameState === GAME_STATES.INSTRUCTIONS) {
-    return (
-      <div className="exercise-page">
-        <ClickableLogo onLogoClick={onLogoClick} />
-        
-        <div className="quiz-container">
-          <h1>🎤 Speaking Exercise</h1>
-          
-          <div className="instructions-container">
-            <div className="instruction-content">
-              <h3>📋 How it Works</h3>
-              
-              <div className="instruction-list">
-                <div className="instruction-item">
-                  <span className="instruction-icon">👀</span>
-                  <span>Read the sentence displayed on screen</span>
-                </div>
-                
-                <div className="instruction-item">
-                  <span className="instruction-icon">🎤</span>
-                  <span>Click "Start Recording" and speak the sentence clearly</span>
-                </div>
-                
-                <div className="instruction-item">
-                  <span className="instruction-icon">⏹️</span>
-                  <span>Click "Stop Recording" when you've finished speaking</span>
-                </div>
-                
-                <div className="instruction-item">
-                  <span className="instruction-icon">📊</span>
-                  <span>Get instant feedback on your pronunciation accuracy</span>
-                </div>
-                
-                <div className="instruction-item">
-                  <span className="instruction-icon">🎯</span>
-                  <span>Complete {sentences.length || 10} sentences across difficulty levels</span>
-                </div>
-              </div>
-              
-              <div className="tips-section">
-                <h4>💡 Speaking Tips:</h4>
-                <ul>
-                  <li>Speak clearly and at a normal pace</li>
-                  <li>Find a quiet environment</li>
-                  <li>Pronounce each word distinctly</li>
-                  <li>British and American pronunciations are both accepted</li>
-                </ul>
-              </div>
-              
-              {feedback && (
-                <div className={`feedback ${feedback.type}`}>
-                  {feedback.message}
-                </div>
-              )}
-            </div>
-            
-            <button className="btn btn-primary btn-large" onClick={startExercise}>
-              🎤 Start Speaking Exercise
-            </button>
-          </div>
-
-          <button className="btn btn-secondary" onClick={onBack}>
-            ← Back to Exercises
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Render results
-  if (gameState === GAME_STATES.RESULTS) {
-    return (
-      <div className="exercise-page scrollable-page">
-        <ClickableLogo onLogoClick={onLogoClick} />
-        
-        <div className="quiz-container">
-          <h1>🎤 Speaking Exercise Results</h1>
-          
-          <div className="results">
-            <h2>🎉 Exercise Complete!</h2>
-            <div className="score-display">{finalResults?.totalScore || 0}%</div>
-            
-            <div className="level-estimate">
-              <h3>Speaking Practice Complete</h3>
-              <p>You completed {finalResults?.completedSentences || 0} of {finalResults?.totalSentences || 0} sentences</p>
-            </div>
-
-            <div className="test-stats">
-              <p>⏱️ Time taken: {formatDuration(finalResults?.testDuration || 0)}</p>
-              <p>📊 Overall accuracy: {finalResults?.totalScore || 0}%</p>
-            </div>
-
-            {finalResults?.levelAverages && (
-              <div className="level-breakdown">
-                <h3>Performance by Level:</h3>
-                <div className="level-scores">
-                  {Object.entries(finalResults.levelAverages).map(([level, score]) => (
-                    <div key={level} className="level-score-item">
-                      <span className="level-name">{level}:</span>
-                      <span className="level-score">{score}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="detailed-results">
-              <h3>📝 Detailed Results:</h3>
-              <div className="results-list">
-                {results.map((result, index) => (
-                  <div key={index} className={`result-item ${result.score >= 70 ? 'success' : result.score >= 50 ? 'warning' : 'error'}`}>
-                    <div className="result-header">
-                      <h4>Sentence {index + 1} ({result.level}): {result.score}%</h4>
-                      <div className="result-actions">
-                        {result.duration > 0 && (
-                          <span className="duration">⏱️ {result.duration.toFixed(1)}s</span>
-                        )}
-                        {sentences[index]?.audioFile && (
-                          <button 
-                            className="btn btn-small btn-secondary audio-play-btn"
-                            onClick={() => playAudioForSentence(sentences[index].audioFile)}
-                            title="Play sample pronunciation"
-                          >
-                            🔊 Play
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <p><strong>Target:</strong> "{result.target}"</p>
-                    <p><strong>You said:</strong> "{result.spoken || '(Skipped)'}"</p>
-                    <p><strong>Word accuracy:</strong> {result.matchedWords}/{result.totalWords} words correct</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '30px', flexWrap: 'wrap' }}>
-              <button className="btn btn-primary" onClick={restartExercise}>
-                🔄 Try Again
-              </button>
-              <button className="btn btn-secondary" onClick={onBack}>
-                ← Back to Exercises
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Render main exercise interface (playing/recording/feedback states)
-  return (
-    <div className="exercise-page">
-      <ClickableLogo onLogoClick={onLogoClick} />
-      
-      <div className="quiz-container">
-        <h1>🎤 Speaking Exercise</h1>
-        
-        <div className="progress-container">
-          <div className="progress-bar">
-            <div className="progress-fill" style={{width: `${progress}%`}}></div>
-          </div>
-          <div className="progress-text">
-            Sentence {currentIndex + 1} of {sentences.length}
-            {currentSentence && ` (${currentSentence.level})`}
-          </div>
-        </div>
-
-        {currentSentence && (
-          <>
-            <div className="sentence-display">
-              <h3>Read this sentence aloud:</h3>
-              <div className="target-sentence">
-                "{currentSentence.text}"
-              </div>
-            </div>
-
-            {isRecording && (
-              <div className="recording-indicator">
-                <div className="recording-pulse"></div>
-                <div className="recording-text">Recording... Click "Stop Recording" when finished!</div>
-              </div>
-            )}
-
-            {currentTranscript && (
-              <div className="transcript-display">
-                <div className="transcript-label">You're saying:</div>
-                <div className="transcript-text">"{currentTranscript}"</div>
-              </div>
-            )}
-
-            <div className="recording-controls">
-              {gameState === GAME_STATES.PLAYING && (
-                <button 
-                  className="btn btn-primary btn-large"
-                  onClick={startRecording}
-                >
-                  🎤 Start Recording
-                </button>
-              )}
-              
-              {gameState === GAME_STATES.RECORDING && (
-                <>
-                  <button 
-                    className="btn btn-danger btn-large recording"
-                    onClick={stopRecording}
-                  >
-                    ⏹️ Stop Recording
-                  </button>
-                  <button 
-                    className="btn btn-warning"
-                    onClick={restartRecording}
-                  >
-                    🔄 Restart Recording
-                  </button>
-                </>
-              )}
-              
-              <button 
-                className="btn btn-secondary"
-                onClick={skipSentence}
-                disabled={gameState === GAME_STATES.RECORDING}
-              >
-                ⏭️ Skip Sentence
-              </button>
-            </div>
-
-            {feedback && gameState === GAME_STATES.FEEDBACK && (
-              <div className={`feedback ${feedback.type} show`}>
-                {feedback.message}
-              </div>
-            )}
-          </>
-        )}
-
-        <div className="exercise-footer">
-          <button className="btn btn-secondary btn-small" onClick={onBack}>
-            ← Back to Exercises
-          </button>
-        </div>
-      </div>
-    </div>
+// Get progress statistics with performance optimizations
+export const getProgressStats = () => {
+  const progressData = getProgressData();
+  const recentTests = progressData.testHistory.slice(0, 10);
+  
+  // Calculate average score (normalize 20-question tests to 10-point scale)
+  const normalizedScores = recentTests.map(test => 
+    test.totalQuestions === 20 ? test.score / 2 : test.score
   );
-}
+  
+  const averageScore = normalizedScores.length > 0 
+    ? Math.round(normalizedScores.reduce((sum, score) => sum + score, 0) / normalizedScores.length)
+    : 0;
 
-export default SpeakingExercise;
+  const averagePercentage = recentTests.length > 0
+    ? Math.round(recentTests.reduce((sum, test) => sum + test.percentage, 0) / recentTests.length)
+    : 0;
+
+  // Find most common level
+  const levelEntries = Object.entries(progressData.levelProgress);
+  const mostCommonLevel = levelEntries.length > 0
+    ? levelEntries.reduce((a, b) => a[1] > b[1] ? a : b)[0]
+    : 'A1-A2';
+
+  // Calculate improvement trend (compare first 5 vs last 5 tests)
+  let trend = 'stable';
+  if (recentTests.length >= 10) {
+    const recent5 = recentTests.slice(0, 5);
+    const older5 = recentTests.slice(5, 10);
+    
+    // Normalize scores for comparison
+    const recentAvg = recent5.reduce((sum, test) => 
+      sum + (test.totalQuestions === 20 ? test.score / 2 : test.score), 0
+    ) / 5;
+    
+    const olderAvg = older5.reduce((sum, test) => 
+      sum + (test.totalQuestions === 20 ? test.score / 2 : test.score), 0
+    ) / 5;
+    
+    if (recentAvg > olderAvg + 0.5) trend = 'improving';
+    else if (recentAvg < olderAvg - 0.5) trend = 'declining';
+  }
+
+  // Count tests this week
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const testsThisWeek = recentTests.filter(test => {
+    const testDate = new Date(test.date);
+    return testDate > weekAgo;
+  }).length;
+
+  // Calculate total time spent
+  const totalTimeSpent = Object.values(progressData.dailyStats).reduce((total, day) => 
+    total + (day.timeSpent || 0), 0
+  );
+
+  // Find favourite exercise type
+  const exercisePerformance = getExercisePerformance();
+  const exerciseEntries = Object.entries(exercisePerformance);
+  const favouriteExercise = exerciseEntries.length > 0
+    ? exerciseEntries.reduce((a, b) => a[1].attempts > b[1].attempts ? a : b)[0]
+    : 'None yet';
+
+  return {
+    totalTests: progressData.totalTests,
+    currentStreak: progressData.streak,
+    bestStreak: progressData.bestStreak,
+    averageScore,
+    averagePercentage,
+    mostCommonLevel,
+    trend,
+    lastTestDate: progressData.lastTestDate,
+    testsThisWeek,
+    totalTimeSpent: Math.round(totalTimeSpent / 60), // Convert to minutes
+    favouriteExercise,
+    startDate: progressData.startDate || new Date().toISOString()
+  };
+};
+
+// ==============================================
+// LEARNING INSIGHTS FUNCTION
+// ==============================================
+
+export const getLearningInsights = () => {
+  const progressData = getProgressData();
+  const exercisePerformance = getExercisePerformance();
+  
+  // Find strongest skill (highest average score)
+  const exerciseEntries = Object.entries(exercisePerformance);
+  const strongestSkill = exerciseEntries.length > 0
+    ? exerciseEntries.reduce((a, b) => a[1].averageScore > b[1].averageScore ? a : b)
+    : null;
+
+  // Find most improved skill
+  const improvingSkills = exerciseEntries.filter(([, data]) => data.improvement === 'improving');
+  const mostImproved = improvingSkills.length > 0 
+    ? improvingSkills.reduce((a, b) => a[1].averageScore > b[1].averageScore ? a : b)
+    : null;
+
+  // Find area needing work (lowest average score with attempts)
+  const needsWork = exerciseEntries.length > 0
+    ? exerciseEntries.reduce((a, b) => a[1].averageScore < b[1].averageScore ? a : b)
+    : null;
+
+  // Calculate consistency (standard deviation of recent scores)
+  let consistency = 'stable';
+  const recentTests = progressData.testHistory.slice(0, 10);
+  if (recentTests.length >= 5) {
+    const scores = recentTests.map(test => 
+      test.totalQuestions === 20 ? (test.score / 2) : test.score
+    );
+    const avg = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const variance = scores.reduce((sum, score) => sum + Math.pow(score - avg, 2), 0) / scores.length;
+    const stdDev = Math.sqrt(variance);
+    
+    if (stdDev < 1) consistency = 'very consistent';
+    else if (stdDev < 2) consistency = 'consistent';
+    else if (stdDev < 3) consistency = 'somewhat variable';
+    else consistency = 'quite variable';
+  }
+
+  return {
+    strongestSkill: strongestSkill ? {
+      name: strongestSkill[0],
+      score: strongestSkill[1].averageScore,
+      icon: strongestSkill[1].icon
+    } : null,
+    mostImproved: mostImproved ? {
+      name: mostImproved[0],
+      score: mostImproved[1].averageScore,
+      icon: mostImproved[1].icon
+    } : null,
+    needsWork: needsWork ? {
+      name: needsWork[0],
+      score: needsWork[1].averageScore,
+      icon: needsWork[1].icon
+    } : null,
+    consistency,
+    totalExerciseTypes: exerciseEntries.length,
+    recentPerformance: recentTests.length > 0 ? recentTests[0].percentage : 0
+  };
+};
+
+// ==============================================
+// ACHIEVEMENTS FUNCTION
+// ==============================================
+
+export const getAchievements = () => {
+  const progressData = getProgressData();
+  const achievements = [];
+  
+  // First Test Achievement
+  if (progressData.totalTests >= 1) {
+    achievements.push({
+      id: 'first_test',
+      title: 'First Steps',
+      description: 'Completed your first exercise',
+      icon: '🎯',
+      earnedAt: progressData.testHistory[progressData.testHistory.length - 1]?.date || null,
+      type: 'milestone'
+    });
+  }
+  
+  // Streak Achievements
+  if (progressData.bestStreak >= 3) {
+    achievements.push({
+      id: 'streak_3',
+      title: '3-Day Streak',
+      description: 'Practiced for 3 consecutive days',
+      icon: '🔥',
+      earnedAt: null,
+      type: 'streak'
+    });
+  }
+  
+  if (progressData.bestStreak >= 7) {
+    achievements.push({
+      id: 'streak_7',
+      title: 'Weekly Warrior',
+      description: 'Practiced for 7 consecutive days',
+      icon: '⚡',
+      earnedAt: null,
+      type: 'streak'
+    });
+  }
+  
+  if (progressData.bestStreak >= 30) {
+    achievements.push({
+      id: 'streak_30',
+      title: 'Monthly Master',
+      description: 'Practiced for 30 consecutive days',
+      icon: '👑',
+      earnedAt: null,
+      type: 'streak'
+    });
+  }
+  
+  // Test Count Achievements
+  if (progressData.totalTests >= 10) {
+    achievements.push({
+      id: 'tests_10',
+      title: 'Getting Started',
+      description: 'Completed 10 exercises',
+      icon: '📚',
+      earnedAt: null,
+      type: 'milestone'
+    });
+  }
+  
+  if (progressData.totalTests >= 50) {
+    achievements.push({
+      id: 'tests_50',
+      title: 'Dedicated Learner',
+      description: 'Completed 50 exercises',
+      icon: '🎓',
+      earnedAt: null,
+      type: 'milestone'
+    });
+  }
+  
+  if (progressData.totalTests >= 100) {
+    achievements.push({
+      id: 'tests_100',
+      title: 'Century Club',
+      description: 'Completed 100 exercises',
+      icon: '💯',
+      earnedAt: null,
+      type: 'milestone'
+    });
+  }
+  
+  // Perfect Score Achievement
+  const perfectScores = progressData.testHistory.filter(test => test.percentage === 100);
+  if (perfectScores.length >= 1) {
+    achievements.push({
+      id: 'perfect_score',
+      title: 'Perfect Score',
+      description: 'Achieved 100% on an exercise',
+      icon: '⭐',
+      earnedAt: perfectScores[0].date,
+      type: 'performance'
+    });
+  }
+  
+  // Level Achievements
+  const levelCounts = progressData.levelProgress;
+  if (levelCounts['C1-C2'] >= 5) {
+    achievements.push({
+      id: 'advanced_level',
+      title: 'Advanced Learner',
+      description: 'Scored at C1-C2 level 5 times',
+      icon: '🏆',
+      earnedAt: null,
+      type: 'level'
+    });
+  }
+  
+  return achievements;
+};
+
+// ==============================================
+// DATA MANAGEMENT FUNCTIONS
+// ==============================================
+
+// Clear all progress data (use with caution)
+export const clearProgressData = () => {
+  try {
+    localStorage.removeItem(PROGRESS_DATA_KEY);
+    console.log('Progress data cleared');
+    return true;
+  } catch (error) {
+    console.error('Error clearing progress data:', error);
+    return false;
+  }
+};
+
+// Export progress data for backup
+export const exportProgressData = () => {
+  try {
+    const data = getProgressData();
+    return JSON.stringify(data, null, 2);
+  } catch (error) {
+    console.error('Error exporting progress data:', error);
+    return null;
+  }
+};
+
+// Import progress data from backup
+export const importProgressData = (jsonData) => {
+  try {
+    const data = JSON.parse(jsonData);
+    // Validate data structure
+    if (data && typeof data === 'object' && Array.isArray(data.testHistory)) {
+      saveProgressData(data);
+      console.log('Progress data imported successfully');
+      return true;
+    } else {
+      throw new Error('Invalid data format');
+    }
+  } catch (error) {
+    console.error('Error importing progress data:', error);
+    return false;
+  }
+};
+
+// Alias for backwards compatibility with ProgressPage
+export const clearAllProgress = clearProgressData;
