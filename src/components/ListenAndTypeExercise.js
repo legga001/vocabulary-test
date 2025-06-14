@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
+import { recordTestResult } from '../utils/progressDataManager';
 
 // ==============================================
 // HELPER FUNCTIONS - Moved outside component for efficiency
@@ -383,6 +384,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   const [hasStarted, setHasStarted] = useState(false);
   const [testSentences, setTestSentences] = useState([]);
   const [contentFilterError, setContentFilterError] = useState(null);
+  const [exerciseStartTime, setExerciseStartTime] = useState(null);
   
   // NEW: Separated audio state management for better control
   const [audioState, setAudioState] = useState({
@@ -488,6 +490,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     console.log('🚀 Starting exercise');
     setHasStarted(true);
     setTimeLeft(60);
+    setExerciseStartTime(Date.now());
     resetAudioState();
   }, [resetAudioState]);
 
@@ -528,10 +531,18 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       setContentFilterError(null);
       resetAudioState(); // Complete audio state reset
     } else {
-      // Test completed
-      setShowResults(true);
+      // Test completed - record progress
+      finishExercise([...answers, {
+        sentence: currentData,
+        userInput: userInput.trim(),
+        result: result,
+        correct: result.type === 'perfect',
+        close: result.type === 'close',
+        partial: result.type === 'partial',
+        timeTaken: 60 - timeLeft
+      }]);
     }
-  }, [currentData, userInput, timeLeft, currentSentence, testSentences.length, resetAudioState]);
+  }, [currentData, userInput, timeLeft, currentSentence, testSentences.length, resetAudioState, answers]);
 
   const handleSubmit = useCallback(() => {
     console.log('📤 Submit button clicked');
@@ -549,6 +560,45 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     console.log('✅ Processing answer...');
     moveToNextQuestion();
   }, [currentData, userInput, contentFilterError, moveToNextQuestion]);
+
+  // UPDATED: Enhanced finish exercise function with daily progress tracking
+  const finishExercise = useCallback((finalAnswers) => {
+    console.log('🏁 Finishing Listen and Type exercise');
+    
+    const testDuration = exerciseStartTime ? Math.round((Date.now() - exerciseStartTime) / 1000) : 0;
+    const totalScore = finalAnswers.reduce((sum, answer) => sum + answer.result.score, 0);
+    const averageScore = finalAnswers.length > 0 ? totalScore / finalAnswers.length : 0;
+    
+    // Convert to 0-10 scale for consistency with other exercises
+    const scoreOutOf10 = Math.round(averageScore * 10);
+    
+    try {
+      // Prepare user answers for progress tracking
+      const formattedAnswers = finalAnswers.map(answer => ({
+        answer: answer.userInput || '',
+        correct: answer.result.type === 'perfect',
+        score: Math.round(answer.result.score * 100), // Convert to percentage
+        level: answer.sentence.level || 'B1'
+      }));
+
+      // FIXED: Record test result with proper quiz type - this automatically increments daily targets
+      recordTestResult({
+        quizType: 'listen-and-type', // This matches the exercise type in LandingPage.js
+        score: scoreOutOf10,
+        totalQuestions: 10,
+        completedAt: new Date(),
+        timeSpent: testDuration,
+        userAnswers: formattedAnswers
+      });
+      
+      console.log(`✅ Listen and Type test result recorded: ${scoreOutOf10}/10 (${Math.round(averageScore * 100)}%)`);
+      console.log('📊 Daily target should now be incremented for listen-and-type');
+    } catch (error) {
+      console.error('❌ Error recording test result:', error);
+    }
+
+    setShowResults(true);
+  }, [exerciseStartTime]);
 
   const calculateScore = useCallback(() => {
     const totalScore = answers.reduce((sum, answer) => sum + answer.result.score, 0);
@@ -580,6 +630,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     setAnswers([]);
     setHasStarted(false);
     setContentFilterError(null);
+    setExerciseStartTime(null);
     resetAudioState();
     
     // Generate new random sentences
