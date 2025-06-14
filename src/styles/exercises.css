@@ -1,76 +1,13 @@
 /* ==============================================
-   EXERCISES.CSS - All exercise page styles
-   ============================================== */
-
-.exercise-page {
-  text-align: center;
-}
-
-.exercise-page h1 {
-  color: #4c51bf;
-  margin-bottom: 30px;
-}
-
-.welcome-text {
-  margin-bottom: 30px;
-}
-
-.welcome-text p {
-  color: #666;
-  font-size: 1.1em;
-  margin: 0;
-}
-
-/* ==============================================
-   COMING SOON SECTION
-   ============================================== */
-.coming-soon {
-  background: #f8f9fa;
-  border: 2px dashed #cbd5e0;
-  border-radius: 15px;
-  padding: 40px;
-  margin: 30px 0;
-}
-
-.coming-soon-icon {
-  font-size: 4em;
-  margin-bottom: 20px;
-}
-
-.coming-soon h2 {
-  color: #4a5568;
-  margin-bottom: 15px;
-}
-
-.coming-soon p {
-  color: #666;
-  margin-bottom: 20px;
-}
-
-.coming-soon ul {
-  list-style: none;
-  padding: 0;
-  text-align: left;
-  max-width: 300px;
-  margin: 0 auto;
-}
-
-.coming-soon li {
-  padding: 8px 0;
-  color: #666;
-}
-
-/* ==============================================
    READING EXERCISE STYLES
    ============================================== */
+
+/* Reading main options */
 .reading-main-options {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+  gap: 25px;
   margin: 30px 0;
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .reading-main-card {
@@ -82,10 +19,8 @@
   transition: all 0.3s ease;
   text-align: center;
   position: relative;
-  min-height: 280px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 }
 
 .reading-main-card:hover {
@@ -97,7 +32,7 @@
 .reading-main-card.featured-card {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   color: white;
-  border-color: #f093fb;
+  border: none;
 }
 
 .reading-main-card.featured-card:hover {
@@ -231,16 +166,50 @@
   box-shadow: 0 8px 25px rgba(76, 81, 191, 0.15);
 }
 
+/* UPDATED: Featured badge styling */
 .newest-badge {
   position: absolute;
   top: -8px;
   right: -8px;
-  background: linear-gradient(135deg, #48bb78, #38a169);
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   color: white;
   font-size: 0.7em;
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 6px 12px;
+  border-radius: 15px;
   font-weight: 700;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+}
+
+/* NEW: Article category styling */
+.article-category {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Environment & Science category gets green gradient */
+.article-selection-card:first-child .article-category {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+/* Current Events category gets blue gradient for 2nd and 4th items */
+.article-selection-card:nth-child(2) .article-category,
+.article-selection-card:nth-child(4) .article-category {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Environment & Science category gets teal gradient for 3rd item */
+.article-selection-card:nth-child(3) .article-category {
+  background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
 }
 
 .article-header {
@@ -337,4 +306,41 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
+}
+
+/* ==============================================
+   RESPONSIVE DESIGN
+   ============================================== */
+@media (max-width: 768px) {
+  .reading-main-options {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .article-selection-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .article-actions {
+    flex-direction: column;
+  }
+  
+  .article-actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .reading-main-card,
+  .article-selection-card {
+    padding: 20px;
+  }
+  
+  .card-details,
+  .test-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
 }
