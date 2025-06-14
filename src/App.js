@@ -263,6 +263,15 @@ function App() {
           />
         );
       
+      case 'water-treatment-quiz':  // NEW: Water treatment quiz case
+        return (
+          <ReadingExercise 
+            onBack={() => setCurrentScreen('article-selection')} 
+            onLogoClick={goToLanding}
+            initialView="water-treatment-quiz"
+          />
+        );
+      
       case 'real-fake-words':
         return (
           <RealFakeWordsExercise 
