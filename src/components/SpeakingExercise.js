@@ -231,7 +231,22 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       });
   }, []);
 
-  // Start recording
+  // Restart current recording
+  const restartRecording = useCallback(() => {
+    console.log('🔄 Restarting recording for current sentence');
+    
+    // Stop current recording if active
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
+    }
+    
+    // Reset transcript and state
+    setCurrentTranscript('');
+    setConfidence(0);
+    setIsRecording(false);
+    setFeedback({ type: 'info', message: 'Recording restarted - try again!' });
+    setGameState(GAME_STATES.PLAYING);
+  }, [isRecording]);
   const startRecording = useCallback(() => {
     if (!recognitionRef.current) {
       recognitionRef.current = initSpeechRecognition();
@@ -268,7 +283,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     processRecording(currentTranscript.trim(), recordingDuration);
   }, [currentTranscript, recordingStartTime]);
 
-  // Calculate detailed score
+  // Calculate detailed score with forgiving algorithm
   const calculateScore = useCallback((spoken, target) => {
     const normalise = (text) => {
       return text.toLowerCase()
@@ -277,31 +292,81 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         .trim();
     };
 
-    const spokenWords = normalise(spoken).split(' ');
-    const targetWords = normalise(target).split(' ');
+    const spokenWords = normalise(spoken).split(' ').filter(word => word.length > 0);
+    const targetWords = normalise(target).split(' ').filter(word => word.length > 0);
     
-    let matches = 0;
-    const maxLength = Math.max(spokenWords.length, targetWords.length);
-    
-    // Word-by-word comparison with homophones
-    for (let i = 0; i < maxLength; i++) {
-      if (i < spokenWords.length && i < targetWords.length) {
-        const spokenWord = spokenWords[i];
-        const targetWord = targetWords[i];
-        
-        if (spokenWord === targetWord ||
-            (HOMOPHONES[targetWord] && HOMOPHONES[targetWord].includes(spokenWord)) ||
-            (HOMOPHONES[spokenWord] && HOMOPHONES[spokenWord].includes(targetWord))) {
-          matches++;
-        }
-      }
+    // If no speech detected, return 0
+    if (spokenWords.length === 0) {
+      return {
+        percentage: 0,
+        matchedWords: 0,
+        totalWords: targetWords.length
+      };
     }
     
-    const percentage = Math.round((matches / maxLength) * 100);
+    // Create a set of target words for easy lookup
+    const targetWordSet = new Set(targetWords);
+    const targetWordMap = new Map();
+    
+    // Count occurrences of each target word
+    targetWords.forEach(word => {
+      targetWordMap.set(word, (targetWordMap.get(word) || 0) + 1);
+    });
+    
+    // Count how many target words are present in spoken words
+    let correctWordsFound = 0;
+    const spokenWordMap = new Map();
+    
+    // Count occurrences of each spoken word
+    spokenWords.forEach(word => {
+      spokenWordMap.set(word, (spokenWordMap.get(word) || 0) + 1);
+    });
+    
+    // For each target word, check if it appears in spoken words
+    targetWordMap.forEach((targetCount, word) => {
+      const spokenCount = spokenWordMap.get(word) || 0;
+      
+      // Count the minimum of target and spoken occurrences
+      const matchedCount = Math.min(targetCount, spokenCount);
+      correctWordsFound += matchedCount;
+      
+      // Also check homophones
+      if (matchedCount === 0 && HOMOPHONES[word]) {
+        for (const homophone of HOMOPHONES[word]) {
+          const homophoneCount = spokenWordMap.get(homophone) || 0;
+          if (homophoneCount > 0) {
+            correctWordsFound += Math.min(targetCount, homophoneCount);
+            break; // Only count one homophone match per target word
+          }
+        }
+      }
+    });
+    
+    // Calculate percentage based on target words found
+    // This is much more forgiving - focuses on content rather than exact order
+    const basePercentage = (correctWordsFound / targetWords.length) * 100;
+    
+    // Apply slight penalty for excessive repetition or extra words
+    const lengthRatio = spokenWords.length / targetWords.length;
+    let lengthPenalty = 0;
+    
+    if (lengthRatio > 2) {
+      // Significant penalty for very long responses (more than double length)
+      lengthPenalty = 15;
+    } else if (lengthRatio > 1.5) {
+      // Moderate penalty for somewhat long responses
+      lengthPenalty = 10;
+    } else if (lengthRatio > 1.2) {
+      // Small penalty for slightly long responses
+      lengthPenalty = 5;
+    }
+    
+    const finalPercentage = Math.max(0, Math.min(100, Math.round(basePercentage - lengthPenalty)));
+    
     return {
-      percentage: Math.max(0, Math.min(100, percentage)),
-      matchedWords: matches,
-      totalWords: maxLength
+      percentage: finalPercentage,
+      matchedWords: correctWordsFound,
+      totalWords: targetWords.length
     };
   }, []);
 
@@ -727,12 +792,20 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               )}
               
               {gameState === GAME_STATES.RECORDING && (
-                <button 
-                  className="btn btn-danger btn-large recording"
-                  onClick={stopRecording}
-                >
-                  ⏹️ Stop Recording
-                </button>
+                <>
+                  <button 
+                    className="btn btn-danger btn-large recording"
+                    onClick={stopRecording}
+                  >
+                    ⏹️ Stop Recording
+                  </button>
+                  <button 
+                    className="btn btn-warning"
+                    onClick={restartRecording}
+                  >
+                    🔄 Restart Recording
+                  </button>
+                </>
               )}
               
               <button 
