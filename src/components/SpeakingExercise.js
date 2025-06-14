@@ -356,6 +356,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         setCurrentIndex(prev => prev + 1);
         setCurrentTranscript('');
         setConfidence(0);
+        setFeedback(null); // Clear feedback for next question
         setGameState(GAME_STATES.PLAYING);
       } else {
         finishExercise();
@@ -385,6 +386,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       setCurrentIndex(prev => prev + 1);
       setCurrentTranscript('');
       setConfidence(0);
+      setFeedback(null); // Clear feedback for next question
     } else {
       finishExercise();
     }
@@ -653,9 +655,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                     </div>
                     <p><strong>Target:</strong> "{result.target}"</p>
                     <p><strong>You said:</strong> "{result.spoken || '(Skipped)'}"</p>
-                    {result.confidence > 0 && (
-                      <p><strong>Recognition confidence:</strong> {Math.round(result.confidence * 100)}%</p>
-                    )}
                     <p><strong>Word accuracy:</strong> {result.matchedWords}/{result.totalWords} words correct</p>
                   </div>
                 ))}
@@ -714,11 +713,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               <div className="transcript-display">
                 <div className="transcript-label">You're saying:</div>
                 <div className="transcript-text">"{currentTranscript}"</div>
-                {confidence > 0 && (
-                  <div className="confidence-display">
-                    Recognition confidence: {Math.round(confidence * 100)}%
-                  </div>
-                )}
               </div>
             )}
 
@@ -750,7 +744,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               </button>
             </div>
 
-            {feedback && (
+            {feedback && gameState === GAME_STATES.FEEDBACK && (
               <div className={`feedback ${feedback.type} show`}>
                 {feedback.message}
               </div>
