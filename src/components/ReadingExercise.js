@@ -147,12 +147,22 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     }
   }, [userAnswers, currentQuestion, checkedQuestions, currentView, showResults]);
 
-  // Answer checking logic
+  // Answer checking logic with enhanced British/American spelling support
   const checkAnswer = useCallback(() => {
     const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
     const correctAnswer = currentQuestionData.answer.toLowerCase();
-    const alternativeAnswers = getAlternativeSpellings(currentQuestionData.answer);
-    const isCorrect = userAnswer === correctAnswer || alternativeAnswers.includes(userAnswer);
+    
+    // Get alternative spellings for both the correct answer AND the user's answer
+    const correctAnswerAlternatives = getAlternativeSpellings(currentQuestionData.answer);
+    const userAnswerAlternatives = getAlternativeSpellings(userAnswer);
+    
+    // Check if answer is correct in multiple ways:
+    // 1. Direct match
+    // 2. User's answer matches an alternative spelling of the correct answer
+    // 3. Correct answer matches an alternative spelling of the user's answer
+    const isCorrect = userAnswer === correctAnswer || 
+                     correctAnswerAlternatives.includes(userAnswer) ||
+                     userAnswerAlternatives.includes(correctAnswer);
 
     if (isCorrect) {
       const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
@@ -199,19 +209,24 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     }
   }, [currentQuestion]);
 
-  // Score calculation
+  // Enhanced score calculation with bidirectional spelling support
   const calculateScore = useCallback(() => {
     return userAnswers.slice(0, 10).reduce((score, answer, index) => {
       if (!answer) return score;
       
       const userAnswer = answer.toLowerCase().trim();
       const correctAnswer = questions[index].answer.toLowerCase();
-      const alternativeAnswers = getAlternativeSpellings(questions[index].answer);
       
-      if (userAnswer === correctAnswer || alternativeAnswers.includes(userAnswer)) {
-        return score + 1;
-      }
-      return score;
+      // Get alternative spellings for both directions
+      const correctAnswerAlternatives = getAlternativeSpellings(questions[index].answer);
+      const userAnswerAlternatives = getAlternativeSpellings(userAnswer);
+      
+      // Check if answer is correct in multiple ways
+      const isCorrect = userAnswer === correctAnswer || 
+                       correctAnswerAlternatives.includes(userAnswer) ||
+                       userAnswerAlternatives.includes(correctAnswer);
+      
+      return isCorrect ? score + 1 : score;
     }, 0);
   }, [userAnswers, questions, getAlternativeSpellings]);
 
@@ -229,13 +244,28 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     }
     
     try {
-      // Prepare user answers for progress tracking
-      const formattedAnswers = userAnswers.slice(0, 10).map((answer, index) => ({
-        answer: answer || '',
-        correct: answer && answer.toLowerCase().trim() === questions[index].answer.toLowerCase(),
-        score: answer && answer.toLowerCase().trim() === questions[index].answer.toLowerCase() ? 100 : 0,
-        level: questions[index].level || 'B1'
-      }));
+      // Prepare user answers for progress tracking with enhanced spelling support
+      const formattedAnswers = userAnswers.slice(0, 10).map((answer, index) => {
+        if (!answer) return { answer: '', correct: false, score: 0, level: questions[index].level || 'B1' };
+        
+        const userAnswer = answer.toLowerCase().trim();
+        const correctAnswer = questions[index].answer.toLowerCase();
+        
+        // Enhanced spelling check - bidirectional
+        const correctAnswerAlternatives = getAlternativeSpellings(questions[index].answer);
+        const userAnswerAlternatives = getAlternativeSpellings(userAnswer);
+        
+        const isCorrect = userAnswer === correctAnswer || 
+                         correctAnswerAlternatives.includes(userAnswer) ||
+                         userAnswerAlternatives.includes(correctAnswer);
+        
+        return {
+          answer: answer,
+          correct: isCorrect,
+          score: isCorrect ? 100 : 0,
+          level: questions[index].level || 'B1'
+        };
+      });
 
       // Record test result - this automatically increments daily targets
       recordTestResult({
