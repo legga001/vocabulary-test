@@ -1,4 +1,4 @@
-// src/components/Results.js
+// src/components/Results.js - Updated with daily progress tracking
 import React, { useEffect } from 'react';
 import { questions as staticQuestions } from '../questionsData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
@@ -27,21 +27,32 @@ function Results({ onRestart, userAnswers, quizType }) {
 
   const score = calculateScore();
 
-  // Record the test result when component mounts
+  // Record the test result when component mounts - this increments daily targets
   useEffect(() => {
     try {
+      // Prepare user answers for progress tracking
+      const formattedUserAnswers = userAnswers ? userAnswers.slice(0, 10).map((answer, index) => ({
+        answer: answer || '',
+        correct: answer && answer.toLowerCase().trim() === questions[index].answer.toLowerCase(),
+        score: answer && answer.toLowerCase().trim() === questions[index].answer.toLowerCase() ? 100 : 0,
+        level: 'B1' // Default level for vocabulary exercises
+      })) : [];
+
+      // Record test result - this automatically increments daily targets
       recordTestResult({
-        quizType: quizType,
+        quizType: quizType === 'article' ? 'article-vocabulary' : 'standard-vocabulary',
         score: score,
         totalQuestions: 10,
         completedAt: new Date(),
-        userAnswers: userAnswers
+        timeSpent: null, // Could add timer tracking in the future
+        userAnswers: formattedUserAnswers
       });
-      console.log('Test result recorded successfully');
+      
+      console.log(`✅ ${quizType === 'article' ? 'Article' : 'Standard'} vocabulary test result recorded: ${score}/10`);
     } catch (error) {
       console.error('Error recording test result:', error);
     }
-  }, [quizType, score, userAnswers]);
+  }, [quizType, score, userAnswers, questions]);
 
   // Determine level and feedback
   const getLevelInfo = (score) => {
@@ -73,68 +84,89 @@ function Results({ onRestart, userAnswers, quizType }) {
       return {
         level: "C1-C2 (Advanced)",
         description: "Outstanding vocabulary mastery!",
-        feedback: "Your vocabulary knowledge is impressive! You can handle complex texts and nuanced language with confidence. Keep challenging yourself with literature and academic materials."
+        feedback: "Your vocabulary knowledge is impressive! Keep challenging yourself with complex texts and specialized vocabulary in different fields."
       };
     }
   };
 
   const levelInfo = getLevelInfo(score);
+  const percentage = Math.round((score / 10) * 100);
 
   return (
-    <div className="results">
-      <h2>🎉 Test Complete!</h2>
-      
-      {/* Show quiz type */}
-      <div className="quiz-type-indicator">
-        {quizType === 'article' ? (
-          <div className="article-test-indicator">
-            <h3>📰 Article-Based Test</h3>
-            <p>Based on: "{articleInfo?.title}"</p>
-          </div>
-        ) : (
-          <div className="standard-test-indicator">
-            <h3>📚 Standard Vocabulary Test</h3>
-          </div>
-        )}
-      </div>
-      
-      <div className="score-display">{score}/10</div>
-      
-      <div className="level-estimate">
-        <h3>Your Level: {levelInfo.level}</h3>
-        <p>{levelInfo.description}</p>
-      </div>
-
-      {/* Pronunciation Feature Highlight */}
-      {isSpeechSupported && (
-        <div className="pronunciation-feature-highlight">
-          <div className="feature-icon">🔊</div>
-          <h4>New: Pronunciation Practice!</h4>
-          <p>Click the pronunciation buttons next to each word to hear how they're pronounced. Perfect your speaking skills!</p>
+    <div className="results-page">
+      <div className="results-container">
+        <div className="results-header">
+          <h1>📊 Quiz Results</h1>
+          {articleInfo && (
+            <div className="article-info">
+              <h2>📰 Article-Based Quiz</h2>
+              <p>Based on: "{articleInfo.title}"</p>
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Use the reusable AnswerReview component */}
-      <AnswerReview 
-        questions={questions}
-        userAnswers={userAnswers}
-        title="Your Answers"
-      />
-      
-      <div className="feedback-message">
-        {levelInfo.feedback}
-        {quizType === 'article' && (
-          <div className="article-feedback">
-            <br />
-            <strong>Great work!</strong> You've practiced vocabulary from a current BBC article. 
-            This helps you learn words in context and stay up-to-date with contemporary English usage.
+        <div className="score-section">
+          <div className="score-display">
+            <div className="score-circle">
+              <span className="score-number">{score}</span>
+              <span className="score-total">/10</span>
+            </div>
+            <div className="percentage">{percentage}%</div>
+          </div>
+          
+          <div className="level-info">
+            <h3>{levelInfo.level}</h3>
+            <p className="level-description">{levelInfo.description}</p>
+            <p className="level-feedback">{levelInfo.feedback}</p>
+          </div>
+        </div>
+
+        <div className="detailed-results">
+          <AnswerReview 
+            questions={questions}
+            userAnswers={userAnswers}
+            title="Your Answers"
+          />
+        </div>
+
+        {articleInfo && (
+          <div className="article-context">
+            <h3>📖 About the Article</h3>
+            <p><strong>Source:</strong> {articleInfo.source}</p>
+            <p><strong>Topic:</strong> {articleInfo.topic}</p>
+            <p><strong>Level:</strong> {articleInfo.level}</p>
+            <div className="article-summary">
+              <p>{articleInfo.summary}</p>
+            </div>
           </div>
         )}
+
+        <div className="pronunciation-section">
+          <h3>🔊 Practice Pronunciation</h3>
+          <div className="pronunciation-grid">
+            {questions.slice(0, 10).map((question, index) => (
+              <div key={index} className="pronunciation-item">
+                <span className="word">{question.answer}</span>
+                {isSpeechSupported && (
+                  <PronunciationButton 
+                    word={question.answer} 
+                    size="small"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="results-actions">
+          <button 
+            className="btn btn-primary"
+            onClick={onRestart}
+          >
+            🔄 Try Again
+          </button>
+        </div>
       </div>
-      
-      <button className="btn" onClick={onRestart}>
-        Take Test Again
-      </button>
     </div>
   );
 }
