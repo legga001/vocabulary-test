@@ -1,5 +1,6 @@
 /* ==============================================
    RESULTS.CSS - Results and answer review styles
+   Updated with spelling variation support
    ============================================== */
 
 .results {
@@ -195,4 +196,20 @@
   padding: 8px 12px;
   border-radius: 6px;
   border-left: 3px solid #f6e05e;
+}
+
+/* NEW: Spelling variation indicator */
+.spelling-variation {
+  color: #48bb78;
+  font-size: 0.9em;
+  background: #f0fff4;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #68d391;
+  margin-top: 8px;
+}
+
+.spelling-variation em {
+  font-style: italic;
+  font-weight: 500;
 }
