@@ -1,8 +1,9 @@
-// src/utils/progressDataManager.js - Updated to include daily target increment
+// src/utils/progressDataManager.js - Clean rewrite with daily target integration
 const PROGRESS_DATA_KEY = 'mrFoxEnglishProgressData';
-const MAX_HISTORY_DAYS = 100; // Keep last 100 test results
+const DAILY_TARGETS_KEY = 'mrFoxEnglishDailyTargets';
+const MAX_HISTORY_DAYS = 100;
 
-// Quiz type display mappings for better UX
+// Quiz type mappings for better UX
 const QUIZ_TYPE_MAPPINGS = {
   'standard-vocabulary': { display: 'Standard Vocabulary', icon: '📖' },
   'article-vocabulary': { display: 'Article Vocabulary', icon: '📰' },
@@ -31,53 +32,38 @@ const DEFAULT_PROGRESS_DATA = {
 };
 
 // ==============================================
-// DAILY TARGET INTEGRATION FUNCTIONS
+// UTILITY FUNCTIONS
 // ==============================================
 
-// Direct implementation of daily target increment (more reliable than imports)
-const incrementDailyTargetDirect = (exerciseType) => {
-  try {
-    const DAILY_TARGETS_KEY = 'mrFoxEnglishDailyTargets';
-    const getTodayString = () => new Date().toDateString();
-    
-    // Load current targets
-    const saved = localStorage.getItem(DAILY_TARGETS_KEY);
-    let currentTargets = {};
-    
-    if (saved) {
-      const data = JSON.parse(saved);
-      const today = getTodayString();
-      if (data.date === today) {
-        currentTargets = data.targets;
-      }
-    }
-    
-    // Increment the specific exercise type
-    const newTargets = {
-      ...currentTargets,
-      [exerciseType]: (currentTargets[exerciseType] || 0) + 1
-    };
-    
-    // Save updated targets
-    const dataToSave = {
-      date: getTodayString(),
-      targets: newTargets
-    };
-    
-    localStorage.setItem(DAILY_TARGETS_KEY, JSON.stringify(dataToSave));
-    
-    // Trigger storage event to update UI immediately
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: DAILY_TARGETS_KEY,
-      newValue: JSON.stringify(dataToSave)
-    }));
-    
-    console.log(`✅ Daily target incremented for ${exerciseType}: ${newTargets[exerciseType]}`);
-    return newTargets;
-  } catch (error) {
-    console.error('Error incrementing daily target:', error);
-    return null;
-  }
+// Get today's date string
+const getTodayString = () => new Date().toDateString();
+
+// Get user's estimated level based on score
+const getScoreLevel = (score, totalQuestions = 10) => {
+  const percentage = Math.round((score / totalQuestions) * 100);
+  if (percentage <= 25) return 'A1-A2';
+  if (percentage <= 50) return 'A2-B1';
+  if (percentage <= 70) return 'B1-B2';
+  if (percentage <= 85) return 'B2-C1';
+  return 'C1-C2';
+};
+
+// Get display information for quiz types
+const getQuizTypeInfo = (type) => {
+  return QUIZ_TYPE_MAPPINGS[type] || QUIZ_TYPE_MAPPINGS.default;
+};
+
+// Calculate streak based on dates
+const calculateStreak = (lastTestDate, today) => {
+  if (!lastTestDate) return 1;
+  
+  const lastDate = new Date(lastTestDate).toDateString();
+  const todayStr = today.toDateString();
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+  
+  if (lastDate === todayStr) return 0; // Same day
+  if (lastDate === yesterday) return 1; // Consecutive day
+  return 'reset'; // Streak broken
 };
 
 // ==============================================
@@ -103,7 +89,6 @@ const getProgressData = () => {
     console.error('Error loading progress data:', error);
   }
   
-  // Return default structure if no data or error
   return { ...DEFAULT_PROGRESS_DATA };
 };
 
@@ -119,46 +104,77 @@ const saveProgressData = (data) => {
 };
 
 // ==============================================
-// UTILITY FUNCTIONS
+// DAILY TARGET FUNCTIONS
 // ==============================================
 
-// Get user's estimated level based on score and total questions
-const getScoreLevel = (score, totalQuestions = 10) => {
-  const percentage = Math.round((score / totalQuestions) * 100);
-  if (percentage <= 25) return 'A1-A2';
-  if (percentage <= 50) return 'A2-B1';
-  if (percentage <= 70) return 'B1-B2';
-  if (percentage <= 85) return 'B2-C1';
-  return 'C1-C2';
-};
-
-// Get display information for quiz types
-const getQuizTypeInfo = (type) => {
-  return QUIZ_TYPE_MAPPINGS[type] || QUIZ_TYPE_MAPPINGS.default;
-};
-
-// Calculate streak based on dates
-const calculateStreak = (lastTestDate, today) => {
-  if (!lastTestDate) return 1; // First test
-  
-  const lastDate = new Date(lastTestDate).toDateString();
-  const todayStr = today.toDateString();
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
-  
-  if (lastDate === todayStr) {
-    return 0; // Same day, don't increment
-  } else if (lastDate === yesterday) {
-    return 1; // Consecutive day, increment by 1
-  } else {
-    return 'reset'; // Streak broken, reset to 1
+// Get daily target data
+const getDailyTargetData = () => {
+  try {
+    const saved = localStorage.getItem(DAILY_TARGETS_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      const today = getTodayString();
+      
+      if (data.date === today) {
+        return data.targets;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading daily targets:', error);
   }
+  
+  return {};
+};
+
+// Save daily target data
+const saveDailyTargetData = (targets) => {
+  try {
+    const dataToSave = {
+      date: getTodayString(),
+      targets: targets
+    };
+    localStorage.setItem(DAILY_TARGETS_KEY, JSON.stringify(dataToSave));
+    return true;
+  } catch (error) {
+    console.error('Error saving daily targets:', error);
+    return false;
+  }
+};
+
+// Increment daily target for specific exercise type
+const incrementDailyTarget = (exerciseType) => {
+  try {
+    const currentTargets = getDailyTargetData();
+    const newTargets = {
+      ...currentTargets,
+      [exerciseType]: (currentTargets[exerciseType] || 0) + 1
+    };
+    
+    if (saveDailyTargetData(newTargets)) {
+      // Trigger storage event to update UI immediately
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: DAILY_TARGETS_KEY,
+        newValue: JSON.stringify({
+          date: getTodayString(),
+          targets: newTargets
+        })
+      }));
+      
+      console.log(`✅ Daily target incremented for ${exerciseType}: ${newTargets[exerciseType]}`);
+      return newTargets;
+    }
+  } catch (error) {
+    console.error('Error incrementing daily target:', error);
+  }
+  
+  return null;
 };
 
 // ==============================================
 // MAIN RECORDING FUNCTION
 // ==============================================
 
-// Record a completed test
+// Record a completed test and increment daily targets
 export const recordTestResult = (testData) => {
   const {
     quizType,
@@ -175,7 +191,7 @@ export const recordTestResult = (testData) => {
   const level = getScoreLevel(score, totalQuestions);
   const quizTypeInfo = getQuizTypeInfo(quizType);
 
-  console.log('📊 Recording test result:', quizType, 'Score:', score, 'Total:', totalQuestions);
+  console.log(`📊 Recording test result: ${quizType}, Score: ${score}/${totalQuestions}`);
 
   // Create test record
   const testRecord = {
@@ -198,7 +214,7 @@ export const recordTestResult = (testData) => {
   // Update test history
   progressData.testHistory.unshift(testRecord);
   
-  // Keep only recent history to prevent storage bloat
+  // Keep only recent history
   if (progressData.testHistory.length > MAX_HISTORY_DAYS) {
     progressData.testHistory = progressData.testHistory.slice(0, MAX_HISTORY_DAYS);
   }
@@ -219,7 +235,7 @@ export const recordTestResult = (testData) => {
   const dailyStat = progressData.dailyStats[todayStr];
   dailyStat.testsCompleted += 1;
   
-  // Calculate score out of 10 for consistency in daily averages
+  // Normalize score to 10-point scale for consistency
   const normalizedScore = totalQuestions === 20 ? score / 2 : score;
   dailyStat.totalScore += normalizedScore;
   dailyStat.averageScore = Math.round(dailyStat.totalScore / dailyStat.testsCompleted);
@@ -234,7 +250,6 @@ export const recordTestResult = (testData) => {
   } else if (streakChange === 1) {
     progressData.streak += 1;
   }
-  // If streakChange === 0, don't change streak (same day)
 
   // Update best streak
   if (progressData.streak > progressData.bestStreak) {
@@ -245,26 +260,18 @@ export const recordTestResult = (testData) => {
   progressData.levelProgress[level] = (progressData.levelProgress[level] || 0) + 1;
   progressData.lastTestDate = completedAt.toISOString();
 
-  // Ensure start date is set
+  // Set start date if not set
   if (!progressData.startDate) {
     progressData.startDate = completedAt.toISOString();
   }
 
-  // Save progress data first
+  // Save progress data
   saveProgressData(progressData);
 
-  // UPDATED: Increment daily target directly after successful completion
-  try {
-    const result = incrementDailyTargetDirect(quizType);
-    if (result) {
-      console.log(`✅ Test result recorded and daily target incremented for: ${quizType}`);
-    } else {
-      console.warn(`⚠️ Test recorded but daily target increment failed for: ${quizType}`);
-    }
-  } catch (error) {
-    console.error('Error incrementing daily target:', error);
-  }
+  // Increment daily target - this updates the landing page progress bars
+  incrementDailyTarget(quizType);
 
+  console.log(`✅ Test recorded and daily target incremented for: ${quizType}`);
   return progressData;
 };
 
@@ -272,13 +279,13 @@ export const recordTestResult = (testData) => {
 // DATA RETRIEVAL FUNCTIONS
 // ==============================================
 
-// Get recent test history (last N tests)
+// Get recent test history
 export const getRecentTests = (limit = 10) => {
   const progressData = getProgressData();
   return progressData.testHistory.slice(0, limit);
 };
 
-// Get daily stats for chart (last N days)
+// Get daily stats for charts
 export const getDailyStatsForChart = (days = 30) => {
   const progressData = getProgressData();
   const chartData = [];
@@ -300,12 +307,11 @@ export const getDailyStatsForChart = (days = 30) => {
   return chartData;
 };
 
-// Get exercise performance data for analytics
+// Get exercise performance analytics
 export const getExercisePerformance = () => {
   const progressData = getProgressData();
   const exerciseStats = {};
   
-  // Analyse performance by exercise type
   progressData.testHistory.forEach(test => {
     const exerciseType = test.quizTypeDisplay || 'Standard Vocabulary';
     
@@ -326,7 +332,7 @@ export const getExercisePerformance = () => {
     const stat = exerciseStats[exerciseType];
     stat.attempts++;
     
-    // Normalise score to 10-point scale for consistency
+    // Normalize to percentage for consistency
     const normalizedScore = test.totalQuestions === 20 ? test.score / 2 : test.score;
     const scorePercentage = Math.round((normalizedScore / 10) * 100);
     
@@ -341,20 +347,20 @@ export const getExercisePerformance = () => {
       stat.totalTime += test.timeSpent;
     }
     
-    // Keep track of recent scores for trend analysis
+    // Track recent scores for trend analysis
     stat.recentScores.push({
       score: scorePercentage,
       date: test.date,
       normalizedScore: normalizedScore
     });
     
-    // Keep only last 10 scores for trend analysis
+    // Keep only last 10 scores
     if (stat.recentScores.length > 10) {
       stat.recentScores = stat.recentScores.slice(-10);
     }
   });
   
-  // Calculate trends for each exercise type
+  // Calculate trends
   Object.values(exerciseStats).forEach(stat => {
     if (stat.recentScores.length >= 5) {
       const recent5 = stat.recentScores.slice(-5);
@@ -378,12 +384,12 @@ export const getExercisePerformance = () => {
   return exerciseStats;
 };
 
-// Get progress statistics with performance optimizations
+// Get overall progress statistics
 export const getProgressStats = () => {
   const progressData = getProgressData();
   const recentTests = progressData.testHistory.slice(0, 10);
   
-  // Calculate average score (normalize 20-question tests to 10-point scale)
+  // Calculate average score (normalize 20-question tests)
   const normalizedScores = recentTests.map(test => 
     test.totalQuestions === 20 ? test.score / 2 : test.score
   );
@@ -402,13 +408,12 @@ export const getProgressStats = () => {
     ? levelEntries.reduce((a, b) => a[1] > b[1] ? a : b)[0]
     : 'A1-A2';
 
-  // Calculate improvement trend (compare first 5 vs last 5 tests)
+  // Calculate improvement trend
   let trend = 'stable';
   if (recentTests.length >= 10) {
     const recent5 = recentTests.slice(0, 5);
     const older5 = recentTests.slice(5, 10);
     
-    // Normalize scores for comparison
     const recentAvg = recent5.reduce((sum, test) => 
       sum + (test.totalQuestions === 20 ? test.score / 2 : test.score), 0
     ) / 5;
@@ -464,7 +469,7 @@ export const getLearningInsights = () => {
   const progressData = getProgressData();
   const exercisePerformance = getExercisePerformance();
   
-  // Find strongest skill (highest average score)
+  // Find strongest skill
   const exerciseEntries = Object.entries(exercisePerformance);
   const strongestSkill = exerciseEntries.length > 0
     ? exerciseEntries.reduce((a, b) => a[1].averageScore > b[1].averageScore ? a : b)
@@ -476,12 +481,12 @@ export const getLearningInsights = () => {
     ? improvingSkills.reduce((a, b) => a[1].averageScore > b[1].averageScore ? a : b)
     : null;
 
-  // Find area needing work (lowest average score with attempts)
+  // Find area needing work
   const needsWork = exerciseEntries.length > 0
     ? exerciseEntries.reduce((a, b) => a[1].averageScore < b[1].averageScore ? a : b)
     : null;
 
-  // Calculate consistency (standard deviation of recent scores)
+  // Calculate consistency
   let consistency = 'stable';
   const recentTests = progressData.testHistory.slice(0, 10);
   if (recentTests.length >= 5) {
@@ -641,11 +646,12 @@ export const getAchievements = () => {
 // DATA MANAGEMENT FUNCTIONS
 // ==============================================
 
-// Clear all progress data (use with caution)
+// Clear all progress data
 export const clearProgressData = () => {
   try {
     localStorage.removeItem(PROGRESS_DATA_KEY);
-    console.log('Progress data cleared');
+    localStorage.removeItem(DAILY_TARGETS_KEY);
+    console.log('All progress data cleared');
     return true;
   } catch (error) {
     console.error('Error clearing progress data:', error);
@@ -660,10 +666,19 @@ export const clearAllProgress = clearProgressData;
 export const exportProgressData = () => {
   try {
     const data = getProgressData();
-    return JSON.stringify(data, null, 2);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mr-fox-english-progress-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return true;
   } catch (error) {
     console.error('Error exporting progress data:', error);
-    return null;
+    return false;
   }
 };
 
@@ -671,7 +686,6 @@ export const exportProgressData = () => {
 export const importProgressData = (jsonData) => {
   try {
     const data = JSON.parse(jsonData);
-    // Validate data structure
     if (data && typeof data === 'object' && Array.isArray(data.testHistory)) {
       saveProgressData(data);
       console.log('Progress data imported successfully');
@@ -684,6 +698,3 @@ export const importProgressData = (jsonData) => {
     return false;
   }
 };
-
-// Alias for backwards compatibility with ProgressPage
-export const clearAllProgress = clearProgressData;
