@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { getAirIndiaVocabularyQuestions, getAirIndiaArticleInfo } from '../airIndiaVocabularyData';
+import { getWaterTreatmentVocabularyQuestions, getWaterTreatmentArticleInfo } from '../waterTreatmentVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
 import { questions as staticQuestions, correctMessages } from '../questionsData';
 import AnswerReview from './AnswerReview';
@@ -61,10 +62,11 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   const isDirectFromLanding = initialView !== 'selection';
 
   // Memoised article information
-  const { octopusArticleInfo, smugglingArticleInfo, airIndiaArticleInfo } = useMemo(() => ({
+  const { octopusArticleInfo, smugglingArticleInfo, airIndiaArticleInfo, waterTreatmentArticleInfo } = useMemo(() => ({
     octopusArticleInfo: getReadingArticleInfo(),
     smugglingArticleInfo: getArticleInfo(),
-    airIndiaArticleInfo: getAirIndiaArticleInfo()
+    airIndiaArticleInfo: getAirIndiaArticleInfo(),
+    waterTreatmentArticleInfo: getWaterTreatmentArticleInfo()
   }), []);
 
   // Memoised questions based on current quiz type
@@ -73,6 +75,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       case 'octopus-quiz': return getReadingVocabularyQuestions();
       case 'smuggling-quiz': return getArticleQuestions();
       case 'air-india-quiz': return getAirIndiaVocabularyQuestions();
+      case 'water-treatment-quiz': return getWaterTreatmentVocabularyQuestions();
       case 'standard-quiz': return staticQuestions;
       default: return [];
     }
@@ -227,12 +230,13 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   // Render Results
   if (showResults) {
     const score = calculateScore();
-    const isArticleTest = ['octopus-quiz', 'smuggling-quiz', 'air-india-quiz'].includes(currentView);
+    const isArticleTest = ['octopus-quiz', 'smuggling-quiz', 'air-india-quiz', 'water-treatment-quiz'].includes(currentView);
     
     const getCurrentArticleInfo = () => {
       if (currentView === 'octopus-quiz') return octopusArticleInfo;
       if (currentView === 'smuggling-quiz') return smugglingArticleInfo;
       if (currentView === 'air-india-quiz') return airIndiaArticleInfo;
+      if (currentView === 'water-treatment-quiz') return waterTreatmentArticleInfo;
       return null;
     };
 
@@ -289,6 +293,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       if (currentView === 'octopus-quiz') return octopusArticleInfo;
       if (currentView === 'smuggling-quiz') return smugglingArticleInfo;
       if (currentView === 'air-india-quiz') return airIndiaArticleInfo;
+      if (currentView === 'water-treatment-quiz') return waterTreatmentArticleInfo;
       return null;
     };
 
