@@ -1,10 +1,11 @@
-// src/components/ReadingExercise.js - Updated with Air India article support
+// src/components/ReadingExercise.js - Updated with proper daily progress tracking
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { getAirIndiaVocabularyQuestions, getAirIndiaArticleInfo } from '../airIndiaVocabularyData';
 import { getWaterTreatmentVocabularyQuestions, getWaterTreatmentArticleInfo } from '../waterTreatmentVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
 import { questions as staticQuestions, correctMessages } from '../questionsData';
+import { recordTestResult } from '../utils/progressDataManager';
 import AnswerReview from './AnswerReview';
 import ArticleSelection from './ArticleSelection';
 import RealFakeWordsExercise from './RealFakeWordsExercise';
@@ -57,6 +58,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   const [checkedQuestions, setCheckedQuestions] = useState(INITIAL_CHECKED);
   const [feedback, setFeedback] = useState(INITIAL_FEEDBACK);
   const [showResults, setShowResults] = useState(false);
+  const [exerciseStartTime, setExerciseStartTime] = useState(null);
 
   // Derived state
   const isDirectFromLanding = initialView !== 'selection';
@@ -98,6 +100,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     setCheckedQuestions(INITIAL_CHECKED);
     setFeedback(INITIAL_FEEDBACK);
     setShowResults(false);
+    setExerciseStartTime(Date.now());
   }, []);
 
   // Navigation functions
@@ -188,7 +191,8 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
 
   const nextQuestion = useCallback(() => {
     if (currentQuestion === 9) {
-      setShowResults(true);
+      // Finish quiz and record results
+      finishQuiz();
     } else {
       setCurrentQuestion(prev => prev + 1);
       setFeedback(INITIAL_FEEDBACK);
@@ -210,6 +214,46 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       return score;
     }, 0);
   }, [userAnswers, questions, getAlternativeSpellings]);
+
+  // NEW: Finish quiz and record progress
+  const finishQuiz = useCallback(() => {
+    console.log('🏁 Finishing reading vocabulary exercise');
+    
+    const score = calculateScore();
+    const testDuration = exerciseStartTime ? Math.round((Date.now() - exerciseStartTime) / 1000) : 0;
+    
+    // Determine quiz type for progress tracking
+    let quizType = 'standard-vocabulary';
+    if (['octopus-quiz', 'smuggling-quiz', 'air-india-quiz', 'water-treatment-quiz'].includes(currentView)) {
+      quizType = 'article-vocabulary';
+    }
+    
+    try {
+      // Prepare user answers for progress tracking
+      const formattedAnswers = userAnswers.slice(0, 10).map((answer, index) => ({
+        answer: answer || '',
+        correct: answer && answer.toLowerCase().trim() === questions[index].answer.toLowerCase(),
+        score: answer && answer.toLowerCase().trim() === questions[index].answer.toLowerCase() ? 100 : 0,
+        level: questions[index].level || 'B1'
+      }));
+
+      // Record test result - this automatically increments daily targets
+      recordTestResult({
+        quizType: quizType,
+        score: score,
+        totalQuestions: 10,
+        completedAt: new Date(),
+        timeSpent: testDuration,
+        userAnswers: formattedAnswers
+      });
+      
+      console.log(`✅ ${quizType} test result recorded: ${score}/10`);
+    } catch (error) {
+      console.error('Error recording test result:', error);
+    }
+
+    setShowResults(true);
+  }, [calculateScore, exerciseStartTime, currentView, userAnswers, questions]);
 
   // Render Real/Fake Words exercise
   if (currentView === 'real-fake-words') {
@@ -241,6 +285,44 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     };
 
     const currentArticleInfo = getCurrentArticleInfo();
+    const percentage = Math.round((score / 10) * 100);
+
+    // Get level and feedback based on score
+    const getLevelInfo = (score) => {
+      if (score <= 2) {
+        return {
+          level: "A1-A2 (Elementary)",
+          description: "You're building your foundation!",
+          feedback: "Keep practising basic vocabulary and common phrases. Focus on everyday words and simple sentence structures."
+        };
+      } else if (score <= 4) {
+        return {
+          level: "A2-B1 (Pre-Intermediate)",
+          description: "You're making good progress!",
+          feedback: "Continue expanding your vocabulary with more complex words. Practice reading simple texts and engaging in basic conversations."
+        };
+      } else if (score <= 6) {
+        return {
+          level: "B1-B2 (Intermediate)",
+          description: "You have a solid vocabulary base!",
+          feedback: "Focus on advanced vocabulary and expressions. Try reading news articles and academic texts to challenge yourself further."
+        };
+      } else if (score <= 8) {
+        return {
+          level: "B2-C1 (Upper-Intermediate)",
+          description: "Excellent vocabulary knowledge!",
+          feedback: "You demonstrate strong command of English vocabulary. Continue with advanced materials and specialised terminology in your areas of interest."
+        };
+      } else {
+        return {
+          level: "C1-C2 (Advanced)",
+          description: "Outstanding vocabulary mastery!",
+          feedback: "Your vocabulary knowledge is impressive! Keep challenging yourself with complex texts and specialised vocabulary in different fields."
+        };
+      }
+    };
+
+    const levelInfo = getLevelInfo(score);
 
     return (
       <div className="exercise-page scrollable-page">
@@ -252,10 +334,25 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
           <div className="results">
             <h2>🎉 Quiz Complete!</h2>
             <div className="score-display">{score}/10</div>
+            <div className="score-percentage">({percentage}%)</div>
             
             <div className="level-estimate">
               <h3>{isArticleTest ? '📰 Article-Based' : '📚 Standard'} Vocabulary Test</h3>
-              {isArticleTest && <p>Based on: "{currentArticleInfo.title}"</p>}
+              <p><strong>{levelInfo.level}</strong></p>
+              <p>{levelInfo.description}</p>
+              {isArticleTest && currentArticleInfo && (
+                <p style={{ marginTop: '10px', fontStyle: 'italic' }}>
+                  Based on: "{currentArticleInfo.title}"
+                </p>
+              )}
+            </div>
+
+            <div className="feedback-message">
+              <strong>Well done!</strong> You've practised {isArticleTest ? 'vocabulary from a current BBC article' : 'standard English vocabulary'}. 
+              {isArticleTest && ' This helps you learn words in context from real news stories.'}
+              <div style={{ marginTop: '15px', padding: '15px', background: '#f8f9fa', borderRadius: '10px', textAlign: 'left' }}>
+                <strong>💡 Learning Tip:</strong> {levelInfo.feedback}
+              </div>
             </div>
 
             <AnswerReview 
@@ -263,11 +360,6 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
               userAnswers={userAnswers}
               title="Your Answers"
             />
-            
-            <div className="feedback-message">
-              <strong>Well done!</strong> You've practised {isArticleTest ? 'vocabulary from a current BBC article' : 'standard English vocabulary'}. 
-              {isArticleTest && ' This helps you learn words in context from real news stories.'}
-            </div>
             
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
               <button className="btn btn-primary" onClick={navigationHandlers.backToSelection}>
