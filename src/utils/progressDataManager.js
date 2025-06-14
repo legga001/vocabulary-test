@@ -653,6 +653,9 @@ export const clearProgressData = () => {
   }
 };
 
+// Alias for backwards compatibility
+export const clearAllProgress = clearProgressData;
+
 // Export progress data for backup
 export const exportProgressData = () => {
   try {
