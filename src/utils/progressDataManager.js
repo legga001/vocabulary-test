@@ -34,27 +34,13 @@ const DEFAULT_PROGRESS_DATA = {
 // DAILY TARGET INTEGRATION FUNCTIONS
 // ==============================================
 
-// Import daily target functions - using dynamic import to avoid circular dependency
-let incrementDailyTarget = null;
-
-// Try to import the increment function when needed
-const loadDailyTargetIncrement = async () => {
-  try {
-    const landingPageModule = await import('../components/LandingPage');
-    incrementDailyTarget = landingPageModule.incrementDailyTarget;
-    return true;
-  } catch (error) {
-    console.warn('Could not load daily target increment function:', error);
-    return false;
-  }
-};
-
-// Alternative manual increment for daily targets
-const incrementDailyTargetFallback = (exerciseType) => {
+// Direct implementation of daily target increment (more reliable than imports)
+const incrementDailyTargetDirect = (exerciseType) => {
   try {
     const DAILY_TARGETS_KEY = 'mrFoxEnglishDailyTargets';
     const getTodayString = () => new Date().toDateString();
     
+    // Load current targets
     const saved = localStorage.getItem(DAILY_TARGETS_KEY);
     let currentTargets = {};
     
@@ -66,11 +52,13 @@ const incrementDailyTargetFallback = (exerciseType) => {
       }
     }
     
+    // Increment the specific exercise type
     const newTargets = {
       ...currentTargets,
       [exerciseType]: (currentTargets[exerciseType] || 0) + 1
     };
     
+    // Save updated targets
     const dataToSave = {
       date: getTodayString(),
       targets: newTargets
@@ -78,13 +66,13 @@ const incrementDailyTargetFallback = (exerciseType) => {
     
     localStorage.setItem(DAILY_TARGETS_KEY, JSON.stringify(dataToSave));
     
-    // Trigger storage event to update UI
+    // Trigger storage event to update UI immediately
     window.dispatchEvent(new StorageEvent('storage', {
       key: DAILY_TARGETS_KEY,
       newValue: JSON.stringify(dataToSave)
     }));
     
-    console.log('📊 Daily target incremented:', exerciseType, newTargets[exerciseType]);
+    console.log(`✅ Daily target incremented for ${exerciseType}: ${newTargets[exerciseType]}`);
     return newTargets;
   } catch (error) {
     console.error('Error incrementing daily target:', error);
@@ -171,7 +159,7 @@ const calculateStreak = (lastTestDate, today) => {
 // ==============================================
 
 // Record a completed test
-export const recordTestResult = async (testData) => {
+export const recordTestResult = (testData) => {
   const {
     quizType,
     score,
@@ -265,30 +253,18 @@ export const recordTestResult = async (testData) => {
   // Save progress data first
   saveProgressData(progressData);
 
-  // UPDATED: Increment daily target after successful completion
+  // UPDATED: Increment daily target directly after successful completion
   try {
-    // Try to use the imported function first
-    if (!incrementDailyTarget) {
-      const loaded = await loadDailyTargetIncrement();
-      if (!loaded) {
-        // Use fallback method
-        incrementDailyTargetFallback(quizType);
-      }
-    }
-    
-    if (incrementDailyTarget) {
-      incrementDailyTarget(quizType);
+    const result = incrementDailyTargetDirect(quizType);
+    if (result) {
+      console.log(`✅ Test result recorded and daily target incremented for: ${quizType}`);
     } else {
-      // Use fallback method
-      incrementDailyTargetFallback(quizType);
+      console.warn(`⚠️ Test recorded but daily target increment failed for: ${quizType}`);
     }
   } catch (error) {
     console.error('Error incrementing daily target:', error);
-    // Use fallback method as last resort
-    incrementDailyTargetFallback(quizType);
   }
 
-  console.log('✅ Test result recorded and daily target incremented for:', quizType);
   return progressData;
 };
 
