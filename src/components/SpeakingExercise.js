@@ -479,46 +479,63 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
   // Finish exercise and show results
   const finishExercise = useCallback(() => {
-    console.log('🏁 Finishing exercise');
-    const testDuration = testStartTime ? Math.round((Date.now() - testStartTime) / 1000) : 0;
+    console.log('🏁 Finishing exercise - ENTRY POINT');
     
-    // Save results to progress tracking
-    const overallScore = results.length > 0 
-      ? results.reduce((sum, r) => sum + r.score, 0) / results.length
-      : 0;
+    // Use a more reliable way to get current results
+    setResults(currentResults => {
+      console.log('📊 Current results in finishExercise:', currentResults.length);
+      
+      const testDuration = testStartTime ? Math.round((Date.now() - testStartTime) / 1000) : 0;
+      console.log('⏱️ Test duration:', testDuration, 'seconds');
+      
+      // Calculate overall score
+      const overallScore = currentResults.length > 0 
+        ? currentResults.reduce((sum, r) => sum + r.score, 0) / currentResults.length
+        : 0;
+      
+      console.log('📈 Overall score calculated:', overallScore, '%');
+      
+      try {
+        const userAnswers = currentResults.map(result => ({
+          answer: result.spoken || '',
+          correct: result.score >= 70,
+          score: result.score,
+          level: result.level
+        }));
+        
+        const scoreOutOf10 = Math.round(overallScore / 10);
+        
+        console.log('🎤 About to call recordTestResult with:', {
+          quizType: 'speak-and-record',
+          score: scoreOutOf10,
+          totalQuestions: 10,
+          overallPercentage: Math.round(overallScore),
+          userAnswersCount: userAnswers.length
+        });
+        
+        recordTestResult({
+          quizType: 'speak-and-record',
+          score: scoreOutOf10,
+          totalQuestions: 10,
+          completedAt: new Date(),
+          timeSpent: testDuration,
+          userAnswers: userAnswers
+        });
+        
+        console.log('✅ recordTestResult called successfully');
+        
+      } catch (error) {
+        console.error('❌ Error in finishExercise:', error);
+        console.error('❌ Error stack:', error.stack);
+      }
+      
+      // Return the current results unchanged
+      return currentResults;
+    });
     
-    try {
-      const userAnswers = results.map(result => ({
-        answer: result.spoken || '',
-        correct: result.score >= 70,
-        score: result.score,
-        level: result.level
-      }));
-      
-      console.log('🎤 About to call recordTestResult with:', {
-        quizType: 'speak-and-record',
-        score: Math.round(overallScore / 10),
-        totalQuestions: 10,
-        overallPercentage: Math.round(overallScore)
-      });
-      
-      recordTestResult({
-        quizType: 'speak-and-record',
-        score: Math.round(overallScore / 10), // Convert percentage to score out of 10
-        totalQuestions: 10,
-        completedAt: new Date(),
-        timeSpent: testDuration,
-        userAnswers: userAnswers
-      });
-      
-      console.log('✅ recordTestResult called successfully');
-      
-    } catch (error) {
-      console.error('❌ Error saving test results:', error);
-    }
-    
+    console.log('🎯 Setting game state to RESULTS');
     setGameState(GAME_STATES.RESULTS);
-  }, [results, testStartTime]);
+  }, [testStartTime]);
 
   // Restart exercise
   const restartExercise = useCallback(() => {
