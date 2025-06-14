@@ -1,4 +1,4 @@
-// src/components/LandingPage.js - Daily targets with reset functionality
+// src/components/LandingPage.js - Fixed daily targets to only increment on completion
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 
 // Constants for better performance - moved outside component
@@ -176,13 +176,24 @@ const saveDailyTargetData = (targets) => {
   }
 };
 
-const incrementDailyTarget = (exerciseType) => {
+// UPDATED: Export function to increment from external modules
+export const incrementDailyTarget = (exerciseType) => {
   const currentTargets = getDailyTargetData();
   const newTargets = {
     ...currentTargets,
     [exerciseType]: (currentTargets[exerciseType] || 0) + 1
   };
   saveDailyTargetData(newTargets);
+  
+  // Trigger a storage event to update the landing page if it's visible
+  window.dispatchEvent(new StorageEvent('storage', {
+    key: DAILY_TARGETS_KEY,
+    newValue: JSON.stringify({
+      date: getTodayString(),
+      targets: newTargets
+    })
+  }));
+  
   return newTargets;
 };
 
@@ -197,6 +208,20 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
   useEffect(() => {
     const targets = getDailyTargetData();
     setDailyTargets(targets);
+  }, []);
+
+  // Listen for storage changes to update progress in real-time
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === DAILY_TARGETS_KEY) {
+        const targets = getDailyTargetData();
+        setDailyTargets(targets);
+        console.log('📊 Daily targets updated from storage:', targets);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Trigger exercise animations after component mounts
@@ -267,13 +292,11 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     setSelectedCategory(categoryId);
   }, []);
 
+  // FIXED: Remove increment from click, only start exercise
   const handleExerciseClick = useCallback((exercise) => {
     console.log('Exercise clicked:', exercise.type, 'isActive:', exercise.isActive);
     if (exercise.isActive) {
-      // Increment daily target when exercise is started
-      const newTargets = incrementDailyTarget(exercise.type);
-      setDailyTargets(newTargets);
-      
+      // Don't increment here - this will be handled when exercise is completed
       onSelectExercise(exercise.type);
     }
   }, [onSelectExercise]);
@@ -293,6 +316,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           style={{ cursor: item.action ? 'pointer' : 'default' }}
           role={item.action ? 'button' : 'text'}
           tabIndex={item.action ? 0 : -1}
+          aria-label={item.text}
           onKeyDown={(e) => {
             if (item.action && (e.key === 'Enter' || e.key === ' ')) {
               e.preventDefault();
@@ -300,16 +324,18 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
             }
           }}
         >
-          <span className={iconClass} aria-hidden="true">{item.icon}</span>
+          <span className={iconClass}>{item.icon}</span>
           <span className={textClass}>{item.text}</span>
         </div>
-        {index === 2 && <div className={dividerClass} role="separator"></div>}
+        {index < MENU_ITEMS.length - 1 && index === 2 && (
+          <div className={dividerClass}></div>
+        )}
       </React.Fragment>
     );
   }, [handleMenuItemClick]);
 
   const renderCategoryTabs = useMemo(() => (
-    <div className="categories-tabs" role="tablist">
+    <div className="category-tabs" role="tablist" aria-label="Exercise categories">
       {CATEGORIES.map((category) => (
         <button
           key={category.id}
@@ -318,31 +344,19 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           role="tab"
           aria-selected={selectedCategory === category.id}
           aria-controls="exercises-list"
+          id={`tab-${category.id}`}
         >
-          {category.name}
+          <span className="category-icon">{category.icon}</span>
+          <span className="category-name">{category.name}</span>
         </button>
       ))}
     </div>
   ), [selectedCategory, handleCategoryChange]);
 
   const renderExerciseItem = useCallback((exercise, index) => {
-    // Add debug logging for speaking exercise
-    if (exercise.type === 'speak-and-record') {
-      console.log('🎤 RENDERING SPEAKING EXERCISE:', {
-        type: exercise.type,
-        isActive: exercise.isActive,
-        category: exercise.category,
-        index: index,
-        title: exercise.title,
-        position: `Position ${index + 1} in filtered list`,
-        dailyTarget: exercise.target,
-        completed: exercise.completed
-      });
-    }
-    
     return (
       <div
-        key={`${exercise.category}-${exercise.type}-${index}`}
+        key={exercise.type}
         className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''} ${exercise.isTargetMet ? 'target-met' : ''}`}
         onClick={() => handleExerciseClick(exercise)}
         style={{ 
@@ -455,7 +469,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
             <button 
               className="mobile-menu-close" 
               onClick={handleMobileMenuClose}
-              aria-label="Close mobile menu"
+              aria-label="Close menu"
             >
               ✕
             </button>
@@ -470,16 +484,11 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
       {/* Mobile Header */}
       <header className="mobile-header">
         <button 
-          className="hamburger-btn" 
+          className="mobile-menu-btn" 
           onClick={handleMobileMenuToggle}
-          aria-label="Open mobile menu"
-          aria-expanded={showMobileMenu}
+          aria-label="Open menu"
         >
-          <div className="hamburger-lines">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
+          ☰
         </button>
         
         <div className="header-logo">
@@ -542,6 +551,8 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
               Speaking position: {exercisesWithTargets.findIndex(e => e.type === 'speak-and-record') + 1}
               <br />
               <strong>Targets met:</strong> {exercisesWithTargets.filter(e => e.isTargetMet && e.isActive).length} of {exercisesWithTargets.filter(e => e.isActive).length} active exercises
+              <br />
+              <strong>FIXED:</strong> Progress only increments on exercise completion, not on click!
             </div>
           )}
           
