@@ -521,6 +521,123 @@ export const getLearningInsights = () => {
 };
 
 // ==============================================
+// ACHIEVEMENTS FUNCTION
+// ==============================================
+
+export const getAchievements = () => {
+  const progressData = getProgressData();
+  const achievements = [];
+  
+  // First Test Achievement
+  if (progressData.totalTests >= 1) {
+    achievements.push({
+      id: 'first_test',
+      title: 'First Steps',
+      description: 'Completed your first exercise',
+      icon: '🎯',
+      earnedAt: progressData.testHistory[progressData.testHistory.length - 1]?.date || null,
+      type: 'milestone'
+    });
+  }
+  
+  // Streak Achievements
+  if (progressData.bestStreak >= 3) {
+    achievements.push({
+      id: 'streak_3',
+      title: '3-Day Streak',
+      description: 'Practiced for 3 consecutive days',
+      icon: '🔥',
+      earnedAt: null,
+      type: 'streak'
+    });
+  }
+  
+  if (progressData.bestStreak >= 7) {
+    achievements.push({
+      id: 'streak_7',
+      title: 'Weekly Warrior',
+      description: 'Practiced for 7 consecutive days',
+      icon: '⚡',
+      earnedAt: null,
+      type: 'streak'
+    });
+  }
+  
+  if (progressData.bestStreak >= 30) {
+    achievements.push({
+      id: 'streak_30',
+      title: 'Monthly Master',
+      description: 'Practiced for 30 consecutive days',
+      icon: '👑',
+      earnedAt: null,
+      type: 'streak'
+    });
+  }
+  
+  // Test Count Achievements
+  if (progressData.totalTests >= 10) {
+    achievements.push({
+      id: 'tests_10',
+      title: 'Getting Started',
+      description: 'Completed 10 exercises',
+      icon: '📚',
+      earnedAt: null,
+      type: 'milestone'
+    });
+  }
+  
+  if (progressData.totalTests >= 50) {
+    achievements.push({
+      id: 'tests_50',
+      title: 'Dedicated Learner',
+      description: 'Completed 50 exercises',
+      icon: '🎓',
+      earnedAt: null,
+      type: 'milestone'
+    });
+  }
+  
+  if (progressData.totalTests >= 100) {
+    achievements.push({
+      id: 'tests_100',
+      title: 'Century Club',
+      description: 'Completed 100 exercises',
+      icon: '💯',
+      earnedAt: null,
+      type: 'milestone'
+    });
+  }
+  
+  // Perfect Score Achievement
+  const perfectScores = progressData.testHistory.filter(test => test.percentage === 100);
+  if (perfectScores.length >= 1) {
+    achievements.push({
+      id: 'perfect_score',
+      title: 'Perfect Score',
+      description: 'Achieved 100% on an exercise',
+      icon: '⭐',
+      earnedAt: perfectScores[0].date,
+      type: 'performance'
+    });
+  }
+  
+  // Level Achievements
+  const levelCounts = progressData.levelProgress;
+  if (levelCounts['C1-C2'] >= 5) {
+    achievements.push({
+      id: 'advanced_level',
+      title: 'Advanced Learner',
+      description: 'Scored at C1-C2 level 5 times',
+      icon: '🏆',
+      earnedAt: null,
+      type: 'level'
+    });
+  }
+  
+  return achievements;
+};
+
+// ==============================================
 // DATA MANAGEMENT FUNCTIONS
 // ==============================================
 
