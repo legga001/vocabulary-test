@@ -1,16 +1,24 @@
-// src/utils/progressDataManager.js - Complete rewrite with all functions including missing ones
-// Manages long-term user progress data in localStorage
-
-// Constants
+// src/utils/progressDataManager.js - Updated to include daily target increment
 const PROGRESS_DATA_KEY = 'mrFoxEnglishProgressData';
-const MAX_HISTORY_DAYS = 365; // Keep 1 year of history
+const MAX_HISTORY_DAYS = 100; // Keep last 100 test results
 
-// Default data structure
-const DEFAULT_PROGRESS_DATA = Object.freeze({
+// Quiz type display mappings for better UX
+const QUIZ_TYPE_MAPPINGS = {
+  'standard-vocabulary': { display: 'Standard Vocabulary', icon: '📖' },
+  'article-vocabulary': { display: 'Article Vocabulary', icon: '📰' },
+  'real-fake-words': { display: 'Real or Fake Words', icon: '🎯' },
+  'listen-and-type': { display: 'Listen and Type', icon: '🎧' },
+  'speak-and-record': { display: 'Speak and Record', icon: '🎤' },
+  'default': { display: 'Vocabulary Practice', icon: '📚' }
+};
+
+// Default progress data structure
+const DEFAULT_PROGRESS_DATA = {
   totalTests: 0,
   streak: 0,
   bestStreak: 0,
   lastTestDate: null,
+  startDate: null,
   testHistory: [],
   dailyStats: {},
   levelProgress: {
@@ -19,34 +27,81 @@ const DEFAULT_PROGRESS_DATA = Object.freeze({
     'B1-B2': 0,
     'B2-C1': 0,
     'C1-C2': 0
-  },
-  startDate: new Date().toISOString()
-});
-
-// Quiz type display mappings
-const QUIZ_TYPE_MAPPINGS = Object.freeze({
-  realFakeWords: { display: 'Word Recognition', icon: '🎯' },
-  article: { display: 'Article-Based', icon: '📰' },
-  'speak-and-record': { display: 'Speaking Practice', icon: '🎤' },
-  'listen-and-type': { display: 'Listen & Type', icon: '🎧' },
-  standard: { display: 'Standard Vocabulary', icon: '📚' },
-  'octopus-quiz': { display: 'Octopus Article', icon: '📰' },
-  'smuggling-quiz': { display: 'Smuggling Article', icon: '📰' },
-  'standard-vocabulary': { display: 'Standard Vocabulary', icon: '📚' },
-  default: { display: 'Vocabulary Test', icon: '📚' }
-});
+  }
+};
 
 // ==============================================
-// CORE DATA FUNCTIONS
+// DAILY TARGET INTEGRATION FUNCTIONS
 // ==============================================
 
-// Initialize or get existing progress data
-export const getProgressData = () => {
+// Import daily target functions - using dynamic import to avoid circular dependency
+let incrementDailyTarget = null;
+
+// Try to import the increment function when needed
+const loadDailyTargetIncrement = async () => {
+  try {
+    const landingPageModule = await import('../components/LandingPage');
+    incrementDailyTarget = landingPageModule.incrementDailyTarget;
+    return true;
+  } catch (error) {
+    console.warn('Could not load daily target increment function:', error);
+    return false;
+  }
+};
+
+// Alternative manual increment for daily targets
+const incrementDailyTargetFallback = (exerciseType) => {
+  try {
+    const DAILY_TARGETS_KEY = 'mrFoxEnglishDailyTargets';
+    const getTodayString = () => new Date().toDateString();
+    
+    const saved = localStorage.getItem(DAILY_TARGETS_KEY);
+    let currentTargets = {};
+    
+    if (saved) {
+      const data = JSON.parse(saved);
+      const today = getTodayString();
+      if (data.date === today) {
+        currentTargets = data.targets;
+      }
+    }
+    
+    const newTargets = {
+      ...currentTargets,
+      [exerciseType]: (currentTargets[exerciseType] || 0) + 1
+    };
+    
+    const dataToSave = {
+      date: getTodayString(),
+      targets: newTargets
+    };
+    
+    localStorage.setItem(DAILY_TARGETS_KEY, JSON.stringify(dataToSave));
+    
+    // Trigger storage event to update UI
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: DAILY_TARGETS_KEY,
+      newValue: JSON.stringify(dataToSave)
+    }));
+    
+    console.log('📊 Daily target incremented:', exerciseType, newTargets[exerciseType]);
+    return newTargets;
+  } catch (error) {
+    console.error('Error incrementing daily target:', error);
+    return null;
+  }
+};
+
+// ==============================================
+// DATA LOADING/SAVING FUNCTIONS
+// ==============================================
+
+// Load progress data with error handling
+const getProgressData = () => {
   try {
     const saved = localStorage.getItem(PROGRESS_DATA_KEY);
     if (saved) {
       const data = JSON.parse(saved);
-      // Merge with defaults to ensure all properties exist
       return {
         ...DEFAULT_PROGRESS_DATA,
         ...data,
@@ -116,7 +171,7 @@ const calculateStreak = (lastTestDate, today) => {
 // ==============================================
 
 // Record a completed test
-export const recordTestResult = (testData) => {
+export const recordTestResult = async (testData) => {
   const {
     quizType,
     score,
@@ -131,6 +186,8 @@ export const recordTestResult = (testData) => {
   const todayStr = today.toDateString();
   const level = getScoreLevel(score, totalQuestions);
   const quizTypeInfo = getQuizTypeInfo(quizType);
+
+  console.log('📊 Recording test result:', quizType, 'Score:', score, 'Total:', totalQuestions);
 
   // Create test record
   const testRecord = {
@@ -205,8 +262,33 @@ export const recordTestResult = (testData) => {
     progressData.startDate = completedAt.toISOString();
   }
 
-  // Save and return updated data
+  // Save progress data first
   saveProgressData(progressData);
+
+  // UPDATED: Increment daily target after successful completion
+  try {
+    // Try to use the imported function first
+    if (!incrementDailyTarget) {
+      const loaded = await loadDailyTargetIncrement();
+      if (!loaded) {
+        // Use fallback method
+        incrementDailyTargetFallback(quizType);
+      }
+    }
+    
+    if (incrementDailyTarget) {
+      incrementDailyTarget(quizType);
+    } else {
+      // Use fallback method
+      incrementDailyTargetFallback(quizType);
+    }
+  } catch (error) {
+    console.error('Error incrementing daily target:', error);
+    // Use fallback method as last resort
+    incrementDailyTargetFallback(quizType);
+  }
+
+  console.log('✅ Test result recorded and daily target incremented for:', quizType);
   return progressData;
 };
 
@@ -399,7 +481,7 @@ export const getProgressStats = () => {
 };
 
 // ==============================================
-// LEARNING INSIGHTS FUNCTION - MISSING FUNCTION ADDED
+// LEARNING INSIGHTS FUNCTION
 // ==============================================
 
 export const getLearningInsights = () => {
@@ -414,269 +496,95 @@ export const getLearningInsights = () => {
 
   // Find most improved skill
   const improvingSkills = exerciseEntries.filter(([, data]) => data.improvement === 'improving');
-  const mostImproved = improvingSkills.length > 0 ? improvingSkills[0] : null;
+  const mostImproved = improvingSkills.length > 0 
+    ? improvingSkills.reduce((a, b) => a[1].averageScore > b[1].averageScore ? a : b)
+    : null;
 
-  // Recommended challenge (lowest performing active skill)
-  const challenges = [
-    { displayName: 'Speaking Practice', icon: '🎤', reason: 'Improve your pronunciation skills' },
-    { displayName: 'Listen & Type', icon: '🎧', reason: 'Enhance listening comprehension' },
-    { displayName: 'Word Recognition', icon: '🎯', reason: 'Build vocabulary faster' },
-    { displayName: 'Article-Based', icon: '📰', reason: 'Learn from real news stories' }
-  ];
-  
-  const lowestPerforming = exerciseEntries.length > 0
+  // Find area needing work (lowest average score with attempts)
+  const needsWork = exerciseEntries.length > 0
     ? exerciseEntries.reduce((a, b) => a[1].averageScore < b[1].averageScore ? a : b)
     : null;
 
-  const recommendedChallenge = lowestPerforming 
-    ? { displayName: lowestPerforming[0], icon: lowestPerforming[1].icon, reason: 'Focus on your weakest area' }
-    : challenges[Math.floor(Math.random() * challenges.length)];
-
-  // Words to review (from wrong answers)
-  const wordsToReview = [];
-  const wrongAnswers = {};
-
-  progressData.testHistory.forEach(test => {
-    if (test.userAnswers) {
-      test.userAnswers.forEach(answer => {
-        if (!answer.isCorrect && answer.answer) {
-          const word = answer.answer.toLowerCase().trim();
-          if (word && word.length > 2) {
-            if (!wrongAnswers[word]) {
-              wrongAnswers[word] = {
-                word: word,
-                count: 0,
-                exercises: new Set()
-              };
-            }
-            wrongAnswers[word].count++;
-            wrongAnswers[word].exercises.add(test.quizTypeDisplay);
-          }
-        }
-      });
-    }
-  });
-
-  // Convert to array and get top 5 most missed words
-  const sortedWords = Object.values(wrongAnswers)
-    .filter(wordData => wordData.count > 1)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5)
-    .map(wordData => ({
-      word: wordData.word,
-      count: wordData.count,
-      exercises: Array.from(wordData.exercises)
-    }));
+  // Calculate consistency (standard deviation of recent scores)
+  let consistency = 'stable';
+  const recentTests = progressData.testHistory.slice(0, 10);
+  if (recentTests.length >= 5) {
+    const scores = recentTests.map(test => 
+      test.totalQuestions === 20 ? (test.score / 2) : test.score
+    );
+    const avg = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const variance = scores.reduce((sum, score) => sum + Math.pow(score - avg, 2), 0) / scores.length;
+    const stdDev = Math.sqrt(variance);
+    
+    if (stdDev < 1) consistency = 'very consistent';
+    else if (stdDev < 2) consistency = 'consistent';
+    else if (stdDev < 3) consistency = 'somewhat variable';
+    else consistency = 'quite variable';
+  }
 
   return {
     strongestSkill: strongestSkill ? {
-      displayName: strongestSkill[0],
-      icon: strongestSkill[1].icon,
-      average: strongestSkill[1].averageScore
+      name: strongestSkill[0],
+      score: strongestSkill[1].averageScore,
+      icon: strongestSkill[1].icon
     } : null,
     mostImproved: mostImproved ? {
-      displayName: mostImproved[0],
-      icon: mostImproved[1].icon,
-      improvement: mostImproved[1].improvement
+      name: mostImproved[0],
+      score: mostImproved[1].averageScore,
+      icon: mostImproved[1].icon
     } : null,
-    recommendedChallenge,
-    wordsToReview: sortedWords
+    needsWork: needsWork ? {
+      name: needsWork[0],
+      score: needsWork[1].averageScore,
+      icon: needsWork[1].icon
+    } : null,
+    consistency,
+    totalExerciseTypes: exerciseEntries.length,
+    recentPerformance: recentTests.length > 0 ? recentTests[0].percentage : 0
   };
 };
 
 // ==============================================
-// ACHIEVEMENTS FUNCTION - MISSING FUNCTION ADDED
+// DATA MANAGEMENT FUNCTIONS
 // ==============================================
 
-export const getAchievements = () => {
-  const progressData = getProgressData();
-  const achievements = [];
-
-  // First Test Achievement
-  if (progressData.totalTests >= 1) {
-    achievements.push({
-      id: 'first_test',
-      title: 'First Steps',
-      description: 'Completed your first test',
-      icon: '🎯',
-      earnedDate: progressData.testHistory[progressData.testHistory.length - 1]?.date || new Date().toISOString()
-    });
+// Clear all progress data (use with caution)
+export const clearProgressData = () => {
+  try {
+    localStorage.removeItem(PROGRESS_DATA_KEY);
+    console.log('Progress data cleared');
+    return true;
+  } catch (error) {
+    console.error('Error clearing progress data:', error);
+    return false;
   }
-
-  // Streak Achievements
-  if (progressData.bestStreak >= 3) {
-    achievements.push({
-      id: 'streak_3',
-      title: 'Getting Started',
-      description: 'Maintained a 3-day streak',
-      icon: '🔥',
-      earnedDate: progressData.lastTestDate
-    });
-  }
-
-  if (progressData.bestStreak >= 7) {
-    achievements.push({
-      id: 'streak_7',
-      title: 'Week Warrior',
-      description: 'Maintained a 7-day streak',
-      icon: '💪',
-      earnedDate: progressData.lastTestDate
-    });
-  }
-
-  if (progressData.bestStreak >= 30) {
-    achievements.push({
-      id: 'streak_30',
-      title: 'Month Master',
-      description: 'Maintained a 30-day streak',
-      icon: '👑',
-      earnedDate: progressData.lastTestDate
-    });
-  }
-
-  // Test Count Achievements
-  if (progressData.totalTests >= 10) {
-    achievements.push({
-      id: 'tests_10',
-      title: 'Dedicated Learner',
-      description: 'Completed 10 tests',
-      icon: '📚',
-      earnedDate: progressData.testHistory[progressData.testHistory.length - 10]?.date || new Date().toISOString()
-    });
-  }
-
-  if (progressData.totalTests >= 50) {
-    achievements.push({
-      id: 'tests_50',
-      title: 'Study Enthusiast',
-      description: 'Completed 50 tests',
-      icon: '🌟',
-      earnedDate: progressData.testHistory[progressData.testHistory.length - 50]?.date || new Date().toISOString()
-    });
-  }
-
-  if (progressData.totalTests >= 100) {
-    achievements.push({
-      id: 'tests_100',
-      title: 'Century Club',
-      description: 'Completed 100 tests',
-      icon: '💯',
-      earnedDate: progressData.testHistory[progressData.testHistory.length - 100]?.date || new Date().toISOString()
-    });
-  }
-
-  // Perfect Score Achievements
-  const perfectScores = progressData.testHistory.filter(test => test.percentage === 100);
-  if (perfectScores.length >= 1) {
-    achievements.push({
-      id: 'perfect_1',
-      title: 'Perfect Score',
-      description: 'Achieved 100% on a test',
-      icon: '🎯',
-      earnedDate: perfectScores[0].date
-    });
-  }
-
-  if (perfectScores.length >= 5) {
-    achievements.push({
-      id: 'perfect_5',
-      title: 'Perfectionist',
-      description: 'Achieved 100% on 5 tests',
-      icon: '⭐',
-      earnedDate: perfectScores[4].date
-    });
-  }
-
-  // Level Achievements
-  const levelCounts = progressData.levelProgress;
-  if (levelCounts['C1-C2'] >= 5) {
-    achievements.push({
-      id: 'advanced_level',
-      title: 'Advanced Speaker',
-      description: 'Scored at C1-C2 level 5 times',
-      icon: '🎓',
-      earnedDate: progressData.lastTestDate
-    });
-  }
-
-  // Sort by earned date (most recent first)
-  return achievements.sort((a, b) => new Date(b.earnedDate) - new Date(a.earnedDate));
 };
-
-// ==============================================
-// UTILITY FUNCTIONS
-// ==============================================
 
 // Export progress data for backup
 export const exportProgressData = () => {
-  const progressData = getProgressData();
-  const dataStr = JSON.stringify(progressData, null, 2);
-  const dataBlob = new Blob([dataStr], { type: 'application/json' });
-  
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(dataBlob);
-  link.download = `mr-fox-english-progress-${new Date().toISOString().split('T')[0]}.json`;
-  link.click();
-  
-  // Clean up
-  URL.revokeObjectURL(link.href);
-};
-
-// Clear all progress data (with confirmation)
-export const clearAllProgress = () => {
-  if (window.confirm('Are you sure you want to clear all progress data? This cannot be undone.')) {
-    try {
-      localStorage.removeItem(PROGRESS_DATA_KEY);
-      return true;
-    } catch (error) {
-      console.error('Error clearing progress data:', error);
-      return false;
-    }
+  try {
+    const data = getProgressData();
+    return JSON.stringify(data, null, 2);
+  } catch (error) {
+    console.error('Error exporting progress data:', error);
+    return null;
   }
-  return false;
 };
 
 // Import progress data from backup
 export const importProgressData = (jsonData) => {
   try {
     const data = JSON.parse(jsonData);
-    
     // Validate data structure
-    if (typeof data !== 'object' || !Array.isArray(data.testHistory)) {
+    if (data && typeof data === 'object' && Array.isArray(data.testHistory)) {
+      saveProgressData(data);
+      console.log('Progress data imported successfully');
+      return true;
+    } else {
       throw new Error('Invalid data format');
     }
-    
-    // Merge with defaults to ensure all properties exist
-    const validatedData = {
-      ...DEFAULT_PROGRESS_DATA,
-      ...data,
-      levelProgress: {
-        ...DEFAULT_PROGRESS_DATA.levelProgress,
-        ...(data.levelProgress || {})
-      }
-    };
-    
-    return saveProgressData(validatedData);
   } catch (error) {
     console.error('Error importing progress data:', error);
     return false;
   }
-};
-
-// Get statistics for admin/debugging
-export const getDataStats = () => {
-  const progressData = getProgressData();
-  const stats = {
-    totalTests: progressData.totalTests,
-    totalHistory: progressData.testHistory.length,
-    streakInfo: {
-      current: progressData.streak,
-      best: progressData.bestStreak
-    },
-    levelDistribution: progressData.levelProgress,
-    dailyStatsCount: Object.keys(progressData.dailyStats).length,
-    storageSize: new Blob([JSON.stringify(progressData)]).size
-  };
-  
-  return stats;
 };
