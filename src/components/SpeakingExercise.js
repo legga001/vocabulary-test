@@ -271,7 +271,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
   // Stop recording
   const stopRecording = useCallback(() => {
-    console.log('🛑 Stopping recording...');
+    console.log('🛑 Stopping recording for sentence:', currentIndex + 1);
     setIsRecording(false);
     
     if (recognitionRef.current) {
@@ -280,8 +280,9 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     
     // Process the recording
     const recordingDuration = recordingStartTime ? (Date.now() - recordingStartTime) / 1000 : 0;
+    console.log('📝 Processing transcript:', currentTranscript, 'Duration:', recordingDuration);
     processRecording(currentTranscript.trim(), recordingDuration);
-  }, [currentTranscript, recordingStartTime]);
+  }, [currentTranscript, recordingStartTime, currentIndex, processRecording]);
 
   // Calculate detailed score with forgiving algorithm
   const calculateScore = useCallback((spoken, target) => {
@@ -372,13 +373,17 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
   // Process recording result
   const processRecording = useCallback((transcript, duration) => {
+    console.log('🎙️ Processing recording:', transcript, 'duration:', duration);
+    
     if (!transcript) {
+      console.log('⚠️ No transcript detected');
       setFeedback({ type: 'warning', message: 'No speech detected. Try again!' });
       setGameState(GAME_STATES.PLAYING);
       return;
     }
 
     const scoreData = calculateScore(transcript, currentSentence.text);
+    console.log('📊 Score calculated:', scoreData);
     
     // Store result
     const result = {
@@ -392,7 +397,12 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       totalWords: scoreData.totalWords
     };
     
-    setResults(prev => [...prev, result]);
+    console.log('💾 Storing result:', result);
+    setResults(prev => {
+      const newResults = [...prev, result];
+      console.log('📋 Total results so far:', newResults.length);
+      return newResults;
+    });
     
     // Show feedback
     let feedbackMessage = '';
@@ -415,23 +425,27 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     setFeedback({ type: feedbackType, message: feedbackMessage });
     setGameState(GAME_STATES.FEEDBACK);
     
+    console.log(`🔄 Question ${currentIndex + 1} of ${sentences.length} completed`);
+    
     // Auto-advance after delay
     setTimeout(() => {
       if (currentIndex + 1 < sentences.length) {
+        console.log('➡️ Moving to next question');
         setCurrentIndex(prev => prev + 1);
         setCurrentTranscript('');
         setConfidence(0);
         setFeedback(null); // Clear feedback for next question
         setGameState(GAME_STATES.PLAYING);
       } else {
+        console.log('🏁 All questions completed, calling finishExercise');
         finishExercise();
       }
     }, 3000);
-  }, [calculateScore, currentSentence, confidence, currentIndex, sentences.length]);
+  }, [calculateScore, currentSentence, confidence, currentIndex, sentences.length, finishExercise]);
 
   // Skip current sentence
   const skipSentence = useCallback(() => {
-    console.log('⏭️ Skipping sentence');
+    console.log('⏭️ Skipping sentence', currentIndex + 1);
     
     const result = {
       target: currentSentence.text,
@@ -444,18 +458,24 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       totalWords: currentSentence.text.split(' ').length
     };
     
-    setResults(prev => [...prev, result]);
+    setResults(prev => {
+      const newResults = [...prev, result];
+      console.log('📋 Results after skip:', newResults.length);
+      return newResults;
+    });
     setFeedback({ type: 'info', message: 'Sentence skipped' });
     
     if (currentIndex + 1 < sentences.length) {
+      console.log('➡️ Moving to next question after skip');
       setCurrentIndex(prev => prev + 1);
       setCurrentTranscript('');
       setConfidence(0);
       setFeedback(null); // Clear feedback for next question
     } else {
+      console.log('🏁 All questions completed after skip, calling finishExercise');
       finishExercise();
     }
-  }, [currentSentence, currentIndex, sentences.length]);
+  }, [currentSentence, currentIndex, sentences.length, finishExercise]);
 
   // Finish exercise and show results
   const finishExercise = useCallback(() => {
