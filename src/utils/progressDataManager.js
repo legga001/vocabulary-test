@@ -684,3 +684,6 @@ export const importProgressData = (jsonData) => {
     return false;
   }
 };
+
+// Alias for backwards compatibility with ProgressPage
+export const clearAllProgress = clearProgressData;
