@@ -3,6 +3,7 @@ import React from 'react';
 import ClickableLogo from './ClickableLogo';
 import { getReadingArticleInfo } from '../readingVocabularyData';
 import { getAirIndiaArticleInfo } from '../airIndiaVocabularyData';
+import { getWaterTreatmentArticleInfo } from '../waterTreatmentVocabularyData';
 import { getArticleInfo } from '../articleQuestions';
 
 function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
@@ -10,16 +11,27 @@ function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
   const octopusArticle = getReadingArticleInfo();
   const smugglingArticle = getArticleInfo();
   const airIndiaArticle = getAirIndiaArticleInfo();
+  const waterTreatmentArticle = getWaterTreatmentArticleInfo();
 
-  // Create articles array with all necessary info
+  // Create articles array with all necessary info - WATER TREATMENT FIRST
   const articles = [
+    {
+      id: 'water-treatment-quiz',
+      title: waterTreatmentArticle.title,
+      date: waterTreatmentArticle.date,
+      summary: waterTreatmentArticle.summary,
+      url: waterTreatmentArticle.url,
+      excerpt: waterTreatmentArticle.excerpt || null,
+      category: 'Environment & Science'
+    },
     {
       id: 'air-india-quiz',
       title: airIndiaArticle.title,
       date: airIndiaArticle.date,
       summary: airIndiaArticle.summary,
       url: airIndiaArticle.url,
-      excerpt: airIndiaArticle.excerpt || null
+      excerpt: airIndiaArticle.excerpt || null,
+      category: 'Current Events'
     },
     {
       id: 'octopus-quiz',
@@ -27,7 +39,8 @@ function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
       date: octopusArticle.date,
       summary: octopusArticle.summary,
       url: octopusArticle.url,
-      excerpt: octopusArticle.excerpt || null
+      excerpt: octopusArticle.excerpt || null,
+      category: 'Environment & Science'
     },
     {
       id: 'smuggling-quiz',
@@ -35,12 +48,13 @@ function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
       date: smugglingArticle.date,
       summary: smugglingArticle.summary,
       url: smugglingArticle.url,
-      excerpt: null
+      excerpt: null,
+      category: 'Current Events'
     }
   ];
 
-  // Sort by date (most recent first)
-  const sortedArticles = articles.sort((a, b) => new Date(b.date) - new Date(a.date));
+  // Don't sort by date - use manual ordering with water treatment first
+  const sortedArticles = articles;
 
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-GB', {
@@ -79,11 +93,12 @@ function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
             <div key={article.id} className="article-selection-card">
               {index === 0 && (
                 <div className="newest-badge">
-                  ✨ Most Recent
+                  🌱 Featured
                 </div>
               )}
               
               <div className="article-header">
+                <div className="article-category">{article.category}</div>
                 <h3 className="article-title">"{article.title}"</h3>
                 <div className="article-meta">
                   <span className="article-date">{formatDate(article.date)}</span>
