@@ -41,6 +41,9 @@ const HOMOPHONES = {
 };
 
 function SpeakingExercise({ onBack, onLogoClick }) {
+  // DEPLOYMENT TEST: This should appear in console if new version is deployed
+  console.log('🚀 SpeakingExercise v2.0 - NEW VERSION LOADED');
+  
   // Core state
   const [gameState, setGameState] = useState(GAME_STATES.CHECKING);
   const [currentIndex, setCurrentIndex] = useState(0);
