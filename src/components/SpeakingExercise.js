@@ -475,6 +475,13 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         level: result.level
       }));
       
+      console.log('🎤 About to call recordTestResult with:', {
+        quizType: 'speak-and-record',
+        score: Math.round(overallScore / 10),
+        totalQuestions: 10,
+        overallPercentage: Math.round(overallScore)
+      });
+      
       recordTestResult({
         quizType: 'speak-and-record',
         score: Math.round(overallScore / 10), // Convert percentage to score out of 10
@@ -483,8 +490,11 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         timeSpent: testDuration,
         userAnswers: userAnswers
       });
+      
+      console.log('✅ recordTestResult called successfully');
+      
     } catch (error) {
-      console.error('Error saving test results:', error);
+      console.error('❌ Error saving test results:', error);
     }
     
     setGameState(GAME_STATES.RESULTS);
