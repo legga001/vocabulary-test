@@ -56,7 +56,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
   // Refs
   const recognitionRef = useRef(null);
-  const silenceTimerRef = useRef(null);
 
   // Current sentence data
   const currentSentence = sentences[currentIndex];
@@ -138,9 +137,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
       const fullTranscript = finalTranscript + interimTranscript;
       setCurrentTranscript(fullTranscript);
-      
-      // Reset silence timer when speech is detected
-      resetSilenceTimer();
     };
 
     recognition.onerror = (event) => {
@@ -243,19 +239,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       });
   }, [currentSentence, playCount]);
 
-  // Reset silence timer
-  const resetSilenceTimer = useCallback(() => {
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-    }
-    
-    // Auto-stop after 5 seconds of silence
-    silenceTimerRef.current = setTimeout(() => {
-      console.log('⏱️ Stopping recording due to silence');
-      stopRecording();
-    }, 5000);
-  }, []);
-
   // Start recording
   const startRecording = useCallback(() => {
     if (!recognitionRef.current) {
@@ -272,22 +255,17 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     
     try {
       recognitionRef.current.start();
-      resetSilenceTimer();
     } catch (error) {
       console.error('Error starting recording:', error);
       setIsRecording(false);
       setFeedback({ type: 'error', message: 'Failed to start recording' });
     }
-  }, [initSpeechRecognition, resetSilenceTimer]);
+  }, [initSpeechRecognition]);
 
   // Stop recording
   const stopRecording = useCallback(() => {
     console.log('🛑 Stopping recording...');
     setIsRecording(false);
-    
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-    }
     
     if (recognitionRef.current) {
       recognitionRef.current.stop();
@@ -472,9 +450,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     checkSpeechRecognition();
     return () => {
       // Cleanup
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-      }
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
@@ -588,8 +563,8 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                 </div>
                 
                 <div className="instruction-item">
-                  <span className="instruction-icon">⏱️</span>
-                  <span>Recording stops automatically after 5 seconds of silence</span>
+                  <span className="instruction-icon">⏹️</span>
+                  <span>Click "Stop Recording" when you've finished speaking</span>
                 </div>
                 
                 <div className="instruction-item">
@@ -746,7 +721,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
             {isRecording && (
               <div className="recording-indicator">
                 <div className="recording-pulse"></div>
-                <div className="recording-text">Recording... Speak now!</div>
+                <div className="recording-text">Recording... Click "Stop Recording" when finished!</div>
               </div>
             )}
 
