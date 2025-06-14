@@ -282,9 +282,14 @@
   justify-content: center;
   margin: 25px 0;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .recording-controls .btn {
+  min-width: 160px;
+}
+
+.recording-controls .btn.btn-large {
   min-width: 180px;
 }
 
@@ -295,6 +300,19 @@
 
 .btn.recording:hover {
   background: linear-gradient(135deg, #c53030, #a53030);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #ed8936, #dd6b20);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-warning:hover {
+  background: linear-gradient(135deg, #dd6b20, #c05621);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(237, 137, 54, 0.3);
 }
 
 @keyframes recordButtonPulse {
@@ -618,8 +636,12 @@
   }
   
   .recording-controls .btn {
-    min-width: 150px;
-    padding: 12px 20px;
+    min-width: 140px;
+    padding: 12px 16px;
+  }
+  
+  .recording-controls .btn.btn-large {
+    min-width: 160px;
   }
   
   .result-item {
