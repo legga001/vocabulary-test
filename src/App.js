@@ -1,4 +1,4 @@
-// src/App.js - Updated with Air India quiz support
+// src/App.js - Updated with cleaned imports (removed unused Results)
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import SplashPage from './components/SplashPage';
