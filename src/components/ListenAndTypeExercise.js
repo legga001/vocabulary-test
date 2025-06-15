@@ -691,9 +691,16 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearTimeout(timer);
   }, [hasStarted, showResults, timeLeft]); // Minimal dependencies
 
-  // FIXED: Audio element management - Proper event listener setup for first question
+  // FIXED: Audio element management - Force effect to run for each question
   useEffect(() => {
-    if (!audioRef.current || !currentData) return;
+    console.log('🎵 Audio setup effect triggered for question', currentSentence + 1);
+    console.log('Current data:', currentData?.audioFile);
+    console.log('Audio ref exists:', !!audioRef.current);
+    
+    if (!audioRef.current || !currentData) {
+      console.log('❌ Missing audioRef or currentData, skipping setup');
+      return;
+    }
 
     console.log('🎵 Setting up audio for:', currentData.audioFile);
     const audio = audioRef.current;
@@ -757,7 +764,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
         audio.removeEventListener(event, handler);
       });
     };
-  }, [currentData, resetAudioState, updateAudioState]);
+  }, [currentSentence, currentData, resetAudioState, updateAudioState]); // Changed dependencies
 
   // Removed the backup auto-play effect since it's causing conflicts
   // The main auto-play effect should handle everything
@@ -1096,7 +1103,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           </div>
 
           <div className="audio-section">
-            <audio ref={audioRef} preload="auto" key={`${currentData?.audioFile}-${currentSentence}`}>
+            <audio ref={audioRef} preload="auto" key={currentSentence}>
               <source src={`/${currentData?.audioFile}`} type="audio/mpeg" />
               Your browser does not support the audio element.
             </audio>
