@@ -691,7 +691,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearTimeout(timer);
   }, [hasStarted, showResults, timeLeft]); // Minimal dependencies
 
-  // FIXED: Audio element management - Force effect to run for each question
+  // FIXED: Single audio element management - No conflicts
   useEffect(() => {
     console.log('🎵 Audio setup effect triggered for question', currentSentence + 1);
     console.log('Current data:', currentData?.audioFile);
@@ -707,6 +707,9 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     
     // CRITICAL: Reset state immediately when audio element changes
     resetAudioState();
+    
+    // Force reload the audio source
+    audio.load();
     
     // Define all event handlers
     const handlers = {
@@ -750,7 +753,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       }
     };
 
-    // Add all event listeners IMMEDIATELY (no delay)
+    // Add all event listeners IMMEDIATELY
     Object.entries(handlers).forEach(([event, handler]) => {
       audio.addEventListener(event, handler);
     });
@@ -764,7 +767,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
         audio.removeEventListener(event, handler);
       });
     };
-  }, [currentSentence, currentData, resetAudioState, updateAudioState]); // Changed dependencies
+  }, [currentSentence, currentData?.audioFile, resetAudioState, updateAudioState]);
 
   // Removed the backup auto-play effect since it's causing conflicts
   // The main auto-play effect should handle everything
@@ -1079,7 +1082,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Main test interface
+  // Main test interface with improved layout
   return (
     <div className="listen-type-container">
       <div className="listen-type-quiz-container">
@@ -1096,21 +1099,23 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           <button className="close-btn" onClick={onBack}>✕</button>
         </div>
 
-        <div className="listen-main">
+        {/* IMPROVED: Compact layout with audio, input, and controls closer together */}
+        <div className="listen-main-compact">
           <div className="level-indicator">
             <span className="level-badge">{currentData?.level}</span>
             <span className="level-description">{currentData?.difficulty}</span>
           </div>
 
-          <div className="audio-section">
+          {/* Audio section - more compact */}
+          <div className="audio-section-compact">
             <audio ref={audioRef} preload="auto" key={currentSentence}>
               <source src={`/${currentData?.audioFile}`} type="audio/mpeg" />
               Your browser does not support the audio element.
             </audio>
             
-            <div className="audio-controls">
+            <div className="audio-controls-compact">
               <button 
-                className={`play-btn ${audioState.isPlaying ? 'playing' : ''}`}
+                className={`play-btn-compact ${audioState.isPlaying ? 'playing' : ''}`}
                 onClick={playAudio}
                 disabled={audioState.playCount >= 3 || audioState.isPlaying || audioState.hasError}
               >
@@ -1122,7 +1127,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
                 </span>
               </button>
               
-              <div className="play-counter">
+              <div className="play-counter-compact">
                 Plays remaining: {3 - audioState.playCount}
               </div>
             </div>
@@ -1134,30 +1139,14 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
                 <small>Please ensure the file exists in the public/audio/listen-and-type/ folder</small>
               </div>
             )}
-
-            {/* Debug info (remove in production) */}
-            {process.env.NODE_ENV === 'development' && (
-              <div style={{ 
-                fontSize: '0.8em', 
-                color: '#666', 
-                marginTop: '10px',
-                padding: '8px',
-                background: '#f0f0f0',
-                borderRadius: '4px'
-              }}>
-                🐛 Audio Debug: Playing: {audioState.isPlaying ? 'Yes' : 'No'} | 
-                Loaded: {audioState.isLoaded ? 'Yes' : 'No'} | 
-                Error: {audioState.hasError ? 'Yes' : 'No'} | 
-                Plays: {audioState.playCount}/3
-              </div>
-            )}
           </div>
 
-          <div className="input-section">
+          {/* Input section - positioned right below audio */}
+          <div className="input-section-compact">
             <h3>Type what you hear:</h3>
             <textarea
               ref={inputRef}
-              className={`typing-input ${contentFilterError ? 'error' : ''}`}
+              className={`typing-input-compact ${contentFilterError ? 'error' : ''}`}
               value={userInput}
               onChange={(e) => handleInputChange(e.target.value)}
               placeholder="Type the sentence here..."
@@ -1175,32 +1164,40 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               </div>
             )}
             
-            <div className="input-info">
-              <p>💡 <strong>Remember:</strong> Just type what you hear - spelling variations, numbers as words/digits, and missing punctuation are all fine!</p>
+            <div className="input-info-compact">
+              <p>💡 <strong>Tip:</strong> Just type what you hear - spelling variations and missing punctuation are fine!</p>
             </div>
 
-            <div className="submit-section">
+            <div className="action-buttons-compact">
               <button 
-                className="btn btn-primary"
+                className="btn btn-primary btn-submit"
                 onClick={handleSubmit}
                 disabled={!userInput.trim() || contentFilterError}
               >
                 Submit Answer
               </button>
-              <p className="keyboard-hint">
-                <small>💻 Press <strong>Enter</strong> to submit on desktop</small>
-              </p>
+              <button 
+                className="btn btn-secondary btn-skip"
+                onClick={moveToNextQuestion}
+              >
+                {currentSentence + 1 === testSentences.length ? 'Finish Test' : 'Skip Question'}
+              </button>
             </div>
+            
+            <p className="keyboard-hint-compact">
+              <small>💻 Press <strong>Enter</strong> to submit on desktop</small>
+            </p>
           </div>
 
-          <div className="navigation-section">
-            <button 
-              className="btn btn-secondary"
-              onClick={moveToNextQuestion}
-            >
-              {currentSentence + 1 === testSentences.length ? 'Finish Test' : 'Skip Question'}
-            </button>
-          </div>
+          {/* Debug info (keep for troubleshooting) */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="debug-info-compact">
+              🐛 Audio Debug: Playing: {audioState.isPlaying ? 'Yes' : 'No'} | 
+              Loaded: {audioState.isLoaded ? 'Yes' : 'No'} | 
+              Error: {audioState.hasError ? 'Yes' : 'No'} | 
+              Plays: {audioState.playCount}/3
+            </div>
+          )}
         </div>
       </div>
     </div>
