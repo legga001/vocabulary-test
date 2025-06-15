@@ -1,50 +1,37 @@
 /* ==============================================
-   LISTEN-AND-TYPE.CSS - Listen and Type Exercise Styles
-   Clean, efficient, and properly structured
+   LISTEN AND TYPE CSS - Updated with compact layout
    ============================================== */
 
-/* ==============================================
-   1. MAIN LAYOUT - Full screen with gradient
-   ============================================== */
 .listen-type-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background-attachment: fixed;
-  z-index: 1000;
-  overflow-y: auto;
-  overflow-x: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 20px;
-  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Grey content container - scrollable */
 .listen-type-quiz-container {
-  max-width: 800px;
-  width: 100%;
-  margin: 0 auto;
-  background: #f8f9fa;
-  border: 1px solid #e2e8f0;
+  background: white;
   border-radius: 20px;
   padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  min-height: calc(100vh - 40px);
-  box-sizing: border-box;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
   position: relative;
 }
 
 /* ==============================================
-   2. HEADER SECTION
+   HEADER SECTION
    ============================================== */
 .listen-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
-  padding-bottom: 15px;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
   border-bottom: 2px solid #e2e8f0;
 }
 
@@ -52,236 +39,277 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 700;
+  font-size: 1.2em;
+  font-weight: 600;
 }
 
 .timer-icon {
-  font-size: 1.2em;
-}
-
-.timer-text {
-  font-size: 1.2em;
-  transition: color 0.3s ease;
+  font-size: 1.4em;
 }
 
 .progress-section {
+  color: #4c51bf;
   font-weight: 600;
-  color: #4a5568;
-  text-align: center;
+  font-size: 1.1em;
 }
 
 .close-btn {
-  background: none;
+  background: #f56565;
+  color: white;
   border: none;
-  font-size: 1.5em;
-  color: #666;
-  cursor: pointer;
-  padding: 8px;
   border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 1.2em;
   transition: all 0.3s ease;
-  line-height: 1;
 }
 
 .close-btn:hover {
-  background: #f0f0f0;
-  color: #333;
+  background: #e53e3e;
+  transform: scale(1.05);
 }
 
 /* ==============================================
-   3. MAIN CONTENT AREA
+   COMPACT LAYOUT (NEW)
    ============================================== */
-.listen-main {
-  flex: 1;
+.listen-main-compact {
   display: flex;
   flex-direction: column;
   gap: 25px;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .level-indicator {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 15px;
 }
 
 .level-badge {
-  background: #4c51bf;
+  background: linear-gradient(135deg, #4c51bf, #667eea);
   color: white;
   padding: 8px 16px;
   border-radius: 20px;
-  font-weight: 700;
+  font-weight: bold;
   font-size: 0.9em;
-  display: inline-block;
-  margin-bottom: 8px;
 }
 
 .level-description {
   color: #666;
   font-style: italic;
   font-size: 0.95em;
-  line-height: 1.4;
 }
 
 /* ==============================================
-   4. AUDIO SECTION
+   COMPACT AUDIO SECTION
    ============================================== */
-.audio-section {
-  background: white;
+.audio-section-compact {
+  background: #f8f9fa;
   border-radius: 15px;
-  padding: 25px;
+  padding: 20px;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
+  border: 2px solid #e2e8f0;
 }
 
-.audio-controls {
+.audio-controls-compact {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 15px;
 }
 
-.play-btn {
-  background: linear-gradient(135deg, #4c51bf, #667eea);
+.play-btn-compact {
+  background: linear-gradient(135deg, #48bb78, #38a169);
   color: white;
   border: none;
   border-radius: 50px;
-  padding: 18px 35px;
+  padding: 15px 30px;
   font-size: 1.1em;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   gap: 10px;
-  min-width: 180px;
+  min-width: 160px;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(76, 81, 191, 0.3);
 }
 
-.play-btn:hover:not(:disabled) {
+.play-btn-compact:hover:not(:disabled) {
+  background: linear-gradient(135deg, #38a169, #2f855a);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(76, 81, 191, 0.4);
+  box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
 }
 
-.play-btn:disabled {
-  background: #cbd5e0;
+.play-btn-compact:disabled {
+  background: #a0aec0;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.play-btn.playing {
-  background: linear-gradient(135deg, #48bb78, #38a169);
-  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+.play-btn-compact.playing {
+  background: linear-gradient(135deg, #ed8936, #dd6b20);
+  animation: pulse 2s infinite;
 }
 
-.play-icon {
-  font-size: 1.2em;
-  line-height: 1;
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
-.play-counter {
-  font-weight: 600;
-  color: #4c51bf;
-  background: #f0f2ff;
-  padding: 8px 16px;
-  border-radius: 20px;
+.play-counter-compact {
+  color: #666;
   font-size: 0.9em;
+  font-weight: 500;
 }
 
-.audio-error {
-  background: #fff5f5;
-  border: 2px solid #f56565;
-  border-radius: 10px;
+/* ==============================================
+   COMPACT INPUT SECTION
+   ============================================== */
+.input-section-compact {
+  background: #fff;
+  border-radius: 15px;
+  padding: 25px;
+  border: 2px solid #e2e8f0;
+}
+
+.input-section-compact h3 {
+  color: #2d3748;
+  margin-bottom: 15px;
+  font-size: 1.3em;
+  text-align: center;
+}
+
+.typing-input-compact {
+  width: 100%;
+  min-height: 100px;
   padding: 15px;
-  color: #e53e3e;
-  margin-top: 15px;
-  text-align: left;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1.1em;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  resize: vertical;
+  transition: all 0.3s ease;
   line-height: 1.5;
 }
 
-/* ==============================================
-   5. INPUT SECTION
-   ============================================== */
-.input-section {
-  background: white;
-  border-radius: 15px;
-  padding: 25px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
-}
-
-.input-section h3 {
-  color: #4c51bf;
-  margin-bottom: 15px;
-  text-align: center;
-  font-size: 1.2em;
-}
-
-.typing-input {
-  width: 100%;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 15px;
-  font-size: 1.1em;
-  font-family: inherit;
-  resize: vertical;
-  min-height: 80px;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-
-.typing-input:focus {
+.typing-input-compact:focus {
   outline: none;
   border-color: #4c51bf;
-  box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.1);
+  box-shadow: 0 0 15px rgba(76, 81, 191, 0.2);
 }
 
-/* Enhanced input validation styles */
-.typing-input.error {
-  border-color: #e53e3e;
-  background-color: #fff5f5;
+.typing-input-compact.error {
+  border-color: #f56565;
+  background: #fff5f5;
 }
 
-.typing-input.warning {
-  border-color: #d69e2e;
-  background-color: #fffbeb;
+.input-info-compact {
+  margin: 15px 0;
+  text-align: center;
+}
+
+.input-info-compact p {
+  color: #666;
+  font-size: 0.95em;
+  margin: 0;
 }
 
 /* ==============================================
-   6. CONTENT FILTER ERROR STYLES
+   COMPACT ACTION BUTTONS
+   ============================================== */
+.action-buttons-compact {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.btn-submit,
+.btn-skip {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1em;
+  min-width: 140px;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #4c51bf, #667eea);
+  color: white;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3c41a5, #5a67d8);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(76, 81, 191, 0.3);
+}
+
+.btn-submit:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-skip {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.btn-skip:hover {
+  background: #cbd5e0;
+  transform: translateY(-2px);
+}
+
+.keyboard-hint-compact {
+  text-align: center;
+  margin: 10px 0 0 0;
+}
+
+.keyboard-hint-compact small {
+  color: #718096;
+  font-size: 0.85em;
+}
+
+/* ==============================================
+   DEBUG INFO
+   ============================================== */
+.debug-info-compact {
+  font-size: 0.8em;
+  color: #666;
+  padding: 10px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* ==============================================
+   CONTENT FILTER ERROR
    ============================================== */
 .content-filter-error {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-top: 15px;
-  padding: 15px;
-  border-radius: 10px;
-  border-left: 4px solid;
-  animation: slideInError 0.3s ease-out;
-}
-
-.content-filter-error.high {
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
   background: #fff5f5;
-  border-color: #e53e3e;
-  color: #c53030;
-}
-
-.content-filter-error.medium {
-  background: #fffbeb;
-  border-color: #d69e2e;
-  color: #b7791f;
-}
-
-.content-filter-error.low {
-  background: #e6f4ff;
-  border-color: #4c51bf;
-  color: #3c4fe0;
+  border: 1px solid #feb2b2;
 }
 
 .filter-error-icon {
-  font-size: 1.3em;
-  flex-shrink: 0;
-  margin-top: 2px;
+  font-size: 1.2em;
 }
 
 .filter-error-content {
@@ -289,659 +317,179 @@
 }
 
 .filter-error-title {
-  font-weight: 700;
-  font-size: 1em;
-  margin-bottom: 4px;
+  font-weight: 600;
+  color: #c53030;
+  margin-bottom: 2px;
 }
 
 .filter-error-message {
+  color: #e53e3e;
   font-size: 0.9em;
-  line-height: 1.4;
-  opacity: 0.9;
 }
 
-@keyframes slideInError {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.input-info {
-  margin-top: 15px;
-  padding: 12px 15px;
-  background: #fffbeb;
+/* ==============================================
+   AUDIO ERROR
+   ============================================== */
+.audio-error {
+  background: #fff5f5;
+  color: #e53e3e;
+  padding: 15px;
   border-radius: 8px;
-  border-left: 4px solid #f6e05e;
-}
-
-.input-info p {
-  margin: 0;
-  color: #d69e2e;
-  font-size: 0.95em;
-  line-height: 1.4;
-}
-
-.submit-section {
-  margin-top: 20px;
+  margin-top: 15px;
   text-align: center;
+  border: 1px solid #feb2b2;
 }
 
-.keyboard-hint {
-  margin-top: 10px;
-  color: #666;
+.audio-error small {
+  color: #c53030;
+  font-size: 0.85em;
 }
 
 /* ==============================================
-   7. NAVIGATION SECTION
+   RESPONSIVE DESIGN
    ============================================== */
-.navigation-section {
-  text-align: center;
-  margin-top: 25px;
+@media (max-width: 768px) {
+  .listen-type-container {
+    padding: 10px;
+  }
+  
+  .listen-type-quiz-container {
+    padding: 20px;
+    border-radius: 15px;
+  }
+  
+  .listen-main-compact {
+    gap: 20px;
+    max-height: none;
+  }
+  
+  .action-buttons-compact {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .btn-submit,
+  .btn-skip {
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .audio-controls-compact {
+    gap: 10px;
+  }
+  
+  .play-btn-compact {
+    padding: 12px 24px;
+    font-size: 1em;
+    min-width: 140px;
+  }
+  
+  .typing-input-compact {
+    min-height: 80px;
+    font-size: 1em;
+  }
+}
+
+@media (max-width: 480px) {
+  .listen-header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .timer-section,
+  .progress-section {
+    font-size: 1em;
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 35px;
+    height: 35px;
+  }
+  
+  .level-indicator {
+    flex-direction: column;
+    gap: 5px;
+  }
 }
 
 /* ==============================================
-   8. INSTRUCTIONS STYLES
+   LOADING AND INSTRUCTIONS STYLES
    ============================================== */
+.loading-message {
+  text-align: center;
+  padding: 40px;
+  color: #4c51bf;
+}
+
+.loading-message p {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
 .instructions-container {
-  background: white;
-  border-radius: 15px;
-  padding: 30px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: left;
 }
 
 .instruction-content h3 {
   color: #4c51bf;
-  margin-bottom: 20px;
   text-align: center;
-  font-size: 1.3em;
+  margin-bottom: 25px;
+  font-size: 1.4em;
 }
 
 .instruction-list {
-  margin-bottom: 25px;
+  margin-bottom: 30px;
 }
 
 .instruction-item {
   display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 12px;
-  padding: 12px 15px;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 15px;
+  padding: 12px;
   background: #f8f9fa;
   border-radius: 8px;
-  transition: background 0.3s ease;
-}
-
-.instruction-item:hover {
-  background: #e9ecef;
+  border-left: 4px solid #4c51bf;
 }
 
 .instruction-icon {
   font-size: 1.2em;
-  width: 25px;
-  text-align: center;
-  flex-shrink: 0;
+  min-width: 20px;
 }
 
 .difficulty-info {
-  background: #f0f2ff;
+  background: linear-gradient(135deg, #f0fff4, #e6fffa);
   padding: 20px;
   border-radius: 12px;
-  text-align: center;
-  margin-bottom: 25px;
-  border: 1px solid #e0e6ff;
+  border-left: 4px solid #48bb78;
+  margin-top: 25px;
 }
 
 .difficulty-info h4 {
-  color: #4c51bf;
+  color: #2f855a;
   margin-bottom: 10px;
-  font-size: 1.1em;
-}
-
-.difficulty-info p {
-  color: #666;
-  margin: 0 0 8px 0;
-  line-height: 1.5;
 }
 
 .difficulty-info ul {
-  text-align: left;
-  margin: 15px auto 0 auto;
-  max-width: 350px;
+  margin: 15px 0;
   padding-left: 20px;
 }
 
 .difficulty-info li {
-  margin-bottom: 5px;
-  line-height: 1.4;
-}
-
-/* ==============================================
-   9. LOADING MESSAGE
-   ============================================== */
-.loading-message {
-  text-align: center;
-  padding: 40px 20px;
-  color: #666;
-}
-
-.loading-message p {
-  font-size: 1.1em;
-  margin-bottom: 10px;
-  line-height: 1.5;
-}
-
-/* ==============================================
-   10. RESULTS STYLES
-   ============================================== */
-.score-breakdown {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin: 25px 0;
-  max-width: 450px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.breakdown-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 15px 10px;
-  border-radius: 10px;
-  border: 2px solid;
-  transition: all 0.3s ease;
-  cursor: default;
-}
-
-.breakdown-item:hover {
-  transform: translateY(-2px);
-}
-
-.breakdown-item.perfect {
-  background: #f0fff4;
-  border-color: #48bb78;
-  color: #38a169;
-}
-
-.breakdown-item.close {
-  background: #fffbeb;
-  border-color: #ed8936;
-  color: #d69e2e;
-}
-
-.breakdown-item.partial {
-  background: #e6f4ff;
-  border-color: #4c51bf;
-  color: #3c4fe0;
-}
-
-.breakdown-item.incorrect {
-  background: #fff5f5;
-  border-color: #f56565;
-  color: #e53e3e;
-}
-
-.breakdown-icon {
-  font-size: 1.3em;
-  margin-bottom: 6px;
-}
-
-.breakdown-count {
-  font-size: 1.6em;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-
-.breakdown-label {
-  font-size: 0.8em;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.detailed-results {
-  margin: 30px 0;
-}
-
-.detailed-results h3 {
-  color: #4c51bf;
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.3em;
-}
-
-.results-list {
-  max-height: 400px;
-  overflow-y: auto;
-  padding-right: 8px;
-}
-
-.result-item {
-  background: white;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 15px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.result-item:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.result-item.perfect {
-  border-color: #48bb78;
-  background: #f0fff4;
-}
-
-.result-item.close {
-  border-color: #ed8936;
-  background: #fffbeb;
-}
-
-.result-item.partial {
-  border-color: #4c51bf;
-  background: #e6f4ff;
-}
-
-.result-item.incorrect {
-  border-color: #f56565;
-  background: #fff5f5;
-}
-
-.result-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.result-emoji {
-  font-size: 1.2em;
-}
-
-.result-level {
-  background: #4c51bf;
-  color: white;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.75em;
-  font-weight: 700;
-}
-
-.result-number {
-  color: #666;
-  font-weight: 600;
-  font-size: 0.9em;
-}
-
-.result-score {
-  margin-left: auto;
-  background: #f0f2ff;
-  color: #4c51bf;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.8em;
-  font-weight: 700;
-}
-
-.result-content {
-  text-align: left;
-  font-size: 0.95em;
-  line-height: 1.5;
-}
-
-.result-status {
-  margin-bottom: 10px;
-  color: #2d3748;
-  font-weight: 600;
-}
-
-.result-status small {
-  color: #666;
-  font-style: italic;
-  font-weight: normal;
-}
-
-.correct-text {
   margin-bottom: 8px;
   color: #2d3748;
 }
 
-/* ==============================================
-   11. MISTAKE HIGHLIGHTING SYSTEM
-   ============================================== */
-.user-answer-analysis {
-  margin-bottom: 10px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 10px;
-  border-left: 3px solid #cbd5e0;
-}
-
-.highlighted-answer {
-  margin: 10px 0;
-  line-height: 1.8;
-  font-family: 'Courier New', monospace;
-  font-size: 0.95em;
-  padding: 12px;
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  word-wrap: break-word;
-}
-
-.highlight-word {
-  padding: 3px 6px;
-  margin: 2px 1px;
-  border-radius: 4px;
-  display: inline-block;
-  cursor: help;
-  transition: all 0.3s ease;
-  font-weight: 500;
-}
-
-.highlight-word:hover {
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  z-index: 10;
-  position: relative;
-}
-
-.highlight-word.correct {
-  background: #c6f6d5;
-  color: #22543d;
-  border: 1px solid #9ae6b4;
-}
-
-.highlight-word.close {
-  background: #fef5e7;
-  color: #c05621;
-  border: 1px solid #fbb142;
-}
-
-.highlight-word.wrong {
-  background: #fed7d7;
-  color: #c53030;
-  border: 1px solid #fc8181;
-}
-
-.highlight-word.missing {
-  background: #e6f4ff;
-  color: #3c4fe0;
-  border: 1px dashed #4c51bf;
-  font-style: italic;
-}
-
-.highlight-word.extra {
-  background: #f7fafc;
-  color: #4a5568;
-  border: 1px solid #cbd5e0;
-  text-decoration: line-through;
-  opacity: 0.8;
-}
-
-.highlight-legend {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #e2e8f0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: center;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8em;
-  color: #666;
-  font-weight: 500;
-}
-
-.legend-color {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-.legend-color.correct {
-  background: #c6f6d5;
-  border: 1px solid #9ae6b4;
-}
-
-.legend-color.close {
-  background: #fef5e7;
-  border: 1px solid #fbb142;
-}
-
-.legend-color.wrong {
-  background: #fed7d7;
-  border: 1px solid #fc8181;
-}
-
-.legend-color.missing {
-  background: #e6f4ff;
-  border: 1px dashed #4c51bf;
-}
-
-.legend-color.extra {
-  background: #f7fafc;
-  border: 1px solid #cbd5e0;
-}
-
-.time-taken {
-  font-size: 0.85em;
-  color: #666;
-  font-style: italic;
-  margin-top: 8px;
-}
-
-/* ==============================================
-   12. CUSTOM SCROLLBAR
-   ============================================== */
-.results-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.results-list::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.results-list::-webkit-scrollbar-thumb {
-  background: #cbd5e0;
-  border-radius: 4px;
-}
-
-.results-list::-webkit-scrollbar-thumb:hover {
-  background: #a0aec0;
-}
-
-/* ==============================================
-   13. RESPONSIVE DESIGN
-   ============================================== */
-
-/* Large desktops */
-@media (min-width: 1200px) {
-  .listen-type-container {
-    padding: 60px;
-  }
-  
-  .listen-type-quiz-container {
-    padding: 50px;
-    min-height: calc(100vh - 120px);
-  }
-}
-
-/* Desktop */
-@media (min-width: 769px) and (max-width: 1199px) {
-  .listen-type-container {
-    padding: 40px;
-  }
-  
-  .listen-type-quiz-container {
-    padding: 40px;
-    min-height: calc(100vh - 80px);
-  }
-}
-
-/* Tablet */
-@media (min-width: 481px) and (max-width: 768px) {
-  .listen-type-container {
-    padding: 20px;
-  }
-
-  .listen-type-quiz-container {
-    padding: 30px;
-    min-height: calc(100vh - 40px);
-  }
-
-  .listen-header {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
-  }
-
-  .audio-section,
-  .input-section {
-    padding: 20px;
-  }
-
-  .play-btn {
-    padding: 15px 30px;
-    font-size: 1em;
-    min-width: 160px;
-  }
-
-  .instructions-container {
-    padding: 25px;
-  }
-
-  .instruction-item {
-    flex-direction: column;
-    text-align: center;
-    gap: 8px;
-  }
-
-  .level-badge {
-    margin-bottom: 10px;
-  }
-  
-  .score-breakdown {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  
-  .results-list {
-    max-height: 350px;
-  }
-}
-
-/* Mobile */
-@media (max-width: 480px) {
-  .listen-type-container {
-    padding: 15px;
-  }
-
-  .listen-type-quiz-container {
-    padding: 20px;
-    min-height: calc(100vh - 30px);
-  }
-
-  .listen-header {
-    flex-direction: column;
-    gap: 10px;
-    text-align: center;
-  }
-
-  .timer-text {
-    font-size: 1.1em;
-  }
-
-  .play-btn {
-    padding: 14px 28px;
-    min-width: 150px;
-    font-size: 0.95em;
-  }
-
-  .typing-input {
-    min-height: 70px;
-    padding: 12px;
-    font-size: 1em;
-  }
-
-  .instructions-container {
-    padding: 20px;
-  }
-
-  .instruction-item {
-    padding: 10px;
-    flex-direction: column;
-    text-align: center;
-    gap: 6px;
-  }
-
-  .difficulty-info {
-    padding: 15px;
-  }
-  
-  .score-breakdown {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-  
-  .breakdown-item {
-    padding: 12px 8px;
-  }
-  
-  .breakdown-count {
-    font-size: 1.4em;
-  }
-  
-  .results-list {
-    max-height: 300px;
-  }
-  
-  .result-item {
-    padding: 15px;
-  }
-  
-  .highlight-legend {
-    gap: 10px;
-  }
-  
-  .legend-item {
-    font-size: 0.75em;
-  }
-  
-  .highlighted-answer {
-    font-size: 0.9em;
-    padding: 10px;
-  }
-
-  .content-filter-error {
-    padding: 12px;
-    gap: 10px;
-  }
-
-  .filter-error-title {
-    font-size: 0.9em;
-  }
-
-  .filter-error-message {
-    font-size: 0.8em;
-  }
+.btn-large {
+  padding: 15px 30px;
+  font-size: 1.2em;
+  margin: 20px auto;
+  display: block;
+  min-width: 250px;
 }
