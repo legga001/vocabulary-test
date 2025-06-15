@@ -703,14 +703,16 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearTimeout(timer);
   }, [hasStarted, showResults, timeLeft]); // Minimal dependencies
 
-  // FIXED: Audio element management - Ensure events fire properly
+  // FIXED: Audio element management - Ensure it runs when test sentences load
   useEffect(() => {
     console.log('🎵 Audio setup effect triggered for question', currentSentence + 1);
     console.log('Current data:', currentData?.audioFile);
     console.log('Audio ref exists:', !!audioRef.current);
+    console.log('Test sentences loaded:', testSentences.length > 0);
     
-    if (!audioRef.current || !currentData) {
-      console.log('❌ Missing audioRef or currentData, skipping setup');
+    // CRITICAL: Don't run if test sentences aren't loaded yet
+    if (!audioRef.current || !currentData || testSentences.length === 0) {
+      console.log('❌ Missing audioRef, currentData, or testSentences not loaded, skipping setup');
       return;
     }
 
@@ -789,11 +791,18 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     // Cleanup function
     return () => {
       console.log('🧹 Cleaning up event listeners for:', currentData?.audioFile || 'unknown');
+      
+      // Clear any pending fallback timer
+      if (audio._fallbackTimer) {
+        clearTimeout(audio._fallbackTimer);
+        audio._fallbackTimer = null;
+      }
+      
       Object.entries(handlers).forEach(([event, handler]) => {
         audio.removeEventListener(event, handler);
       });
     };
-  }, [currentSentence, currentData?.audioFile, resetAudioState, updateAudioState]);
+  }, [currentSentence, currentData?.audioFile, testSentences.length, resetAudioState, updateAudioState]);
 
   // Removed the backup auto-play effect since it's causing conflicts
   // The main auto-play effect should handle everything
