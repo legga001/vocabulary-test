@@ -103,7 +103,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   const [testSentences, setTestSentences] = useState([]);
   const [exerciseStartTime, setExerciseStartTime] = useState(null);
   
-  // Audio state - simplified
+  // Audio state
   const [isPlaying, setIsPlaying] = useState(false);
   const [playCount, setPlayCount] = useState(0);
   const [audioError, setAudioError] = useState(false);
@@ -118,17 +118,9 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   }, [testSentences, currentQuestion]);
 
   // ==============================================
-  // AUDIO MANAGEMENT - SIMPLIFIED
+  // AUDIO MANAGEMENT - FIXED VERSION
   // ==============================================
   
-  // Reset audio state for new question
-  const resetAudioState = useCallback(() => {
-    console.log('🔄 Resetting audio state for question', currentQuestion + 1);
-    setIsPlaying(false);
-    setPlayCount(0);
-    setAudioError(false);
-  }, [currentQuestion]);
-
   // Play audio function
   const playAudio = useCallback(() => {
     if (!audioRef.current || !currentData || playCount >= 3 || isPlaying || audioError) {
@@ -136,24 +128,30 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     }
 
     console.log('▶️ Playing audio for question', currentQuestion + 1);
-    setIsPlaying(true);
     
     const audio = audioRef.current;
+    
+    // Reset audio to start
     audio.currentTime = 0;
     
+    // Set playing state immediately
+    setIsPlaying(true);
+    
+    // Play audio
     const playPromise = audio.play();
     if (playPromise) {
       playPromise
         .then(() => {
+          console.log('✅ Audio playing successfully');
           setPlayCount(prev => prev + 1);
         })
         .catch(error => {
-          console.error('Audio play error:', error);
+          console.error('❌ Audio play error:', error);
           setAudioError(true);
           setIsPlaying(false);
         });
     }
-  }, [audioRef, currentData, playCount, isPlaying, audioError, currentQuestion]);
+  }, [currentData, playCount, isPlaying, audioError, currentQuestion]);
 
   // ==============================================
   // MAIN HANDLERS
@@ -168,8 +166,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   const startExercise = useCallback(() => {
     setHasStarted(true);
     setExerciseStartTime(Date.now());
-    resetAudioState();
-  }, [resetAudioState]);
+  }, []);
 
   const moveToNextQuestion = useCallback(() => {
     if (!currentData) return;
@@ -188,7 +185,10 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       setCurrentQuestion(prev => prev + 1);
       setUserInput('');
       setTimeLeft(60);
-      resetAudioState();
+      // Reset audio state for new question
+      setIsPlaying(false);
+      setPlayCount(0);
+      setAudioError(false);
     } else {
       // Finish exercise
       finishExercise([...answers, {
@@ -198,7 +198,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
         timeTaken: 60 - timeLeft
       }]);
     }
-  }, [currentData, userInput, timeLeft, currentQuestion, testSentences.length, resetAudioState, answers]);
+  }, [currentData, userInput, timeLeft, currentQuestion, testSentences.length, answers]);
 
   const handleSubmit = useCallback(() => {
     if (!currentData || !userInput.trim()) return;
@@ -260,11 +260,13 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     setAnswers([]);
     setHasStarted(false);
     setExerciseStartTime(null);
-    resetAudioState();
+    setIsPlaying(false);
+    setPlayCount(0);
+    setAudioError(false);
     
     const newSentences = generateTestSentences();
     setTestSentences(newSentences);
-  }, [resetAudioState]);
+  }, []);
 
   // ==============================================
   // EFFECTS
@@ -293,49 +295,52 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearTimeout(timer);
   }, [hasStarted, showResults, timeLeft, moveToNextQuestion]);
 
-  // Audio event management - SIMPLIFIED
+  // FIXED: Audio event management
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const handleEnded = () => {
-      console.log('🎵 Audio ended');
+      console.log('🎵 Audio ended for question', currentQuestion + 1);
       setIsPlaying(false);
     };
 
     const handlePause = () => {
-      console.log('🎵 Audio paused');
+      console.log('🎵 Audio paused for question', currentQuestion + 1);
       setIsPlaying(false);
     };
 
-    const handleError = () => {
-      console.log('🎵 Audio error');
+    const handleError = (e) => {
+      console.error('🎵 Audio error for question', currentQuestion + 1, e);
       setAudioError(true);
       setIsPlaying(false);
     };
 
-    // Add listeners
+    // Add event listeners
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('error', handleError);
 
+    // Clean up function
     return () => {
+      console.log('🧹 Cleaning up audio listeners for question', currentQuestion + 1);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('error', handleError);
     };
-  }, [currentQuestion]); // Re-run when question changes
+  }, [currentQuestion]); // Re-attach listeners when question changes
 
-  // Auto-play logic
+  // Auto-play first audio after a delay
   useEffect(() => {
-    if (!hasStarted || !currentData || playCount > 0 || isPlaying) return;
+    if (!hasStarted || !currentData || playCount > 0 || showResults) return;
 
     const autoPlayTimer = setTimeout(() => {
+      console.log('🎯 Auto-playing audio for question', currentQuestion + 1);
       playAudio();
     }, 1500);
 
     return () => clearTimeout(autoPlayTimer);
-  }, [hasStarted, currentData, playCount, isPlaying, playAudio]);
+  }, [hasStarted, currentData, playCount, showResults, currentQuestion, playAudio]);
 
   // Focus input
   useEffect(() => {
@@ -522,7 +527,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           <button className="close-btn" onClick={onBack}>✕</button>
         </div>
 
-        {/* Main content - compact layout */}
+        {/* Main content */}
         <div className="listen-main-compact">
           {/* Level indicator */}
           <div className="level-indicator">
@@ -535,9 +540,8 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             <audio 
               ref={audioRef} 
               preload="auto"
-              key={`question-${currentQuestion}`}
+              src={currentData ? `/${currentData.audioFile}` : ''}
             >
-              <source src={`/${currentData?.audioFile}`} type="audio/mpeg" />
               Your browser does not support the audio element.
             </audio>
             
@@ -562,7 +566,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
 
             {audioError && (
               <div className="audio-error">
-                ⚠️ Audio file not found: {currentData?.audioFile}
+                ⚠️ Audio playback error. Please try again or skip this question.
               </div>
             )}
           </div>
@@ -607,9 +611,9 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           {/* Debug info */}
           {process.env.NODE_ENV === 'development' && (
             <div className="debug-info-compact">
-              🐛 Playing: {isPlaying ? 'Yes' : 'No'} | 
-              Plays: {playCount}/3 | 
-              Error: {audioError ? 'Yes' : 'No'}
+              🐛 Q{currentQuestion + 1} | Playing: {isPlaying ? 'Yes' : 'No'} | 
+              Plays: {playCount}/3 | Error: {audioError ? 'Yes' : 'No'} |
+              Audio: {currentData?.audioFile || 'None'}
             </div>
           )}
         </div>
