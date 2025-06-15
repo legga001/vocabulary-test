@@ -425,7 +425,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     });
   }, []);
 
-  // NEW: Play audio function with better state management
+  // NEW: Play audio function with enhanced first question support
   const playAudio = useCallback(() => {
     console.log('🎯 Play audio requested');
     console.log('Current audio state:', audioState);
@@ -473,6 +473,17 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             hasError: true 
           });
         });
+    } else {
+      // Fallback for browsers that don't return a promise
+      updateAudioState({ playCount: audioState.playCount + 1 });
+      
+      // Fallback timeout to reset playing state if needed
+      setTimeout(() => {
+        if (audio.paused || audio.ended) {
+          console.log('⏰ Fallback: Resetting playing state');
+          updateAudioState({ isPlaying: false });
+        }
+      }, 2000);
     }
   }, [audioState, currentData, updateAudioState]);
 
@@ -680,7 +691,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearTimeout(timer);
   }, [hasStarted, showResults, timeLeft]); // Minimal dependencies
 
-  // NEW: Audio element management - COMPLETELY REWRITTEN
+  // NEW: Audio element management - FIXED for first question button state
   useEffect(() => {
     if (!audioRef.current || !currentData) return;
 
@@ -690,58 +701,66 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     // CRITICAL: Reset state immediately when audio element changes
     resetAudioState();
     
-    // Define all event handlers
-    const handlers = {
-      loadstart: () => {
-        console.log('🔄 Audio loadstart');
-        updateAudioState({ isLoaded: false, isPlaying: false, hasError: false });
-      },
-      
-      loadeddata: () => {
-        console.log('✅ Audio loadeddata');
-        updateAudioState({ isLoaded: true, hasError: false });
-      },
-      
-      canplay: () => {
-        console.log('✅ Audio canplay');
-        updateAudioState({ isLoaded: true, hasError: false });
-      },
-      
-      play: () => {
-        console.log('▶️ Audio play event');
-        updateAudioState({ isPlaying: true });
-      },
-      
-      pause: () => {
-        console.log('⏸️ Audio pause event');
-        updateAudioState({ isPlaying: false });
-      },
-      
-      ended: () => {
-        console.log('⏹️ Audio ended event');
-        updateAudioState({ isPlaying: false });
-      },
-      
-      error: (e) => {
-        console.error('❌ Audio error event:', e);
-        updateAudioState({ 
-          isPlaying: false, 
-          hasError: true,
-          isLoaded: false 
-        });
-      }
-    };
+    // Force a small delay to ensure the audio element is properly initialized
+    const initTimer = setTimeout(() => {
+      // Define all event handlers
+      const handlers = {
+        loadstart: () => {
+          console.log('🔄 Audio loadstart');
+          updateAudioState({ isLoaded: false, isPlaying: false, hasError: false });
+        },
+        
+        loadeddata: () => {
+          console.log('✅ Audio loadeddata');
+          updateAudioState({ isLoaded: true, hasError: false });
+        },
+        
+        canplay: () => {
+          console.log('✅ Audio canplay');
+          updateAudioState({ isLoaded: true, hasError: false });
+        },
+        
+        play: () => {
+          console.log('▶️ Audio play event');
+          updateAudioState({ isPlaying: true });
+        },
+        
+        pause: () => {
+          console.log('⏸️ Audio pause event');
+          updateAudioState({ isPlaying: false });
+        },
+        
+        ended: () => {
+          console.log('⏹️ Audio ended event');
+          updateAudioState({ isPlaying: false });
+        },
+        
+        error: (e) => {
+          console.error('❌ Audio error event:', e);
+          updateAudioState({ 
+            isPlaying: false, 
+            hasError: true,
+            isLoaded: false 
+          });
+        }
+      };
 
-    // Add all event listeners
-    Object.entries(handlers).forEach(([event, handler]) => {
-      audio.addEventListener(event, handler);
-    });
+      // Add all event listeners
+      Object.entries(handlers).forEach(([event, handler]) => {
+        audio.addEventListener(event, handler);
+      });
+
+      // Store cleanup function
+      return () => {
+        Object.entries(handlers).forEach(([event, handler]) => {
+          audio.removeEventListener(event, handler);
+        });
+      };
+    }, 100); // Small delay to ensure audio element is ready
 
     // Cleanup function
     return () => {
-      Object.entries(handlers).forEach(([event, handler]) => {
-        audio.removeEventListener(event, handler);
-      });
+      clearTimeout(initTimer);
     };
   }, [currentData, resetAudioState, updateAudioState]);
 
@@ -769,7 +788,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     }
   }, [audioState.isLoaded, audioState.hasError, audioState.playCount, audioState.isPlaying, hasStarted, currentData, playAudio]);
 
-  // NEW: Auto-play logic - FIXED for first question
+  // FIXED: Auto-play logic with better first question handling
   useEffect(() => {
     // Only auto-play if:
     // - Exercise has started
@@ -786,55 +805,43 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     console.log('⏰ Setting up auto-play timer for question', currentSentence + 1);
     console.log('Audio state for auto-play:', audioState);
     
-    // FIXED: For first question, wait for audio to be loaded OR use longer delay
     const isFirstQuestion = currentSentence === 0;
     
-    if (isFirstQuestion) {
-      // For first question, wait for audio to load OR use a longer timeout
-      const attemptAutoPlay = () => {
-        console.log('🎯 Attempting auto-play for first question');
-        console.log('Audio loaded:', audioState.isLoaded, 'Has error:', audioState.hasError);
-        
-        if (audioState.hasError) {
-          console.log('❌ Audio has error, skipping auto-play');
-          return;
-        }
-        
-        // Try to play regardless of loaded state (browser will handle it)
-        playAudio();
-      };
-      
-      if (audioState.isLoaded && !audioState.hasError) {
-        // Audio is ready, play immediately
-        console.log('✅ Audio ready, auto-playing immediately');
-        const timer = setTimeout(attemptAutoPlay, 500);
-        return () => clearTimeout(timer);
-      } else {
-        // Audio not ready, wait longer
-        console.log('⏳ Audio not ready, waiting longer for first question');
-        const timer = setTimeout(attemptAutoPlay, 3000); // Wait 3 seconds for first question
-        return () => clearTimeout(timer);
-      }
-    } else {
-      // For other questions, use normal logic
-      console.log('⏰ Setting up auto-play for question', currentSentence + 1);
+    // Enhanced auto-play logic that waits for proper audio setup
+    const attemptAutoPlay = () => {
+      console.log('🎯 Attempting auto-play for question', currentSentence + 1);
+      console.log('Audio loaded:', audioState.isLoaded, 'Has error:', audioState.hasError);
       
       if (audioState.hasError) {
         console.log('❌ Audio has error, skipping auto-play');
         return;
       }
       
-      const autoPlayTimer = setTimeout(() => {
-        console.log('🔄 Auto-play timer triggered for question', currentSentence + 1);
-        playAudio();
-      }, 1000);
+      // For first question, ensure audio element is properly initialized
+      if (isFirstQuestion && audioRef.current) {
+        const audio = audioRef.current;
+        
+        // Force a readyState check
+        if (audio.readyState === 0) {
+          console.log('⏳ Audio not ready yet, waiting a bit more...');
+          setTimeout(attemptAutoPlay, 1000);
+          return;
+        }
+      }
+      
+      playAudio();
+    };
+    
+    // Use longer delay for first question to ensure proper initialization
+    const delay = isFirstQuestion ? 2000 : 1000;
+    
+    const autoPlayTimer = setTimeout(attemptAutoPlay, delay);
 
-      return () => {
-        console.log('❌ Clearing auto-play timer');
-        clearTimeout(autoPlayTimer);
-      };
-    }
-  }, [hasStarted, currentData, audioState, currentSentence, playAudio]);
+    return () => {
+      console.log('❌ Clearing auto-play timer');
+      clearTimeout(autoPlayTimer);
+    };
+  }, [hasStarted, currentData, audioState.playCount, audioState.isPlaying, audioState.hasError, currentSentence, playAudio]);
 
   // Focus input when appropriate
   useEffect(() => {
