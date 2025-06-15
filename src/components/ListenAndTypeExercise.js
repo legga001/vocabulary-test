@@ -691,7 +691,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearTimeout(timer);
   }, [hasStarted, showResults, timeLeft]); // Minimal dependencies
 
-  // NEW: Audio element management - FIXED for first question button state
+  // FIXED: Audio element management - Proper event listener setup for first question
   useEffect(() => {
     if (!audioRef.current || !currentData) return;
 
@@ -701,94 +701,68 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     // CRITICAL: Reset state immediately when audio element changes
     resetAudioState();
     
-    // Force a small delay to ensure the audio element is properly initialized
-    const initTimer = setTimeout(() => {
-      // Define all event handlers
-      const handlers = {
-        loadstart: () => {
-          console.log('🔄 Audio loadstart');
-          updateAudioState({ isLoaded: false, isPlaying: false, hasError: false });
-        },
-        
-        loadeddata: () => {
-          console.log('✅ Audio loadeddata');
-          updateAudioState({ isLoaded: true, hasError: false });
-        },
-        
-        canplay: () => {
-          console.log('✅ Audio canplay');
-          updateAudioState({ isLoaded: true, hasError: false });
-        },
-        
-        play: () => {
-          console.log('▶️ Audio play event');
-          updateAudioState({ isPlaying: true });
-        },
-        
-        pause: () => {
-          console.log('⏸️ Audio pause event');
-          updateAudioState({ isPlaying: false });
-        },
-        
-        ended: () => {
-          console.log('⏹️ Audio ended event');
-          updateAudioState({ isPlaying: false });
-        },
-        
-        error: (e) => {
-          console.error('❌ Audio error event:', e);
-          updateAudioState({ 
-            isPlaying: false, 
-            hasError: true,
-            isLoaded: false 
-          });
-        }
-      };
-
-      // Add all event listeners
-      Object.entries(handlers).forEach(([event, handler]) => {
-        audio.addEventListener(event, handler);
-      });
-
-      // Store cleanup function
-      return () => {
-        Object.entries(handlers).forEach(([event, handler]) => {
-          audio.removeEventListener(event, handler);
+    // Define all event handlers
+    const handlers = {
+      loadstart: () => {
+        console.log('🔄 Audio loadstart');
+        updateAudioState({ isLoaded: false, isPlaying: false, hasError: false });
+      },
+      
+      loadeddata: () => {
+        console.log('✅ Audio loadeddata');
+        updateAudioState({ isLoaded: true, hasError: false });
+      },
+      
+      canplay: () => {
+        console.log('✅ Audio canplay');
+        updateAudioState({ isLoaded: true, hasError: false });
+      },
+      
+      play: () => {
+        console.log('▶️ Audio play event');
+        updateAudioState({ isPlaying: true });
+      },
+      
+      pause: () => {
+        console.log('⏸️ Audio pause event');
+        updateAudioState({ isPlaying: false });
+      },
+      
+      ended: () => {
+        console.log('⏹️ Audio ended event');
+        updateAudioState({ isPlaying: false });
+      },
+      
+      error: (e) => {
+        console.error('❌ Audio error event:', e);
+        updateAudioState({ 
+          isPlaying: false, 
+          hasError: true,
+          isLoaded: false 
         });
-      };
-    }, 100); // Small delay to ensure audio element is ready
+      }
+    };
+
+    // Add all event listeners IMMEDIATELY (no delay)
+    Object.entries(handlers).forEach(([event, handler]) => {
+      audio.addEventListener(event, handler);
+    });
+
+    console.log('🎧 Event listeners attached for:', currentData.audioFile);
 
     // Cleanup function
     return () => {
-      clearTimeout(initTimer);
+      console.log('🧹 Cleaning up event listeners for:', currentData?.audioFile || 'unknown');
+      Object.entries(handlers).forEach(([event, handler]) => {
+        audio.removeEventListener(event, handler);
+      });
     };
   }, [currentData, resetAudioState, updateAudioState]);
 
-  // NEW: Backup auto-play when audio becomes ready (especially for first question)
-  useEffect(() => {
-    // Trigger auto-play when audio becomes loaded (backup mechanism)
-    if (hasStarted && 
-        currentData && 
-        audioState.isLoaded && 
-        !audioState.hasError && 
-        audioState.playCount === 0 && 
-        !audioState.isPlaying) {
-      
-      console.log('🔄 Audio just became ready - triggering backup auto-play');
-      
-      // Small delay to ensure everything is settled
-      const backupTimer = setTimeout(() => {
-        if (audioState.playCount === 0 && !audioState.isPlaying) {
-          console.log('✅ Executing backup auto-play');
-          playAudio();
-        }
-      }, 200);
-      
-      return () => clearTimeout(backupTimer);
-    }
-  }, [audioState.isLoaded, audioState.hasError, audioState.playCount, audioState.isPlaying, hasStarted, currentData, playAudio]);
+  // Removed the backup auto-play effect since it's causing conflicts
+  // The main auto-play effect should handle everything
 
-  // FIXED: Auto-play logic with better first question handling
+  // FIXED: Simplified auto-play logic without complex timing issues
   useEffect(() => {
     // Only auto-play if:
     // - Exercise has started
@@ -805,37 +779,20 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     console.log('⏰ Setting up auto-play timer for question', currentSentence + 1);
     console.log('Audio state for auto-play:', audioState);
     
-    const isFirstQuestion = currentSentence === 0;
-    
-    // Enhanced auto-play logic that waits for proper audio setup
-    const attemptAutoPlay = () => {
-      console.log('🎯 Attempting auto-play for question', currentSentence + 1);
-      console.log('Audio loaded:', audioState.isLoaded, 'Has error:', audioState.hasError);
+    // Simple auto-play with consistent timing for all questions
+    const autoPlayTimer = setTimeout(() => {
+      console.log('🎯 Auto-play timer triggered for question', currentSentence + 1);
       
       if (audioState.hasError) {
         console.log('❌ Audio has error, skipping auto-play');
         return;
       }
       
-      // For first question, ensure audio element is properly initialized
-      if (isFirstQuestion && audioRef.current) {
-        const audio = audioRef.current;
-        
-        // Force a readyState check
-        if (audio.readyState === 0) {
-          console.log('⏳ Audio not ready yet, waiting a bit more...');
-          setTimeout(attemptAutoPlay, 1000);
-          return;
-        }
+      // Check if we still haven't played and aren't currently playing
+      if (audioState.playCount === 0 && !audioState.isPlaying) {
+        playAudio();
       }
-      
-      playAudio();
-    };
-    
-    // Use longer delay for first question to ensure proper initialization
-    const delay = isFirstQuestion ? 2000 : 1000;
-    
-    const autoPlayTimer = setTimeout(attemptAutoPlay, delay);
+    }, 1500); // Consistent 1.5 second delay for all questions
 
     return () => {
       console.log('❌ Clearing auto-play timer');
