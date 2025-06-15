@@ -425,7 +425,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     });
   }, []);
 
-  // NEW: Play audio function with enhanced first question support
+  // ENHANCED: Play audio function with fallback state management
   const playAudio = useCallback(() => {
     console.log('🎯 Play audio requested');
     console.log('Current audio state:', audioState);
@@ -465,6 +465,18 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
         .then(() => {
           console.log('✅ Audio play promise resolved');
           updateAudioState({ playCount: audioState.playCount + 1 });
+          
+          // FALLBACK: Set a timer to reset playing state if events don't fire
+          const fallbackTimer = setTimeout(() => {
+            console.log('⏰ FALLBACK: Checking if audio is still playing after 10 seconds');
+            if (audio.ended || audio.paused || audio.currentTime === 0) {
+              console.log('⏰ FALLBACK: Audio appears to have finished, resetting state');
+              updateAudioState({ isPlaying: false });
+            }
+          }, 10000); // 10 second fallback
+          
+          // Store timer reference for cleanup
+          audio._fallbackTimer = fallbackTimer;
         })
         .catch(error => {
           console.error('❌ Audio play promise rejected:', error);
@@ -477,7 +489,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       // Fallback for browsers that don't return a promise
       updateAudioState({ playCount: audioState.playCount + 1 });
       
-      // Fallback timeout to reset playing state if needed
+      // Fallback timeout to reset playing state
       setTimeout(() => {
         if (audio.paused || audio.ended) {
           console.log('⏰ Fallback: Resetting playing state');
@@ -691,7 +703,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearTimeout(timer);
   }, [hasStarted, showResults, timeLeft]); // Minimal dependencies
 
-  // FIXED: Single audio element management - No conflicts
+  // FIXED: Audio element management - Ensure events fire properly
   useEffect(() => {
     console.log('🎵 Audio setup effect triggered for question', currentSentence + 1);
     console.log('Current data:', currentData?.audioFile);
@@ -707,9 +719,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     
     // CRITICAL: Reset state immediately when audio element changes
     resetAudioState();
-    
-    // Force reload the audio source
-    audio.load();
     
     // Define all event handlers
     const handlers = {
@@ -736,11 +745,23 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       pause: () => {
         console.log('⏸️ Audio pause event');
         updateAudioState({ isPlaying: false });
+        
+        // Clear any fallback timer since the proper event fired
+        if (audio._fallbackTimer) {
+          clearTimeout(audio._fallbackTimer);
+          audio._fallbackTimer = null;
+        }
       },
       
       ended: () => {
         console.log('⏹️ Audio ended event');
         updateAudioState({ isPlaying: false });
+        
+        // Clear any fallback timer since the proper event fired
+        if (audio._fallbackTimer) {
+          clearTimeout(audio._fallbackTimer);
+          audio._fallbackTimer = null;
+        }
       },
       
       error: (e) => {
@@ -753,12 +774,17 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       }
     };
 
-    // Add all event listeners IMMEDIATELY
+    // Add all event listeners FIRST
     Object.entries(handlers).forEach(([event, handler]) => {
       audio.addEventListener(event, handler);
     });
 
     console.log('🎧 Event listeners attached for:', currentData.audioFile);
+
+    // THEN force reload the audio source (this ensures events are attached when load happens)
+    audio.load();
+    
+    console.log('🔄 Audio.load() called to refresh source');
 
     // Cleanup function
     return () => {
