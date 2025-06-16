@@ -1,0 +1,455 @@
+/* ==============================================
+   BASIC WRITING EXERCISE CSS
+   ============================================== */
+
+/* ==============================================
+   1. EXERCISE START SECTION
+   ============================================== */
+.exercise-start {
+  text-align: center;
+  margin: 40px 0;
+  padding: 30px;
+  background: linear-gradient(135deg, #f0f2ff, #e6f4ff);
+  border-radius: 20px;
+  border: 2px solid #4c51bf;
+}
+
+.btn-large {
+  font-size: 1.3em;
+  padding: 15px 30px;
+  margin-bottom: 15px;
+}
+
+.start-note {
+  color: #666;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ==============================================
+   2. WRITING INTERFACE
+   ============================================== */
+.writing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.writing-header h2 {
+  color: #4c51bf;
+  margin: 0;
+  font-size: 1.5em;
+}
+
+.writing-controls {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.timer {
+  background: #4c51bf;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 1em;
+  transition: all 0.3s ease;
+}
+
+.timer.urgent {
+  background: #e53e3e;
+  animation: pulse 1s infinite;
+}
+
+.word-counter {
+  background: #f8f9fa;
+  border: 2px solid #e2e8f0;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.word-counter small {
+  color: #999;
+  font-size: 0.8em;
+  margin-left: 5px;
+}
+
+/* ==============================================
+   3. WRITING PROMPT SECTION
+   ============================================== */
+.writing-prompt {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.photo-placeholder {
+  background: linear-gradient(135deg, #f0f2ff, #e6f4ff);
+  border: 2px dashed #4c51bf;
+  border-radius: 10px;
+  padding: 40px 20px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.photo-icon {
+  font-size: 3em;
+  margin-bottom: 10px;
+  color: #4c51bf;
+}
+
+.photo-placeholder small {
+  color: #666;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.placeholder-note {
+  color: #999;
+  font-size: 0.8em;
+  font-style: italic;
+  margin: 5px 0 0 0;
+}
+
+.prompt-text {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+  text-align: left;
+  border-left: 4px solid #4c51bf;
+}
+
+.prompt-text strong {
+  color: #4c51bf;
+}
+
+.level-indicator {
+  margin-top: 10px;
+}
+
+.level-badge {
+  background: #4c51bf;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: 600;
+}
+
+/* ==============================================
+   4. WRITING AREA
+   ============================================== */
+.writing-area {
+  margin-bottom: 20px;
+}
+
+.writing-textarea {
+  width: 100%;
+  min-height: 300px;
+  padding: 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.1em;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.writing-textarea:focus {
+  border-color: #4c51bf;
+  box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.1);
+}
+
+.writing-textarea::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+.writing-footer {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ==============================================
+   5. FEEDBACK SECTION
+   ============================================== */
+.feedback-score {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.score-circle {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.score-number {
+  font-size: 3.5em;
+  font-weight: 900;
+  color: #4c51bf;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 1.5em;
+  color: #666;
+  margin-left: 5px;
+}
+
+.score-message {
+  font-size: 1.3em;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.feedback-section {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 25px;
+}
+
+.feedback-section h3 {
+  color: #4c51bf;
+  margin-bottom: 20px;
+  font-size: 1.3em;
+  border-bottom: 2px solid #f0f2ff;
+  padding-bottom: 10px;
+}
+
+/* ==============================================
+   6. WRITING STATISTICS
+   ============================================== */
+.writing-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.stat-item {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.stat-label {
+  display: block;
+  color: #666;
+  font-size: 0.9em;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.stat-value {
+  display: block;
+  color: #4c51bf;
+  font-size: 1.5em;
+  font-weight: 700;
+}
+
+/* ==============================================
+   7. SUGGESTIONS
+   ============================================== */
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.suggestion-item {
+  background: #e6f4ff;
+  color: #3c4fe0;
+  padding: 12px 15px;
+  border-radius: 8px;
+  border-left: 4px solid #4c51bf;
+  font-weight: 500;
+}
+
+/* ==============================================
+   8. TEXT DISPLAYS
+   ============================================== */
+.user-writing,
+.model-answer {
+  background: #f8f9fa;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 20px;
+  line-height: 1.7;
+  font-size: 1.05em;
+  color: #2d3748;
+  margin-bottom: 15px;
+}
+
+.model-answer {
+  background: #f0f2ff;
+  border-color: #4c51bf;
+}
+
+.comparison-tips {
+  background: #fffbeb;
+  border: 2px solid #f6e05e;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 15px;
+}
+
+.comparison-tips h4 {
+  color: #d69e2e;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+}
+
+.comparison-tips ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.comparison-tips li {
+  color: #744210;
+  margin-bottom: 5px;
+  line-height: 1.4;
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+/* ==============================================
+   9. ANIMATIONS
+   ============================================== */
+@keyframes pulse {
+  0%, 100% { 
+    transform: scale(1); 
+    box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.4);
+  }
+  50% { 
+    transform: scale(1.05); 
+    box-shadow: 0 0 0 10px rgba(229, 62, 62, 0);
+  }
+}
+
+/* ==============================================
+   10. RESPONSIVE DESIGN
+   ============================================== */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .writing-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .writing-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .writing-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .instruction-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .writing-instructions {
+    padding: 20px;
+  }
+  
+  .photo-placeholder {
+    padding: 30px 15px;
+  }
+  
+  .photo-icon {
+    font-size: 2.5em;
+  }
+  
+  .writing-textarea {
+    min-height: 250px;
+    padding: 15px;
+    font-size: 1em;
+  }
+  
+  .feedback-section {
+    padding: 20px;
+  }
+  
+  .score-number {
+    font-size: 3em;
+  }
+  
+  .writing-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .writing-footer,
+  .feedback-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .writing-footer .btn,
+  .feedback-actions .btn {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .user-writing,
+  .model-answer {
+    padding: 15px;
+    font-size: 1em;
+  }
+  
+  .timer,
+  .word-counter {
+    font-size: 0.9em;
+    padding: 6px 12px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 360px) {
+  .score-number {
+    font-size: 2.5em;
+  }
+  
+  .writing-header h2 {
+    font-size: 1.3em;
+  }
+  
+  .feedback-section h3 {
+    font-size: 1.2em;
+  }
+  
+  .stat-value {
+    font-size: 1.3em;
+  }
+}
