@@ -112,9 +112,11 @@ function Quiz({ onFinish, quizType }) {
     } else {
       // Generate fresh random questions for standard vocabulary tests
       newQuestions = getNewQuestions();
-      console.log('📚 Generated new random vocabulary test:', newQuestions.map(q => ({
+      console.log('📚 Generated new random vocabulary test with hints:', newQuestions.map(q => ({
         level: q.level,
-        word: q.answer
+        word: q.answer,
+        hasHint: !!q.hint,
+        hint: q.hint ? q.hint.substring(0, 30) + '...' : 'NO HINT'
       })));
     }
     
@@ -220,7 +222,10 @@ function Quiz({ onFinish, quizType }) {
       newChecked[currentQuestion] = true;
       setCheckedQuestions(newChecked);
     } else {
-      setFeedback({ show: true, type: 'incorrect', message: `💡 Hint: ${question.hint}` });
+      // Ensure we have a hint to display
+      const hintText = question.hint || "Try to think about the context of the sentence.";
+      setFeedback({ show: true, type: 'incorrect', message: `💡 Hint: ${hintText}` });
+      console.log('🔍 Showing hint for:', question.answer, '→', hintText);
       // Don't disable input for incorrect answers - allow retry
     }
   };
