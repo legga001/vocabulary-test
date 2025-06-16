@@ -1,6 +1,6 @@
-// src/components/Quiz.js - Rewritten with fixed British/American spelling support
+// src/components/Quiz.js - Updated with random question selection and British spelling support
 import React, { useState, useEffect } from 'react';
-import { questions as staticQuestions, correctMessages } from '../questionsData';
+import { getNewQuestions, correctMessages } from '../questionsData';
 import { getArticleQuestions } from '../articleQuestions';
 import LetterInput from './LetterInput';
 import { processSentence, extractVisibleLetters } from '../utils/quizHelpers';
@@ -101,20 +101,43 @@ function Quiz({ onFinish, quizType }) {
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
   const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
   const [feedback, setFeedback] = useState({ show: false, type: '', message: '' });
+  const [questions, setQuestions] = useState([]);
 
-  // Get questions based on quiz type
-  const questions = quizType === 'article' ? getArticleQuestions() : staticQuestions;
+  // Load questions when component mounts or quiz type changes
+  useEffect(() => {
+    let newQuestions;
+    
+    if (quizType === 'article') {
+      newQuestions = getArticleQuestions();
+    } else {
+      // Generate fresh random questions for standard vocabulary tests
+      newQuestions = getNewQuestions();
+      console.log('📚 Generated new random vocabulary test:', newQuestions.map(q => ({
+        level: q.level,
+        word: q.answer
+      })));
+    }
+    
+    setQuestions(newQuestions);
+    
+    // Reset quiz state for new questions
+    setCurrentQuestion(0);
+    setUserAnswers(new Array(10).fill(''));
+    setCheckedQuestions(new Array(10).fill(false));
+    setFeedback({ show: false, type: '', message: '' });
+  }, [quizType]);
+
   const question = questions[currentQuestion];
   const progress = ((currentQuestion) / 10) * 100;
 
-  // Process the current sentence
-  const processedData = processSentence(question.sentence, question.answer);
-  const visibleLetters = extractVisibleLetters(question.sentence);
+  // Process the current sentence if question exists
+  const processedData = question ? processSentence(question.sentence, question.answer) : null;
+  const visibleLetters = question ? extractVisibleLetters(question.sentence) : '';
 
   // Add Enter key listener for checking answers
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (e.key === 'Enter' && userAnswers[currentQuestion] && !checkedQuestions[currentQuestion]) {
+      if (e.key === 'Enter' && userAnswers[currentQuestion] && !checkedQuestions[currentQuestion] && question) {
         checkAnswer();
       }
     };
@@ -123,7 +146,7 @@ function Quiz({ onFinish, quizType }) {
     return () => {
       document.removeEventListener('keypress', handleKeyPress);
     };
-  }, [userAnswers, currentQuestion, checkedQuestions]);
+  }, [userAnswers, currentQuestion, checkedQuestions, question]);
 
   // Load saved quiz state on component mount
   useEffect(() => {
@@ -138,8 +161,11 @@ function Quiz({ onFinish, quizType }) {
         
         if (parsedState.quizType === quizType && 
             parsedState.timestamp && 
-            (now - parsedState.timestamp) < thirtyMinutes) {
+            (now - parsedState.timestamp) < thirtyMinutes &&
+            parsedState.questions && 
+            parsedState.questions.length === 10) {
           
+          setQuestions(parsedState.questions);
           setCurrentQuestion(parsedState.currentQuestion || 0);
           setUserAnswers(parsedState.userAnswers || new Array(10).fill(''));
           setCheckedQuestions(parsedState.checkedQuestions || new Array(10).fill(false));
@@ -157,11 +183,14 @@ function Quiz({ onFinish, quizType }) {
 
   // Save quiz state whenever it changes
   useEffect(() => {
+    if (questions.length === 0) return; // Don't save until questions are loaded
+
     const stateToSave = {
       quizType,
       currentQuestion,
       userAnswers,
       checkedQuestions,
+      questions,
       timestamp: Date.now()
     };
 
@@ -170,9 +199,11 @@ function Quiz({ onFinish, quizType }) {
     } catch (error) {
       console.error('Error saving quiz state:', error);
     }
-  }, [currentQuestion, userAnswers, checkedQuestions, quizType]);
+  }, [currentQuestion, userAnswers, checkedQuestions, quizType, questions]);
 
   const checkAnswer = () => {
+    if (!question) return;
+
     const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
     const correctAnswer = question.answer.toLowerCase();
     
@@ -221,6 +252,22 @@ function Quiz({ onFinish, quizType }) {
       }, 50);
     }
   };
+
+  // Show loading state while questions are being loaded
+  if (questions.length === 0) {
+    return (
+      <div className="quiz-container">
+        <div className="quiz-header">
+          <div className="quiz-type-badge">
+            {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
+          </div>
+        </div>
+        <div className="loading-state">
+          <p>🎲 Generating your vocabulary test...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="quiz-container">
