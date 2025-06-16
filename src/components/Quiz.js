@@ -224,6 +224,7 @@ function Quiz({ onFinish, quizType }) {
 
     if (isCorrect) {
       const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
+      console.log('✅ SETTING CORRECT FEEDBACK:', randomMessage);
       setFeedback({ show: true, type: 'correct', message: randomMessage });
       
       // Only disable input after correct answer
@@ -233,9 +234,18 @@ function Quiz({ onFinish, quizType }) {
     } else {
       // Ensure we have a hint to display
       const hintText = question.hint || "Try to think about the context of the sentence.";
-      console.log('🔍 SHOWING HINT:', hintText);
-      setFeedback({ show: true, type: 'incorrect', message: `💡 Hint: ${hintText}` });
-      // Don't disable input for incorrect answers - allow retry
+      const feedbackMessage = `💡 Hint: ${hintText}`;
+      console.log('❌ SETTING INCORRECT FEEDBACK:', feedbackMessage);
+      setFeedback({ show: true, type: 'incorrect', message: feedbackMessage });
+      
+      // Force a re-render check
+      setTimeout(() => {
+        console.log('🔍 FEEDBACK STATE AFTER SET:', { 
+          show: feedback.show, 
+          type: feedback.type, 
+          message: feedback.message 
+        });
+      }, 100);
     }
   };
 
@@ -337,6 +347,25 @@ function Quiz({ onFinish, quizType }) {
       {feedback.show && (
         <div className={`feedback ${feedback.type}`}>
           {feedback.message}
+        </div>
+      )}
+
+      {/* Debug feedback state - remove this after testing */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ 
+          background: '#f0f0f0', 
+          padding: '10px', 
+          margin: '10px 0', 
+          fontSize: '12px',
+          border: '1px solid #ccc' 
+        }}>
+          <strong>🐛 Debug Info:</strong><br/>
+          Feedback Show: {feedback.show ? 'YES' : 'NO'}<br/>
+          Feedback Type: {feedback.type}<br/>
+          Feedback Message: {feedback.message}<br/>
+          Current Question: {currentQuestion + 1}<br/>
+          Question Answer: {question?.answer}<br/>
+          Question Hint: {question?.hint || 'NO HINT'}
         </div>
       )}
 
