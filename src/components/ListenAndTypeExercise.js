@@ -21,6 +21,7 @@ Plays remaining: {3 - playCount}
               rows={3}
             />
             
+            <div className="input-info-compact">
               <p>💡 <strong>Tip:</strong> Just type what you hear - spelling variations and missing punctuation are fine!</p>
             </div>
 
