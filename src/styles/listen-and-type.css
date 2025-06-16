@@ -386,17 +386,25 @@
 
 @media (max-width: 480px) {
   .listen-header {
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 10px;
-    text-align: center;
+    padding-bottom: 15px;
+  }
+  
+  .timer-section,
+  .progress-section {
+    flex: 1;
+    min-width: 120px;
   }
   
   .close-btn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 35px;
-    height: 35px;
+    position: static;
+    order: -1;
+    align-self: flex-end;
+    margin-left: auto;
+    width: 30px;
+    height: 30px;
+    font-size: 0.9em;
   }
   
   .level-indicator {
