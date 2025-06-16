@@ -345,8 +345,21 @@ function Quiz({ onFinish, quizType }) {
       </div>
 
       {feedback.show && (
-        <div className={`feedback ${feedback.type}`}>
-          {feedback.message}
+        <div 
+          className={`feedback ${feedback.type}`}
+          style={{
+            background: feedback.type === 'correct' ? '#d4edda' : '#f8d7da',
+            color: feedback.type === 'correct' ? '#155724' : '#721c24',
+            border: feedback.type === 'correct' ? '1px solid #c3e6cb' : '1px solid #f5c6cb',
+            padding: '12px',
+            borderRadius: '8px',
+            margin: '15px 0',
+            fontSize: '16px',
+            fontWeight: '500',
+            minHeight: '20px'
+          }}
+        >
+          {feedback.message || 'NO MESSAGE FOUND'}
         </div>
       )}
 
