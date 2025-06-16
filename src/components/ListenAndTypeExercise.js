@@ -1,66 +1,5 @@
-Plays remaining: {3 - playCount}
-              </div>
-            </div>
-
-            {audioError && (
-              <div className="audio-error">
-                ⚠️ Audio playback error. Please try again or skip this question.
-              </div>
-            )}
-          </div>
-
-          {/* Input section */}
-          <div className="input-section-compact">
-            <h3>Type what you hear:</h3>
-            <textarea
-              ref={inputRef}
-              className="typing-input-compact"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              placeholder="Type the sentence here..."
-              rows={3}
-            />
-            
-            <div className="input-info-compact">
-              <p>💡 <strong>Tip:</strong> Just type what you hear - spelling variations and missing punctuation are fine!</p>
-            </div>
-
-            <div className="action-buttons-compact">
-              <button 
-                className="btn btn-primary btn-submit"
-                onClick={handleSubmit}
-                disabled={!userInput.trim()}
-              >
-                Submit Answer
-              </button>
-              <button 
-                className="btn btn-secondary btn-skip"
-                onClick={moveToNextQuestion}
-              >
-                {currentQuestion + 1 === testSentences.length ? 'Finish Test' : 'Skip Question'}
-              </button>
-            </div>
-            
-            <p className="keyboard-hint-compact">
-              <small>💻 Press <strong>Enter</strong> to submit</small>
-            </p>
-          </div>
-
-          {/* Debug info */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="debug-info-compact">
-              🐛 Q{currentQuestion + 1} | Playing: {isPlaying ? 'Yes' : 'No'} | 
-              Plays: {playCount}/3 | Error: {audioError ? 'Yes' : 'No'} |
-              Audio: {currentData?.audioFile || 'None'}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default ListenAndTypeExercise;import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+// src/components/ListenAndTypeExercise.js - Clean rewrite with daily progress tracking
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
 import { recordTestResult } from '../utils/progressDataManager';
@@ -181,7 +120,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   }, [testSentences, currentQuestion]);
 
   // ==============================================
-  // AUDIO MANAGEMENT - PROPERLY FIXED
+  // AUDIO MANAGEMENT
   // ==============================================
   
   // Play audio function
@@ -357,7 +296,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearTimeout(timer);
   }, [hasStarted, showResults, timeLeft, moveToNextQuestion]);
 
-  // CRITICAL FIX: Setup audio handlers when audio element changes
+  // Setup audio handlers when audio element changes
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentData) return;
@@ -394,7 +333,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     const autoPlayTimer = setTimeout(() => {
       console.log('🎯 Auto-playing first audio');
       playAudio();
-    }, 2000); // Increased delay to ensure handlers are ready
+    }, 2000);
 
     return () => clearTimeout(autoPlayTimer);
   }, [hasStarted, currentData, playCount, showResults, currentQuestion, playAudio]);
@@ -617,3 +556,66 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               </button>
               
               <div className="play-counter-compact">
+                Plays remaining: {3 - playCount}
+              </div>
+            </div>
+
+            {audioError && (
+              <div className="audio-error">
+                ⚠️ Audio playback error. Please try again or skip this question.
+              </div>
+            )}
+          </div>
+
+          {/* Input section */}
+          <div className="input-section-compact">
+            <h3>Type what you hear:</h3>
+            <textarea
+              ref={inputRef}
+              className="typing-input-compact"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              placeholder="Type the sentence here..."
+              rows={3}
+            />
+            
+            <div className="input-info-compact">
+              <p>💡 <strong>Tip:</strong> Just type what you hear - spelling variations and missing punctuation are fine!</p>
+            </div>
+
+            <div className="action-buttons-compact">
+              <button 
+                className="btn btn-primary btn-submit"
+                onClick={handleSubmit}
+                disabled={!userInput.trim()}
+              >
+                Submit Answer
+              </button>
+              <button 
+                className="btn btn-secondary btn-skip"
+                onClick={moveToNextQuestion}
+              >
+                {currentQuestion + 1 === testSentences.length ? 'Finish Test' : 'Skip Question'}
+              </button>
+            </div>
+            
+            <p className="keyboard-hint-compact">
+              <small>💻 Press <strong>Enter</strong> to submit</small>
+            </p>
+          </div>
+
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="debug-info-compact">
+              🐛 Q{currentQuestion + 1} | Playing: {isPlaying ? 'Yes' : 'No'} | 
+              Plays: {playCount}/3 | Error: {audioError ? 'Yes' : 'No'} |
+              Audio: {currentData?.audioFile || 'None'}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default ListenAndTypeExercise;
