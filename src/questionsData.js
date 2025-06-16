@@ -1,75 +1,31 @@
-// src/questionsData.js - Updated with new format
-export const questions = [
-  // A2 Level (2 questions)
-  {
-    level: "A2",
-    sentence: "I need to b__ some groceries from the store.",
-    answer: "buy",
-    hint: "This means to purchase something with money."
-  },
-  {
-    level: "A2", 
-    sentence: "The weather is very h__ today, so I'll wear shorts.",
-    answer: "hot",
-    hint: "This describes high temperature weather."
-  },
-  // B1 Level (2 questions)
-  {
-    level: "B1",
-    sentence: "She was s__ to hear about her friend's accident.",
-    answer: "sad",
-    hint: "This emotion is the opposite of happy."
-  },
-  {
-    level: "B1",
-    sentence: "The company decided to h___ twenty new employees this year.",
-    answer: "hire",
-    hint: "This means to employ or recruit someone for a job."
-  },
-  // B2 Level (4 questions)
-  {
-    level: "B2",
-    sentence: "The research findings were quite sig________ and unexpected.",
-    answer: "significant",
-    hint: "This means important or meaningful in impact."
-  },
-  {
-    level: "B2",
-    sentence: "We need to ana____ the situation carefully before making a decision.",
-    answer: "analyze",
-    hint: "This means to examine something in detail to understand it."
-  },
-  {
-    level: "B2",
-    sentence: "The new policy will have con_________ for all departments.",
-    answer: "consequences",
-    hint: "These are the results or effects of an action."
-  },
-  {
-    level: "B2",
-    sentence: "Her performance in the presentation was truly imp_______ .",
-    answer: "impressive",
-    hint: "This means causing admiration through skill or achievement."
-  },
-  // C1 Level (2 questions)
-  {
-    level: "C1",
-    sentence: "The professor's lecture was quite pro_____ and thought-provoking.",
-    answer: "profound",
-    hint: "This means very deep, intense, or having great insight."
-  },
-  {
-    level: "C1",
-    sentence: "The artist's work represents a rem_______ innovation in modern sculpture.",
-    answer: "remarkable",
-    hint: "This means worthy of attention; extraordinary or striking."
-  }
-];
+// src/questionsData.js - Updated with vocabulary pool integration
+import { generateRandomTest } from './data/vocabularyPool';
 
+// Generate a random test each time this module is imported
+// This ensures fresh questions for each new test session
+export const questions = generateRandomTest();
+
+// Feedback messages for correct answers
 export const correctMessages = [
   "✓ Correct! Well done! 🎉",
   "✓ Excellent! Keep it up! 🌟", 
   "✓ Perfect! Great job! 👏",
   "✓ That's right! Nice work! 💪",
-  "✓ Correct! You're doing great! 🎯"
+  "✓ Correct! You're doing great! 🎯",
+  "✓ Brilliant! Excellent work! ⭐",
+  "✓ Spot on! Well done! 🎊",
+  "✓ Outstanding! Keep going! 🔥",
+  "✓ Fantastic! Great progress! 🚀",
+  "✓ Perfect answer! Well done! 💯"
 ];
+
+// Function to get a fresh set of questions (for retaking tests)
+export const getNewQuestions = () => {
+  return generateRandomTest();
+};
+
+// Function to get pool statistics for debugging
+export const getVocabularyStats = () => {
+  const { getPoolStatistics } = require('./data/vocabularyPool');
+  return getPoolStatistics();
+};
