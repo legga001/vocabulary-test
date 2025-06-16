@@ -210,36 +210,36 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       const hintText = currentQuestionData.hint || "Try to think about the context of the sentence.";
       const feedbackMessage = `💡 Hint: ${hintText}`;
       console.log('❌ READING EXERCISE - SETTING INCORRECT FEEDBACK:', feedbackMessage);
-      setFeedback({ 
-        show: true, 
-        type: 'incorrect', 
-        message: feedbackMessage
-      });
       
-      // Force a re-render check
-      setTimeout(() => {
-        console.log('🔍 READING EXERCISE - FEEDBACK STATE AFTER SET:', { 
-          show: feedback.show, 
-          type: feedback.type, 
-          message: feedback.message 
-        });
-      }, 100);
+      const newFeedback = { show: true, type: 'incorrect', message: feedbackMessage };
+      console.log('❌ READING EXERCISE - NEW FEEDBACK OBJECT:', newFeedback);
+      setFeedback(newFeedback);
     }
   }, [userAnswers, currentQuestion, currentQuestionData, getAlternativeSpellings]);
 
   // Answer update handler
   const updateAnswer = useCallback((value) => {
+    console.log('✏️ UPDATING ANSWER - Current feedback state:', { 
+      show: feedback.show, 
+      type: feedback.type, 
+      message: feedback.message ? feedback.message.substring(0, 30) + '...' : 'NO MESSAGE'
+    });
+    
     setUserAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[currentQuestion] = value;
       return newAnswers;
     });
-  }, [currentQuestion]);
+    
+    // Don't clear feedback when typing - only clear on navigation
+    // setFeedback(INITIAL_FEEDBACK); // REMOVED - this was clearing hints!
+  }, [currentQuestion, feedback]);
 
   // Navigation handlers
   const previousQuestion = useCallback(() => {
     if (currentQuestion > 0) {
       setCurrentQuestion(prev => prev - 1);
+      console.log('🔄 PREVIOUS QUESTION - Clearing feedback');
       setFeedback(INITIAL_FEEDBACK);
     }
   }, [currentQuestion]);
@@ -250,6 +250,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       finishQuiz();
     } else {
       setCurrentQuestion(prev => prev + 1);
+      console.log('🔄 NEXT QUESTION - Clearing feedback');
       setFeedback(INITIAL_FEEDBACK);
     }
   }, [currentQuestion]);
