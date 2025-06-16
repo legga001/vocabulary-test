@@ -557,6 +557,22 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
             If you can see this, you're in ReadingExercise component
           </div>
 
+          {/* Force feedback to always show for testing */}
+          <div style={{
+            background: 'orange',
+            color: 'black',
+            padding: '15px',
+            margin: '15px 0',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            border: '3px solid blue'
+          }}>
+            🧪 FORCED FEEDBACK TEST:<br/>
+            Feedback Show: {feedback.show ? 'TRUE' : 'FALSE'}<br/>
+            Feedback Type: {feedback.type || 'EMPTY'}<br/>
+            Feedback Message: {feedback.message || 'NO MESSAGE'}<br/>
+          </div>
+
           {feedback.show && (
             <div 
               className={`feedback ${feedback.type}`}
@@ -573,6 +589,20 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
               }}
             >
               {feedback.message || 'NO MESSAGE FOUND'}
+            </div>
+          )}
+
+          {/* Also force the feedback to show regardless of state */}
+          {feedback.message && (
+            <div style={{
+              background: 'yellow',
+              color: 'black',
+              padding: '12px',
+              margin: '15px 0',
+              fontSize: '16px',
+              border: '2px solid green'
+            }}>
+              🟡 FORCED MESSAGE DISPLAY: {feedback.message}
             </div>
           )}
 
