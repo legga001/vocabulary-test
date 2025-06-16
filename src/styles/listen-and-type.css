@@ -1,6 +1,5 @@
 /* ==============================================
-   LISTEN AND TYPE CSS - Clean Rewrite
-   Fixed button state transitions
+   LISTEN AND TYPE CSS - Fixed Audio Button States
    ============================================== */
 
 .listen-type-container {
@@ -63,170 +62,6 @@
   height: 40px;
   cursor: pointer;
   font-size: 1.2em;
-  transition: all 0.3s ease;
-}
-
-.close-btn:hover {
-  background: #e53e3e;
-  transform: scale(1.05);
-}
-
-/* ==============================================
-   COMPACT LAYOUT
-   ============================================== */
-.listen-main-compact {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-.level-indicator {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  justify-content: center;
-  margin-bottom: 15px;
-}
-
-.level-badge {
-  background: linear-gradient(135deg, #4c51bf, #667eea);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: bold;
-  font-size: 0.9em;
-}
-
-.level-description {
-  color: #666;
-  font-style: italic;
-  font-size: 0.95em;
-}
-
-/* ==============================================
-   AUDIO SECTION - FIXED BUTTON STATES
-   ============================================== */
-.audio-section-compact {
-  background: #f8f9fa;
-  border-radius: 15px;
-  padding: 20px;
-  text-align: center;
-  border: 2px solid #e2e8f0;
-}
-
-.audio-controls-compact {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-}
-
-/* CRITICAL: Clean button state management */
-.play-btn-compact {
-  background: linear-gradient(135deg, #48bb78, #38a169);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  padding: 15px 30px;
-  font-size: 1.1em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 160px;
-  justify-content: center;
-  /* IMPORTANT: Remove any persistent animations */
-  animation: none;
-}
-
-.play-btn-compact:hover:not(:disabled):not(.playing) {
-  background: linear-gradient(135deg, #38a169, #2f855a);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
-}
-
-.play-btn-compact:disabled {
-  background: #a0aec0 !important;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-  /* FORCE: Remove any animations when disabled */
-  animation: none !important;
-}
-
-/* CRITICAL: Playing state styling - must override default */
-.play-btn-compact.playing {
-  background: linear-gradient(135deg, #ed8936, #dd6b20) !important;
-  animation: buttonPulse 2s infinite;
-  /* Ensure no hover effects while playing */
-  transform: none;
-  box-shadow: none;
-}
-
-.play-btn-compact.playing:hover {
-  /* FORCE: No hover effects while playing */
-  background: linear-gradient(135deg, #ed8936, #dd6b20) !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-/* CRITICAL: Pulse animation - clean and controlled */
-@keyframes buttonPulse {
-  0% { 
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(237, 137, 54, 0.7);
-  }
-  50% { 
-    transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(237, 137, 54, 0);
-  }
-  100% { 
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(237, 137, 54, 0);
-  }
-}
-
-/* FORCE: Remove playing class animations when not playing */
-.play-btn-compact:not(.playing) {
-  animation: none !important;
-}
-
-.play-counter-compact {
-  color: #666;
-  font-size: 0.9em;
-  font-weight: 500;
-}
-
-/* ==============================================
-   INPUT SECTION
-   ============================================== */
-.input-section-compact {
-  background: #fff;
-  border-radius: 15px;
-  padding: 25px;
-  border: 2px solid #e2e8f0;
-}
-
-.input-section-compact h3 {
-  color: #2d3748;
-  margin-bottom: 15px;
-  font-size: 1.3em;
-  text-align: center;
-}
-
-.typing-input-compact {
-  width: 100%;
-  min-height: 100px;
-  padding: 15px;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 1.1em;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  resize: vertical;
   transition: all 0.3s ease;
   line-height: 1.5;
   box-sizing: border-box;
@@ -582,3 +417,182 @@
     justify-content: space-between;
   }
 }
+
+/* ==============================================
+   REDUCED MOTION SUPPORT
+   ============================================== */
+@media (prefers-reduced-motion: reduce) {
+  .play-btn-compact.playing {
+    animation: none;
+  }
+  
+  .play-btn-compact,
+  .btn-submit,
+  .btn-skip,
+  .close-btn {
+    transition: none;
+  }
+} ease;
+}
+
+.close-btn:hover {
+  background: #e53e3e;
+  transform: scale(1.05);
+}
+
+/* ==============================================
+   COMPACT LAYOUT
+   ============================================== */
+.listen-main-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.level-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.level-badge {
+  background: linear-gradient(135deg, #4c51bf, #667eea);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.level-description {
+  color: #666;
+  font-style: italic;
+  font-size: 0.95em;
+}
+
+/* ==============================================
+   AUDIO SECTION - FIXED BUTTON STATES
+   ============================================== */
+.audio-section-compact {
+  background: #f8f9fa;
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  border: 2px solid #e2e8f0;
+}
+
+.audio-controls-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Base button state */
+.play-btn-compact {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 15px 30px;
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 160px;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hover state (only when not playing or disabled) */
+.play-btn-compact:hover:not(:disabled):not(.playing) {
+  background: linear-gradient(135deg, #38a169, #2f855a);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+}
+
+/* Active/pressed state */
+.play-btn-compact:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Playing state */
+.play-btn-compact.playing {
+  background: linear-gradient(135deg, #ed8936, #dd6b20);
+  cursor: default;
+  animation: playingPulse 2s ease-in-out infinite;
+}
+
+/* Disabled state */
+.play-btn-compact:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+/* Playing animation - subtle pulse */
+@keyframes playingPulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(237, 137, 54, 0.2);
+  }
+  50% { 
+    transform: scale(1.02);
+    box-shadow: 0 4px 20px rgba(237, 137, 54, 0.3);
+  }
+}
+
+.play-icon {
+  font-size: 1.2em;
+  display: inline-flex;
+  align-items: center;
+}
+
+.play-text {
+  display: inline-flex;
+  align-items: center;
+}
+
+.play-counter-compact {
+  color: #666;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+/* ==============================================
+   INPUT SECTION
+   ============================================== */
+.input-section-compact {
+  background: #fff;
+  border-radius: 15px;
+  padding: 25px;
+  border: 2px solid #e2e8f0;
+}
+
+.input-section-compact h3 {
+  color: #2d3748;
+  margin-bottom: 15px;
+  font-size: 1.3em;
+  text-align: center;
+}
+
+.typing-input-compact {
+  width: 100%;
+  min-height: 100px;
+  padding: 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1.1em;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  resize: vertical;
+  transition: all 0.3s
