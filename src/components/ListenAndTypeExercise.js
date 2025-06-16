@@ -1,4 +1,66 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+Plays remaining: {3 - playCount}
+              </div>
+            </div>
+
+            {audioError && (
+              <div className="audio-error">
+                ⚠️ Audio playback error. Please try again or skip this question.
+              </div>
+            )}
+          </div>
+
+          {/* Input section */}
+          <div className="input-section-compact">
+            <h3>Type what you hear:</h3>
+            <textarea
+              ref={inputRef}
+              className="typing-input-compact"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              placeholder="Type the sentence here..."
+              rows={3}
+            />
+            
+            <div className="input-info-compact">
+              <p>💡 <strong>Tip:</strong> Just type what you hear - spelling variations and missing punctuation are fine!</p>
+            </div>
+
+            <div className="action-buttons-compact">
+              <button 
+                className="btn btn-primary btn-submit"
+                onClick={handleSubmit}
+                disabled={!userInput.trim()}
+              >
+                Submit Answer
+              </button>
+              <button 
+                className="btn btn-secondary btn-skip"
+                onClick={moveToNextQuestion}
+              >
+                {currentQuestion + 1 === testSentences.length ? 'Finish Test' : 'Skip Question'}
+              </button>
+            </div>
+            
+            <p className="keyboard-hint-compact">
+              <small>💻 Press <strong>Enter</strong> to submit</small>
+            </p>
+          </div>
+
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="debug-info-compact">
+              🐛 Q{currentQuestion + 1} | Playing: {isPlaying ? 'Yes' : 'No'} | 
+              Plays: {playCount}/3 | Error: {audioError ? 'Yes' : 'No'} |
+              Audio: {currentData?.audioFile || 'None'}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default ListenAndTypeExercise;import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
 import { recordTestResult } from '../utils/progressDataManager';
@@ -111,6 +173,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   // Refs
   const audioRef = useRef(null);
   const inputRef = useRef(null);
+  const audioHandlersRef = useRef(null);
 
   // Current sentence data
   const currentData = useMemo(() => {
@@ -118,7 +181,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   }, [testSentences, currentQuestion]);
 
   // ==============================================
-  // AUDIO MANAGEMENT - FIXED VERSION
+  // AUDIO MANAGEMENT - PROPERLY FIXED
   // ==============================================
   
   // Play audio function
@@ -131,13 +194,12 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     
     const audio = audioRef.current;
     
-    // Reset audio to start
-    audio.currentTime = 0;
-    
-    // Set playing state immediately
+    // Set playing state first
     setIsPlaying(true);
     
-    // Play audio
+    // Reset and play
+    audio.currentTime = 0;
+    
     const playPromise = audio.play();
     if (playPromise) {
       playPromise
@@ -185,7 +247,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       setCurrentQuestion(prev => prev + 1);
       setUserInput('');
       setTimeLeft(60);
-      // Reset audio state for new question
+      // Reset audio state
       setIsPlaying(false);
       setPlayCount(0);
       setAudioError(false);
@@ -295,49 +357,44 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearTimeout(timer);
   }, [hasStarted, showResults, timeLeft, moveToNextQuestion]);
 
-  // FIXED: Audio event management
+  // CRITICAL FIX: Setup audio handlers when audio element changes
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !currentData) return;
 
     const handleEnded = () => {
       console.log('🎵 Audio ended for question', currentQuestion + 1);
       setIsPlaying(false);
     };
 
-    const handlePause = () => {
-      console.log('🎵 Audio paused for question', currentQuestion + 1);
-      setIsPlaying(false);
-    };
-
     const handleError = (e) => {
-      console.error('🎵 Audio error for question', currentQuestion + 1, e);
+      console.error('🎵 Audio error:', e);
       setAudioError(true);
       setIsPlaying(false);
     };
 
-    // Add event listeners
+    // Add listeners
     audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('pause', handlePause);
     audio.addEventListener('error', handleError);
 
-    // Clean up function
+    // Store handlers for cleanup
+    audioHandlersRef.current = { handleEnded, handleError };
+
     return () => {
-      console.log('🧹 Cleaning up audio listeners for question', currentQuestion + 1);
       audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('error', handleError);
     };
-  }, [currentQuestion]); // Re-attach listeners when question changes
+  }, [currentQuestion, currentData]);
 
-  // Auto-play first audio after a delay
+  // Auto-play for first audio only
   useEffect(() => {
-    if (!hasStarted || !currentData || playCount > 0 || showResults) return;
+    if (!hasStarted || !currentData || playCount > 0 || showResults || currentQuestion !== 0) return;
 
+    // Delay auto-play to ensure handlers are attached
     const autoPlayTimer = setTimeout(() => {
-      console.log('🎯 Auto-playing audio for question', currentQuestion + 1);
+      console.log('🎯 Auto-playing first audio');
       playAudio();
-    }, 1500);
+    }, 2000); // Increased delay to ensure handlers are ready
 
     return () => clearTimeout(autoPlayTimer);
   }, [hasStarted, currentData, playCount, showResults, currentQuestion, playAudio]);
@@ -560,66 +617,3 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               </button>
               
               <div className="play-counter-compact">
-                Plays remaining: {3 - playCount}
-              </div>
-            </div>
-
-            {audioError && (
-              <div className="audio-error">
-                ⚠️ Audio playback error. Please try again or skip this question.
-              </div>
-            )}
-          </div>
-
-          {/* Input section */}
-          <div className="input-section-compact">
-            <h3>Type what you hear:</h3>
-            <textarea
-              ref={inputRef}
-              className="typing-input-compact"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              placeholder="Type the sentence here..."
-              rows={3}
-            />
-            
-            <div className="input-info-compact">
-              <p>💡 <strong>Tip:</strong> Just type what you hear - spelling variations and missing punctuation are fine!</p>
-            </div>
-
-            <div className="action-buttons-compact">
-              <button 
-                className="btn btn-primary btn-submit"
-                onClick={handleSubmit}
-                disabled={!userInput.trim()}
-              >
-                Submit Answer
-              </button>
-              <button 
-                className="btn btn-secondary btn-skip"
-                onClick={moveToNextQuestion}
-              >
-                {currentQuestion + 1 === testSentences.length ? 'Finish Test' : 'Skip Question'}
-              </button>
-            </div>
-            
-            <p className="keyboard-hint-compact">
-              <small>💻 Press <strong>Enter</strong> to submit</small>
-            </p>
-          </div>
-
-          {/* Debug info */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="debug-info-compact">
-              🐛 Q{currentQuestion + 1} | Playing: {isPlaying ? 'Yes' : 'No'} | 
-              Plays: {playCount}/3 | Error: {audioError ? 'Yes' : 'No'} |
-              Audio: {currentData?.audioFile || 'None'}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default ListenAndTypeExercise;
