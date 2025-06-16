@@ -531,6 +531,7 @@ export const STANDARD_TEST_STRUCTURE = [
 export const generateRandomTest = () => {
   const testQuestions = [];
   
+  // Process levels in order: A2 → B1 → B2 → C1
   STANDARD_TEST_STRUCTURE.forEach(({ level, count }) => {
     const levelPool = VOCABULARY_POOL[level];
     if (!levelPool || levelPool.length === 0) {
@@ -538,7 +539,7 @@ export const generateRandomTest = () => {
       return;
     }
     
-    // Create a shuffled copy of the level pool
+    // Create a shuffled copy of the level pool to get random questions from this level
     const shuffled = [...levelPool].sort(() => Math.random() - 0.5);
     
     // Take the required number of questions
@@ -550,11 +551,18 @@ export const generateRandomTest = () => {
       level: level
     }));
     
+    // Add questions to test in order (don't shuffle at the end)
     testQuestions.push(...questionsWithLevel);
   });
   
-  // Shuffle the final test to mix up the order
-  return testQuestions.sort(() => Math.random() - 0.5);
+  // Return questions in progressive difficulty order (no final shuffle)
+  console.log('📚 Generated test with progressive difficulty:', testQuestions.map((q, index) => ({
+    position: index + 1,
+    level: q.level,
+    word: q.answer
+  })));
+  
+  return testQuestions;
 };
 
 // Helper function to get statistics about the pool
