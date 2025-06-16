@@ -1,10 +1,10 @@
-// src/components/ReadingExercise.js - Updated with proper daily progress tracking
+// src/components/ReadingExercise.js - Updated with random vocabulary pool integration
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { getAirIndiaVocabularyQuestions, getAirIndiaArticleInfo } from '../airIndiaVocabularyData';
 import { getWaterTreatmentVocabularyQuestions, getWaterTreatmentArticleInfo } from '../waterTreatmentVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
-import { questions as staticQuestions, correctMessages } from '../questionsData';
+import { getNewQuestions, correctMessages } from '../questionsData';
 import { recordTestResult } from '../utils/progressDataManager';
 import AnswerReview from './AnswerReview';
 import ArticleSelection from './ArticleSelection';
@@ -59,6 +59,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   const [feedback, setFeedback] = useState(INITIAL_FEEDBACK);
   const [showResults, setShowResults] = useState(false);
   const [exerciseStartTime, setExerciseStartTime] = useState(null);
+  const [questions, setQuestions] = useState([]);
 
   // Derived state
   const isDirectFromLanding = initialView !== 'selection';
@@ -71,21 +72,41 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     waterTreatmentArticleInfo: getWaterTreatmentArticleInfo()
   }), []);
 
-  // Memoised questions based on current quiz type
-  const questions = useMemo(() => {
+  // Load questions when view changes
+  useEffect(() => {
+    let newQuestions = [];
+    
     switch (currentView) {
-      case 'octopus-quiz': return getReadingVocabularyQuestions();
-      case 'smuggling-quiz': return getArticleQuestions();
-      case 'air-india-quiz': return getAirIndiaVocabularyQuestions();
-      case 'water-treatment-quiz': return getWaterTreatmentVocabularyQuestions();
-      case 'standard-quiz': return staticQuestions;
-      default: return [];
+      case 'octopus-quiz':
+        newQuestions = getReadingVocabularyQuestions();
+        break;
+      case 'smuggling-quiz':
+        newQuestions = getArticleQuestions();
+        break;
+      case 'air-india-quiz':
+        newQuestions = getAirIndiaVocabularyQuestions();
+        break;
+      case 'water-treatment-quiz':
+        newQuestions = getWaterTreatmentVocabularyQuestions();
+        break;
+      case 'standard-quiz':
+        // Generate fresh random questions for standard vocabulary tests
+        newQuestions = getNewQuestions();
+        console.log('📚 Generated new random vocabulary test for reading exercise:', newQuestions.map(q => ({
+          level: q.level,
+          word: q.answer
+        })));
+        break;
+      default:
+        newQuestions = [];
     }
+    
+    setQuestions(newQuestions);
   }, [currentView]);
 
   // Current question data
   const currentQuestionData = questions[currentQuestion];
-  const progress = ((currentQuestion) / 10) * 100;
+  const progress = questions.length > 0 ? ((currentQuestion) / 10) * 100 : 0;
 
   // Get alternative spellings function
   const getAlternativeSpellings = useCallback((word) => {
@@ -135,7 +156,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   // Enter key handler for checking answers
   useEffect(() => {
     if (currentView !== 'selection' && currentView !== 'article-selection' && 
-        currentView !== 'real-fake-words' && !showResults) {
+        currentView !== 'real-fake-words' && !showResults && currentQuestionData) {
       const handleKeyPress = (e) => {
         if (e.key === 'Enter' && userAnswers[currentQuestion] && !checkedQuestions[currentQuestion]) {
           checkAnswer();
@@ -145,10 +166,12 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       document.addEventListener('keypress', handleKeyPress);
       return () => document.removeEventListener('keypress', handleKeyPress);
     }
-  }, [userAnswers, currentQuestion, checkedQuestions, currentView, showResults]);
+  }, [userAnswers, currentQuestion, checkedQuestions, currentView, showResults, currentQuestionData]);
 
   // Answer checking logic with enhanced British/American spelling support
   const checkAnswer = useCallback(() => {
+    if (!currentQuestionData) return;
+
     const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
     const correctAnswer = currentQuestionData.answer.toLowerCase();
     
@@ -212,7 +235,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   // Enhanced score calculation with bidirectional spelling support
   const calculateScore = useCallback(() => {
     return userAnswers.slice(0, 10).reduce((score, answer, index) => {
-      if (!answer) return score;
+      if (!answer || !questions[index]) return score;
       
       const userAnswer = answer.toLowerCase().trim();
       const correctAnswer = questions[index].answer.toLowerCase();
@@ -230,7 +253,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     }, 0);
   }, [userAnswers, questions, getAlternativeSpellings]);
 
-  // NEW: Finish quiz and record progress
+  // Finish quiz and record progress
   const finishQuiz = useCallback(() => {
     console.log('🏁 Finishing reading vocabulary exercise');
     
@@ -246,7 +269,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     try {
       // Prepare user answers for progress tracking with enhanced spelling support
       const formattedAnswers = userAnswers.slice(0, 10).map((answer, index) => {
-        if (!answer) return { answer: '', correct: false, score: 0, level: questions[index].level || 'B1' };
+        if (!answer || !questions[index]) return { answer: '', correct: false, score: 0, level: 'B1' };
         
         const userAnswer = answer.toLowerCase().trim();
         const correctAnswer = questions[index].answer.toLowerCase();
@@ -283,7 +306,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     }
 
     setShowResults(true);
-  }, [calculateScore, exerciseStartTime, currentView, userAnswers, questions]);
+  }, [calculateScore, exerciseStartTime, currentView, userAnswers, questions, getAlternativeSpellings]);
 
   // Render Real/Fake Words exercise
   if (currentView === 'real-fake-words') {
@@ -378,8 +401,8 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
             </div>
 
             <div className="feedback-message">
-              <strong>Well done!</strong> You've practised {isArticleTest ? 'vocabulary from a current BBC article' : 'standard English vocabulary'}. 
-              {isArticleTest && ' This helps you learn words in context from real news stories.'}
+              <strong>Well done!</strong> You've practised {isArticleTest ? 'vocabulary from a current BBC article' : 'vocabulary from our extensive question pool'}. 
+              {isArticleTest ? ' This helps you learn words in context from real news stories.' : ' Each test uses randomly selected questions from 100 exercises across all CEFR levels.'}
               <div style={{ marginTop: '15px', padding: '15px', background: '#f8f9fa', borderRadius: '10px', textAlign: 'left' }}>
                 <strong>💡 Learning Tip:</strong> {levelInfo.feedback}
               </div>
@@ -407,8 +430,24 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     );
   }
 
+  // Show loading state while questions are being loaded
+  if ((currentView === 'standard-quiz' || currentView === 'octopus-quiz' || currentView === 'smuggling-quiz' || 
+       currentView === 'air-india-quiz' || currentView === 'water-treatment-quiz') && questions.length === 0) {
+    return (
+      <div className="exercise-page">
+        <ClickableLogo onLogoClick={onLogoClick} />
+        <div className="quiz-container">
+          <h1>📖 Reading Exercise</h1>
+          <div className="loading-state">
+            <p>🎲 Generating your vocabulary test...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Render Quiz Interface
-  if (currentView !== 'selection') {
+  if (currentView !== 'selection' && questions.length > 0 && currentQuestionData) {
     const processedData = processSentence(currentQuestionData.sentence, currentQuestionData.answer);
     
     const getCurrentArticleInfo = () => {
@@ -535,10 +574,10 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
         <div className="reading-main-card" onClick={navigationHandlers.startStandardQuiz}>
           <div className="card-icon">📚</div>
           <h3>Standard Vocabulary</h3>
-          <p>General vocabulary across different CEFR levels (A2-C1)</p>
+          <p>Random selection from 100+ exercises across CEFR levels (A2-C1)</p>
           <div className="card-details">
-            <span>• 10 questions</span>
-            <span>• Mixed topics</span>
+            <span>• 2 A2 + 3 B1 + 3 B2 + 2 C1</span>
+            <span>• Fresh questions each time</span>
             <span>• 5-10 mins</span>
           </div>
           <div className="card-arrow">→</div>
@@ -571,8 +610,15 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       </div>
 
       <div className="reading-info">
-        <h3>💡 Why Practice Reading Vocabulary?</h3>
-        <p>Building vocabulary through reading helps you understand context, improve comprehension, and learn how words are used naturally in English. Word recognition exercises train your brain to quickly identify real English words from fake ones.</p>
+        <h3>💡 About Standard Vocabulary Tests</h3>
+        <p>Our enhanced standard vocabulary test now features a comprehensive pool of 100 exercises distributed across CEFR levels:</p>
+        <ul>
+          <li>🎯 <strong>Smart Selection:</strong> Each test randomly selects 2 A2, 3 B1, 3 B2, and 2 C1 questions</li>
+          <li>🔄 <strong>Fresh Content:</strong> Different questions every time you take the test</li>
+          <li>📈 <strong>Progressive Difficulty:</strong> From elementary to advanced level vocabulary</li>
+          <li>🇬🇧 <strong>British English:</strong> Accepts both British and American spelling variations</li>
+          <li>💡 <strong>Helpful Hints:</strong> Each question includes contextual hints to aid learning</li>
+        </ul>
       </div>
 
       <button className="btn btn-secondary" onClick={onBack}>
