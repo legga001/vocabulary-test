@@ -231,13 +231,13 @@
 }
 
 .letter-input-box {
-  width: 45px;
-  height: 45px;
+  width: 38px;
+  height: 38px;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   text-align: center;
   font-family: 'Nunito', sans-serif;
-  font-size: 1.2em;
+  font-size: 1.1em;
   font-weight: 600;
   background: white;
   transition: all 0.3s ease;
@@ -312,9 +312,9 @@
   }
   
   .letter-input-box {
-    width: 40px;
-    height: 40px;
-    font-size: 1.1em;
+    width: 35px;
+    height: 35px;
+    font-size: 1em;
   }
 }
 
@@ -329,9 +329,9 @@
   }
   
   .letter-input-box {
-    width: 35px;
-    height: 35px;
-    font-size: 1em;
+    width: 32px;
+    height: 32px;
+    font-size: 0.9em;
   }
   
   /* Keep original mobile navigation */
