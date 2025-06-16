@@ -1,14 +1,8 @@
-// src/components/ListenAndTypeExercise.js - Clean rewrite with daily progress tracking
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
 import { recordTestResult } from '../utils/progressDataManager';
 
-// ==============================================
-// HELPER FUNCTIONS
-// ==============================================
-
-// Generate test sentences in order: A2 → B1 → B2 → C1
 const generateTestSentences = () => {
   const testSentences = [];
   let sentenceCounter = 1;
@@ -16,13 +10,11 @@ const generateTestSentences = () => {
   TEST_STRUCTURE.forEach(({ level, count }) => {
     const availableSentences = [...SENTENCE_POOLS[level]];
     
-    // Shuffle within level
     for (let i = availableSentences.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [availableSentences[i], availableSentences[j]] = [availableSentences[j], availableSentences[i]];
     }
     
-    // Take required number of sentences
     for (let i = 0; i < count && i < availableSentences.length; i++) {
       testSentences.push({
         id: sentenceCounter,
@@ -38,7 +30,6 @@ const generateTestSentences = () => {
   return testSentences;
 };
 
-// Text normalisation
 const normaliseText = (text) => {
   return text
     .toLowerCase()
@@ -47,7 +38,6 @@ const normaliseText = (text) => {
     .trim();
 };
 
-// Levenshtein distance
 const getLevenshteinDistance = (str1, str2) => {
   const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
   
@@ -68,7 +58,6 @@ const getLevenshteinDistance = (str1, str2) => {
   return matrix[str2.length][str1.length];
 };
 
-// Check answer
 const checkAnswer = (userInput, correctText) => {
   const userNormalised = normaliseText(userInput);
   const correctNormalised = normaliseText(correctText);
@@ -90,11 +79,7 @@ const checkAnswer = (userInput, correctText) => {
   }
 };
 
-// ==============================================
-// MAIN COMPONENT
-// ==============================================
 function ListenAndTypeExercise({ onBack, onLogoClick }) {
-  // Core state
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userInput, setUserInput] = useState('');
   const [timeLeft, setTimeLeft] = useState(60);
@@ -103,61 +88,40 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   const [hasStarted, setHasStarted] = useState(false);
   const [testSentences, setTestSentences] = useState([]);
   const [exerciseStartTime, setExerciseStartTime] = useState(null);
-  
-  // Audio state
   const [isPlaying, setIsPlaying] = useState(false);
   const [playCount, setPlayCount] = useState(0);
   const [audioError, setAudioError] = useState(false);
   
-  // Refs
   const audioRef = useRef(null);
   const inputRef = useRef(null);
-  const audioHandlersRef = useRef(null);
 
-  // Current sentence data
   const currentData = useMemo(() => {
     return testSentences[currentQuestion] || null;
   }, [testSentences, currentQuestion]);
 
-  // ==============================================
-  // AUDIO MANAGEMENT
-  // ==============================================
-  
-  // Play audio function
   const playAudio = useCallback(() => {
     if (!audioRef.current || !currentData || playCount >= 3 || isPlaying || audioError) {
       return;
     }
 
-    console.log('▶️ Playing audio for question', currentQuestion + 1);
-    
     const audio = audioRef.current;
-    
-    // Set playing state first
     setIsPlaying(true);
-    
-    // Reset and play
     audio.currentTime = 0;
     
     const playPromise = audio.play();
     if (playPromise) {
       playPromise
         .then(() => {
-          console.log('✅ Audio playing successfully');
           setPlayCount(prev => prev + 1);
         })
         .catch(error => {
-          console.error('❌ Audio play error:', error);
+          console.error('Audio play error:', error);
           setAudioError(true);
           setIsPlaying(false);
         });
     }
-  }, [currentData, playCount, isPlaying, audioError, currentQuestion]);
+  }, [currentData, playCount, isPlaying, audioError]);
 
-  // ==============================================
-  // MAIN HANDLERS
-  // ==============================================
-  
   const formatTime = useCallback((seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -182,16 +146,13 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     }]);
 
     if (currentQuestion + 1 < testSentences.length) {
-      // Move to next question
       setCurrentQuestion(prev => prev + 1);
       setUserInput('');
       setTimeLeft(60);
-      // Reset audio state
       setIsPlaying(false);
       setPlayCount(0);
       setAudioError(false);
     } else {
-      // Finish exercise
       finishExercise([...answers, {
         sentence: currentData,
         userInput: userInput.trim(),
@@ -228,8 +189,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
         timeSpent: testDuration,
         userAnswers: formattedAnswers
       });
-      
-      console.log(`✅ Listen and Type test result recorded: ${scoreOutOf10}/10`);
     } catch (error) {
       console.error('Error recording test result:', error);
     }
@@ -269,17 +228,11 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     setTestSentences(newSentences);
   }, []);
 
-  // ==============================================
-  // EFFECTS
-  // ==============================================
-  
-  // Generate test sentences on mount
   useEffect(() => {
     const sentences = generateTestSentences();
     setTestSentences(sentences);
   }, []);
 
-  // Timer countdown
   useEffect(() => {
     if (!hasStarted || showResults || timeLeft <= 0) return;
 
@@ -296,28 +249,21 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearTimeout(timer);
   }, [hasStarted, showResults, timeLeft, moveToNextQuestion]);
 
-  // Setup audio handlers when audio element changes
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentData) return;
 
     const handleEnded = () => {
-      console.log('🎵 Audio ended for question', currentQuestion + 1);
       setIsPlaying(false);
     };
 
-    const handleError = (e) => {
-      console.error('🎵 Audio error:', e);
+    const handleError = () => {
       setAudioError(true);
       setIsPlaying(false);
     };
 
-    // Add listeners
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
-
-    // Store handlers for cleanup
-    audioHandlersRef.current = { handleEnded, handleError };
 
     return () => {
       audio.removeEventListener('ended', handleEnded);
@@ -325,27 +271,22 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     };
   }, [currentQuestion, currentData]);
 
-  // Auto-play for first audio only
   useEffect(() => {
     if (!hasStarted || !currentData || playCount > 0 || showResults || currentQuestion !== 0) return;
 
-    // Delay auto-play to ensure handlers are attached
     const autoPlayTimer = setTimeout(() => {
-      console.log('🎯 Auto-playing first audio');
       playAudio();
     }, 2000);
 
     return () => clearTimeout(autoPlayTimer);
   }, [hasStarted, currentData, playCount, showResults, currentQuestion, playAudio]);
 
-  // Focus input
   useEffect(() => {
     if (hasStarted && inputRef.current && !showResults) {
       inputRef.current.focus();
     }
   }, [hasStarted, currentQuestion, showResults]);
 
-  // Enter key handler
   useEffect(() => {
     if (!hasStarted || showResults) return;
 
@@ -360,11 +301,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => document.removeEventListener('keypress', handleKeyPress);
   }, [hasStarted, showResults, userInput, handleSubmit]);
 
-  // ==============================================
-  // RENDER CONDITIONS
-  // ==============================================
-
-  // Loading state
   if (testSentences.length === 0) {
     return (
       <div className="listen-type-container">
@@ -382,7 +318,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Results state
   if (showResults) {
     const score = calculateScore();
 
@@ -445,7 +380,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Instructions state
   if (!hasStarted) {
     return (
       <div className="listen-type-container">
@@ -505,11 +439,9 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Main test interface
   return (
     <div className="listen-type-container">
       <div className="listen-type-quiz-container">
-        {/* Header */}
         <div className="listen-header">
           <div className="timer-section">
             <span className="timer-icon">⏱️</span>
@@ -523,15 +455,12 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           <button className="close-btn" onClick={onBack}>✕</button>
         </div>
 
-        {/* Main content */}
         <div className="listen-main-compact">
-          {/* Level indicator */}
           <div className="level-indicator">
             <span className="level-badge">{currentData?.level}</span>
             <span className="level-description">{currentData?.difficulty}</span>
           </div>
 
-          {/* Audio section */}
           <div className="audio-section-compact">
             <audio 
               ref={audioRef} 
@@ -567,7 +496,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             )}
           </div>
 
-          {/* Input section */}
           <div className="input-section-compact">
             <h3>Type what you hear:</h3>
             <textarea
@@ -603,15 +531,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               <small>💻 Press <strong>Enter</strong> to submit</small>
             </p>
           </div>
-
-          {/* Debug info */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="debug-info-compact">
-              🐛 Q{currentQuestion + 1} | Playing: {isPlaying ? 'Yes' : 'No'} | 
-              Plays: {playCount}/3 | Error: {audioError ? 'Yes' : 'No'} |
-              Audio: {currentData?.audioFile || 'None'}
-            </div>
-          )}
         </div>
       </div>
     </div>
