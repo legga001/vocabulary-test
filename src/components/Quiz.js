@@ -206,6 +206,15 @@ function Quiz({ onFinish, quizType }) {
   const checkAnswer = () => {
     if (!question) return;
 
+    console.log('🔍 CHECKING ANSWER - Question object:', {
+      answer: question.answer,
+      level: question.level,
+      sentence: question.sentence ? question.sentence.substring(0, 50) + '...' : 'NO SENTENCE',
+      hint: question.hint || 'NO HINT PROPERTY',
+      hasHint: !!question.hint,
+      allProperties: Object.keys(question)
+    });
+
     const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
     const correctAnswer = question.answer.toLowerCase();
     
@@ -224,8 +233,8 @@ function Quiz({ onFinish, quizType }) {
     } else {
       // Ensure we have a hint to display
       const hintText = question.hint || "Try to think about the context of the sentence.";
+      console.log('🔍 SHOWING HINT:', hintText);
       setFeedback({ show: true, type: 'incorrect', message: `💡 Hint: ${hintText}` });
-      console.log('🔍 Showing hint for:', question.answer, '→', hintText);
       // Don't disable input for incorrect answers - allow retry
     }
   };
