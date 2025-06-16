@@ -213,7 +213,22 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       
       const newFeedback = { show: true, type: 'incorrect', message: feedbackMessage };
       console.log('❌ READING EXERCISE - NEW FEEDBACK OBJECT:', newFeedback);
-      setFeedback(newFeedback);
+      
+      // Use functional update to ensure we're working with the latest state
+      setFeedback(prevFeedback => {
+        console.log('❌ READING EXERCISE - PREVIOUS FEEDBACK STATE:', prevFeedback);
+        console.log('❌ READING EXERCISE - SETTING NEW FEEDBACK STATE:', newFeedback);
+        return newFeedback;
+      });
+      
+      // Also force a re-render to double-check
+      setTimeout(() => {
+        console.log('🔍 READING EXERCISE - CHECKING STATE 100ms LATER');
+        setFeedback(prevFeedback => {
+          console.log('🔍 CURRENT STATE IN TIMEOUT:', prevFeedback);
+          return prevFeedback; // Don't change it, just log it
+        });
+      }, 100);
     }
   }, [userAnswers, currentQuestion, currentQuestionData, getAlternativeSpellings]);
 
@@ -471,6 +486,8 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
 
   // Render Quiz Interface
   if (currentView !== 'selection' && questions.length > 0 && currentQuestionData) {
+    console.log('🎯 RENDERING QUIZ INTERFACE - currentView:', currentView);
+    
     const processedData = processSentence(currentQuestionData.sentence, currentQuestionData.answer);
     
     const getCurrentArticleInfo = () => {
@@ -505,6 +522,18 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
             <div className="quiz-type-badge">
               📖 {currentArticleInfo ? 'Article-Based' : 'Standard'} Vocabulary Exercise
             </div>
+          </div>
+
+          {/* DEBUG: Show current view */}
+          <div style={{
+            background: 'purple',
+            color: 'white',
+            padding: '10px',
+            margin: '10px 0',
+            fontSize: '14px',
+            border: '2px solid white'
+          }}>
+            🟣 CURRENT VIEW DEBUG: {currentView} | Questions: {questions.length} | Question Data: {currentQuestionData ? 'EXISTS' : 'NULL'}
           </div>
 
           <div className="progress-container">
