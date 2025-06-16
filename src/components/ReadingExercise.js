@@ -172,6 +172,15 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   const checkAnswer = useCallback(() => {
     if (!currentQuestionData) return;
 
+    console.log('🔍 READING EXERCISE - CHECKING ANSWER:', {
+      answer: currentQuestionData.answer,
+      level: currentQuestionData.level,
+      sentence: currentQuestionData.sentence ? currentQuestionData.sentence.substring(0, 50) + '...' : 'NO SENTENCE',
+      hint: currentQuestionData.hint || 'NO HINT PROPERTY',
+      hasHint: !!currentQuestionData.hint,
+      allProperties: Object.keys(currentQuestionData)
+    });
+
     const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
     const correctAnswer = currentQuestionData.answer.toLowerCase();
     
@@ -189,6 +198,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
 
     if (isCorrect) {
       const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
+      console.log('✅ READING EXERCISE - SETTING CORRECT FEEDBACK:', randomMessage);
       setFeedback({ show: true, type: 'correct', message: randomMessage });
       
       setCheckedQuestions(prev => {
@@ -197,11 +207,23 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
         return newChecked;
       });
     } else {
+      const hintText = currentQuestionData.hint || "Try to think about the context of the sentence.";
+      const feedbackMessage = `💡 Hint: ${hintText}`;
+      console.log('❌ READING EXERCISE - SETTING INCORRECT FEEDBACK:', feedbackMessage);
       setFeedback({ 
         show: true, 
         type: 'incorrect', 
-        message: `💡 Hint: ${currentQuestionData.hint}` 
+        message: feedbackMessage
       });
+      
+      // Force a re-render check
+      setTimeout(() => {
+        console.log('🔍 READING EXERCISE - FEEDBACK STATE AFTER SET:', { 
+          show: feedback.show, 
+          type: feedback.type, 
+          message: feedback.message 
+        });
+      }, 100);
     }
   }, [userAnswers, currentQuestion, currentQuestionData, getAlternativeSpellings]);
 
@@ -520,8 +542,40 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
           </div>
 
           {feedback.show && (
-            <div className={`feedback ${feedback.type}`}>
-              {feedback.message}
+            <div 
+              className={`feedback ${feedback.type}`}
+              style={{
+                background: feedback.type === 'correct' ? '#d4edda' : '#f8d7da',
+                color: feedback.type === 'correct' ? '#155724' : '#721c24',
+                border: feedback.type === 'correct' ? '1px solid #c3e6cb' : '1px solid #f5c6cb',
+                padding: '12px',
+                borderRadius: '8px',
+                margin: '15px 0',
+                fontSize: '16px',
+                fontWeight: '500',
+                minHeight: '20px'
+              }}
+            >
+              {feedback.message || 'NO MESSAGE FOUND'}
+            </div>
+          )}
+
+          {/* Debug feedback state - remove this after testing */}
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{ 
+              background: '#f0f0f0', 
+              padding: '10px', 
+              margin: '10px 0', 
+              fontSize: '12px',
+              border: '1px solid #ccc' 
+            }}>
+              <strong>🐛 READING EXERCISE Debug Info:</strong><br/>
+              Feedback Show: {feedback.show ? 'YES' : 'NO'}<br/>
+              Feedback Type: {feedback.type}<br/>
+              Feedback Message: {feedback.message}<br/>
+              Current Question: {currentQuestion + 1}<br/>
+              Question Answer: {currentQuestionData?.answer}<br/>
+              Question Hint: {currentQuestionData?.hint || 'NO HINT'}
             </div>
           )}
 
