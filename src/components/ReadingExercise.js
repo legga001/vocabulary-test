@@ -92,10 +92,6 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       case 'standard-quiz':
         // Generate fresh random questions for standard vocabulary tests
         newQuestions = getNewQuestions();
-        console.log('📚 Generated new random vocabulary test for reading exercise:', newQuestions.map(q => ({
-          level: q.level,
-          word: q.answer
-        })));
         break;
       default:
         newQuestions = [];
@@ -205,12 +201,6 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
 
   // Answer update handler
   const updateAnswer = useCallback((value) => {
-    console.log('✏️ UPDATING ANSWER - Current feedback state:', { 
-      show: feedback.show, 
-      type: feedback.type, 
-      message: feedback.message ? feedback.message.substring(0, 30) + '...' : 'NO MESSAGE'
-    });
-    
     setUserAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[currentQuestion] = value;
@@ -218,14 +208,12 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     });
     
     // Don't clear feedback when typing - only clear on navigation
-    // setFeedback(INITIAL_FEEDBACK); // REMOVED - this was clearing hints!
-  }, [currentQuestion, feedback]);
+  }, [currentQuestion]);
 
   // Navigation handlers
   const previousQuestion = useCallback(() => {
     if (currentQuestion > 0) {
       setCurrentQuestion(prev => prev - 1);
-      console.log('🔄 PREVIOUS QUESTION - Clearing feedback');
       setFeedback(INITIAL_FEEDBACK);
     }
   }, [currentQuestion]);
@@ -236,7 +224,6 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       finishQuiz();
     } else {
       setCurrentQuestion(prev => prev + 1);
-      console.log('🔄 NEXT QUESTION - Clearing feedback');
       setFeedback(INITIAL_FEEDBACK);
     }
   }, [currentQuestion]);
@@ -457,8 +444,6 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
 
   // Render Quiz Interface
   if (currentView !== 'selection' && questions.length > 0 && currentQuestionData) {
-    console.log('🎯 RENDERING QUIZ INTERFACE - currentView:', currentView);
-    
     const processedData = processSentence(currentQuestionData.sentence, currentQuestionData.answer);
     
     const getCurrentArticleInfo = () => {
@@ -493,18 +478,6 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
             <div className="quiz-type-badge">
               📖 {currentArticleInfo ? 'Article-Based' : 'Standard'} Vocabulary Exercise
             </div>
-          </div>
-
-          {/* DEBUG: Show current view */}
-          <div style={{
-            background: 'purple',
-            color: 'white',
-            padding: '10px',
-            margin: '10px 0',
-            fontSize: '14px',
-            border: '2px solid white'
-          }}>
-            🟣 CURRENT VIEW DEBUG: {currentView} | Questions: {questions.length} | Question Data: {currentQuestionData ? 'EXISTS' : 'NULL'}
           </div>
 
           <div className="progress-container">
