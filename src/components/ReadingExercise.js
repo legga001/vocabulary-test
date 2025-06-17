@@ -515,37 +515,6 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
             )}
           </div>
 
-          {/* ALWAYS VISIBLE TEST - This should ALWAYS show */}
-          <div style={{
-            background: 'red',
-            color: 'white',
-            padding: '20px',
-            margin: '20px 0',
-            fontSize: '20px',
-            fontWeight: 'bold',
-            border: '5px solid black',
-            textAlign: 'center'
-          }}>
-            🚨 ALWAYS VISIBLE TEST BOX 🚨<br/>
-            If you can see this, you're in ReadingExercise component
-          </div>
-
-          {/* Force feedback to always show for testing */}
-          <div style={{
-            background: 'orange',
-            color: 'black',
-            padding: '15px',
-            margin: '15px 0',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            border: '3px solid blue'
-          }}>
-            🧪 FORCED FEEDBACK TEST:<br/>
-            Feedback Show: {feedback.show ? 'TRUE' : 'FALSE'}<br/>
-            Feedback Type: {feedback.type || 'EMPTY'}<br/>
-            Feedback Message: {feedback.message || 'NO MESSAGE'}<br/>
-          </div>
-
           {feedback.show && (
             <div 
               className={`feedback ${feedback.type}`}
