@@ -606,15 +606,20 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
             <div 
               className={`feedback ${feedback.type}`}
               style={{
-                background: feedback.type === 'correct' ? '#d4edda' : '#f8d7da',
-                color: feedback.type === 'correct' ? '#155724' : '#721c24',
-                border: feedback.type === 'correct' ? '1px solid #c3e6cb' : '1px solid #f5c6cb',
-                padding: '12px',
-                borderRadius: '8px',
-                margin: '15px 0',
-                fontSize: '16px',
-                fontWeight: '500',
-                minHeight: '20px'
+                background: feedback.type === 'correct' ? '#d4edda !important' : '#f8d7da !important',
+                color: feedback.type === 'correct' ? '#155724 !important' : '#721c24 !important',
+                border: feedback.type === 'correct' ? '2px solid #c3e6cb !important' : '2px solid #f5c6cb !important',
+                padding: '15px !important',
+                borderRadius: '8px !important',
+                margin: '15px 0 !important',
+                fontSize: '18px !important',
+                fontWeight: 'bold !important',
+                minHeight: '50px !important',
+                display: 'block !important',
+                visibility: 'visible !important',
+                opacity: '1 !important',
+                position: 'relative !important',
+                zIndex: '9999 !important'
               }}
             >
               {feedback.message || 'NO MESSAGE FOUND'}
@@ -624,12 +629,18 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
           {/* Also force the feedback to show regardless of state */}
           {feedback.message && (
             <div style={{
-              background: 'yellow',
-              color: 'black',
-              padding: '12px',
-              margin: '15px 0',
-              fontSize: '16px',
-              border: '2px solid green'
+              background: 'yellow !important',
+              color: 'black !important',
+              padding: '15px !important',
+              margin: '15px 0 !important',
+              fontSize: '18px !important',
+              border: '3px solid red !important',
+              fontWeight: 'bold !important',
+              display: 'block !important',
+              visibility: 'visible !important',
+              opacity: '1 !important',
+              position: 'relative !important',
+              zIndex: '10000 !important'
             }}>
               🟡 FORCED MESSAGE DISPLAY: {feedback.message}
             </div>
