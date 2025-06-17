@@ -555,18 +555,6 @@ export const generateRandomTest = () => {
     testQuestions.push(...questionsWithLevel);
   });
   
-  // Debug: Check if hints are properly included
-  console.log('🔍 DETAILED TEST GENERATION:');
-  testQuestions.forEach((q, index) => {
-    console.log(`Question ${index + 1}:`, {
-      level: q.level,
-      word: q.answer,
-      sentence: q.sentence ? q.sentence.substring(0, 30) + '...' : 'NO SENTENCE',
-      hint: q.hint || 'NO HINT FOUND',
-      hasHint: !!q.hint
-    });
-  });
-  
   return testQuestions;
 };
 
