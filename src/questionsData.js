@@ -7,14 +7,7 @@ export const questions = generateRandomTest();
 
 // Function to get a fresh set of questions (for retaking tests)
 export const getNewQuestions = () => {
-  const newQuestions = generateRandomTest();
-  console.log('🔄 Generating new questions with hints check:', newQuestions.map(q => ({
-    word: q.answer,
-    level: q.level,
-    hasHint: !!q.hint,
-    hintPreview: q.hint ? q.hint.substring(0, 20) + '...' : 'NO HINT'
-  })));
-  return newQuestions;
+  return generateRandomTest();
 };
 
 // Function to get pool statistics for debugging
