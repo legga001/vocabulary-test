@@ -112,12 +112,6 @@ function Quiz({ onFinish, quizType }) {
     } else {
       // Generate fresh random questions for standard vocabulary tests
       newQuestions = getNewQuestions();
-      console.log('📚 Generated new random vocabulary test with hints:', newQuestions.map(q => ({
-        level: q.level,
-        word: q.answer,
-        hasHint: !!q.hint,
-        hint: q.hint ? q.hint.substring(0, 30) + '...' : 'NO HINT'
-      })));
     }
     
     setQuestions(newQuestions);
