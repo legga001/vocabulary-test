@@ -172,15 +172,6 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   const checkAnswer = useCallback(() => {
     if (!currentQuestionData) return;
 
-    console.log('🔍 READING EXERCISE - CHECKING ANSWER:', {
-      answer: currentQuestionData.answer,
-      level: currentQuestionData.level,
-      sentence: currentQuestionData.sentence ? currentQuestionData.sentence.substring(0, 50) + '...' : 'NO SENTENCE',
-      hint: currentQuestionData.hint || 'NO HINT PROPERTY',
-      hasHint: !!currentQuestionData.hint,
-      allProperties: Object.keys(currentQuestionData)
-    });
-
     const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
     const correctAnswer = currentQuestionData.answer.toLowerCase();
     
@@ -198,7 +189,6 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
 
     if (isCorrect) {
       const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
-      console.log('✅ READING EXERCISE - SETTING CORRECT FEEDBACK:', randomMessage);
       setFeedback({ show: true, type: 'correct', message: randomMessage });
       
       setCheckedQuestions(prev => {
@@ -209,26 +199,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     } else {
       const hintText = currentQuestionData.hint || "Try to think about the context of the sentence.";
       const feedbackMessage = `💡 Hint: ${hintText}`;
-      console.log('❌ READING EXERCISE - SETTING INCORRECT FEEDBACK:', feedbackMessage);
-      
-      const newFeedback = { show: true, type: 'incorrect', message: feedbackMessage };
-      console.log('❌ READING EXERCISE - NEW FEEDBACK OBJECT:', newFeedback);
-      
-      // Use functional update to ensure we're working with the latest state
-      setFeedback(prevFeedback => {
-        console.log('❌ READING EXERCISE - PREVIOUS FEEDBACK STATE:', prevFeedback);
-        console.log('❌ READING EXERCISE - SETTING NEW FEEDBACK STATE:', newFeedback);
-        return newFeedback;
-      });
-      
-      // Also force a re-render to double-check
-      setTimeout(() => {
-        console.log('🔍 READING EXERCISE - CHECKING STATE 100ms LATER');
-        setFeedback(prevFeedback => {
-          console.log('🔍 CURRENT STATE IN TIMEOUT:', prevFeedback);
-          return prevFeedback; // Don't change it, just log it
-        });
-      }, 100);
+      setFeedback({ show: true, type: 'incorrect', message: feedbackMessage });
     }
   }, [userAnswers, currentQuestion, currentQuestionData, getAlternativeSpellings]);
 
@@ -606,43 +577,21 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
             <div 
               className={`feedback ${feedback.type}`}
               style={{
-                background: feedback.type === 'correct' ? '#d4edda !important' : '#f8d7da !important',
-                color: feedback.type === 'correct' ? '#155724 !important' : '#721c24 !important',
-                border: feedback.type === 'correct' ? '2px solid #c3e6cb !important' : '2px solid #f5c6cb !important',
-                padding: '15px !important',
-                borderRadius: '8px !important',
-                margin: '15px 0 !important',
-                fontSize: '18px !important',
-                fontWeight: 'bold !important',
-                minHeight: '50px !important',
-                display: 'block !important',
-                visibility: 'visible !important',
-                opacity: '1 !important',
-                position: 'relative !important',
-                zIndex: '9999 !important'
+                background: feedback.type === 'correct' ? '#d4edda' : '#f8d7da',
+                color: feedback.type === 'correct' ? '#155724' : '#721c24',
+                border: feedback.type === 'correct' ? '2px solid #c3e6cb' : '2px solid #f5c6cb',
+                padding: '15px',
+                borderRadius: '8px',
+                margin: '15px 0',
+                fontSize: '16px',
+                fontWeight: '600',
+                minHeight: '20px',
+                display: 'block',
+                visibility: 'visible',
+                opacity: '1'
               }}
             >
-              {feedback.message || 'NO MESSAGE FOUND'}
-            </div>
-          )}
-
-          {/* Also force the feedback to show regardless of state */}
-          {feedback.message && (
-            <div style={{
-              background: 'yellow !important',
-              color: 'black !important',
-              padding: '15px !important',
-              margin: '15px 0 !important',
-              fontSize: '18px !important',
-              border: '3px solid red !important',
-              fontWeight: 'bold !important',
-              display: 'block !important',
-              visibility: 'visible !important',
-              opacity: '1 !important',
-              position: 'relative !important',
-              zIndex: '10000 !important'
-            }}>
-              🟡 FORCED MESSAGE DISPLAY: {feedback.message}
+              {feedback.message}
             </div>
           )}
 
