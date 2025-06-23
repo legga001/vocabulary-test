@@ -80,35 +80,40 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     
     console.log('Loading questions for view:', currentView); // Debug log
     
-    switch (currentView) {
-      case 'killer-whale-quiz':
-        newQuestions = getKillerWhaleVocabularyQuestions();
-        console.log('Loaded killer whale questions:', newQuestions.length); // Debug log
-        break;
-      case 'octopus-quiz':
-        newQuestions = getReadingVocabularyQuestions();
-        console.log('Loaded octopus questions:', newQuestions.length); // Debug log
-        break;
-      case 'smuggling-quiz':
-        newQuestions = getArticleQuestions();
-        console.log('Loaded smuggling questions:', newQuestions.length); // Debug log
-        break;
-      case 'air-india-quiz':
-        newQuestions = getAirIndiaVocabularyQuestions();
-        console.log('Loaded air india questions:', newQuestions.length); // Debug log
-        break;
-      case 'water-treatment-quiz':
-        newQuestions = getWaterTreatmentVocabularyQuestions();
-        console.log('Loaded water treatment questions:', newQuestions.length); // Debug log
-        break;
-      case 'standard-quiz':
-        // Generate fresh random questions for standard vocabulary tests
-        newQuestions = getNewQuestions();
-        console.log('Loaded standard questions:', newQuestions.length); // Debug log
-        break;
-      default:
-        newQuestions = [];
-        console.log('No questions loaded for view:', currentView); // Debug log
+    try {
+      switch (currentView) {
+        case 'killer-whale-quiz':
+          newQuestions = getKillerWhaleVocabularyQuestions();
+          console.log('Loaded killer whale questions:', newQuestions.length); // Debug log
+          break;
+        case 'octopus-quiz':
+          newQuestions = getReadingVocabularyQuestions();
+          console.log('Loaded octopus questions:', newQuestions.length); // Debug log
+          break;
+        case 'smuggling-quiz':
+          newQuestions = getArticleQuestions();
+          console.log('Loaded smuggling questions:', newQuestions.length); // Debug log
+          break;
+        case 'air-india-quiz':
+          newQuestions = getAirIndiaVocabularyQuestions();
+          console.log('Loaded air india questions:', newQuestions.length); // Debug log
+          break;
+        case 'water-treatment-quiz':
+          newQuestions = getWaterTreatmentVocabularyQuestions();
+          console.log('Loaded water treatment questions:', newQuestions.length); // Debug log
+          break;
+        case 'standard-quiz':
+          // Generate fresh random questions for standard vocabulary tests
+          newQuestions = getNewQuestions();
+          console.log('Loaded standard questions:', newQuestions.length); // Debug log
+          break;
+        default:
+          newQuestions = [];
+          console.log('No questions loaded for view:', currentView); // Debug log
+      }
+    } catch (error) {
+      console.error('Error loading questions for', currentView, ':', error);
+      newQuestions = [];
     }
     
     setQuestions(newQuestions);
