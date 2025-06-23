@@ -1,4 +1,4 @@
-// src/components/Quiz.js - Updated with random question selection and British spelling support
+// src/components/Quiz.js - Fixed quiz component with proper feedback timing
 import React, { useState, useEffect } from 'react';
 import { getNewQuestions, correctMessages } from '../questionsData';
 import { getArticleQuestions } from '../articleQuestions';
@@ -226,20 +226,11 @@ function Quiz({ onFinish, quizType }) {
       newChecked[currentQuestion] = true;
       setCheckedQuestions(newChecked);
     } else {
-      // Ensure we have a hint to display
+      // Ensure we have a hint to display - only show after checking incorrect answer
       const hintText = question.hint || "Try to think about the context of the sentence.";
       const feedbackMessage = `💡 Hint: ${hintText}`;
       console.log('❌ SETTING INCORRECT FEEDBACK:', feedbackMessage);
       setFeedback({ show: true, type: 'incorrect', message: feedbackMessage });
-      
-      // Force a re-render check
-      setTimeout(() => {
-        console.log('🔍 FEEDBACK STATE AFTER SET:', { 
-          show: feedback.show, 
-          type: feedback.type, 
-          message: feedback.message 
-        });
-      }, 100);
     }
   };
 
@@ -247,6 +238,11 @@ function Quiz({ onFinish, quizType }) {
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestion] = value;
     setUserAnswers(newAnswers);
+    
+    // Clear feedback when user starts typing again
+    if (feedback.show) {
+      setFeedback({ show: false, type: '', message: '' });
+    }
   };
 
   const previousQuestion = () => {
@@ -338,63 +334,41 @@ function Quiz({ onFinish, quizType }) {
         </div>
       </div>
 
+      {/* Only show feedback AFTER answer has been checked */}
       {feedback.show && (
-        <div 
-          className={`feedback ${feedback.type}`}
-          style={{
-            background: feedback.type === 'correct' ? '#d4edda' : '#f8d7da',
-            color: feedback.type === 'correct' ? '#155724' : '#721c24',
-            border: feedback.type === 'correct' ? '1px solid #c3e6cb' : '1px solid #f5c6cb',
-            padding: '12px',
-            borderRadius: '8px',
-            margin: '15px 0',
-            fontSize: '16px',
-            fontWeight: '500',
-            minHeight: '20px'
-          }}
-        >
-          {feedback.message || 'NO MESSAGE FOUND'}
+        <div className={`feedback ${feedback.type}`}>
+          {feedback.message}
         </div>
       )}
-
-      {/* Debug feedback state - remove this after testing */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ 
-          background: '#f0f0f0', 
-          padding: '10px', 
-          margin: '10px 0', 
-          fontSize: '12px',
-          border: '1px solid #ccc' 
-        }}>
-          <strong>🐛 Debug Info:</strong><br/>
-          Feedback Show: {feedback.show ? 'YES' : 'NO'}<br/>
-          Feedback Type: {feedback.type}<br/>
-          Feedback Message: {feedback.message}<br/>
-          Current Question: {currentQuestion + 1}<br/>
-          Question Answer: {question?.answer}<br/>
-          Question Hint: {question?.hint || 'NO HINT'}
-        </div>
-      )}
-
-      <button 
-        className="btn" 
-        onClick={checkAnswer}
-        disabled={checkedQuestions[currentQuestion] || !userAnswers[currentQuestion]}
-      >
-        Check Answer
-      </button>
 
       <div className="navigation">
         <button 
           className="nav-btn" 
-          onClick={previousQuestion}
+          onClick={previousQuestion} 
           disabled={currentQuestion === 0}
         >
-          Previous
+          ← Previous
         </button>
-        <button className="nav-btn" onClick={nextQuestion}>
-          {currentQuestion === 9 ? 'Finish' : 'Next'}
-        </button>
+        
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {!checkedQuestions[currentQuestion] && userAnswers[currentQuestion] && (
+            <button className="nav-btn" onClick={checkAnswer}>
+              Check Answer
+            </button>
+          )}
+          
+          <button 
+            className="nav-btn" 
+            onClick={nextQuestion}
+            disabled={!checkedQuestions[currentQuestion] && !userAnswers[currentQuestion]}
+          >
+            {currentQuestion === 9 ? 'Finish' : 'Next →'}
+          </button>
+        </div>
+      </div>
+
+      <div className="quiz-footer">
+        <p>Press Enter to check your answer, or use the buttons below.</p>
       </div>
     </div>
   );
