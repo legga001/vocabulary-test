@@ -78,28 +78,37 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   useEffect(() => {
     let newQuestions = [];
     
+    console.log('Loading questions for view:', currentView); // Debug log
+    
     switch (currentView) {
       case 'killer-whale-quiz':
         newQuestions = getKillerWhaleVocabularyQuestions();
+        console.log('Loaded killer whale questions:', newQuestions.length); // Debug log
         break;
       case 'octopus-quiz':
         newQuestions = getReadingVocabularyQuestions();
+        console.log('Loaded octopus questions:', newQuestions.length); // Debug log
         break;
       case 'smuggling-quiz':
         newQuestions = getArticleQuestions();
+        console.log('Loaded smuggling questions:', newQuestions.length); // Debug log
         break;
       case 'air-india-quiz':
         newQuestions = getAirIndiaVocabularyQuestions();
+        console.log('Loaded air india questions:', newQuestions.length); // Debug log
         break;
       case 'water-treatment-quiz':
         newQuestions = getWaterTreatmentVocabularyQuestions();
+        console.log('Loaded water treatment questions:', newQuestions.length); // Debug log
         break;
       case 'standard-quiz':
         // Generate fresh random questions for standard vocabulary tests
         newQuestions = getNewQuestions();
+        console.log('Loaded standard questions:', newQuestions.length); // Debug log
         break;
       default:
         newQuestions = [];
+        console.log('No questions loaded for view:', currentView); // Debug log
     }
     
     setQuestions(newQuestions);
@@ -441,6 +450,51 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
           <h1>📖 Reading Exercise</h1>
           <div className="loading-state">
             <p>🎲 Generating your vocabulary test...</p>
+            <p style={{ fontSize: '0.9em', color: '#666', marginTop: '10px' }}>
+              Loading {currentView}...
+            </p>
+            {/* Add a fallback button in case loading fails */}
+            <button 
+              className="btn btn-secondary btn-small" 
+              onClick={navigationHandlers.backToArticleSelection}
+              style={{ marginTop: '20px' }}
+            >
+              ← Back to Article Selection
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Add error state for when questions should have loaded but didn't
+  if ((currentView === 'standard-quiz' || currentView === 'killer-whale-quiz' || currentView === 'octopus-quiz' || 
+       currentView === 'smuggling-quiz' || currentView === 'air-india-quiz' || currentView === 'water-treatment-quiz') && 
+       questions.length === 0) {
+    return (
+      <div className="exercise-page">
+        <ClickableLogo onLogoClick={onLogoClick} />
+        <div className="quiz-container">
+          <h1>📖 Reading Exercise</h1>
+          <div className="error-state">
+            <p>⚠️ Failed to load questions for this exercise.</p>
+            <p style={{ fontSize: '0.9em', color: '#666' }}>
+              Please try selecting a different article or go back to try again.
+            </p>
+            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => window.location.reload()}
+              >
+                🔄 Refresh Page
+              </button>
+              <button 
+                className="btn btn-secondary" 
+                onClick={navigationHandlers.backToArticleSelection}
+              >
+                ← Back to Articles
+              </button>
+            </div>
           </div>
         </div>
       </div>
