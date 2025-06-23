@@ -1,4 +1,4 @@
-// src/App.js - Simplified with direct navigation to quizzes
+// src/App.js - Completely fixed with direct Quiz navigation
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import SplashPage from './components/SplashPage';
@@ -172,7 +172,7 @@ function App() {
     setCurrentScreen('article-quiz');
   };
 
-  // Main render function
+  // Main render function - COMPLETELY FIXED
   const renderCurrentScreen = () => {
     switch(currentScreen) {
       case 'splash':
@@ -197,7 +197,7 @@ function App() {
           <ProgressPage onBack={goBack} />
         );
 
-      // DIRECT QUIZ NAVIGATION - no ReadingExercise wrapper
+      // DIRECT QUIZ NAVIGATION - FIXED
       case 'standard-vocabulary-quiz':
         return (
           <Quiz 
@@ -219,7 +219,7 @@ function App() {
         return (
           <Quiz 
             quizType="article" 
-            articleType={selectedArticleType} // Pass the selected article type
+            articleType={selectedArticleType}
             onFinish={handleQuizFinish}
             onBack={() => setCurrentScreen('article-selection')}
           />
