@@ -1,4 +1,4 @@
-// src/App.js - Updated with cleaned imports (removed unused Results)
+// src/App.js - Updated with cleaned imports (removed unused Results) and killer whale quiz
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import SplashPage from './components/SplashPage';
@@ -62,11 +62,21 @@ function App() {
     
     // If we get here, this is NOT a page refresh
     // Check if this is a new session (new tab, browser restart, etc.)
-    const currentSessionId = Date.now().toString();
-    sessionStorage.setItem(SESSION_KEY, currentSessionId);
-    sessionStorage.removeItem(SPLASH_SHOWN_KEY);
-    setCurrentScreen('splash');
-    console.log('New session - showing splash');
+    const existingSession = sessionStorage.getItem(SESSION_KEY);
+    const splashShown = sessionStorage.getItem(SPLASH_SHOWN_KEY);
+    
+    if (existingSession && splashShown) {
+      // Session exists and splash was already shown - skip to landing
+      setCurrentScreen('landing');
+      console.log('Existing session detected - skipping splash');
+    } else {
+      // No session or splash not shown - show splash as normal
+      const currentSessionId = Date.now().toString();
+      sessionStorage.setItem(SESSION_KEY, currentSessionId);
+      sessionStorage.removeItem(SPLASH_SHOWN_KEY);
+      setCurrentScreen('splash');
+      console.log('New session - showing splash');
+    }
   }, []);
 
   // Save state whenever it changes (but not for splash or transition states)
@@ -197,7 +207,7 @@ function App() {
     setCurrentScreen(articleType);
   };
 
-  // Main render function - WITH AIR INDIA SUPPORT
+  // Main render function - WITH KILLER WHALE SUPPORT
   const renderCurrentScreen = () => {
     switch(currentScreen) {
       case 'splash':
@@ -233,6 +243,15 @@ function App() {
             onBack={goBack}
             onLogoClick={goToLanding}
             onSelectArticle={handleArticleSelection}
+          />
+        );
+      
+      case 'killer-whale-quiz':  // NEW: Killer whale quiz case
+        return (
+          <ReadingExercise 
+            onBack={() => setCurrentScreen('article-selection')} 
+            onLogoClick={goToLanding}
+            initialView="killer-whale-quiz"
           />
         );
       
