@@ -400,10 +400,29 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
         </div>
       </div>
 
-      {/* Feedback */}
+      {/* Feedback - Enhanced with debugging */}
       {feedback.show && (
         <div className={`feedback ${feedback.type}`}>
           {feedback.message}
+        </div>
+      )}
+
+      {/* DEBUG: Always show feedback state for testing */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{
+          background: '#fff3cd',
+          padding: '10px',
+          margin: '10px 0',
+          borderRadius: '5px',
+          fontSize: '0.8em',
+          fontFamily: 'monospace'
+        }}>
+          <strong>🐛 Feedback Debug:</strong><br />
+          Show: {feedback.show ? 'YES' : 'NO'}<br />
+          Type: "{feedback.type}"<br />
+          Message: "{feedback.message}"<br />
+          Current Answer: "{userAnswers[currentQuestion]}"<br />
+          Question Checked: {checkedQuestions[currentQuestion] ? 'YES' : 'NO'}
         </div>
       )}
 
