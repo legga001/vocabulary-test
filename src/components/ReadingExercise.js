@@ -176,16 +176,94 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       );
     }
 
-    if (currentView === 'standard-quiz') {
+    // Handle all quiz types
+    if (currentView === 'standard-quiz' || currentView === 'killer-whale-quiz' || 
+        currentView === 'octopus-quiz' || currentView === 'smuggling-quiz' || 
+        currentView === 'air-india-quiz' || currentView === 'water-treatment-quiz') {
+      
+      console.log('🎮 Rendering quiz view for:', currentView);
+      
+      // Try to load questions for this quiz type
+      let questions = [];
+      let quizTitle = currentView;
+      
+      try {
+        switch (currentView) {
+          case 'killer-whale-quiz':
+            questions = getKillerWhaleVocabularyQuestions();
+            quizTitle = '🐋 Killer Whale Quiz';
+            break;
+          case 'octopus-quiz':
+            questions = getReadingVocabularyQuestions();
+            quizTitle = '🐙 Octopus Quiz';
+            break;
+          case 'smuggling-quiz':
+            questions = getArticleQuestions();
+            quizTitle = '🚢 Smuggling Quiz';
+            break;
+          case 'air-india-quiz':
+            questions = getAirIndiaVocabularyQuestions();
+            quizTitle = '✈️ Air India Quiz';
+            break;
+          case 'water-treatment-quiz':
+            questions = getWaterTreatmentVocabularyQuestions();
+            quizTitle = '💧 Water Treatment Quiz';
+            break;
+          case 'standard-quiz':
+            questions = getNewQuestions();
+            quizTitle = '📚 Standard Quiz';
+            break;
+        }
+        console.log(`✅ Loaded ${questions.length} questions for ${currentView}`);
+      } catch (error) {
+        console.error(`❌ Error loading questions for ${currentView}:`, error);
+      }
+
       return (
         <div className="exercise-page">
           <ClickableLogo onLogoClick={onLogoClick} />
           <div className="quiz-container">
-            <h1>📚 Standard Quiz</h1>
-            <p>Standard quiz is loading...</p>
-            <button className="btn btn-secondary" onClick={goBack}>
-              ← Back
-            </button>
+            <h1>{quizTitle}</h1>
+            
+            <div style={{ background: '#f0f0f0', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+              <h3>🔧 Debug Information</h3>
+              <p><strong>Quiz Type:</strong> {currentView}</p>
+              <p><strong>Questions Loaded:</strong> {questions.length}</p>
+              <p><strong>Status:</strong> {questions.length > 0 ? '✅ Ready' : '❌ No Questions'}</p>
+            </div>
+
+            {questions.length > 0 ? (
+              <div>
+                <p>✅ Quiz loaded successfully with {questions.length} questions!</p>
+                <div style={{ background: '#e8f5e8', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+                  <h4>First Question Preview:</h4>
+                  <p><strong>Sentence:</strong> {questions[0]?.sentence}</p>
+                  <p><strong>Answer:</strong> {questions[0]?.answer}</p>
+                  <p><strong>Hint:</strong> {questions[0]?.hint}</p>
+                  <p><strong>Level:</strong> {questions[0]?.level}</p>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p>❌ No questions loaded for this quiz type.</p>
+                <div style={{ background: '#ffebee', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+                  <p>This indicates an issue with the data file for {currentView}</p>
+                </div>
+              </div>
+            )}
+            
+            <div style={{ marginTop: '20px' }}>
+              <button className="btn btn-secondary" onClick={goBack}>
+                ← Back
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => window.location.reload()}
+                style={{ marginLeft: '10px' }}
+              >
+                🔄 Refresh
+              </button>
+            </div>
           </div>
         </div>
       );
