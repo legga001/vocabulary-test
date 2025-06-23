@@ -1,5 +1,5 @@
 /* ==============================================
-   QUIZ.CSS - Quiz interface styles with proper letter input display
+   QUIZ.CSS - Completely fixed quiz interface styles
    ============================================== */
 
 .quiz-header {
@@ -66,7 +66,7 @@
 }
 
 /* ==============================================
-   QUESTION SECTION WITH PROPER LETTER INPUT DISPLAY
+   QUESTION SECTION WITH INLINE LETTER INPUTS
    ============================================== */
 
 .question-section {
@@ -81,105 +81,109 @@
   line-height: 1.8;
   color: #2d3748;
   margin-bottom: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
+  display: inline-block;
+  text-align: center;
 }
 
-/* Container for the letter input boxes */
-.letter-input-wrapper {
-  display: inline-flex;
-  align-items: center;
-  margin: 0 8px;
+/* Ensure visible letters appear inline */
+.visible-letters {
+  font-weight: 700;
+  color: #4c51bf;
+  background: #f0f2ff;
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin: 0 2px;
 }
 
 /* ==============================================
-   LETTER INPUT COMPONENT STYLES
+   LETTER INPUT COMPONENT STYLES - INLINE DISPLAY
    ============================================== */
 
 .letter-input-container {
-  display: inline-flex;
-  gap: 4px;
+  display: inline-flex !important;
+  gap: 3px;
   align-items: center;
   justify-content: center;
+  margin: 0 4px;
+  vertical-align: baseline;
 }
 
 .letter-input-box {
-  width: 40px;
-  height: 40px;
+  width: 35px !important;
+  height: 35px !important;
   border: 2px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 6px;
   text-align: center;
   font-family: 'Nunito', sans-serif;
-  font-size: 1.2em;
+  font-size: 1.1em;
   font-weight: 600;
   background: white;
   transition: all 0.3s ease;
   outline: none;
   text-transform: lowercase;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-block !important;
+  margin: 0;
+  padding: 0;
+  vertical-align: middle;
+  line-height: 31px; /* Helps with vertical alignment */
 }
 
 /* Pre-filled letters (given letters) */
 .letter-input-box.pre-filled {
-  background: #f0f2ff;
-  border-color: #4c51bf;
-  color: #4c51bf;
+  background: #f0f2ff !important;
+  border-color: #4c51bf !important;
+  color: #4c51bf !important;
   font-weight: 700;
   cursor: not-allowed;
 }
 
 /* Editable letters (user input) */
 .letter-input-box.editable {
-  background: #ffffff;
-  border-color: #cbd5e0;
+  background: #ffffff !important;
+  border-color: #cbd5e0 !important;
   cursor: text;
 }
 
 .letter-input-box.editable:focus {
-  border-color: #48bb78;
-  box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
-  background: #f0fff4;
+  border-color: #48bb78 !important;
+  box-shadow: 0 0 0 2px rgba(72, 187, 120, 0.2) !important;
+  background: #f0fff4 !important;
 }
 
 .letter-input-box.editable:hover:not(:focus) {
-  border-color: #a0aec0;
-  background: #fafafa;
+  border-color: #a0aec0 !important;
+  background: #fafafa !important;
 }
 
 .letter-input-box:disabled {
-  background: #f7fafc;
-  color: #a0aec0;
+  background: #f7fafc !important;
+  color: #a0aec0 !important;
   cursor: not-allowed;
 }
 
 /* Feedback states for the entire container */
 .letter-input-container.correct .letter-input-box {
-  border-color: #48bb78;
-  background: #f0fff4;
-  color: #38a169;
+  border-color: #48bb78 !important;
+  background: #f0fff4 !important;
+  color: #38a169 !important;
 }
 
 .letter-input-container.correct .letter-input-box.pre-filled {
-  background: #e6fffa;
-  border-color: #38a169;
-  color: #2d3748;
+  background: #e6fffa !important;
+  border-color: #38a169 !important;
+  color: #2d3748 !important;
 }
 
 .letter-input-container.incorrect .letter-input-box {
-  border-color: #f56565;
-  background: #fff5f5;
-  color: #e53e3e;
+  border-color: #f56565 !important;
+  background: #fff5f5 !important;
+  color: #e53e3e !important;
 }
 
 .letter-input-container.incorrect .letter-input-box.pre-filled {
-  background: #fed7d7;
-  border-color: #e53e3e;
-  color: #2d3748;
+  background: #fed7d7 !important;
+  border-color: #e53e3e !important;
+  color: #2d3748 !important;
 }
 
 /* ==============================================
@@ -308,6 +312,17 @@
   margin: 0 auto;
 }
 
+.loading-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.loading-state p {
+  font-size: 1.2em;
+  margin: 0;
+}
+
 /* ==============================================
    RESPONSIVE ADJUSTMENTS
    ============================================== */
@@ -316,17 +331,19 @@
 @media (max-width: 768px) {
   .question-text {
     font-size: 1.2em;
-    gap: 6px;
+    line-height: 1.6;
   }
   
   .letter-input-container {
-    gap: 3px;
+    gap: 2px;
+    margin: 0 3px;
   }
   
   .letter-input-box {
-    width: 36px;
-    height: 36px;
-    font-size: 1.1em;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 1em;
+    line-height: 28px;
   }
 }
 
@@ -334,17 +351,19 @@
 @media (max-width: 480px) {
   .question-text {
     font-size: 1.1em;
-    gap: 4px;
+    line-height: 1.5;
   }
   
   .letter-input-container {
-    gap: 2px;
+    gap: 1px;
+    margin: 0 2px;
   }
   
   .letter-input-box {
-    width: 32px;
-    height: 32px;
-    font-size: 1em;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.9em;
+    line-height: 24px;
   }
   
   .navigation {
