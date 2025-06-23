@@ -49,7 +49,7 @@ function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
         </div>
 
         <div className="article-selection-grid">
-          {articles.map((article, index) => (
+          {articles.map((article) => (
             <div
               key={article.type}
               className="article-selection-card"
@@ -98,7 +98,5 @@ function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
     </div>
   );
 }
-
-export default ArticleSelection;
 
 export default ArticleSelection;
