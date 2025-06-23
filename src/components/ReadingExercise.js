@@ -1,9 +1,8 @@
-// src/components/ReadingExercise.js - Updated with killer whale article
+// src/components/ReadingExercise.js - Updated with killer whale article and error handling
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { getAirIndiaVocabularyQuestions, getAirIndiaArticleInfo } from '../airIndiaVocabularyData';
 import { getWaterTreatmentVocabularyQuestions, getWaterTreatmentArticleInfo } from '../waterTreatmentVocabularyData';
-import { getKillerWhaleVocabularyQuestions, getKillerWhaleArticleInfo } from '../killerWhaleVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
 import { getNewQuestions, correctMessages } from '../questionsData';
 import { recordTestResult } from '../utils/progressDataManager';
@@ -13,6 +12,27 @@ import RealFakeWordsExercise from './RealFakeWordsExercise';
 import LetterInput from './LetterInput';
 import ClickableLogo from './ClickableLogo';
 import { processSentence, extractVisibleLetters } from '../utils/quizHelpers';
+
+// Conditional import for killer whale data with fallback
+let getKillerWhaleVocabularyQuestions, getKillerWhaleArticleInfo;
+try {
+  const killerWhaleModule = require('../killerWhaleVocabularyData');
+  getKillerWhaleVocabularyQuestions = killerWhaleModule.getKillerWhaleVocabularyQuestions;
+  getKillerWhaleArticleInfo = killerWhaleModule.getKillerWhaleArticleInfo;
+} catch (error) {
+  console.warn('Killer whale vocabulary data not found, using fallback');
+  // Fallback functions
+  getKillerWhaleVocabularyQuestions = () => [];
+  getKillerWhaleArticleInfo = () => ({
+    title: "Killer whales 'massage' each other using kelp",
+    url: "https://www.bbc.co.uk/news/articles/cwyqll5n2qro",
+    source: "BBC News",
+    date: "23 June 2025",
+    author: "Victoria Gill",
+    summary: "Researchers have discovered that orcas in the North Pacific use kelp to 'massage' each other.",
+    readingTime: "3-4 minutes"
+  });
+}
 
 // Constants
 const INITIAL_ANSWERS = new Array(10).fill('');
