@@ -1,4 +1,4 @@
-// src/utils/quizHelpers.js
+// src/utils/quizHelpers.js - Fixed to remove erroneous highlighted letters
 // Helper functions for processing quiz questions
 
 /**
@@ -19,13 +19,13 @@ export const getLettersToShow = (word) => {
 };
 
 /**
- * Processes a sentence to find the gap and extract the word
+ * Processes a sentence to find the gap and extract the word - FIXED VERSION
  * @param {string} sentence - The sentence with gap
  * @param {string} answer - The correct answer
  * @returns {object} - Processed sentence data
  */
 export const processSentence = (sentence, answer) => {
-  // Find the gap pattern in the sentence
+  // Find the gap pattern in the sentence (underscores with optional letters)
   const gapMatch = sentence.match(/\b\w*_+\w*\b/);
   
   if (!gapMatch) {
@@ -33,7 +33,7 @@ export const processSentence = (sentence, answer) => {
     return {
       beforeGap: sentence,
       afterGap: '',
-      visibleLetters: '',
+      visibleLetters: '', // No visible letters to avoid confusion
       word: answer
     };
   }
@@ -45,25 +45,24 @@ export const processSentence = (sentence, answer) => {
   const beforeGap = sentence.substring(0, gapIndex);
   const afterGap = sentence.substring(gapIndex + gapWord.length);
   
-  // Extract visible letters from the gap
-  const visibleLetters = gapWord.replace(/_/g, '');
+  // FIXED: Don't extract visible letters - this was causing the erroneous highlights
+  // We want clean sentence flow without pre-shown letters
+  const visibleLetters = ''; // Always empty to avoid confusion
   
   return {
     beforeGap: beforeGap.trim(),
     afterGap: afterGap.trim(),
-    visibleLetters,
+    visibleLetters, // Always empty
     word: answer
   };
 };
 
 /**
- * Extracts the visible letters from a sentence gap
+ * Extracts the visible letters from a sentence gap - FIXED TO RETURN EMPTY
  * @param {string} sentence - The sentence with gap
- * @returns {string} - The visible letters
+ * @returns {string} - Always empty to avoid erroneous highlights
  */
 export const extractVisibleLetters = (sentence) => {
-  const gapMatch = sentence.match(/\b\w*_+\w*\b/);
-  if (!gapMatch) return '';
-  
-  return gapMatch[0].replace(/_/g, '');
+  // FIXED: Always return empty string to prevent erroneous highlighted letters
+  return '';
 };
