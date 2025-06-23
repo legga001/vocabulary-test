@@ -1,143 +1,168 @@
-// src/components/ReadingExercise.js - Emergency Debug Version
+// src/components/ReadingExercise.js - Working Version with Quiz Interface
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ClickableLogo from './ClickableLogo';
 
-// Safe imports with error handling
-let getReadingVocabularyQuestions, getReadingArticleInfo;
-let getAirIndiaVocabularyQuestions, getAirIndiaArticleInfo;
-let getWaterTreatmentVocabularyQuestions, getWaterTreatmentArticleInfo;
-let getKillerWhaleVocabularyQuestions, getKillerWhaleArticleInfo;
-let getArticleQuestions, getArticleInfo;
-let getNewQuestions, correctMessages;
-let recordTestResult;
+// Import all the working modules (we know these work from debug testing)
+import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
+import { getAirIndiaVocabularyQuestions, getAirIndiaArticleInfo } from '../airIndiaVocabularyData';
+import { getWaterTreatmentVocabularyQuestions, getWaterTreatmentArticleInfo } from '../waterTreatmentVocabularyData';
+import { getKillerWhaleVocabularyQuestions, getKillerWhaleArticleInfo } from '../killerWhaleVocabularyData';
+import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
+import { getNewQuestions, correctMessages } from '../questionsData';
+import { recordTestResult } from '../utils/progressDataManager';
+
+// Import components with fallbacks
 let AnswerReview, ArticleSelection, RealFakeWordsExercise, LetterInput;
-let processSentence, extractVisibleLetters;
-
-// Import everything safely
 try {
-  console.log('🔄 Importing reading vocabulary data...');
-  const readingModule = require('../readingVocabularyData');
-  getReadingVocabularyQuestions = readingModule.getReadingVocabularyQuestions;
-  getReadingArticleInfo = readingModule.getReadingArticleInfo;
-  console.log('✅ Reading vocabulary data imported');
-} catch (error) {
-  console.error('❌ Failed to import reading vocabulary data:', error);
-  getReadingVocabularyQuestions = () => [];
-  getReadingArticleInfo = () => ({ title: 'Octopus Article', url: '#' });
-}
-
-try {
-  console.log('🔄 Importing air india data...');
-  const airIndiaModule = require('../airIndiaVocabularyData');
-  getAirIndiaVocabularyQuestions = airIndiaModule.getAirIndiaVocabularyQuestions;
-  getAirIndiaArticleInfo = airIndiaModule.getAirIndiaArticleInfo;
-  console.log('✅ Air India data imported');
-} catch (error) {
-  console.error('❌ Failed to import air india data:', error);
-  getAirIndiaVocabularyQuestions = () => [];
-  getAirIndiaArticleInfo = () => ({ title: 'Air India Article', url: '#' });
-}
-
-try {
-  console.log('🔄 Importing water treatment data...');
-  const waterModule = require('../waterTreatmentVocabularyData');
-  getWaterTreatmentVocabularyQuestions = waterModule.getWaterTreatmentVocabularyQuestions;
-  getWaterTreatmentArticleInfo = waterModule.getWaterTreatmentArticleInfo;
-  console.log('✅ Water treatment data imported');
-} catch (error) {
-  console.error('❌ Failed to import water treatment data:', error);
-  getWaterTreatmentVocabularyQuestions = () => [];
-  getWaterTreatmentArticleInfo = () => ({ title: 'Water Treatment Article', url: '#' });
-}
-
-try {
-  console.log('🔄 Importing killer whale data...');
-  const killerWhaleModule = require('../killerWhaleVocabularyData');
-  getKillerWhaleVocabularyQuestions = killerWhaleModule.getKillerWhaleVocabularyQuestions;
-  getKillerWhaleArticleInfo = killerWhaleModule.getKillerWhaleArticleInfo;
-  console.log('✅ Killer whale data imported');
-} catch (error) {
-  console.error('❌ Failed to import killer whale data:', error);
-  getKillerWhaleVocabularyQuestions = () => [];
-  getKillerWhaleArticleInfo = () => ({ title: 'Killer Whale Article', url: '#' });
-}
-
-try {
-  console.log('🔄 Importing article questions...');
-  const articleModule = require('../articleQuestions');
-  getArticleQuestions = articleModule.getArticleQuestions;
-  getArticleInfo = articleModule.getArticleInfo;
-  console.log('✅ Article questions imported');
-} catch (error) {
-  console.error('❌ Failed to import article questions:', error);
-  getArticleQuestions = () => [];
-  getArticleInfo = () => ({ title: 'Smuggling Article', url: '#' });
-}
-
-try {
-  console.log('🔄 Importing questions data...');
-  const questionsModule = require('../questionsData');
-  getNewQuestions = questionsModule.getNewQuestions;
-  correctMessages = questionsModule.correctMessages || ['Good job!', 'Correct!', 'Well done!'];
-  console.log('✅ Questions data imported');
-} catch (error) {
-  console.error('❌ Failed to import questions data:', error);
-  getNewQuestions = () => [];
-  correctMessages = ['Good job!', 'Correct!', 'Well done!'];
-}
-
-try {
-  console.log('🔄 Importing progress manager...');
-  const progressModule = require('../utils/progressDataManager');
-  recordTestResult = progressModule.recordTestResult || (() => {});
-  console.log('✅ Progress manager imported');
-} catch (error) {
-  console.error('❌ Failed to import progress manager:', error);
-  recordTestResult = () => {};
-}
-
-try {
-  console.log('🔄 Importing components...');
   AnswerReview = require('./AnswerReview').default;
   ArticleSelection = require('./ArticleSelection').default;
   RealFakeWordsExercise = require('./RealFakeWordsExercise').default;
   LetterInput = require('./LetterInput').default;
-  console.log('✅ Components imported');
 } catch (error) {
-  console.error('❌ Failed to import components:', error);
-  AnswerReview = () => React.createElement('div', null, 'AnswerReview component failed to load');
-  ArticleSelection = () => React.createElement('div', null, 'ArticleSelection component failed to load');
-  RealFakeWordsExercise = () => React.createElement('div', null, 'RealFakeWordsExercise component failed to load');
-  LetterInput = () => React.createElement('input', { type: 'text', placeholder: 'Answer...' });
+  console.warn('Some components failed to import, using fallbacks');
+  AnswerReview = ({ questions, userAnswers }) => (
+    <div style={{ background: '#f0f0f0', padding: '15px', borderRadius: '8px', margin: '10px 0' }}>
+      <h3>Your Answers:</h3>
+      {questions.slice(0, 10).map((q, i) => (
+        <div key={i} style={{ marginBottom: '8px' }}>
+          <strong>Q{i+1}:</strong> {userAnswers[i] || '(no answer)'} 
+          {userAnswers[i] === q.answer ? ' ✅' : ` ❌ (correct: ${q.answer})`}
+        </div>
+      ))}
+    </div>
+  );
+  ArticleSelection = ({ onBack, onSelectArticle }) => (
+    <div className="exercise-page">
+      <div className="quiz-container">
+        <h1>📰 Article Selection</h1>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '300px', margin: '20px auto' }}>
+          <button className="btn btn-primary" onClick={() => onSelectArticle('killer-whale-quiz')}>
+            🐋 Killer Whale Article
+          </button>
+          <button className="btn btn-primary" onClick={() => onSelectArticle('octopus-quiz')}>
+            🐙 Octopus Article
+          </button>
+          <button className="btn btn-primary" onClick={() => onSelectArticle('smuggling-quiz')}>
+            🚢 Smuggling Article
+          </button>
+          <button className="btn btn-primary" onClick={() => onSelectArticle('air-india-quiz')}>
+            ✈️ Air India Article
+          </button>
+          <button className="btn btn-primary" onClick={() => onSelectArticle('water-treatment-quiz')}>
+            💧 Water Treatment Article
+          </button>
+          <button className="btn btn-secondary" onClick={onBack}>← Back</button>
+        </div>
+      </div>
+    </div>
+  );
+  RealFakeWordsExercise = ({ onBack }) => (
+    <div className="exercise-page">
+      <div className="quiz-container">
+        <h1>🎯 Real or Fake Words</h1>
+        <p>This exercise is loading...</p>
+        <button className="btn btn-secondary" onClick={onBack}>← Back</button>
+      </div>
+    </div>
+  );
+  LetterInput = ({ value, onChange, disabled, placeholder }) => (
+    <input 
+      type="text" 
+      value={value || ''} 
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      placeholder={placeholder}
+      style={{ 
+        padding: '8px 12px', 
+        border: '2px solid #ddd', 
+        borderRadius: '6px',
+        fontSize: '1.1em',
+        minWidth: '200px'
+      }}
+    />
+  );
 }
 
+// Quiz helpers with fallbacks
+let processSentence, extractVisibleLetters;
 try {
-  console.log('🔄 Importing quiz helpers...');
-  const helpersModule = require('../utils/quizHelpers');
-  processSentence = helpersModule.processSentence || ((sentence, answer) => ({ beforeBlank: sentence, afterBlank: '' }));
-  extractVisibleLetters = helpersModule.extractVisibleLetters || ((text) => text.length);
-  console.log('✅ Quiz helpers imported');
+  const helpers = require('../utils/quizHelpers');
+  processSentence = helpers.processSentence;
+  extractVisibleLetters = helpers.extractVisibleLetters;
 } catch (error) {
-  console.error('❌ Failed to import quiz helpers:', error);
-  processSentence = (sentence, answer) => ({ beforeBlank: sentence, afterBlank: '' });
+  processSentence = (sentence, answer) => {
+    const parts = sentence.split('_______');
+    return {
+      beforeBlank: parts[0] || sentence,
+      afterBlank: parts[1] || ''
+    };
+  };
   extractVisibleLetters = (text) => text.length;
 }
 
-console.log('✅ All imports completed');
+const TOTAL_QUESTIONS = 10;
+const QUIZ_TYPES = ['killer-whale-quiz', 'octopus-quiz', 'smuggling-quiz', 'air-india-quiz', 'water-treatment-quiz', 'standard-quiz'];
 
 function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
-  console.log('🚀 ReadingExercise component initializing with view:', initialView);
+  console.log('🚀 ReadingExercise starting with view:', initialView);
   
-  // Simple state - no complex logic yet
+  // Core state
   const [currentView, setCurrentView] = useState(initialView);
-  const [debugInfo, setDebugInfo] = useState('Component initialized');
+  const [questions, setQuestions] = useState([]);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [userAnswers, setUserAnswers] = useState(new Array(TOTAL_QUESTIONS).fill(''));
+  const [checkedQuestions, setCheckedQuestions] = useState(new Array(TOTAL_QUESTIONS).fill(false));
+  const [feedback, setFeedback] = useState({ show: false, type: '', message: '' });
+  const [showResults, setShowResults] = useState(false);
+  const [exerciseStartTime, setExerciseStartTime] = useState(null);
 
+  // Load questions when view changes
   useEffect(() => {
-    console.log('📱 ReadingExercise useEffect triggered, currentView:', currentView);
-    setDebugInfo(`Current view: ${currentView}`);
+    console.log('📚 Loading questions for view:', currentView);
+    
+    if (!QUIZ_TYPES.includes(currentView)) {
+      console.log('❌ Not a quiz view, skipping question loading');
+      return;
+    }
+
+    let newQuestions = [];
+    try {
+      switch (currentView) {
+        case 'killer-whale-quiz':
+          newQuestions = getKillerWhaleVocabularyQuestions();
+          break;
+        case 'octopus-quiz':
+          newQuestions = getReadingVocabularyQuestions();
+          break;
+        case 'smuggling-quiz':
+          newQuestions = getArticleQuestions();
+          break;
+        case 'air-india-quiz':
+          newQuestions = getAirIndiaVocabularyQuestions();
+          break;
+        case 'water-treatment-quiz':
+          newQuestions = getWaterTreatmentVocabularyQuestions();
+          break;
+        case 'standard-quiz':
+          newQuestions = getNewQuestions();
+          break;
+      }
+      console.log(`✅ Loaded ${newQuestions.length} questions for ${currentView}`);
+    } catch (error) {
+      console.error('❌ Error loading questions:', error);
+      newQuestions = [];
+    }
+
+    setQuestions(newQuestions);
+    setCurrentQuestion(0);
+    setUserAnswers(new Array(TOTAL_QUESTIONS).fill(''));
+    setCheckedQuestions(new Array(TOTAL_QUESTIONS).fill(false));
+    setFeedback({ show: false, type: '', message: '' });
+    setShowResults(false);
+    setExerciseStartTime(Date.now());
   }, [currentView]);
 
-  // Simple navigation
+  // Navigation functions
   const goBack = useCallback(() => {
     console.log('🔙 Going back...');
     if (onBack) {
@@ -148,198 +173,301 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   }, [onBack]);
 
   const goToArticleSelection = useCallback(() => {
-    console.log('📰 Going to article selection...');
     setCurrentView('article-selection');
   }, []);
 
   const startStandardQuiz = useCallback(() => {
-    console.log('📚 Starting standard quiz...');
     setCurrentView('standard-quiz');
   }, []);
 
-  console.log('🎯 Rendering ReadingExercise, currentView:', currentView);
+  const startArticleQuiz = useCallback((articleType) => {
+    console.log('🎮 Starting article quiz:', articleType);
+    setCurrentView(articleType);
+  }, []);
 
-  // Emergency fallback render
-  try {
-    if (currentView === 'article-selection') {
-      return (
-        <div className="exercise-page">
-          <ClickableLogo onLogoClick={onLogoClick} />
-          <div className="quiz-container">
-            <h1>📰 Article Selection</h1>
-            <p>Article selection is loading...</p>
-            <button className="btn btn-secondary" onClick={goBack}>
-              ← Back
-            </button>
-          </div>
-        </div>
-      );
+  // Quiz functions
+  const checkAnswer = useCallback(() => {
+    const userAnswer = userAnswers[currentQuestion];
+    const correctAnswer = questions[currentQuestion]?.answer;
+    
+    if (!userAnswer || !correctAnswer) return;
+
+    const isCorrect = userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase();
+    
+    const newChecked = [...checkedQuestions];
+    newChecked[currentQuestion] = true;
+    setCheckedQuestions(newChecked);
+
+    if (isCorrect) {
+      setFeedback({ show: true, type: 'correct', message: 'Correct! Well done!' });
+    } else {
+      setFeedback({ show: true, type: 'incorrect', message: `The correct answer is "${correctAnswer}".` });
     }
+  }, [userAnswers, currentQuestion, questions, checkedQuestions]);
 
-    // Handle all quiz types
-    if (currentView === 'standard-quiz' || currentView === 'killer-whale-quiz' || 
-        currentView === 'octopus-quiz' || currentView === 'smuggling-quiz' || 
-        currentView === 'air-india-quiz' || currentView === 'water-treatment-quiz') {
-      
-      console.log('🎮 Rendering quiz view for:', currentView);
-      
-      // Try to load questions for this quiz type
-      let questions = [];
-      let quizTitle = currentView;
-      
-      try {
-        switch (currentView) {
-          case 'killer-whale-quiz':
-            questions = getKillerWhaleVocabularyQuestions();
-            quizTitle = '🐋 Killer Whale Quiz';
-            break;
-          case 'octopus-quiz':
-            questions = getReadingVocabularyQuestions();
-            quizTitle = '🐙 Octopus Quiz';
-            break;
-          case 'smuggling-quiz':
-            questions = getArticleQuestions();
-            quizTitle = '🚢 Smuggling Quiz';
-            break;
-          case 'air-india-quiz':
-            questions = getAirIndiaVocabularyQuestions();
-            quizTitle = '✈️ Air India Quiz';
-            break;
-          case 'water-treatment-quiz':
-            questions = getWaterTreatmentVocabularyQuestions();
-            quizTitle = '💧 Water Treatment Quiz';
-            break;
-          case 'standard-quiz':
-            questions = getNewQuestions();
-            quizTitle = '📚 Standard Quiz';
-            break;
-        }
-        console.log(`✅ Loaded ${questions.length} questions for ${currentView}`);
-      } catch (error) {
-        console.error(`❌ Error loading questions for ${currentView}:`, error);
+  const nextQuestion = useCallback(() => {
+    if (currentQuestion < TOTAL_QUESTIONS - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setFeedback({ show: false, type: '', message: '' });
+    } else {
+      setShowResults(true);
+    }
+  }, [currentQuestion]);
+
+  const previousQuestion = useCallback(() => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+      setFeedback({ show: false, type: '', message: '' });
+    }
+  }, [currentQuestion]);
+
+  const handleInputChange = useCallback((value) => {
+    const newAnswers = [...userAnswers];
+    newAnswers[currentQuestion] = value;
+    setUserAnswers(newAnswers);
+    
+    if (feedback.show) {
+      setFeedback({ show: false, type: '', message: '' });
+    }
+  }, [userAnswers, currentQuestion, feedback.show]);
+
+  // Get article info
+  const getArticleInfo = useCallback(() => {
+    try {
+      switch (currentView) {
+        case 'killer-whale-quiz': return getKillerWhaleArticleInfo();
+        case 'octopus-quiz': return getReadingArticleInfo();
+        case 'smuggling-quiz': return getArticleInfo();
+        case 'air-india-quiz': return getAirIndiaArticleInfo();
+        case 'water-treatment-quiz': return getWaterTreatmentArticleInfo();
+        default: return null;
       }
-
-      return (
-        <div className="exercise-page">
-          <ClickableLogo onLogoClick={onLogoClick} />
-          <div className="quiz-container">
-            <h1>{quizTitle}</h1>
-            
-            <div style={{ background: '#f0f0f0', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
-              <h3>🔧 Debug Information</h3>
-              <p><strong>Quiz Type:</strong> {currentView}</p>
-              <p><strong>Questions Loaded:</strong> {questions.length}</p>
-              <p><strong>Status:</strong> {questions.length > 0 ? '✅ Ready' : '❌ No Questions'}</p>
-            </div>
-
-            {questions.length > 0 ? (
-              <div>
-                <p>✅ Quiz loaded successfully with {questions.length} questions!</p>
-                <div style={{ background: '#e8f5e8', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
-                  <h4>First Question Preview:</h4>
-                  <p><strong>Sentence:</strong> {questions[0]?.sentence}</p>
-                  <p><strong>Answer:</strong> {questions[0]?.answer}</p>
-                  <p><strong>Hint:</strong> {questions[0]?.hint}</p>
-                  <p><strong>Level:</strong> {questions[0]?.level}</p>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <p>❌ No questions loaded for this quiz type.</p>
-                <div style={{ background: '#ffebee', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
-                  <p>This indicates an issue with the data file for {currentView}</p>
-                </div>
-              </div>
-            )}
-            
-            <div style={{ marginTop: '20px' }}>
-              <button className="btn btn-secondary" onClick={goBack}>
-                ← Back
-              </button>
-              <button 
-                className="btn btn-primary" 
-                onClick={() => window.location.reload()}
-                style={{ marginLeft: '10px' }}
-              >
-                🔄 Refresh
-              </button>
-            </div>
-          </div>
-        </div>
-      );
+    } catch (error) {
+      console.error('Error getting article info:', error);
+      return null;
     }
+  }, [currentView]);
 
-    // Default selection view
+  const articleInfo = getArticleInfo();
+
+  console.log('🎯 Rendering view:', currentView, 'Questions:', questions.length);
+
+  // Real/Fake Words exercise
+  if (currentView === 'real-fake-words') {
+    return <RealFakeWordsExercise onBack={goBack} onLogoClick={onLogoClick} />;
+  }
+
+  // Article Selection
+  if (currentView === 'article-selection') {
+    return (
+      <ArticleSelection 
+        onBack={goBack}
+        onLogoClick={onLogoClick}
+        onSelectArticle={startArticleQuiz}
+      />
+    );
+  }
+
+  // Results page
+  if (showResults) {
+    const score = userAnswers.slice(0, TOTAL_QUESTIONS).reduce((total, answer, index) => {
+      return answer && questions[index] && answer.toLowerCase().trim() === questions[index].answer.toLowerCase() 
+        ? total + 1 : total;
+    }, 0);
+
     return (
       <div className="exercise-page">
         <ClickableLogo onLogoClick={onLogoClick} />
         <div className="quiz-container">
-          <h1>📖 Reading Exercises (Debug Mode)</h1>
-          
-          <div style={{ background: '#f0f0f0', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
-            <h3>🔧 Debug Information</h3>
-            <p><strong>Current View:</strong> {currentView}</p>
-            <p><strong>Status:</strong> {debugInfo}</p>
-            <p><strong>Imports Status:</strong> All imports attempted</p>
-            <p><strong>Time:</strong> {new Date().toLocaleTimeString()}</p>
+          <h1>🎉 Quiz Complete!</h1>
+          <div style={{ textAlign: 'center', margin: '20px 0' }}>
+            <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#4c51bf' }}>
+              {score}/{TOTAL_QUESTIONS}
+            </div>
+            <div style={{ fontSize: '1.2em', color: '#666' }}>
+              ({Math.round((score / TOTAL_QUESTIONS) * 100)}%)
+            </div>
           </div>
           
-          <div className="welcome-text">
-            <p>Choose your reading exercise type:</p>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '400px', margin: '0 auto' }}>
-            <button 
-              className="btn btn-primary" 
-              onClick={startStandardQuiz}
-              style={{ padding: '15px', fontSize: '1.1em' }}
-            >
-              📚 Standard Vocabulary Test
+          <AnswerReview questions={questions} userAnswers={userAnswers} />
+          
+          <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <button className="btn btn-primary" onClick={goBack} style={{ marginRight: '10px' }}>
+              Try Another Test
             </button>
-            
-            <button 
-              className="btn btn-primary" 
-              onClick={goToArticleSelection}
-              style={{ padding: '15px', fontSize: '1.1em' }}
-            >
-              📰 Article-Based Vocabulary
-            </button>
-            
-            <button 
-              className="btn btn-secondary" 
-              onClick={goBack}
-              style={{ padding: '15px', fontSize: '1.1em' }}
-            >
-              ← Back to Main Menu
+            <button className="btn btn-secondary" onClick={() => window.location.reload()}>
+              🔄 Refresh
             </button>
           </div>
-        </div>
-      </div>
-    );
-
-  } catch (renderError) {
-    console.error('💥 RENDER ERROR in ReadingExercise:', renderError);
-    
-    return (
-      <div className="exercise-page">
-        <div className="quiz-container">
-          <h1>💥 Component Error</h1>
-          <div style={{ background: '#ffebee', padding: '20px', borderRadius: '8px', color: '#c62828' }}>
-            <h3>Error Details:</h3>
-            <p><strong>Message:</strong> {renderError.message}</p>
-            <p><strong>Stack:</strong> {renderError.stack}</p>
-          </div>
-          <button 
-            className="btn btn-primary" 
-            onClick={() => window.location.reload()}
-            style={{ marginTop: '20px' }}
-          >
-            🔄 Reload Page
-          </button>
         </div>
       </div>
     );
   }
+
+  // Quiz interface for all quiz types
+  if (QUIZ_TYPES.includes(currentView)) {
+    if (questions.length === 0) {
+      return (
+        <div className="exercise-page">
+          <ClickableLogo onLogoClick={onLogoClick} />
+          <div className="quiz-container">
+            <h1>📚 Loading Quiz...</h1>
+            <p>Loading {currentView.replace('-', ' ')}...</p>
+            <button className="btn btn-secondary" onClick={goBack}>← Back</button>
+          </div>
+        </div>
+      );
+    }
+
+    const currentQuestionData = questions[currentQuestion];
+    if (!currentQuestionData) {
+      return (
+        <div className="exercise-page">
+          <ClickableLogo onLogoClick={onLogoClick} />
+          <div className="quiz-container">
+            <h1>❌ Question Error</h1>
+            <p>Could not load question {currentQuestion + 1}</p>
+            <button className="btn btn-secondary" onClick={goBack}>← Back</button>
+          </div>
+        </div>
+      );
+    }
+
+    const processedData = processSentence(currentQuestionData.sentence, currentQuestionData.answer);
+    const progress = ((currentQuestion + 1) / TOTAL_QUESTIONS) * 100;
+
+    return (
+      <div className="exercise-page">
+        <ClickableLogo onLogoClick={onLogoClick} />
+        
+        {articleInfo && (
+          <div className="article-link-header">
+            <button 
+              className="btn btn-article-link"
+              onClick={() => window.open(articleInfo.url, '_blank')}
+            >
+              📖 Read Original Article
+            </button>
+            <div className="article-title-small">"{articleInfo.title}"</div>
+          </div>
+        )}
+
+        <div className="quiz-container">
+          <div className="quiz-header">
+            <div className="quiz-type-badge">
+              📖 {articleInfo ? `Article: ${articleInfo.title}` : 'Standard Vocabulary Test'}
+            </div>
+            
+            <div className="progress-section">
+              <div className="progress-bar">
+                <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+              </div>
+              <div className="question-counter">
+                Question {currentQuestion + 1} of {TOTAL_QUESTIONS}
+              </div>
+            </div>
+          </div>
+
+          <div className="question-section">
+            <div className="sentence-container">
+              <div className="sentence-display" style={{ fontSize: '1.2em', lineHeight: '1.6', margin: '20px 0' }}>
+                {processedData.beforeBlank}
+                <LetterInput 
+                  value={userAnswers[currentQuestion]}
+                  onChange={handleInputChange}
+                  disabled={checkedQuestions[currentQuestion]}
+                  placeholder="Type your answer..."
+                />
+                {processedData.afterBlank}
+              </div>
+            </div>
+
+            <div className="hint-section">
+              <div className="hint" style={{ background: '#f0f8ff', padding: '10px', borderRadius: '8px', margin: '15px 0' }}>
+                💡 <strong>Hint:</strong> {currentQuestionData.hint}
+              </div>
+            </div>
+
+            {feedback.show && (
+              <div className={`feedback ${feedback.type}`} style={{ 
+                padding: '10px', 
+                borderRadius: '8px', 
+                margin: '15px 0',
+                background: feedback.type === 'correct' ? '#e8f5e8' : '#ffebee',
+                color: feedback.type === 'correct' ? '#2e7d32' : '#c62828'
+              }}>
+                {feedback.message}
+              </div>
+            )}
+          </div>
+
+          <div className="controls-section" style={{ textAlign: 'center', margin: '20px 0' }}>
+            <button 
+              className="btn btn-primary" 
+              onClick={checkedQuestions[currentQuestion] ? nextQuestion : checkAnswer}
+              disabled={!userAnswers[currentQuestion] && !checkedQuestions[currentQuestion]}
+              style={{ fontSize: '1.1em', padding: '12px 24px' }}
+            >
+              {checkedQuestions[currentQuestion] ? (currentQuestion === TOTAL_QUESTIONS - 1 ? 'Finish' : 'Next') : 'Check Answer'}
+            </button>
+            
+            <div style={{ marginTop: '15px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button 
+                className="btn btn-secondary btn-small" 
+                onClick={previousQuestion}
+                disabled={currentQuestion === 0}
+              >
+                ← Previous
+              </button>
+              <button 
+                className="btn btn-secondary btn-small" 
+                onClick={nextQuestion}
+                disabled={!checkedQuestions[currentQuestion]}
+              >
+                {currentQuestion === TOTAL_QUESTIONS - 1 ? 'Finish' : 'Next'} →
+              </button>
+            </div>
+          </div>
+
+          <div className="quiz-footer" style={{ textAlign: 'center', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
+            <button className="btn btn-secondary btn-small" onClick={goBack}>
+              ← Back to {articleInfo ? 'Article Selection' : 'Menu'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Main selection view
+  return (
+    <div className="exercise-page">
+      <ClickableLogo onLogoClick={onLogoClick} />
+      <h1>📖 Reading Exercises</h1>
+      
+      <div className="welcome-text">
+        <p>Choose your reading exercise type:</p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '500px', margin: '30px auto' }}>
+        <div className="reading-main-card" onClick={startStandardQuiz} style={{ cursor: 'pointer', padding: '20px', border: '2px solid #ddd', borderRadius: '15px' }}>
+          <div style={{ fontSize: '2em', marginBottom: '10px' }}>📚</div>
+          <h3>Standard Vocabulary</h3>
+          <p>Random selection from 100+ exercises across CEFR levels (A2-C1)</p>
+        </div>
+
+        <div className="reading-main-card" onClick={goToArticleSelection} style={{ cursor: 'pointer', padding: '20px', border: '2px solid #ddd', borderRadius: '15px' }}>
+          <div style={{ fontSize: '2em', marginBottom: '10px' }}>📰</div>
+          <h3>Article-Based Vocabulary</h3>
+          <p>Vocabulary from current BBC news articles</p>
+        </div>
+      </div>
+
+      <button className="btn btn-secondary" onClick={goBack} style={{ marginTop: '20px' }}>
+        ← Back to Exercise Selection
+      </button>
+    </div>
+  );
 }
 
 export default ReadingExercise;
