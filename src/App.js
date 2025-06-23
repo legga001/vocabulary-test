@@ -23,6 +23,7 @@ function App() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [quizResults, setQuizResults] = useState(null);
   const [testQuestions, setTestQuestions] = useState(null);
+  const [selectedArticleType, setSelectedArticleType] = useState(null); // Track selected article
 
   // Load saved state on component mount
   useEffect(() => {
@@ -42,6 +43,7 @@ function App() {
           
           // This is likely a page refresh - restore the previous screen
           setCurrentScreen(parsedState.currentScreen || 'landing');
+          setSelectedArticleType(parsedState.selectedArticleType || null);
           console.log('Page refresh detected - restored to:', parsedState.currentScreen);
           
           // Maintain session continuity
@@ -83,6 +85,7 @@ function App() {
   useEffect(() => {
     const stateToSave = {
       currentScreen,
+      selectedArticleType,
       timestamp: Date.now()
     };
 
@@ -91,7 +94,7 @@ function App() {
     } catch (error) {
       console.error('Error saving app state:', error);
     }
-  }, [currentScreen]);
+  }, [currentScreen, selectedArticleType]);
 
   // Navigation functions
   const goToLanding = () => {
@@ -163,8 +166,9 @@ function App() {
     }
   };
 
-  // Article selection handler - DIRECT to article quiz
+  // Article selection handler - DIRECT to article quiz with type tracking
   const handleArticleSelection = (articleType) => {
+    setSelectedArticleType(articleType); // Store which article was selected
     setCurrentScreen('article-quiz');
   };
 
@@ -215,6 +219,7 @@ function App() {
         return (
           <Quiz 
             quizType="article" 
+            articleType={selectedArticleType} // Pass the selected article type
             onFinish={handleQuizFinish}
             onBack={() => setCurrentScreen('article-selection')}
           />
