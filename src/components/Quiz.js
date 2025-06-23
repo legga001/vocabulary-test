@@ -1,7 +1,6 @@
-// src/components/Quiz.js - Unified Quiz Component for both Standard and Article quizzes
+// src/components/Quiz.js - Unified Quiz Component for both Standard and Article quizzes - FIXED IMPORTS
 import React, { useState, useEffect } from 'react';
 import { getNewQuestions, correctMessages } from '../questionsData';
-import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
 import LetterInput from './LetterInput';
 import { processSentence } from '../utils/quizHelpers';
 
@@ -60,20 +59,20 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
     try {
       switch (articleType) {
         case 'killer-whale-quiz':
-          const { getKillerWhaleArticleInfo } = require('../killerWhaleVocabularyData');
-          return getKillerWhaleArticleInfo();
+          const killerWhaleModule = require('../killerWhaleVocabularyData');
+          return killerWhaleModule.getKillerWhaleArticleInfo();
         case 'octopus-quiz':
-          const { getReadingArticleInfo } = require('../readingVocabularyData');
-          return getReadingArticleInfo();
+          const octopusModule = require('../readingVocabularyData');
+          return octopusModule.getReadingArticleInfo();
         case 'smuggling-quiz':
-          const { getArticleInfo: getSmugglingInfo } = require('../articleQuestions');
-          return getSmugglingInfo();
+          const smugglingModule = require('../articleQuestions');
+          return smugglingModule.getArticleInfo();
         case 'air-india-quiz':
-          const { getAirIndiaArticleInfo } = require('../airIndiaVocabularyData');
-          return getAirIndiaArticleInfo();
+          const airIndiaModule = require('../airIndiaVocabularyData');
+          return airIndiaModule.getAirIndiaArticleInfo();
         case 'water-treatment-quiz':
-          const { getWaterTreatmentArticleInfo } = require('../waterTreatmentVocabularyData');
-          return getWaterTreatmentArticleInfo();
+          const waterTreatmentModule = require('../waterTreatmentVocabularyData');
+          return waterTreatmentModule.getWaterTreatmentArticleInfo();
         default:
           console.warn('Unknown article type:', articleType);
           return null;
@@ -95,35 +94,35 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
       try {
         switch (articleType) {
           case 'killer-whale-quiz':
-            const { getKillerWhaleVocabularyQuestions } = require('../killerWhaleVocabularyData');
-            newQuestions = getKillerWhaleVocabularyQuestions();
+            const killerWhaleModule = require('../killerWhaleVocabularyData');
+            newQuestions = killerWhaleModule.getKillerWhaleVocabularyQuestions();
             break;
           case 'octopus-quiz':
-            const { getReadingVocabularyQuestions } = require('../readingVocabularyData');
-            newQuestions = getReadingVocabularyQuestions();
+            const octopusModule = require('../readingVocabularyData');
+            newQuestions = octopusModule.getReadingVocabularyQuestions();
             break;
           case 'smuggling-quiz':
-            const { getArticleQuestions } = require('../articleQuestions');
-            newQuestions = getArticleQuestions();
+            const smugglingModule = require('../articleQuestions');
+            newQuestions = smugglingModule.getArticleQuestions();
             break;
           case 'air-india-quiz':
-            const { getAirIndiaVocabularyQuestions } = require('../airIndiaVocabularyData');
-            newQuestions = getAirIndiaVocabularyQuestions();
+            const airIndiaModule = require('../airIndiaVocabularyData');
+            newQuestions = airIndiaModule.getAirIndiaVocabularyQuestions();
             break;
           case 'water-treatment-quiz':
-            const { getWaterTreatmentVocabularyQuestions } = require('../waterTreatmentVocabularyData');
-            newQuestions = getWaterTreatmentVocabularyQuestions();
+            const waterTreatmentModule = require('../waterTreatmentVocabularyData');
+            newQuestions = waterTreatmentModule.getWaterTreatmentVocabularyQuestions();
             break;
           default:
             console.warn('Unknown article type, falling back to smuggling questions');
-            const { getArticleQuestions } = require('../articleQuestions');
-            newQuestions = getArticleQuestions();
+            const defaultModule = require('../articleQuestions');
+            newQuestions = defaultModule.getArticleQuestions();
         }
       } catch (error) {
         console.error('Error loading article questions:', error);
         // Fallback to smuggling questions
-        const { getArticleQuestions } = require('../articleQuestions');
-        newQuestions = getArticleQuestions();
+        const fallbackModule = require('../articleQuestions');
+        newQuestions = fallbackModule.getArticleQuestions();
       }
     } else {
       // Generate fresh random questions for standard vocabulary tests
