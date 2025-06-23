@@ -1,9 +1,10 @@
-// src/App.js - Updated with cleaned imports (removed unused Results) and killer whale quiz
+// src/App.js - Simplified with direct navigation to quizzes
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import SplashPage from './components/SplashPage';
 import LandingPage from './components/LandingPage';
-import ReadingExercise from './components/ReadingExercise';
+import Quiz from './components/Quiz';
+import Results from './components/Results';
 import WritingExercise from './components/WritingExercise';
 import SpeakingExercise from './components/SpeakingExercise';
 import ListeningExercise from './components/ListeningExercise';
@@ -20,6 +21,8 @@ const SPLASH_SHOWN_KEY = 'mrFoxEnglishSplashShown';
 function App() {
   const [currentScreen, setCurrentScreen] = useState('splash');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [quizResults, setQuizResults] = useState(null);
+  const [testQuestions, setTestQuestions] = useState(null);
 
   // Load saved state on component mount
   useEffect(() => {
@@ -62,27 +65,22 @@ function App() {
     
     // If we get here, this is NOT a page refresh
     // Check if this is a new session (new tab, browser restart, etc.)
-    const existingSession = sessionStorage.getItem(SESSION_KEY);
+    const sessionTimestamp = sessionStorage.getItem(SESSION_KEY);
     const splashShown = sessionStorage.getItem(SPLASH_SHOWN_KEY);
     
-    if (existingSession && splashShown) {
-      // Session exists and splash was already shown - skip to landing
+    if (sessionTimestamp && splashShown) {
+      // Session exists and splash was shown - go directly to landing
       setCurrentScreen('landing');
       console.log('Existing session detected - skipping splash');
     } else {
-      // No session or splash not shown - show splash as normal
-      const currentSessionId = Date.now().toString();
-      sessionStorage.setItem(SESSION_KEY, currentSessionId);
-      sessionStorage.removeItem(SPLASH_SHOWN_KEY);
+      // New session - show splash
       setCurrentScreen('splash');
       console.log('New session - showing splash');
     }
   }, []);
 
-  // Save state whenever it changes (but not for splash or transition states)
+  // Save current screen to localStorage for page refresh scenarios
   useEffect(() => {
-    if (currentScreen === 'splash' || isTransitioning) return;
-
     const stateToSave = {
       currentScreen,
       timestamp: Date.now()
@@ -93,31 +91,7 @@ function App() {
     } catch (error) {
       console.error('Error saving app state:', error);
     }
-  }, [currentScreen, isTransitioning]);
-
-  // Clear session when user closes tab/browser
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      // Clear session markers when tab/browser closes
-      sessionStorage.removeItem(SESSION_KEY);
-      sessionStorage.removeItem(SPLASH_SHOWN_KEY);
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        // User switched tabs or minimised - don't clear session
-        // This allows them to return without seeing splash again
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
+  }, [currentScreen]);
 
   // Navigation functions
   const goToLanding = () => {
@@ -130,47 +104,37 @@ function App() {
     setTimeout(() => {
       setCurrentScreen('landing');
       setIsTransitioning(false);
-    }, 400); // Half of animation duration
+    }, 400);
   };
 
   const goToProgress = () => {
     setCurrentScreen('progress');
   };
 
-  const goToExercises = () => {
-    setCurrentScreen('exercises');
-  };
-
-  const goToReading = () => {
-    setCurrentScreen('reading');
-  };
-
-  const goToWriting = () => {
-    setCurrentScreen('writing');
-  };
-
-  const goToSpeaking = () => {
-    setCurrentScreen('speaking');
-  };
-
-  const goToListening = () => {
-    setCurrentScreen('listening');
-  };
-
-  const goToListenAndType = () => {
-    setCurrentScreen('listen-and-type');
-  };
-
   const goBack = () => {
     setCurrentScreen('landing');
+    setQuizResults(null);
+    setTestQuestions(null);
   };
 
-  // Main exercise selection handler - WITH SPEAKING SUPPORT
+  // Quiz completion handler
+  const handleQuizFinish = (userAnswers, questions) => {
+    setQuizResults(userAnswers);
+    setTestQuestions(questions);
+    setCurrentScreen('results');
+  };
+
+  // Results completion handler
+  const handleResultsFinish = () => {
+    goBack();
+  };
+
+  // Main exercise selection handler - DIRECT NAVIGATION
   const handleSelectExercise = (exerciseType) => {
     switch(exerciseType) {
-      // Direct exercise navigation
+      // DIRECT quiz navigation - no intermediate steps
       case 'standard-vocabulary':
-        setCurrentScreen('standard-vocabulary');
+        setCurrentScreen('standard-vocabulary-quiz');
         break;
       case 'article-vocabulary':
         setCurrentScreen('article-selection');
@@ -181,33 +145,30 @@ function App() {
       case 'listen-and-type':
         setCurrentScreen('listen-and-type');
         break;
-      case 'speak-and-record':  // Speaking exercise
+      case 'speak-and-record':
         setCurrentScreen('speak-and-record');
         break;
       // Traditional navigation (for non-active exercises)
-      case 'reading':
-        goToReading();
-        break;
       case 'writing':
-        goToWriting();
+        setCurrentScreen('writing');
         break;
       case 'speaking':
-        goToSpeaking();
+        setCurrentScreen('speaking');
         break;
       case 'listening':
-        goToListening();
+        setCurrentScreen('listening');
         break;
       default:
         console.warn('Unknown exercise type:', exerciseType);
     }
   };
 
+  // Article selection handler - DIRECT to article quiz
   const handleArticleSelection = (articleType) => {
-    // Set the current screen to the specific article quiz
-    setCurrentScreen(articleType);
+    setCurrentScreen('article-quiz');
   };
 
-  // Main render function - WITH KILLER WHALE SUPPORT
+  // Main render function
   const renderCurrentScreen = () => {
     switch(currentScreen) {
       case 'splash':
@@ -221,19 +182,24 @@ function App() {
       case 'landing':
         return (
           <LandingPage
-            onExercises={goToExercises}
             onProgress={goToProgress}
             onSelectExercise={handleSelectExercise}
             isTransitioning={isTransitioning}
           />
         );
       
-      case 'standard-vocabulary':
+      case 'progress':
         return (
-          <ReadingExercise 
-            onBack={goBack} 
-            onLogoClick={goToLanding}
-            initialView="standard-quiz"
+          <ProgressPage onBack={goBack} />
+        );
+
+      // DIRECT QUIZ NAVIGATION - no ReadingExercise wrapper
+      case 'standard-vocabulary-quiz':
+        return (
+          <Quiz 
+            quizType="standard" 
+            onFinish={handleQuizFinish}
+            onBack={goBack}
           />
         );
       
@@ -241,127 +207,66 @@ function App() {
         return (
           <ArticleSelection 
             onBack={goBack}
-            onLogoClick={goToLanding}
             onSelectArticle={handleArticleSelection}
           />
         );
       
-      case 'killer-whale-quiz':  // NEW: Killer whale quiz case
+      case 'article-quiz':
         return (
-          <ReadingExercise 
-            onBack={() => setCurrentScreen('article-selection')} 
-            onLogoClick={goToLanding}
-            initialView="killer-whale-quiz"
+          <Quiz 
+            quizType="article" 
+            onFinish={handleQuizFinish}
+            onBack={() => setCurrentScreen('article-selection')}
+          />
+        );
+
+      case 'results':
+        return (
+          <Results 
+            userAnswers={quizResults}
+            quizType={currentScreen.includes('article') ? 'article' : 'standard'}
+            testQuestions={testQuestions}
+            onRestart={handleResultsFinish}
           />
         );
       
-      case 'octopus-quiz':
-        return (
-          <ReadingExercise 
-            onBack={() => setCurrentScreen('article-selection')} 
-            onLogoClick={goToLanding}
-            initialView="octopus-quiz"
-          />
-        );
-      
-      case 'smuggling-quiz':
-        return (
-          <ReadingExercise 
-            onBack={() => setCurrentScreen('article-selection')} 
-            onLogoClick={goToLanding}
-            initialView="smuggling-quiz"
-          />
-        );
-      
-      case 'air-india-quiz':  // NEW: Air India quiz case
-        return (
-          <ReadingExercise 
-            onBack={() => setCurrentScreen('article-selection')} 
-            onLogoClick={goToLanding}
-            initialView="air-india-quiz"
-          />
-        );
-      
-      case 'water-treatment-quiz':  // NEW: Water treatment quiz case
-        return (
-          <ReadingExercise 
-            onBack={() => setCurrentScreen('article-selection')} 
-            onLogoClick={goToLanding}
-            initialView="water-treatment-quiz"
-          />
-        );
-      
+      // Other exercises
       case 'real-fake-words':
         return (
-          <RealFakeWordsExercise 
-            onBack={goBack} 
-            onLogoClick={goToLanding}
-          />
+          <RealFakeWordsExercise onBack={goBack} />
         );
       
       case 'listen-and-type':
         return (
-          <ListenAndTypeExercise 
-            onBack={goBack} 
-            onLogoClick={goToLanding}
-          />
+          <ListenAndTypeExercise onBack={goBack} />
         );
       
-      case 'speak-and-record':  // Speaking exercise case
+      case 'speak-and-record':
         return (
-          <SpeakingExercise 
-            onBack={goBack} 
-            onLogoClick={goToLanding}
-          />
-        );
-      
-      case 'reading':
-        return (
-          <ReadingExercise 
-            onBack={goBack} 
-            onLogoClick={goToLanding}
-          />
+          <SpeakingExercise onBack={goBack} />
         );
       
       case 'writing':
         return (
-          <WritingExercise 
-            onBack={goBack} 
-            onLogoClick={goToLanding}
-          />
+          <WritingExercise onBack={goBack} />
         );
       
       case 'speaking':
         return (
-          <SpeakingExercise 
-            onBack={goBack} 
-            onLogoClick={goToLanding}
-          />
+          <SpeakingExercise onBack={goBack} />
         );
       
       case 'listening':
         return (
-          <ListeningExercise 
-            onBack={goBack} 
-            onLogoClick={goToLanding}
-          />
-        );
-      
-      case 'progress':
-        return (
-          <ProgressPage 
-            onBack={goBack} 
-            onLogoClick={goToLanding}
-          />
+          <ListeningExercise onBack={goBack} />
         );
       
       default:
         return (
           <LandingPage
-            onExercises={goToExercises}
             onProgress={goToProgress}
             onSelectExercise={handleSelectExercise}
-            isTransitioning={false}
+            isTransitioning={isTransitioning}
           />
         );
     }
