@@ -1,26 +1,71 @@
 /* ==============================================
    MR. FOX ENGLISH - MAIN STYLESHEET - FIXED
    Clean, organised, and modular CSS structure
-   Removed any rules that might hide speaking exercises
+   Ensures all quiz styles are properly loaded
    ============================================== */
 
-/* Import all component stylesheets */
+/* Import all component stylesheets in correct order */
 @import './styles/base.css';
 @import './styles/buttons.css';
 @import './styles/layout.css';
 @import './styles/splash.css';
 @import './styles/landing.css';
-@import './styles/quiz.css';
+@import './styles/quiz.css';                    /* CRITICAL: Quiz styles must be imported */
 @import './styles/results.css';
 @import './styles/exercises.css';
 @import './styles/real-fake-words.css';
 @import './styles/listen-and-type.css';
-@import './styles/speaking-exercise.css';  /* FIXED: Updated to match your filename */
+@import './styles/speaking-exercise.css';
 @import './styles/progress.css';
 @import './styles/responsive.css';
 
 /* ==============================================
-   FIXED: Ensure no global styles hide exercises
+   QUIZ SPECIFIC OVERRIDES AND FIXES
+   ============================================== */
+
+/* Ensure quiz container has proper structure */
+.quiz-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Force proper display for letter input elements */
+.letter-input-container {
+  display: inline-flex !important;
+  gap: 4px !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.letter-input-box {
+  display: inline-block !important;
+  width: 40px !important;
+  height: 40px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+/* Ensure question text flows properly with letter inputs */
+.question-text {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
+.letter-input-wrapper {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin: 0 8px !important;
+}
+
+/* ==============================================
+   EXERCISE VISIBILITY FIXES
    ============================================== */
 
 /* Force visibility for all exercise items */
@@ -44,5 +89,72 @@
 }
 
 /* ==============================================
-   Any remaining shared styles can go here
+   GLOBAL UTILITY CLASSES
    ============================================== */
+
+/* Loading state styles */
+.loading-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.loading-state p {
+  font-size: 1.2em;
+  margin: 0;
+}
+
+/* Ensure proper focus indicators */
+input:focus,
+button:focus {
+  outline: 2px solid #4c51bf;
+  outline-offset: 2px;
+}
+
+/* Hide focus outline on mouse click but keep for keyboard navigation */
+.no-focus-outline:focus {
+  outline: none;
+}
+
+/* ==============================================
+   ACCESSIBILITY IMPROVEMENTS
+   ============================================== */
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .letter-input-box {
+    border-width: 3px !important;
+  }
+  
+  .letter-input-box.pre-filled {
+    background: #000 !important;
+    color: #fff !important;
+  }
+  
+  .letter-input-box.editable {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
