@@ -62,7 +62,7 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
   const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
-  const [feedback, setFeedback] = useState({ show: false, type: '', message: '' });
+  const [feedback, setFeedback] = useState({ show: false, type: '', message: '', persistent: false });
   const [questions, setQuestions] = useState([]);
 
   // Memoized function to get article info
@@ -152,7 +152,7 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
     setCurrentQuestion(0);
     setUserAnswers(new Array(10).fill(''));
     setCheckedQuestions(new Array(10).fill(false));
-    setFeedback({ show: false, type: '', message: '' });
+    setFeedback({ show: false, type: '', message: '', persistent: false });
   }, [loadQuestions]);
 
   // Current question and progress
@@ -198,6 +198,7 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
         setCurrentQuestion(parsedState.currentQuestion || 0);
         setUserAnswers(parsedState.userAnswers || new Array(10).fill(''));
         setCheckedQuestions(parsedState.checkedQuestions || new Array(10).fill(false));
+        setFeedback(parsedState.feedback || { show: false, type: '', message: '', persistent: false });
         console.log('Restored quiz progress from localStorage');
       } else {
         // Clear old state
@@ -219,6 +220,7 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
       currentQuestion,
       userAnswers,
       checkedQuestions,
+      feedback,
       questions,
       timestamp: Date.now()
     };
@@ -230,7 +232,7 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
     }
   }, [currentQuestion, userAnswers, checkedQuestions, quizType, articleType, questions]);
 
-  // Check answer function with fixed logic
+  // Check answer function with persistent feedback
   const checkAnswer = () => {
     if (!question) return;
 
@@ -257,7 +259,13 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
 
     if (isCorrect) {
       const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
-      setFeedback({ show: true, type: 'correct', message: randomMessage });
+      // Set persistent feedback that won't be cleared by typing
+      setFeedback({ 
+        show: true, 
+        type: 'correct', 
+        message: randomMessage,
+        persistent: true // Flag to prevent clearing
+      });
       
       // Mark question as checked
       const newChecked = [...checkedQuestions];
@@ -266,7 +274,13 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
     } else {
       const hintText = question.hint || "Try to think about the context of the sentence.";
       const feedbackMessage = `💡 Hint: ${hintText}`;
-      setFeedback({ show: true, type: 'incorrect', message: feedbackMessage });
+      // Set persistent feedback that won't be cleared by typing
+      setFeedback({ 
+        show: true, 
+        type: 'incorrect', 
+        message: feedbackMessage,
+        persistent: true // Flag to prevent clearing
+      });
     }
   };
 
@@ -284,7 +298,8 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
   const previousQuestion = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
-      setFeedback({ show: false, type: '', message: '' });
+      // Only clear feedback when actually moving between questions
+      setFeedback({ show: false, type: '', message: '', persistent: false });
     }
   };
 
@@ -295,7 +310,8 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
       onFinish(userAnswers, questions);
     } else {
       setCurrentQuestion(currentQuestion + 1);
-      setFeedback({ show: false, type: '', message: '' });
+      // Only clear feedback when actually moving between questions
+      setFeedback({ show: false, type: '', message: '', persistent: false });
     }
   };
 
@@ -419,6 +435,7 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
           Show: {feedback.show ? 'YES' : 'NO'}<br />
           Type: "{feedback.type}"<br />
           Message: "{feedback.message}"<br />
+          Persistent: {feedback.persistent ? 'YES' : 'NO'}<br />
           Current Answer: "{userAnswers[currentQuestion]}"<br />
           Question Checked: {checkedQuestions[currentQuestion] ? 'YES' : 'NO'}
         </div>
