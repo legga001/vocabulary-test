@@ -1,9 +1,9 @@
-// src/components/Quiz.js - Completely fixed with proper sentence processing
+// src/components/Quiz.js - Unified Quiz Component for both Standard and Article quizzes
 import React, { useState, useEffect } from 'react';
 import { getNewQuestions, correctMessages } from '../questionsData';
-import { getArticleQuestions } from '../articleQuestions';
+import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
 import LetterInput from './LetterInput';
-import { processSentence, extractVisibleLetters } from '../utils/quizHelpers';
+import { processSentence } from '../utils/quizHelpers';
 
 // Key for localStorage
 const QUIZ_STATE_KEY = 'mrFoxEnglishQuizState';
@@ -12,96 +12,49 @@ const QUIZ_STATE_KEY = 'mrFoxEnglishQuizState';
 const getAlternativeSpellings = (word) => {
   const spellingMap = {
     // American to British
-    'analyze': ['analyse'],
-    'realize': ['realise'],
-    'organize': ['organise'],
-    'recognize': ['recognise'],
-    'criticize': ['criticise'],
-    'apologize': ['apologise'],
-    'optimize': ['optimise'],
-    'minimize': ['minimise'],
-    'maximize': ['maximise'],
-    'centralize': ['centralise'],
-    'normalize': ['normalise'],
-    'categorize': ['categorise'],
-    'memorize': ['memorise'],
-    'authorize': ['authorise'],
-    'modernize': ['modernise'],
-    'utilize': ['utilise'],
-    'fertilize': ['fertilise'],
-    'sterilize': ['sterilise'],
-    'stabilize': ['stabilise'],
-    'summarize': ['summarise'],
+    'analyze': ['analyse'], 'realize': ['realise'], 'organize': ['organise'],
+    'recognize': ['recognise'], 'criticize': ['criticise'], 'apologize': ['apologise'],
+    'optimize': ['optimise'], 'minimize': ['minimise'], 'maximize': ['maximise'],
+    'centralize': ['centralise'], 'normalize': ['normalise'], 'categorize': ['categorise'],
+    'memorize': ['memorise'], 'authorize': ['authorise'], 'modernize': ['modernise'],
+    'utilize': ['utilise'], 'fertilize': ['fertilise'], 'sterilize': ['sterilise'],
+    'stabilize': ['stabilise'], 'summarize': ['summarise'],
     // British to American
-    'analyse': ['analyze'],
-    'realise': ['realize'],
-    'organise': ['organize'],
-    'recognise': ['recognize'],
-    'criticise': ['criticize'],
-    'apologise': ['apologize'],
-    'optimise': ['optimize'],
-    'minimise': ['minimize'],
-    'maximise': ['maximize'],
-    'centralise': ['centralize'],
-    'normalise': ['normalize'],
-    'categorise': ['categorize'],
-    'memorise': ['memorize'],
-    'authorise': ['authorize'],
-    'modernise': ['modernize'],
-    'utilise': ['utilize'],
-    'fertilise': ['fertilize'],
-    'sterilise': ['sterilize'],
-    'stabilise': ['stabilize'],
-    'summarise': ['summarize'],
+    'analyse': ['analyze'], 'realise': ['realize'], 'organise': ['organize'],
+    'recognise': ['recognize'], 'criticise': ['criticize'], 'apologise': ['apologize'],
+    'optimise': ['optimize'], 'minimise': ['minimize'], 'maximise': ['maximize'],
+    'centralise': ['centralize'], 'normalise': ['normalize'], 'categorise': ['categorize'],
+    'memorise': ['memorize'], 'authorise': ['authorize'], 'modernise': ['modernize'],
+    'utilise': ['utilize'], 'fertilise': ['fertilize'], 'sterilise': ['sterilize'],
+    'stabilise': ['stabilize'], 'summarise': ['summarize'],
     // Color/colour variations
-    'color': ['colour'],
-    'colour': ['color'],
-    'colors': ['colours'],
-    'colours': ['colors'],
-    'colored': ['coloured'],
-    'coloured': ['colored'],
-    'coloring': ['colouring'],
-    'colouring': ['coloring'],
+    'color': ['colour'], 'colour': ['color'], 'colors': ['colours'], 'colours': ['colors'],
+    'colored': ['coloured'], 'coloured': ['colored'], 'coloring': ['colouring'], 'colouring': ['coloring'],
     // Honor/honour variations
-    'honor': ['honour'],
-    'honour': ['honor'],
-    'honors': ['honours'],
-    'honours': ['honors'],
-    'honored': ['honoured'],
-    'honoured': ['honored'],
-    'honoring': ['honouring'],
-    'honouring': ['honoring'],
+    'honor': ['honour'], 'honour': ['honor'], 'honors': ['honours'], 'honours': ['honors'],
+    'honored': ['honoured'], 'honoured': ['honored'], 'honoring': ['honouring'], 'honouring': ['honoring'],
     // Center/centre variations
-    'center': ['centre'],
-    'centre': ['center'],
-    'centers': ['centres'],
-    'centres': ['centers'],
-    'centered': ['centred'],
-    'centred': ['centered'],
-    'centering': ['centring'],
-    'centring': ['centering'],
+    'center': ['centre'], 'centre': ['center'], 'centers': ['centres'], 'centres': ['centers'],
+    'centered': ['centred'], 'centred': ['centered'], 'centering': ['centring'], 'centring': ['centering'],
     // Theater/theatre variations
-    'theater': ['theatre'],
-    'theatre': ['theater'],
-    'theaters': ['theatres'],
-    'theatres': ['theaters'],
+    'theater': ['theatre'], 'theatre': ['theater'], 'theaters': ['theatres'], 'theatres': ['theaters'],
     // Meter/metre variations
-    'meter': ['metre'],
-    'metre': ['meter'],
-    'meters': ['metres'],
-    'metres': ['meters']
+    'meter': ['metre'], 'metre': ['meter'], 'meters': ['metres'], 'metres': ['meters']
   };
   
   const normalizedWord = word.toLowerCase();
   return spellingMap[normalizedWord] || [];
 };
 
-function Quiz({ onFinish, quizType }) {
+function Quiz({ onFinish, quizType, onBack }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
   const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
   const [feedback, setFeedback] = useState({ show: false, type: '', message: '' });
   const [questions, setQuestions] = useState([]);
+
+  // Get article info for article-based quizzes
+  const articleInfo = quizType === 'article' ? getArticleInfo() : null;
 
   // Load questions when component mounts or quiz type changes
   useEffect(() => {
@@ -244,10 +197,16 @@ function Quiz({ onFinish, quizType }) {
     if (currentQuestion === 9) {
       // Clear quiz state when finishing
       localStorage.removeItem(QUIZ_STATE_KEY);
-      onFinish(userAnswers);
+      onFinish(userAnswers, questions);
     } else {
       setCurrentQuestion(currentQuestion + 1);
       setFeedback({ show: false, type: '', message: '' });
+    }
+  };
+
+  const openArticle = () => {
+    if (articleInfo && articleInfo.url) {
+      window.open(articleInfo.url, '_blank');
     }
   };
 
@@ -269,10 +228,35 @@ function Quiz({ onFinish, quizType }) {
 
   return (
     <div className="quiz-container">
+      {/* Article Link Header - Only show for article-based quizzes */}
+      {quizType === 'article' && articleInfo && (
+        <div className="article-link-header">
+          <button 
+            className="btn-article-link"
+            onClick={openArticle}
+            title="Read the original article"
+          >
+            📖 Read Original Article
+          </button>
+          <div className="article-title-small">
+            {articleInfo.title}
+          </div>
+        </div>
+      )}
+
       <div className="quiz-header">
         <div className="quiz-type-badge">
           {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
         </div>
+        {onBack && (
+          <button 
+            className="btn btn-secondary close-btn"
+            onClick={onBack}
+            title="Back to menu"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       <div className="progress-container">
