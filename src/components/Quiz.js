@@ -46,7 +46,7 @@ const getAlternativeSpellings = (word) => {
   return spellingMap[normalizedWord] || [];
 };
 
-function Quiz({ onFinish, quizType, onBack }) {
+function Quiz({ onFinish, quizType, articleType, onBack }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
   const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
@@ -54,14 +54,77 @@ function Quiz({ onFinish, quizType, onBack }) {
   const [questions, setQuestions] = useState([]);
 
   // Get article info for article-based quizzes
-  const articleInfo = quizType === 'article' ? getArticleInfo() : null;
+  const getArticleInfo = () => {
+    if (quizType !== 'article') return null;
+    
+    try {
+      switch (articleType) {
+        case 'killer-whale-quiz':
+          const { getKillerWhaleArticleInfo } = require('../killerWhaleVocabularyData');
+          return getKillerWhaleArticleInfo();
+        case 'octopus-quiz':
+          const { getReadingArticleInfo } = require('../readingVocabularyData');
+          return getReadingArticleInfo();
+        case 'smuggling-quiz':
+          const { getArticleInfo: getSmugglingInfo } = require('../articleQuestions');
+          return getSmugglingInfo();
+        case 'air-india-quiz':
+          const { getAirIndiaArticleInfo } = require('../airIndiaVocabularyData');
+          return getAirIndiaArticleInfo();
+        case 'water-treatment-quiz':
+          const { getWaterTreatmentArticleInfo } = require('../waterTreatmentVocabularyData');
+          return getWaterTreatmentArticleInfo();
+        default:
+          console.warn('Unknown article type:', articleType);
+          return null;
+      }
+    } catch (error) {
+      console.error('Error loading article info:', error);
+      return null;
+    }
+  };
+
+  const articleInfo = getArticleInfo();
 
   // Load questions when component mounts or quiz type changes
   useEffect(() => {
     let newQuestions;
     
     if (quizType === 'article') {
-      newQuestions = getArticleQuestions();
+      // Load questions based on article type
+      try {
+        switch (articleType) {
+          case 'killer-whale-quiz':
+            const { getKillerWhaleVocabularyQuestions } = require('../killerWhaleVocabularyData');
+            newQuestions = getKillerWhaleVocabularyQuestions();
+            break;
+          case 'octopus-quiz':
+            const { getReadingVocabularyQuestions } = require('../readingVocabularyData');
+            newQuestions = getReadingVocabularyQuestions();
+            break;
+          case 'smuggling-quiz':
+            const { getArticleQuestions } = require('../articleQuestions');
+            newQuestions = getArticleQuestions();
+            break;
+          case 'air-india-quiz':
+            const { getAirIndiaVocabularyQuestions } = require('../airIndiaVocabularyData');
+            newQuestions = getAirIndiaVocabularyQuestions();
+            break;
+          case 'water-treatment-quiz':
+            const { getWaterTreatmentVocabularyQuestions } = require('../waterTreatmentVocabularyData');
+            newQuestions = getWaterTreatmentVocabularyQuestions();
+            break;
+          default:
+            console.warn('Unknown article type, falling back to smuggling questions');
+            const { getArticleQuestions } = require('../articleQuestions');
+            newQuestions = getArticleQuestions();
+        }
+      } catch (error) {
+        console.error('Error loading article questions:', error);
+        // Fallback to smuggling questions
+        const { getArticleQuestions } = require('../articleQuestions');
+        newQuestions = getArticleQuestions();
+      }
     } else {
       // Generate fresh random questions for standard vocabulary tests
       newQuestions = getNewQuestions();
@@ -74,7 +137,7 @@ function Quiz({ onFinish, quizType, onBack }) {
     setUserAnswers(new Array(10).fill(''));
     setCheckedQuestions(new Array(10).fill(false));
     setFeedback({ show: false, type: '', message: '' });
-  }, [quizType]);
+  }, [quizType, articleType]);
 
   const question = questions[currentQuestion];
   const progress = ((currentQuestion) / 10) * 100;
@@ -277,12 +340,7 @@ function Quiz({ onFinish, quizType, onBack }) {
           {/* Text before the gap */}
           <span>{processedData.beforeGap}</span>
           
-          {/* Show any visible letters that are part of the gap */}
-          {processedData.visibleLetters && (
-            <span className="visible-letters">{processedData.visibleLetters}</span>
-          )}
-          
-          {/* The letter input component inline with the sentence */}
+          {/* The letter input component inline with the sentence - NO visible letters shown */}
           <LetterInput
             word={question.answer}
             value={userAnswers[currentQuestion]}
@@ -332,12 +390,12 @@ function Quiz({ onFinish, quizType, onBack }) {
             </button>
           )}
           
+          {/* Next button is ALWAYS enabled - acts as skip if no answer checked */}
           <button 
             className="nav-btn" 
             onClick={nextQuestion}
-            disabled={!checkedQuestions[currentQuestion] && !userAnswers[currentQuestion]}
           >
-            {currentQuestion === 9 ? 'Finish' : 'Next →'}
+            {currentQuestion === 9 ? 'Finish' : 'Next'}
           </button>
         </div>
       </div>
