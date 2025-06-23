@@ -1,10 +1,13 @@
 /* ==============================================
-   QUIZ.CSS - Completely fixed quiz interface styles
+   QUIZ.CSS - Fixed with proper mobile responsiveness
    ============================================== */
 
 .quiz-header {
   text-align: center;
   margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .quiz-type-badge {
@@ -66,12 +69,14 @@
 }
 
 /* ==============================================
-   QUESTION SECTION WITH INLINE LETTER INPUTS
+   QUESTION SECTION WITH PROPER MOBILE LAYOUT
    ============================================== */
 
 .question-section {
   margin: 30px 0;
   text-align: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .question-text {
@@ -81,22 +86,18 @@
   line-height: 1.8;
   color: #2d3748;
   margin-bottom: 20px;
-  display: inline-block;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   text-align: center;
-}
-
-/* Ensure visible letters appear inline */
-.visible-letters {
-  font-weight: 700;
-  color: #4c51bf;
-  background: #f0f2ff;
-  padding: 2px 4px;
-  border-radius: 4px;
-  margin: 0 2px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 /* ==============================================
-   LETTER INPUT COMPONENT STYLES - INLINE DISPLAY
+   LETTER INPUT COMPONENT STYLES - MOBILE RESPONSIVE
    ============================================== */
 
 .letter-input-container {
@@ -106,6 +107,8 @@
   justify-content: center;
   margin: 0 4px;
   vertical-align: baseline;
+  flex-wrap: nowrap;
+  max-width: 100%;
 }
 
 .letter-input-box {
@@ -125,7 +128,10 @@
   margin: 0;
   padding: 0;
   vertical-align: middle;
-  line-height: 31px; /* Helps with vertical alignment */
+  line-height: 31px;
+  box-sizing: border-box;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 /* Pre-filled letters (given letters) */
@@ -196,6 +202,7 @@
   padding: 10px 15px;
   margin: 15px 0;
   border-radius: 0 8px 8px 0;
+  word-wrap: break-word;
 }
 
 .question-context small {
@@ -221,6 +228,7 @@
   font-weight: 500;
   text-align: center;
   border: 1px solid;
+  word-wrap: break-word;
 }
 
 .feedback.correct {
@@ -243,6 +251,8 @@
   display: flex;
   justify-content: space-between;
   margin-top: 30px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .nav-btn {
@@ -255,6 +265,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 100px;
 }
 
 .nav-btn:hover {
@@ -275,7 +286,10 @@
   text-align: center;
 }
 
-/* Article link header for article-based tests */
+/* ==============================================
+   ARTICLE LINK HEADER
+   ============================================== */
+
 .article-link-header {
   text-align: center;
   margin-bottom: 20px;
@@ -331,6 +345,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .close-btn:hover {
@@ -350,19 +365,171 @@
 }
 
 /* ==============================================
-   RESPONSIVE ADJUSTMENTS
+   RESULTS PAGE STYLES
+   ============================================== */
+
+.results-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.results-header h1 {
+  color: #4c51bf;
+  margin-bottom: 15px;
+  font-size: 1.8em;
+}
+
+.article-result-info,
+.standard-result-info {
+  background: #f7fafc;
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 4px solid #4c51bf;
+  margin-top: 15px;
+}
+
+.article-result-info h2,
+.standard-result-info h2 {
+  color: #4c51bf;
+  margin-bottom: 5px;
+  font-size: 1.2em;
+}
+
+.article-result-info p,
+.standard-result-info p {
+  color: #666;
+  margin: 0;
+  font-size: 0.95em;
+}
+
+.score-section {
+  text-align: center;
+  margin: 30px 0;
+}
+
+.score-display {
+  font-size: 3em;
+  color: #4c51bf;
+  font-weight: bold;
+  margin: 20px 0;
+  text-shadow: 0 2px 4px rgba(76, 81, 191, 0.2);
+  animation: scoreReveal 0.6s ease-out;
+}
+
+.score-percentage {
+  font-size: 1.2em;
+  color: #4c51bf;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.level-estimate {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 20px;
+  border-radius: 15px;
+  margin: 20px 0;
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+  animation: slideUp 0.8s ease-out 0.3s both;
+}
+
+.level-estimate h3 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.level-estimate p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1em;
+  margin: 0;
+}
+
+.test-info-section,
+.article-link-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  border-left: 4px solid #4c51bf;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.results-actions {
+  text-align: center;
+  margin-top: 30px;
+}
+
+/* Pronunciation feature highlight */
+.pronunciation-feature-highlight {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.feature-icon {
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+.pronunciation-feature-highlight h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.2em;
+}
+
+.pronunciation-feature-highlight p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95em;
+}
+
+/* Animations */
+@keyframes scoreReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==============================================
+   RESPONSIVE ADJUSTMENTS - MOBILE FIXED
    ============================================== */
 
 /* Tablet adjustments */
 @media (max-width: 768px) {
+  .quiz-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
   .question-text {
     font-size: 1.2em;
     line-height: 1.6;
+    padding: 0 10px;
   }
   
   .letter-input-container {
     gap: 2px;
-    margin: 0 3px;
+    margin: 0 2px;
   }
   
   .letter-input-box {
@@ -370,26 +537,6 @@
     height: 32px !important;
     font-size: 1em;
     line-height: 28px;
-  }
-}
-
-/* Mobile adjustments */
-@media (max-width: 480px) {
-  .question-text {
-    font-size: 1.1em;
-    line-height: 1.5;
-  }
-  
-  .letter-input-container {
-    gap: 1px;
-    margin: 0 2px;
-  }
-  
-  .letter-input-box {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 0.9em;
-    line-height: 24px;
   }
   
   .navigation {
@@ -399,5 +546,151 @@
   
   .nav-btn {
     width: 100%;
+    min-width: unset;
+  }
+}
+
+/* Mobile adjustments - CRITICAL FIXES */
+@media (max-width: 480px) {
+  /* FIXED: Ensure quiz container stays within screen */
+  .quiz-container {
+    margin: 10px;
+    padding: 20px;
+    max-width: calc(100vw - 20px);
+    box-sizing: border-box;
+  }
+  
+  .question-text {
+    font-size: 1.1em;
+    line-height: 1.5;
+    padding: 0 5px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* FIXED: Keep letter inputs within container */
+  .letter-input-container {
+    gap: 1px;
+    margin: 0 1px;
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  .letter-input-box {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.9em;
+    line-height: 24px;
+    min-width: 28px;
+    flex-shrink: 0;
+  }
+  
+  .navigation {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .nav-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.1em;
+  }
+  
+  .quiz-header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .close-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 1em;
+  }
+  
+  /* FIXED: Mobile score display */
+  .score-display {
+    font-size: 2.5em;
+  }
+  
+  .level-estimate {
+    padding: 15px;
+    margin: 15px 0;
+  }
+  
+  .level-estimate h3 {
+    font-size: 1.3em;
+  }
+  
+  .level-estimate p {
+    font-size: 1em;
+  }
+  
+  .article-link-header {
+    padding: 12px;
+    margin-bottom: 15px;
+  }
+  
+  .btn-article-link {
+    padding: 10px 20px;
+    font-size: 0.9em;
+  }
+  
+  .article-title-small {
+    font-size: 0.8em;
+  }
+  
+  .feedback {
+    padding: 12px;
+    font-size: 0.9em;
+  }
+  
+  .word-hint {
+    font-size: 0.8em;
+  }
+  
+  .question-context {
+    padding: 8px 12px;
+    margin: 10px 0;
+  }
+  
+  /* FIXED: Results responsive layout */
+  .results-header h1 {
+    font-size: 1.5em;
+  }
+  
+  .test-info-section,
+  .article-link-section {
+    padding: 15px;
+    margin: 15px 0;
+  }
+  
+  .pronunciation-feature-highlight {
+    padding: 15px;
+    margin: 15px 0;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+  .quiz-container {
+    margin: 5px;
+    padding: 15px;
+    max-width: calc(100vw - 10px);
+  }
+  
+  .letter-input-box {
+    width: 25px !important;
+    height: 25px !important;
+    font-size: 0.8em;
+    line-height: 21px;
+  }
+  
+  .question-text {
+    font-size: 1em;
+  }
+  
+  .score-display {
+    font-size: 2em;
   }
 }
