@@ -1,5 +1,5 @@
-// src/components/Quiz.js - Unified Quiz Component for both Standard and Article quizzes - FIXED IMPORTS
-import React, { useState, useEffect } from 'react';
+// src/components/Quiz.js - Complete rewrite with fixed answer checking logic
+import React, { useState, useEffect, useCallback } from 'react';
 import { getNewQuestions, correctMessages } from '../questionsData';
 import LetterInput from './LetterInput';
 import { processSentence } from '../utils/quizHelpers';
@@ -7,196 +7,215 @@ import { processSentence } from '../utils/quizHelpers';
 // Key for localStorage
 const QUIZ_STATE_KEY = 'mrFoxEnglishQuizState';
 
-// Function to get alternative spellings (British vs American)
+// British vs American spelling variations
+const SPELLING_VARIATIONS = {
+  // American to British
+  'analyze': ['analyse'], 'realize': ['realise'], 'organize': ['organise'],
+  'recognize': ['recognise'], 'criticize': ['criticise'], 'apologize': ['apologise'],
+  'optimize': ['optimise'], 'minimize': ['minimise'], 'maximize': ['maximise'],
+  'centralize': ['centralise'], 'normalize': ['normalise'], 'categorize': ['categorise'],
+  'memorize': ['memorise'], 'authorize': ['authorise'], 'modernize': ['modernise'],
+  'utilize': ['utilise'], 'fertilize': ['fertilise'], 'sterilize': ['sterilise'],
+  'stabilize': ['stabilise'], 'summarize': ['summarise'],
+  // British to American
+  'analyse': ['analyze'], 'realise': ['realize'], 'organise': ['organize'],
+  'recognise': ['recognize'], 'criticise': ['criticize'], 'apologise': ['apologize'],
+  'optimise': ['optimize'], 'minimise': ['minimize'], 'maximise': ['maximize'],
+  'centralise': ['centralize'], 'normalise': ['normalize'], 'categorise': ['categorize'],
+  'memorise': ['memorize'], 'authorise': ['authorize'], 'modernise': ['modernize'],
+  'utilise': ['utilize'], 'fertilise': ['fertilize'], 'sterilise': ['sterilize'],
+  'stabilise': ['stabilize'], 'summarise': ['summarize'],
+  // Color/colour variations
+  'color': ['colour'], 'colour': ['color'], 'colors': ['colours'], 'colours': ['colors'],
+  'colored': ['coloured'], 'coloured': ['colored'], 'coloring': ['colouring'], 'colouring': ['coloring'],
+  // Honor/honour variations
+  'honor': ['honour'], 'honour': ['honor'], 'honors': ['honours'], 'honours': ['honors'],
+  'honored': ['honoured'], 'honoured': ['honored'], 'honoring': ['honouring'], 'honouring': ['honoring'],
+  // Center/centre variations
+  'center': ['centre'], 'centre': ['center'], 'centers': ['centres'], 'centres': ['centers'],
+  'centered': ['centred'], 'centred': ['centered'], 'centering': ['centring'], 'centring': ['centering'],
+  // Theater/theatre variations
+  'theater': ['theatre'], 'theatre': ['theater'], 'theaters': ['theatres'], 'theatres': ['theaters'],
+  // Meter/metre variations
+  'meter': ['metre'], 'metre': ['meter'], 'meters': ['metres'], 'metres': ['meters']
+};
+
+// Helper function to get alternative spellings
 const getAlternativeSpellings = (word) => {
-  const spellingMap = {
-    // American to British
-    'analyze': ['analyse'], 'realize': ['realise'], 'organize': ['organise'],
-    'recognize': ['recognise'], 'criticize': ['criticise'], 'apologize': ['apologise'],
-    'optimize': ['optimise'], 'minimize': ['minimise'], 'maximize': ['maximise'],
-    'centralize': ['centralise'], 'normalize': ['normalise'], 'categorize': ['categorise'],
-    'memorize': ['memorise'], 'authorize': ['authorise'], 'modernize': ['modernise'],
-    'utilize': ['utilise'], 'fertilize': ['fertilise'], 'sterilize': ['sterilise'],
-    'stabilize': ['stabilise'], 'summarize': ['summarise'],
-    // British to American
-    'analyse': ['analyze'], 'realise': ['realize'], 'organise': ['organize'],
-    'recognise': ['recognize'], 'criticise': ['criticize'], 'apologise': ['apologize'],
-    'optimise': ['optimize'], 'minimise': ['minimize'], 'maximise': ['maximize'],
-    'centralise': ['centralize'], 'normalise': ['normalize'], 'categorise': ['categorize'],
-    'memorise': ['memorize'], 'authorise': ['authorize'], 'modernise': ['modernize'],
-    'utilise': ['utilize'], 'fertilise': ['fertilize'], 'sterilise': ['sterilize'],
-    'stabilise': ['stabilize'], 'summarise': ['summarize'],
-    // Color/colour variations
-    'color': ['colour'], 'colour': ['color'], 'colors': ['colours'], 'colours': ['colors'],
-    'colored': ['coloured'], 'coloured': ['colored'], 'coloring': ['colouring'], 'colouring': ['coloring'],
-    // Honor/honour variations
-    'honor': ['honour'], 'honour': ['honor'], 'honors': ['honours'], 'honours': ['honors'],
-    'honored': ['honoured'], 'honoured': ['honored'], 'honoring': ['honouring'], 'honouring': ['honoring'],
-    // Center/centre variations
-    'center': ['centre'], 'centre': ['center'], 'centers': ['centres'], 'centres': ['centers'],
-    'centered': ['centred'], 'centred': ['centered'], 'centering': ['centring'], 'centring': ['centering'],
-    // Theater/theatre variations
-    'theater': ['theatre'], 'theatre': ['theater'], 'theaters': ['theatres'], 'theatres': ['theaters'],
-    // Meter/metre variations
-    'meter': ['metre'], 'metre': ['meter'], 'meters': ['metres'], 'metres': ['meters']
-  };
-  
   const normalizedWord = word.toLowerCase();
-  return spellingMap[normalizedWord] || [];
+  return SPELLING_VARIATIONS[normalizedWord] || [];
+};
+
+// Helper function to determine how many letters to show
+const getLettersToShow = (word) => {
+  const length = word.length;
+  if (length <= 3) return 1;
+  if (length <= 5) return 2;
+  if (length <= 7) return 3;
+  if (length <= 9) return 4;
+  if (length <= 11) return 5;
+  return 6;
 };
 
 function Quiz({ onFinish, quizType, articleType, onBack }) {
+  // State management
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
   const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
   const [feedback, setFeedback] = useState({ show: false, type: '', message: '' });
   const [questions, setQuestions] = useState([]);
 
-  // Get article info for article-based quizzes
-  const getArticleInfo = () => {
-    if (quizType !== 'article') return null;
+  // Memoized function to get article info
+  const getArticleInfo = useCallback(() => {
+    if (quizType !== 'article' || !articleType) return null;
     
     try {
       switch (articleType) {
-        case 'killer-whale-quiz':
-          const killerWhaleModule = require('../killerWhaleVocabularyData');
-          return killerWhaleModule.getKillerWhaleArticleInfo();
-        case 'octopus-quiz':
-          const octopusModule = require('../readingVocabularyData');
-          return octopusModule.getReadingArticleInfo();
-        case 'smuggling-quiz':
-          const smugglingModule = require('../articleQuestions');
-          return smugglingModule.getArticleInfo();
-        case 'air-india-quiz':
-          const airIndiaModule = require('../airIndiaVocabularyData');
-          return airIndiaModule.getAirIndiaArticleInfo();
-        case 'water-treatment-quiz':
-          const waterTreatmentModule = require('../waterTreatmentVocabularyData');
-          return waterTreatmentModule.getWaterTreatmentArticleInfo();
+        case 'killer-whale-quiz': {
+          const module = require('../killerWhaleVocabularyData');
+          return module.getKillerWhaleArticleInfo();
+        }
+        case 'octopus-quiz': {
+          const module = require('../readingVocabularyData');
+          return module.getReadingArticleInfo();
+        }
+        case 'smuggling-quiz': {
+          const module = require('../articleQuestions');
+          return module.getArticleInfo();
+        }
+        case 'air-india-quiz': {
+          const module = require('../airIndiaVocabularyData');
+          return module.getAirIndiaArticleInfo();
+        }
+        case 'water-treatment-quiz': {
+          const module = require('../waterTreatmentVocabularyData');
+          return module.getWaterTreatmentArticleInfo();
+        }
         default:
           console.warn('Unknown article type:', articleType);
           return null;
       }
     } catch (error) {
-      console.error('Error loading article info:', error);
+      console.error('Error loading article info for', articleType, ':', error);
       return null;
     }
-  };
+  }, [quizType, articleType]);
 
-  const articleInfo = getArticleInfo();
+  // Memoized function to load questions
+  const loadQuestions = useCallback(() => {
+    if (quizType === 'article' && articleType) {
+      try {
+        switch (articleType) {
+          case 'killer-whale-quiz': {
+            const module = require('../killerWhaleVocabularyData');
+            return module.getKillerWhaleVocabularyQuestions();
+          }
+          case 'octopus-quiz': {
+            const module = require('../readingVocabularyData');
+            return module.getReadingVocabularyQuestions();
+          }
+          case 'smuggling-quiz': {
+            const module = require('../articleQuestions');
+            return module.getArticleQuestions();
+          }
+          case 'air-india-quiz': {
+            const module = require('../airIndiaVocabularyData');
+            return module.getAirIndiaVocabularyQuestions();
+          }
+          case 'water-treatment-quiz': {
+            const module = require('../waterTreatmentVocabularyData');
+            return module.getWaterTreatmentVocabularyQuestions();
+          }
+          default:
+            console.warn('Unknown article type, using smuggling questions:', articleType);
+            const fallback = require('../articleQuestions');
+            return fallback.getArticleQuestions();
+        }
+      } catch (error) {
+        console.error('Error loading article questions for', articleType, ':', error);
+        // Fallback to smuggling questions
+        const fallback = require('../articleQuestions');
+        return fallback.getArticleQuestions();
+      }
+    } else {
+      // Standard vocabulary quiz
+      return getNewQuestions();
+    }
+  }, [quizType, articleType]);
 
   // Load questions when component mounts or quiz type changes
   useEffect(() => {
-    let newQuestions;
-    
-    if (quizType === 'article') {
-      // Load questions based on article type
-      try {
-        switch (articleType) {
-          case 'killer-whale-quiz':
-            const killerWhaleModule = require('../killerWhaleVocabularyData');
-            newQuestions = killerWhaleModule.getKillerWhaleVocabularyQuestions();
-            break;
-          case 'octopus-quiz':
-            const octopusModule = require('../readingVocabularyData');
-            newQuestions = octopusModule.getReadingVocabularyQuestions();
-            break;
-          case 'smuggling-quiz':
-            const smugglingModule = require('../articleQuestions');
-            newQuestions = smugglingModule.getArticleQuestions();
-            break;
-          case 'air-india-quiz':
-            const airIndiaModule = require('../airIndiaVocabularyData');
-            newQuestions = airIndiaModule.getAirIndiaVocabularyQuestions();
-            break;
-          case 'water-treatment-quiz':
-            const waterTreatmentModule = require('../waterTreatmentVocabularyData');
-            newQuestions = waterTreatmentModule.getWaterTreatmentVocabularyQuestions();
-            break;
-          default:
-            console.warn('Unknown article type, falling back to smuggling questions');
-            const defaultModule = require('../articleQuestions');
-            newQuestions = defaultModule.getArticleQuestions();
-        }
-      } catch (error) {
-        console.error('Error loading article questions:', error);
-        // Fallback to smuggling questions
-        const fallbackModule = require('../articleQuestions');
-        newQuestions = fallbackModule.getArticleQuestions();
-      }
-    } else {
-      // Generate fresh random questions for standard vocabulary tests
-      newQuestions = getNewQuestions();
-    }
-    
+    const newQuestions = loadQuestions();
     setQuestions(newQuestions);
     
-    // Reset quiz state for new questions
+    // Reset quiz state
     setCurrentQuestion(0);
     setUserAnswers(new Array(10).fill(''));
     setCheckedQuestions(new Array(10).fill(false));
     setFeedback({ show: false, type: '', message: '' });
-  }, [quizType, articleType]);
+  }, [loadQuestions]);
 
+  // Current question and progress
   const question = questions[currentQuestion];
   const progress = ((currentQuestion) / 10) * 100;
-
-  // Process the current sentence to find the gap and split the text
   const processedData = question ? processSentence(question.sentence, question.answer) : null;
+  const articleInfo = getArticleInfo();
 
-  // Add Enter key listener for checking answers
+  // Enter key listener for checking answers
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (e.key === 'Enter' && userAnswers[currentQuestion] && !checkedQuestions[currentQuestion] && question) {
+      if (e.key === 'Enter' && 
+          userAnswers[currentQuestion] && 
+          !checkedQuestions[currentQuestion] && 
+          question) {
         checkAnswer();
       }
     };
 
     document.addEventListener('keypress', handleKeyPress);
-    return () => {
-      document.removeEventListener('keypress', handleKeyPress);
-    };
+    return () => document.removeEventListener('keypress', handleKeyPress);
   }, [userAnswers, currentQuestion, checkedQuestions, question]);
 
-  // Load saved quiz state on component mount
+  // Load saved quiz state
   useEffect(() => {
     const savedQuizState = localStorage.getItem(QUIZ_STATE_KEY);
-    if (savedQuizState) {
-      try {
-        const parsedState = JSON.parse(savedQuizState);
+    if (!savedQuizState) return;
+
+    try {
+      const parsedState = JSON.parse(savedQuizState);
+      const thirtyMinutes = 30 * 60 * 1000;
+      const now = Date.now();
+      
+      // Only restore recent state for same quiz type
+      if (parsedState.quizType === quizType && 
+          parsedState.articleType === articleType &&
+          parsedState.timestamp && 
+          (now - parsedState.timestamp) < thirtyMinutes &&
+          parsedState.questions && 
+          parsedState.questions.length === 10) {
         
-        // Only restore if it's the same quiz type and recent (within 30 minutes)
-        const thirtyMinutes = 30 * 60 * 1000;
-        const now = Date.now();
-        
-        if (parsedState.quizType === quizType && 
-            parsedState.timestamp && 
-            (now - parsedState.timestamp) < thirtyMinutes &&
-            parsedState.questions && 
-            parsedState.questions.length === 10) {
-          
-          setQuestions(parsedState.questions);
-          setCurrentQuestion(parsedState.currentQuestion || 0);
-          setUserAnswers(parsedState.userAnswers || new Array(10).fill(''));
-          setCheckedQuestions(parsedState.checkedQuestions || new Array(10).fill(false));
-          console.log('Restored quiz progress from localStorage');
-        } else {
-          // Clear old or different quiz state
-          localStorage.removeItem(QUIZ_STATE_KEY);
-        }
-      } catch (error) {
-        console.error('Error loading saved quiz state:', error);
+        setQuestions(parsedState.questions);
+        setCurrentQuestion(parsedState.currentQuestion || 0);
+        setUserAnswers(parsedState.userAnswers || new Array(10).fill(''));
+        setCheckedQuestions(parsedState.checkedQuestions || new Array(10).fill(false));
+        console.log('Restored quiz progress from localStorage');
+      } else {
+        // Clear old state
         localStorage.removeItem(QUIZ_STATE_KEY);
       }
+    } catch (error) {
+      console.error('Error loading saved quiz state:', error);
+      localStorage.removeItem(QUIZ_STATE_KEY);
     }
-  }, [quizType]);
+  }, [quizType, articleType]);
 
-  // Save quiz state whenever it changes
+  // Save quiz state
   useEffect(() => {
-    if (questions.length === 0) return; // Don't save until questions are loaded
+    if (questions.length === 0) return;
 
     const stateToSave = {
       quizType,
+      articleType,
       currentQuestion,
       userAnswers,
       checkedQuestions,
@@ -209,45 +228,61 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
     } catch (error) {
       console.error('Error saving quiz state:', error);
     }
-  }, [currentQuestion, userAnswers, checkedQuestions, quizType, questions]);
+  }, [currentQuestion, userAnswers, checkedQuestions, quizType, articleType, questions]);
 
+  // Check answer function with fixed logic
   const checkAnswer = () => {
     if (!question) return;
 
-    const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
+    const lettersToShow = getLettersToShow(question.answer);
+    const preFilledLetters = question.answer.substring(0, lettersToShow).toLowerCase();
+    const userTypedLetters = userAnswers[currentQuestion].toLowerCase().trim();
+    
+    // Combine pre-filled and user letters to form complete word
+    const completeUserAnswer = preFilledLetters + userTypedLetters;
     const correctAnswer = question.answer.toLowerCase();
     
-    // Check for alternative spellings (British vs American)
+    console.log('🔍 CHECKING COMPLETE ANSWER:', {
+      correctAnswer,
+      preFilledLetters,
+      userTypedLetters,
+      completeUserAnswer,
+      isMatch: completeUserAnswer === correctAnswer
+    });
+    
+    // Check for exact match or spelling variations
     const alternativeAnswers = getAlternativeSpellings(question.answer);
-    const isCorrect = userAnswer === correctAnswer || alternativeAnswers.includes(userAnswer);
+    const isCorrect = completeUserAnswer === correctAnswer || 
+                     alternativeAnswers.includes(completeUserAnswer);
 
     if (isCorrect) {
       const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
       setFeedback({ show: true, type: 'correct', message: randomMessage });
       
-      // Only disable input after correct answer
+      // Mark question as checked
       const newChecked = [...checkedQuestions];
       newChecked[currentQuestion] = true;
       setCheckedQuestions(newChecked);
     } else {
-      // Only show hint AFTER checking incorrect answer
       const hintText = question.hint || "Try to think about the context of the sentence.";
       const feedbackMessage = `💡 Hint: ${hintText}`;
       setFeedback({ show: true, type: 'incorrect', message: feedbackMessage });
     }
   };
 
+  // Update user answer
   const updateAnswer = (value) => {
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestion] = value;
     setUserAnswers(newAnswers);
     
-    // Clear feedback when user starts typing again
+    // Clear feedback when user starts typing
     if (feedback.show) {
       setFeedback({ show: false, type: '', message: '' });
     }
   };
 
+  // Navigation functions
   const previousQuestion = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
@@ -257,7 +292,7 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
 
   const nextQuestion = () => {
     if (currentQuestion === 9) {
-      // Clear quiz state when finishing
+      // Clear quiz state and finish
       localStorage.removeItem(QUIZ_STATE_KEY);
       onFinish(userAnswers, questions);
     } else {
@@ -266,13 +301,14 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
     }
   };
 
+  // Handle article link click
   const openArticle = () => {
     if (articleInfo && articleInfo.url) {
       window.open(articleInfo.url, '_blank');
     }
   };
 
-  // Show loading state while questions are being loaded
+  // Loading state
   if (questions.length === 0) {
     return (
       <div className="quiz-container">
@@ -290,7 +326,7 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
 
   return (
     <div className="quiz-container">
-      {/* Article Link Header - Only show for article-based quizzes */}
+      {/* Article Link Header */}
       {quizType === 'article' && articleInfo && (
         <div className="article-link-header">
           <button 
@@ -306,6 +342,7 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
         </div>
       )}
 
+      {/* Quiz Header */}
       <div className="quiz-header">
         <div className="quiz-type-badge">
           {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
@@ -321,6 +358,7 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
         )}
       </div>
 
+      {/* Progress Bar */}
       <div className="progress-container">
         <div className="progress-bar">
           <div className="progress-fill" style={{width: `${progress}%`}}></div>
@@ -328,18 +366,16 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
         <div className="progress-text">Question {currentQuestion + 1} of 10</div>
       </div>
 
+      {/* Question Header */}
       <div className="question-header">
         <div className="question-number">Question {currentQuestion + 1}</div>
         <div className="level-badge">{question.level}</div>
       </div>
 
-      {/* Display sentence with letter input boxes integrated inline */}
+      {/* Question Section */}
       <div className="question-section">
         <div className="question-text">
-          {/* Text before the gap */}
           <span>{processedData.beforeGap}</span>
-          
-          {/* The letter input component inline with the sentence - NO visible letters shown */}
           <LetterInput
             word={question.answer}
             value={userAnswers[currentQuestion]}
@@ -348,12 +384,10 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
             className={feedback.show ? feedback.type : ''}
             onEnterPress={!checkedQuestions[currentQuestion] && userAnswers[currentQuestion] ? checkAnswer : null}
           />
-          
-          {/* Text after the gap */}
           <span>{processedData.afterGap}</span>
         </div>
 
-        {/* Show context for article-based questions */}
+        {/* Context for article-based questions */}
         {quizType === 'article' && question.context && (
           <div className="question-context">
             <small>📖 {question.context}</small>
@@ -366,13 +400,14 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
         </div>
       </div>
 
-      {/* Only show feedback AFTER answer has been checked */}
+      {/* Feedback */}
       {feedback.show && (
         <div className={`feedback ${feedback.type}`}>
           {feedback.message}
         </div>
       )}
 
+      {/* Navigation */}
       <div className="navigation">
         <button 
           className="nav-btn" 
@@ -389,7 +424,6 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
             </button>
           )}
           
-          {/* Next button is ALWAYS enabled - acts as skip if no answer checked */}
           <button 
             className="nav-btn" 
             onClick={nextQuestion}
@@ -399,6 +433,7 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
         </div>
       </div>
 
+      {/* Footer */}
       <div className="quiz-footer">
         <p>Press Enter to check your answer, or use the buttons below.</p>
       </div>
