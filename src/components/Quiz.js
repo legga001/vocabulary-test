@@ -64,6 +64,11 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
   const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
   const [feedback, setFeedback] = useState({ show: false, type: '', message: '', persistent: false });
   const [questions, setQuestions] = useState([]);
+  
+  // Separate state for feedback that won't be affected by other re-renders
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackType, setFeedbackType] = useState('');
 
   // Memoized function to get article info
   const getArticleInfo = useCallback(() => {
@@ -148,6 +153,9 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
     const newQuestions = loadQuestions();
     setQuestions(newQuestions);
     
+    // ALWAYS start fresh - clear any saved state
+    localStorage.removeItem(QUIZ_STATE_KEY);
+    
     // Reset quiz state
     setCurrentQuestion(0);
     setUserAnswers(new Array(10).fill(''));
@@ -176,61 +184,15 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
     return () => document.removeEventListener('keypress', handleKeyPress);
   }, [userAnswers, currentQuestion, checkedQuestions, question]);
 
-  // Load saved quiz state
-  useEffect(() => {
-    const savedQuizState = localStorage.getItem(QUIZ_STATE_KEY);
-    if (!savedQuizState) return;
+  // DON'T load saved quiz state - always start fresh
+  // useEffect(() => {
+  //   // Removed localStorage restoration to always start fresh
+  // }, [quizType, articleType]);
 
-    try {
-      const parsedState = JSON.parse(savedQuizState);
-      const thirtyMinutes = 30 * 60 * 1000;
-      const now = Date.now();
-      
-      // Only restore recent state for same quiz type
-      if (parsedState.quizType === quizType && 
-          parsedState.articleType === articleType &&
-          parsedState.timestamp && 
-          (now - parsedState.timestamp) < thirtyMinutes &&
-          parsedState.questions && 
-          parsedState.questions.length === 10) {
-        
-        setQuestions(parsedState.questions);
-        setCurrentQuestion(parsedState.currentQuestion || 0);
-        setUserAnswers(parsedState.userAnswers || new Array(10).fill(''));
-        setCheckedQuestions(parsedState.checkedQuestions || new Array(10).fill(false));
-        setFeedback(parsedState.feedback || { show: false, type: '', message: '', persistent: false });
-        console.log('Restored quiz progress from localStorage');
-      } else {
-        // Clear old state
-        localStorage.removeItem(QUIZ_STATE_KEY);
-      }
-    } catch (error) {
-      console.error('Error loading saved quiz state:', error);
-      localStorage.removeItem(QUIZ_STATE_KEY);
-    }
-  }, [quizType, articleType]);
-
-  // Save quiz state
-  useEffect(() => {
-    if (questions.length === 0) return;
-
-    const stateToSave = {
-      quizType,
-      articleType,
-      currentQuestion,
-      userAnswers,
-      checkedQuestions,
-      feedback,
-      questions,
-      timestamp: Date.now()
-    };
-
-    try {
-      localStorage.setItem(QUIZ_STATE_KEY, JSON.stringify(stateToSave));
-    } catch (error) {
-      console.error('Error saving quiz state:', error);
-    }
-  }, [currentQuestion, userAnswers, checkedQuestions, quizType, articleType, questions]);
+  // DON'T save quiz state - always start fresh
+  // useEffect(() => {
+  //   // Removed state saving to always start fresh
+  // }, [currentQuestion, userAnswers, checkedQuestions, quizType, articleType, questions]);
 
   // Check answer function with persistent feedback
   const checkAnswer = () => {
@@ -259,13 +221,11 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
 
     if (isCorrect) {
       const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
-      // Set persistent feedback that won't be cleared by typing
-      setFeedback({ 
-        show: true, 
-        type: 'correct', 
-        message: randomMessage,
-        persistent: true // Flag to prevent clearing
-      });
+      
+      // Use separate feedback state that won't disappear
+      setShowFeedback(true);
+      setFeedbackMessage(randomMessage);
+      setFeedbackType('correct');
       
       // Mark question as checked
       const newChecked = [...checkedQuestions];
@@ -273,14 +233,12 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
       setCheckedQuestions(newChecked);
     } else {
       const hintText = question.hint || "Try to think about the context of the sentence.";
-      const feedbackMessage = `💡 Hint: ${hintText}`;
-      // Set persistent feedback that won't be cleared by typing
-      setFeedback({ 
-        show: true, 
-        type: 'incorrect', 
-        message: feedbackMessage,
-        persistent: true // Flag to prevent clearing
-      });
+      const feedbackMessageText = `💡 Hint: ${hintText}`;
+      
+      // Use separate feedback state that won't disappear
+      setShowFeedback(true);
+      setFeedbackMessage(feedbackMessageText);
+      setFeedbackType('incorrect');
     }
   };
 
@@ -298,8 +256,10 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
   const previousQuestion = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
-      // Only clear feedback when actually moving between questions
-      setFeedback({ show: false, type: '', message: '', persistent: false });
+      // Clear feedback when moving between questions
+      setShowFeedback(false);
+      setFeedbackMessage('');
+      setFeedbackType('');
     }
   };
 
@@ -310,8 +270,10 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
       onFinish(userAnswers, questions);
     } else {
       setCurrentQuestion(currentQuestion + 1);
-      // Only clear feedback when actually moving between questions
-      setFeedback({ show: false, type: '', message: '', persistent: false });
+      // Clear feedback when moving between questions
+      setShowFeedback(false);
+      setFeedbackMessage('');
+      setFeedbackType('');
     }
   };
 
@@ -414,14 +376,14 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
         </div>
       </div>
 
-      {/* Feedback - Enhanced with debugging */}
-      {feedback.show && (
-        <div className={`feedback ${feedback.type}`}>
-          {feedback.message}
+      {/* Feedback - Using separate state that won't disappear */}
+      {showFeedback && (
+        <div className={`feedback ${feedbackType}`}>
+          {feedbackMessage}
         </div>
       )}
 
-      {/* DEBUG: Always show feedback state for testing */}
+      {/* DEBUG: Enhanced feedback debugging */}
       {process.env.NODE_ENV === 'development' && (
         <div style={{
           background: '#fff3cd',
@@ -432,10 +394,9 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
           fontFamily: 'monospace'
         }}>
           <strong>🐛 Feedback Debug:</strong><br />
-          Show: {feedback.show ? 'YES' : 'NO'}<br />
-          Type: "{feedback.type}"<br />
-          Message: "{feedback.message}"<br />
-          Persistent: {feedback.persistent ? 'YES' : 'NO'}<br />
+          Show Feedback: {showFeedback ? 'YES' : 'NO'}<br />
+          Feedback Type: "{feedbackType}"<br />
+          Feedback Message: "{feedbackMessage}"<br />
           Current Answer: "{userAnswers[currentQuestion]}"<br />
           Question Checked: {checkedQuestions[currentQuestion] ? 'YES' : 'NO'}
         </div>
