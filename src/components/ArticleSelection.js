@@ -1,11 +1,29 @@
 // src/components/ArticleSelection.js
 import React from 'react';
 import ClickableLogo from './ClickableLogo';
-import { getKillerWhaleArticleInfo } from '../killerWhaleVocabularyData';
 import { getReadingArticleInfo } from '../readingVocabularyData';
 import { getArticleInfo } from '../articleQuestions';
 import { getAirIndiaArticleInfo } from '../airIndiaVocabularyData';
 import { getWaterTreatmentArticleInfo } from '../waterTreatmentVocabularyData';
+
+// Conditional import for killer whale data with fallback
+let getKillerWhaleArticleInfo;
+try {
+  const killerWhaleModule = require('../killerWhaleVocabularyData');
+  getKillerWhaleArticleInfo = killerWhaleModule.getKillerWhaleArticleInfo;
+} catch (error) {
+  console.warn('Killer whale vocabulary data not found, using fallback');
+  // Fallback function
+  getKillerWhaleArticleInfo = () => ({
+    title: "Killer whales 'massage' each other using kelp",
+    url: "https://www.bbc.co.uk/news/articles/cwyqll5n2qro",
+    source: "BBC News",
+    date: "23 June 2025",
+    author: "Victoria Gill",
+    summary: "Researchers have discovered that orcas in the North Pacific use kelp to 'massage' each other.",
+    readingTime: "3-4 minutes"
+  });
+}
 
 function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
   const articles = [
