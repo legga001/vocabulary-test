@@ -1,8 +1,9 @@
-// src/components/ReadingExercise.js - Updated with random vocabulary pool integration
+// src/components/ReadingExercise.js - Updated with killer whale article
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getReadingVocabularyQuestions, getReadingArticleInfo } from '../readingVocabularyData';
 import { getAirIndiaVocabularyQuestions, getAirIndiaArticleInfo } from '../airIndiaVocabularyData';
 import { getWaterTreatmentVocabularyQuestions, getWaterTreatmentArticleInfo } from '../waterTreatmentVocabularyData';
+import { getKillerWhaleVocabularyQuestions, getKillerWhaleArticleInfo } from '../killerWhaleVocabularyData';
 import { getArticleQuestions, getArticleInfo } from '../articleQuestions';
 import { getNewQuestions, correctMessages } from '../questionsData';
 import { recordTestResult } from '../utils/progressDataManager';
@@ -65,7 +66,8 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   const isDirectFromLanding = initialView !== 'selection';
 
   // Memoised article information
-  const { octopusArticleInfo, smugglingArticleInfo, airIndiaArticleInfo, waterTreatmentArticleInfo } = useMemo(() => ({
+  const { killerWhaleArticleInfo, octopusArticleInfo, smugglingArticleInfo, airIndiaArticleInfo, waterTreatmentArticleInfo } = useMemo(() => ({
+    killerWhaleArticleInfo: getKillerWhaleArticleInfo(),
     octopusArticleInfo: getReadingArticleInfo(),
     smugglingArticleInfo: getArticleInfo(),
     airIndiaArticleInfo: getAirIndiaArticleInfo(),
@@ -77,6 +79,9 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     let newQuestions = [];
     
     switch (currentView) {
+      case 'killer-whale-quiz':
+        newQuestions = getKillerWhaleVocabularyQuestions();
+        break;
       case 'octopus-quiz':
         newQuestions = getReadingVocabularyQuestions();
         break;
@@ -183,52 +188,52 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
                      correctAnswerAlternatives.includes(userAnswer) ||
                      userAnswerAlternatives.includes(correctAnswer);
 
+    const newCheckedQuestions = [...checkedQuestions];
+    newCheckedQuestions[currentQuestion] = true;
+    setCheckedQuestions(newCheckedQuestions);
+
     if (isCorrect) {
       const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
       setFeedback({ show: true, type: 'correct', message: randomMessage });
-      
-      setCheckedQuestions(prev => {
-        const newChecked = [...prev];
-        newChecked[currentQuestion] = true;
-        return newChecked;
-      });
     } else {
-      const hintText = currentQuestionData.hint || "Try to think about the context of the sentence.";
-      const feedbackMessage = `💡 Hint: ${hintText}`;
-      setFeedback({ show: true, type: 'incorrect', message: feedbackMessage });
+      setFeedback({ 
+        show: true, 
+        type: 'incorrect', 
+        message: `The correct answer is "${currentQuestionData.answer}".` 
+      });
     }
-  }, [userAnswers, currentQuestion, currentQuestionData, getAlternativeSpellings]);
+  }, [currentQuestionData, userAnswers, currentQuestion, checkedQuestions, getAlternativeSpellings]);
 
-  // Answer update handler
-  const updateAnswer = useCallback((value) => {
-    setUserAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[currentQuestion] = value;
-      return newAnswers;
-    });
-    
-    // Don't clear feedback when typing - only clear on navigation
+  // Navigation functions
+  const nextQuestion = useCallback(() => {
+    if (currentQuestion < 9) {
+      setCurrentQuestion(currentQuestion + 1);
+      setFeedback(INITIAL_FEEDBACK);
+    } else {
+      finishQuiz();
+    }
   }, [currentQuestion]);
 
-  // Navigation handlers
   const previousQuestion = useCallback(() => {
     if (currentQuestion > 0) {
-      setCurrentQuestion(prev => prev - 1);
+      setCurrentQuestion(currentQuestion - 1);
       setFeedback(INITIAL_FEEDBACK);
     }
   }, [currentQuestion]);
 
-  const nextQuestion = useCallback(() => {
-    if (currentQuestion === 9) {
-      // Finish quiz and record results
-      finishQuiz();
-    } else {
-      setCurrentQuestion(prev => prev + 1);
+  // Handle user input
+  const handleInputChange = useCallback((value) => {
+    const newAnswers = [...userAnswers];
+    newAnswers[currentQuestion] = value;
+    setUserAnswers(newAnswers);
+    
+    // Clear feedback when user starts typing a new answer
+    if (feedback.show) {
       setFeedback(INITIAL_FEEDBACK);
     }
-  }, [currentQuestion]);
+  }, [userAnswers, currentQuestion, feedback.show]);
 
-  // Enhanced score calculation with bidirectional spelling support
+  // Calculate score
   const calculateScore = useCallback(() => {
     return userAnswers.slice(0, 10).reduce((score, answer, index) => {
       if (!answer || !questions[index]) return score;
@@ -236,11 +241,10 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
       const userAnswer = answer.toLowerCase().trim();
       const correctAnswer = questions[index].answer.toLowerCase();
       
-      // Get alternative spellings for both directions
+      // Enhanced spelling check - bidirectional
       const correctAnswerAlternatives = getAlternativeSpellings(questions[index].answer);
       const userAnswerAlternatives = getAlternativeSpellings(userAnswer);
       
-      // Check if answer is correct in multiple ways
       const isCorrect = userAnswer === correctAnswer || 
                        correctAnswerAlternatives.includes(userAnswer) ||
                        userAnswerAlternatives.includes(correctAnswer);
@@ -258,7 +262,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     
     // Determine quiz type for progress tracking
     let quizType = 'standard-vocabulary';
-    if (['octopus-quiz', 'smuggling-quiz', 'air-india-quiz', 'water-treatment-quiz'].includes(currentView)) {
+    if (['killer-whale-quiz', 'octopus-quiz', 'smuggling-quiz', 'air-india-quiz', 'water-treatment-quiz'].includes(currentView)) {
       quizType = 'article-vocabulary';
     }
     
@@ -323,9 +327,10 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   // Render Results
   if (showResults) {
     const score = calculateScore();
-    const isArticleTest = ['octopus-quiz', 'smuggling-quiz', 'air-india-quiz', 'water-treatment-quiz'].includes(currentView);
+    const isArticleTest = ['killer-whale-quiz', 'octopus-quiz', 'smuggling-quiz', 'air-india-quiz', 'water-treatment-quiz'].includes(currentView);
     
     const getCurrentArticleInfo = () => {
+      if (currentView === 'killer-whale-quiz') return killerWhaleArticleInfo;
       if (currentView === 'octopus-quiz') return octopusArticleInfo;
       if (currentView === 'smuggling-quiz') return smugglingArticleInfo;
       if (currentView === 'air-india-quiz') return airIndiaArticleInfo;
@@ -427,8 +432,8 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
   }
 
   // Show loading state while questions are being loaded
-  if ((currentView === 'standard-quiz' || currentView === 'octopus-quiz' || currentView === 'smuggling-quiz' || 
-       currentView === 'air-india-quiz' || currentView === 'water-treatment-quiz') && questions.length === 0) {
+  if ((currentView === 'standard-quiz' || currentView === 'killer-whale-quiz' || currentView === 'octopus-quiz' || 
+       currentView === 'smuggling-quiz' || currentView === 'air-india-quiz' || currentView === 'water-treatment-quiz') && questions.length === 0) {
     return (
       <div className="exercise-page">
         <ClickableLogo onLogoClick={onLogoClick} />
@@ -447,6 +452,7 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     const processedData = processSentence(currentQuestionData.sentence, currentQuestionData.answer);
     
     const getCurrentArticleInfo = () => {
+      if (currentView === 'killer-whale-quiz') return killerWhaleArticleInfo;
       if (currentView === 'octopus-quiz') return octopusArticleInfo;
       if (currentView === 'smuggling-quiz') return smugglingArticleInfo;
       if (currentView === 'air-india-quiz') return airIndiaArticleInfo;
@@ -476,105 +482,72 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
         <div className="quiz-container">
           <div className="quiz-header">
             <div className="quiz-type-badge">
-              📖 {currentArticleInfo ? 'Article-Based' : 'Standard'} Vocabulary Exercise
+              📖 {currentArticleInfo ? `Article: ${currentArticleInfo.title}` : 'Standard Vocabulary Test'}
             </div>
-          </div>
-
-          <div className="progress-container">
-            <div className="progress-bar">
-              <div className="progress-fill" style={{width: `${progress}%`}}></div>
+            
+            <div className="progress-section">
+              <div className="progress-bar">
+                <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+              </div>
+              <div className="question-counter">
+                Question {currentQuestion + 1} of 10
+              </div>
             </div>
-            <div className="progress-text">Question {currentQuestion + 1} of 10</div>
-          </div>
-
-          <div className="question-header">
-            <div className="question-number">Question {currentQuestion + 1}</div>
-            <div className="level-badge">{currentQuestionData.level}</div>
           </div>
 
           <div className="question-section">
-            <div className="question-text">
-              {processedData.beforeGap}
-              <div className="letter-input-wrapper">
-                <LetterInput
-                  word={currentQuestionData.answer}
+            <div className="sentence-container">
+              <div className="sentence-display">
+                {processedData.beforeBlank}
+                <LetterInput 
                   value={userAnswers[currentQuestion]}
-                  onChange={updateAnswer}
+                  onChange={handleInputChange}
                   disabled={checkedQuestions[currentQuestion]}
-                  className={feedback.show ? feedback.type : ''}
-                  onEnterPress={!checkedQuestions[currentQuestion] && userAnswers[currentQuestion] ? checkAnswer : null}
+                  targetLength={extractVisibleLetters(currentQuestionData.answer).length}
+                  placeholder="Type your answer..."
                 />
+                {processedData.afterBlank}
               </div>
-              {processedData.afterGap}
             </div>
 
-            {currentQuestionData.context && (
-              <div className="question-context">
-                <small>📰 {currentQuestionData.context}</small>
+            <div className="hint-section">
+              <div className="hint">
+                💡 <strong>Hint:</strong> {currentQuestionData.hint}
+              </div>
+            </div>
+
+            {feedback.show && (
+              <div className={`feedback ${feedback.type}`}>
+                {feedback.message}
               </div>
             )}
           </div>
 
-          {feedback.show && (
-            <div 
-              className={`feedback ${feedback.type}`}
-              style={{
-                background: feedback.type === 'correct' ? '#d4edda' : '#f8d7da',
-                color: feedback.type === 'correct' ? '#155724' : '#721c24',
-                border: feedback.type === 'correct' ? '2px solid #c3e6cb' : '2px solid #f5c6cb',
-                padding: '15px',
-                borderRadius: '8px',
-                margin: '15px 0',
-                fontSize: '16px',
-                fontWeight: '600',
-                minHeight: '20px',
-                display: 'block',
-                visibility: 'visible',
-                opacity: '1'
-              }}
-            >
-              {feedback.message}
-            </div>
-          )}
-
-          {/* Debug feedback state - remove this after testing */}
-          {process.env.NODE_ENV === 'development' && (
-            <div style={{ 
-              background: '#f0f0f0', 
-              padding: '10px', 
-              margin: '10px 0', 
-              fontSize: '12px',
-              border: '1px solid #ccc' 
-            }}>
-              <strong>🐛 READING EXERCISE Debug Info:</strong><br/>
-              Feedback Show: {feedback.show ? 'YES' : 'NO'}<br/>
-              Feedback Type: {feedback.type}<br/>
-              Feedback Message: {feedback.message}<br/>
-              Current Question: {currentQuestion + 1}<br/>
-              Question Answer: {currentQuestionData?.answer}<br/>
-              Question Hint: {currentQuestionData?.hint || 'NO HINT'}
-            </div>
-          )}
-
-          <button 
-            className="btn" 
-            onClick={checkAnswer}
-            disabled={checkedQuestions[currentQuestion] || !userAnswers[currentQuestion]}
-          >
-            Check Answer
-          </button>
-
-          <div className="navigation">
+          <div className="controls-section">
             <button 
-              className="nav-btn" 
-              onClick={previousQuestion}
-              disabled={currentQuestion === 0}
+              className="btn btn-primary" 
+              onClick={checkedQuestions[currentQuestion] ? nextQuestion : checkAnswer}
+              disabled={!userAnswers[currentQuestion] && !checkedQuestions[currentQuestion]}
             >
-              Previous
+              {checkedQuestions[currentQuestion] ? (currentQuestion === 9 ? 'Finish' : 'Next') : 'Check Answer'}
             </button>
-            <button className="nav-btn" onClick={nextQuestion}>
-              {currentQuestion === 9 ? 'Finish' : 'Next'}
-            </button>
+            
+            <div className="navigation-controls">
+              <button 
+                className="btn btn-secondary btn-small" 
+                onClick={previousQuestion}
+                disabled={currentQuestion === 0}
+              >
+                ← Previous
+              </button>
+              <button 
+                className="btn btn-secondary btn-small" 
+                onClick={nextQuestion}
+                disabled={!checkedQuestions[currentQuestion]}
+              >
+                {currentQuestion === 9 ? 'Finish' : 'Next'} →
+              </button>
+            </div>
           </div>
 
           <div className="quiz-footer">
