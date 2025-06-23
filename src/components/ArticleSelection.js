@@ -52,24 +52,29 @@ function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
           {articles.map((article, index) => (
             <div
               key={article.type}
-              className={`article-selection-card ${article.badge ? 'featured-article' : ''}`}
+              className="article-selection-card"
               onClick={() => onSelectArticle(article.type)}
-              style={{ cursor: 'pointer' }}
             >
               {article.badge && <div className="new-badge">{article.badge}</div>}
-              <div className="article-icon" style={{ fontSize: '2.5em', marginBottom: '15px' }}>{article.icon}</div>
-              <h3 style={{ color: '#2d3748', marginBottom: '10px', fontSize: '1.2em' }}>{article.title}</h3>
-              <div className="article-meta" style={{ marginBottom: '12px' }}>
-                <span className="article-date" style={{ color: '#666', fontSize: '0.9em', marginRight: '15px' }}>{article.date}</span>
-                <span className="article-source" style={{ color: '#4c51bf', fontSize: '0.9em', fontWeight: '600' }}>{article.source}</span>
+              
+              <div className="article-header">
+                <div className="card-icon">{article.icon}</div>
+                <h3 className="article-title">{article.title}</h3>
+                <div className="article-meta">
+                  <span className="article-date">{article.date}</span>
+                  <span className="article-source">{article.source}</span>
+                </div>
               </div>
-              <p className="article-summary" style={{ color: '#666', fontSize: '0.95em', lineHeight: '1.5', marginBottom: '15px' }}>{article.summary}</p>
-              <div className="article-details" style={{ fontSize: '0.85em', color: '#777', marginBottom: '10px' }}>
-                <div>• {article.readingTime}</div>
-                <div>• 10 vocabulary questions</div>
-                <div>• Multiple difficulty levels</div>
+              
+              <p className="article-summary">{article.summary}</p>
+              
+              <div className="test-info">
+                <span>{article.readingTime}</span>
+                <span>10 questions</span>
+                <span>A2-C1 levels</span>
               </div>
-              <div className="card-arrow" style={{ fontSize: '1.5em', color: '#4c51bf', fontWeight: 'bold' }}>→</div>
+              
+              <div className="card-arrow">→</div>
             </div>
           ))}
         </div>
@@ -93,5 +98,7 @@ function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
     </div>
   );
 }
+
+export default ArticleSelection;
 
 export default ArticleSelection;
