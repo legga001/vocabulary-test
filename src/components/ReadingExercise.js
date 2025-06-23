@@ -103,7 +103,12 @@ function ReadingExercise({ onBack, onLogoClick, initialView = 'selection' }) {
     try {
       switch (currentView) {
         case 'killer-whale-quiz':
-          newQuestions = getKillerWhaleVocabularyQuestions();
+          if (getKillerWhaleVocabularyQuestions) {
+            newQuestions = getKillerWhaleVocabularyQuestions();
+          } else {
+            console.warn('Killer whale questions not available');
+            newQuestions = [];
+          }
           console.log('Loaded killer whale questions:', newQuestions.length); // Debug log
           break;
         case 'octopus-quiz':
