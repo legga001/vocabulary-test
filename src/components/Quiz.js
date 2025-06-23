@@ -1,4 +1,4 @@
-// src/components/Quiz.js - Fixed quiz component with proper feedback timing
+// src/components/Quiz.js - Completely fixed with proper sentence processing
 import React, { useState, useEffect } from 'react';
 import { getNewQuestions, correctMessages } from '../questionsData';
 import { getArticleQuestions } from '../articleQuestions';
@@ -126,9 +126,8 @@ function Quiz({ onFinish, quizType }) {
   const question = questions[currentQuestion];
   const progress = ((currentQuestion) / 10) * 100;
 
-  // Process the current sentence if question exists
+  // Process the current sentence to find the gap and split the text
   const processedData = question ? processSentence(question.sentence, question.answer) : null;
-  const visibleLetters = question ? extractVisibleLetters(question.sentence) : '';
 
   // Add Enter key listener for checking answers
   useEffect(() => {
@@ -200,15 +199,6 @@ function Quiz({ onFinish, quizType }) {
   const checkAnswer = () => {
     if (!question) return;
 
-    console.log('🔍 CHECKING ANSWER - Question object:', {
-      answer: question.answer,
-      level: question.level,
-      sentence: question.sentence ? question.sentence.substring(0, 50) + '...' : 'NO SENTENCE',
-      hint: question.hint || 'NO HINT PROPERTY',
-      hasHint: !!question.hint,
-      allProperties: Object.keys(question)
-    });
-
     const userAnswer = userAnswers[currentQuestion].toLowerCase().trim();
     const correctAnswer = question.answer.toLowerCase();
     
@@ -218,7 +208,6 @@ function Quiz({ onFinish, quizType }) {
 
     if (isCorrect) {
       const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
-      console.log('✅ SETTING CORRECT FEEDBACK:', randomMessage);
       setFeedback({ show: true, type: 'correct', message: randomMessage });
       
       // Only disable input after correct answer
@@ -226,10 +215,9 @@ function Quiz({ onFinish, quizType }) {
       newChecked[currentQuestion] = true;
       setCheckedQuestions(newChecked);
     } else {
-      // Ensure we have a hint to display - only show after checking incorrect answer
+      // Only show hint AFTER checking incorrect answer
       const hintText = question.hint || "Try to think about the context of the sentence.";
       const feedbackMessage = `💡 Hint: ${hintText}`;
-      console.log('❌ SETTING INCORRECT FEEDBACK:', feedbackMessage);
       setFeedback({ show: true, type: 'incorrect', message: feedbackMessage });
     }
   };
@@ -260,10 +248,6 @@ function Quiz({ onFinish, quizType }) {
     } else {
       setCurrentQuestion(currentQuestion + 1);
       setFeedback({ show: false, type: '', message: '' });
-      // Small delay to allow component to re-render before focus
-      setTimeout(() => {
-        // Focus will be handled by LetterInput component's useEffect
-      }, 50);
     }
   };
 
@@ -303,22 +287,29 @@ function Quiz({ onFinish, quizType }) {
         <div className="level-badge">{question.level}</div>
       </div>
 
-      {/* Display sentence with letter input */}
+      {/* Display sentence with letter input boxes integrated inline */}
       <div className="question-section">
         <div className="question-text">
-          {processedData.beforeGap}
-          {visibleLetters && <span className="visible-letters">{visibleLetters}</span>}
-          <div className="letter-input-wrapper">
-            <LetterInput
-              word={question.answer}
-              value={userAnswers[currentQuestion]}
-              onChange={updateAnswer}
-              disabled={checkedQuestions[currentQuestion]}
-              className={feedback.show ? feedback.type : ''}
-              onEnterPress={!checkedQuestions[currentQuestion] && userAnswers[currentQuestion] ? checkAnswer : null}
-            />
-          </div>
-          {processedData.afterGap}
+          {/* Text before the gap */}
+          <span>{processedData.beforeGap}</span>
+          
+          {/* Show any visible letters that are part of the gap */}
+          {processedData.visibleLetters && (
+            <span className="visible-letters">{processedData.visibleLetters}</span>
+          )}
+          
+          {/* The letter input component inline with the sentence */}
+          <LetterInput
+            word={question.answer}
+            value={userAnswers[currentQuestion]}
+            onChange={updateAnswer}
+            disabled={checkedQuestions[currentQuestion]}
+            className={feedback.show ? feedback.type : ''}
+            onEnterPress={!checkedQuestions[currentQuestion] && userAnswers[currentQuestion] ? checkAnswer : null}
+          />
+          
+          {/* Text after the gap */}
+          <span>{processedData.afterGap}</span>
         </div>
 
         {/* Show context for article-based questions */}
