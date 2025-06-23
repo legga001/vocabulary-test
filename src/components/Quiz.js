@@ -276,10 +276,8 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
     newAnswers[currentQuestion] = value;
     setUserAnswers(newAnswers);
     
-    // Clear feedback when user starts typing
-    if (feedback.show) {
-      setFeedback({ show: false, type: '', message: '' });
-    }
+    // DON'T clear feedback when user types - let it stay visible
+    // The feedback should only clear when moving to next question
   };
 
   // Navigation functions
