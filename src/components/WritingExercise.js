@@ -1,26 +1,12 @@
-// src/components/WritingExercise.js - Basic implementation ready for images
+// src/components/WritingExercise.js - Complete writing exercise with photo description
 import React, { useState, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { recordTestResult } from '../utils/progressDataManager';
+import { incrementDailyTarget } from './LandingPage';
+import '../styles/writing-exercise.css';
 
 // Photo prompts for writing exercises - ready for DALL-E images
 const PHOTO_PROMPTS = [
-  {
-    id: 'busy_city_street',
-    image: '/images/writing-prompts/busy_city_street.jpg',
-    title: 'Busy City Street',
-    description: 'Describe this busy urban scene during rush hour',
-    level: 'B1-B2',
-    minWords: 100,
-    maxWords: 180,
-    prompt: "Describe this busy city scene. What are people doing? What can you see? What might people be thinking or feeling? Describe the atmosphere and energy of the street.",
-    suggestedPoints: [
-      'What types of transport can you see?',
-      'Describe the buildings and architecture',
-      'What activities are people doing?',
-      'What is the mood and atmosphere?'
-    ]
-  },
   {
     id: 'family_picnic',
     image: '/images/writing-prompts/family_picnic.jpg',
@@ -167,7 +153,7 @@ const PHOTO_PROMPTS = [
   }
 ];
 
-// Model answers for comparison (shorter versions for basic implementation)
+// Model answers for comparison
 const MODEL_ANSWERS = {
   busy_city_street: "This bustling city street captures the energy of modern urban life during rush hour. People hurry along crowded pavements, their faces focused and determined as they navigate their daily commutes. Red buses and black taxis weave through heavy traffic whilst pedestrians wait at crossings. The tall glass buildings reflect the afternoon sunlight, creating interesting patterns of light and shadow. Street vendors add colour to the scene, and the overall atmosphere feels purposeful and dynamic, representing the fast pace of city living.",
   
@@ -279,7 +265,7 @@ function WritingExercise({ onBack, onLogoClick }) {
     generateFeedback();
   };
 
-  // Basic feedback generation (will be enhanced with grammar checker later)
+  // Basic feedback generation
   const generateFeedback = () => {
     // Simple scoring for now
     let score = 70; // Base score
@@ -309,7 +295,7 @@ function WritingExercise({ onBack, onLogoClick }) {
     
     setCurrentStep('feedback');
     
-    // Record test result
+    // Record test result and increment daily target
     recordTestResult({
       quizType: 'writing',
       score: Math.round(score / 10), // Convert to 0-10 scale
@@ -322,6 +308,9 @@ function WritingExercise({ onBack, onLogoClick }) {
         score: score
       }]
     });
+    
+    // Increment daily target for writing
+    incrementDailyTarget('writing');
   };
 
   // Generate basic suggestions
@@ -559,4 +548,20 @@ function WritingExercise({ onBack, onLogoClick }) {
   return null;
 }
 
-export default WritingExercise;
+export default WritingExercise;'busy_city_street',
+    image: '/images/writing-prompts/busy_city_street.jpg',
+    title: 'Busy City Street',
+    description: 'Describe this busy urban scene during rush hour',
+    level: 'B1-B2',
+    minWords: 100,
+    maxWords: 180,
+    prompt: "Describe this busy city scene. What are people doing? What can you see? What might people be thinking or feeling? Describe the atmosphere and energy of the street.",
+    suggestedPoints: [
+      'What types of transport can you see?',
+      'Describe the buildings and architecture',
+      'What activities are people doing?',
+      'What is the mood and atmosphere?'
+    ]
+  },
+  {
+    id:
