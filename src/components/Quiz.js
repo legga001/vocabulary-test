@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getNewQuestions, correctMessages } from '../questionsData';
 import LetterInput from './LetterInput';
+import ClickableLogo from './ClickableLogo';
 import { processSentence } from '../utils/quizHelpers';
 
 // Key for localStorage
@@ -57,7 +58,7 @@ const getLettersToShow = (word) => {
   return 6;
 };
 
-function Quiz({ onFinish, quizType, articleType, onBack }) {
+function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
   console.log('🏗️ Quiz component rendering/re-rendering');
   
   // State management
@@ -295,21 +296,26 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
   // Loading state
   if (questions.length === 0) {
     return (
-      <div className="quiz-container">
-        <div className="quiz-header">
-          <div className="quiz-type-badge">
-            {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
+      <div className="exercise-page">
+        <ClickableLogo onLogoClick={onLogoClick} />
+        <div className="quiz-container">
+          <div className="quiz-header">
+            <div className="quiz-type-badge">
+              {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
+            </div>
           </div>
-        </div>
-        <div className="loading-state">
-          <p>🎲 Generating your vocabulary test...</p>
+          <div className="loading-state">
+            <p>🎲 Generating your vocabulary test...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="quiz-container">
+    <div className="exercise-page">
+      <ClickableLogo onLogoClick={onLogoClick} />
+      <div className="quiz-container">
       {/* Article Link Header */}
       {quizType === 'article' && articleInfo && (
         <div className="article-link-header">
@@ -326,20 +332,11 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
         </div>
       )}
 
-      {/* Quiz Header */}
+      {/* Quiz Header - Removed red X button */}
       <div className="quiz-header">
         <div className="quiz-type-badge">
           {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
         </div>
-        {onBack && (
-          <button 
-            className="btn btn-secondary close-btn"
-            onClick={onBack}
-            title="Back to menu"
-          >
-            ✕
-          </button>
-        )}
       </div>
 
       {/* Progress Bar */}
@@ -464,6 +461,8 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
       {/* Footer */}
       <div className="quiz-footer">
         <p>Press Enter to check your answer, or use the buttons below.</p>
+      </div>
+      
       </div>
     </div>
   );
