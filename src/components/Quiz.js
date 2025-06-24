@@ -246,20 +246,19 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
     }
   };
 
-  // Update user answer - with explicit debugging
-  const updateAnswer = (value) => {
+  // Update user answer - optimized to prevent unnecessary re-renders
+  const updateAnswer = useCallback((value) => {
     console.log('🔄 updateAnswer called with:', value);
     console.log('🔄 Current feedback state before update:', { showFeedback, feedbackMessage, feedbackType });
     
-    const newAnswers = [...userAnswers];
-    newAnswers[currentQuestion] = value;
-    setUserAnswers(newAnswers);
+    setUserAnswers(prevAnswers => {
+      const newAnswers = [...prevAnswers];
+      newAnswers[currentQuestion] = value;
+      return newAnswers;
+    });
     
     console.log('🔄 Feedback state after update (should be unchanged):', { showFeedback, feedbackMessage, feedbackType });
-    
-    // DON'T clear feedback when user types - let it stay visible
-    // The feedback should only clear when moving to next question
-  };
+  }, [currentQuestion, showFeedback, feedbackMessage, feedbackType]);
 
   // Navigation functions
   const previousQuestion = () => {
@@ -385,12 +384,38 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
         </div>
       </div>
 
-      {/* Feedback - Using separate state that won't disappear */}
+      {/* Feedback - Using separate state with forced visibility */}
       {showFeedback && (
-        <div className={`feedback ${feedbackType}`}>
+        <div 
+          className={`feedback ${feedbackType}`}
+          style={{
+            display: 'block !important',
+            visibility: 'visible !important',
+            opacity: '1 !important',
+            position: 'relative !important',
+            zIndex: '999 !important'
+          }}
+        >
           {feedbackMessage}
         </div>
       )}
+
+      {/* ALWAYS SHOW TEST FEEDBACK - Remove this after testing */}
+      <div style={{
+        background: showFeedback ? '#d4edda' : '#f8d7da',
+        color: showFeedback ? '#155724' : '#721c24',
+        border: '2px solid',
+        borderColor: showFeedback ? '#48bb78' : '#f56565',
+        padding: '15px',
+        margin: '20px 0',
+        borderRadius: '8px',
+        fontWeight: 'bold'
+      }}>
+        <strong>🧪 TEST FEEDBACK (Remove after fixing):</strong><br />
+        State: {showFeedback ? 'SHOULD BE VISIBLE' : 'Hidden'}<br />
+        Message: {feedbackMessage || 'No message'}<br />
+        Type: {feedbackType || 'No type'}
+      </div>
 
       {/* DEBUG: Enhanced feedback debugging */}
       {process.env.NODE_ENV === 'development' && (
