@@ -218,10 +218,10 @@
 }
 
 /* ==============================================
-   FEEDBACK SECTION - ENHANCED VISIBILITY
+   FEEDBACK SECTION - MAXIMUM SPECIFICITY TO OVERRIDE CONFLICTS
    ============================================== */
 
-.feedback {
+.quiz-container .feedback {
   margin: 20px 0 !important;
   padding: 20px !important;
   border-radius: 12px !important;
@@ -229,24 +229,67 @@
   text-align: center !important;
   border: 2px solid !important;
   font-size: 1.1em !important;
-  word-wrap: break-word;
+  word-wrap: break-word !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
   animation: feedbackSlide 0.4s ease-out !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 1000 !important;
+  clear: both !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
-.feedback.correct {
+.quiz-container .feedback.correct {
   background: #d4edda !important;
   color: #155724 !important;
   border-color: #48bb78 !important;
 }
 
-.feedback.incorrect {
+.quiz-container .feedback.incorrect {
   background: #f8d7da !important;
   color: #721c24 !important;
   border-color: #f56565 !important;
 }
 
-/* Feedback animation */
+/* Ensure no other styles can override feedback */
+.quiz-container .feedback,
+.quiz-container .feedback.correct,
+.quiz-container .feedback.incorrect {
+  all: unset !important;
+  /* Then re-apply our styles */
+  display: block !important;
+  margin: 20px 0 !important;
+  padding: 20px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  border: 2px solid !important;
+  font-size: 1.1em !important;
+  word-wrap: break-word !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 1000 !important;
+  font-family: 'Nunito', sans-serif !important;
+}
+
+.quiz-container .feedback.correct {
+  background: #d4edda !important;
+  color: #155724 !important;
+  border-color: #48bb78 !important;
+}
+
+.quiz-container .feedback.incorrect {
+  background: #f8d7da !important;
+  color: #721c24 !important;
+  border-color: #f56565 !important;
+}
+
+/* Feedback animation with high specificity */
 @keyframes feedbackSlide {
   from {
     opacity: 0;
