@@ -416,23 +416,6 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
         </div>
       )}
 
-      {/* ALWAYS SHOW TEST FEEDBACK - Remove this after testing */}
-      <div style={{
-        background: showFeedback ? '#d4edda' : '#f8d7da',
-        color: showFeedback ? '#155724' : '#721c24',
-        border: '2px solid',
-        borderColor: showFeedback ? '#48bb78' : '#f56565',
-        padding: '15px',
-        margin: '20px 0',
-        borderRadius: '8px',
-        fontWeight: 'bold'
-      }}>
-        <strong>🧪 TEST FEEDBACK (Remove after fixing):</strong><br />
-        State: {showFeedback ? 'SHOULD BE VISIBLE' : 'Hidden'}<br />
-        Message: {feedbackMessage || 'No message'}<br />
-        Type: {feedbackType || 'No type'}
-      </div>
-
       {/* DEBUG: Enhanced feedback debugging */}
       {process.env.NODE_ENV === 'development' && (
         <div style={{
