@@ -1,4 +1,4 @@
-// src/components/LandingPage.js - Fixed daily targets to only increment on completion
+// src/components/LandingPage.js - Fixed exercise filtering and display
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 
 // Constants for better performance - moved outside component
@@ -55,7 +55,7 @@ const EXERCISES = Object.freeze([
     isDET: true
   },
   
-  // SPEAKING EXERCISES - Right after listen-and-type
+  // SPEAKING EXERCISES
   {
     type: 'speak-and-record',
     category: 'SPEAKING',
@@ -67,7 +67,7 @@ const EXERCISES = Object.freeze([
     isNew: true
   },
   
-  // WRITING EXERCISES - FIXED: Made Photo Description active
+  // WRITING EXERCISES
   {
     type: 'writing',
     category: 'WRITING',
@@ -79,90 +79,52 @@ const EXERCISES = Object.freeze([
     isNew: true
   },
   {
-    type: 'writing',
+    type: 'writing-advanced',
     category: 'WRITING',
     icon: '📝',
-    title: 'Essay Writing',
-    subtitle: 'Structured responses',
-    dailyTarget: 1, // Longer exercises: 1 time per day
-    isActive: false
-  },
-  
-  // REMAINING LISTENING EXERCISES (Coming Soon)
-  {
-    type: 'listening',
-    category: 'LISTENING',
-    icon: '🔊',
-    title: 'Audio Comprehension',
-    subtitle: 'Listen and answer',
-    dailyTarget: 2,
-    isActive: false
-  },
-  {
-    type: 'listening',
-    category: 'LISTENING',
-    icon: '🎵',
-    title: 'Pronunciation Practice',
-    subtitle: 'Listen and repeat',
-    dailyTarget: 3,
-    isActive: false
-  },
-  
-  // REMAINING SPEAKING EXERCISES (Coming Soon)
-  {
-    type: 'speaking',
-    category: 'SPEAKING',
-    icon: '🗣️',
-    title: 'Conversation Practice',
-    subtitle: 'Speaking prompts',
-    dailyTarget: 2,
-    isActive: false
-  },
-  {
-    type: 'speaking',
-    category: 'SPEAKING',
-    icon: '🎙️',
-    title: 'Pronunciation Check',
-    subtitle: 'Voice analysis',
-    dailyTarget: 3,
+    title: 'Advanced Writing',
+    subtitle: 'Essays and analysis',
+    dailyTarget: 1,
     isActive: false
   }
 ]);
 
+// Menu items for sidebar
 const MENU_ITEMS = Object.freeze([
-  { id: 'home', icon: '🏠', text: 'HOME', action: null, isActive: true },
-  { id: 'practice', icon: '🎯', text: 'PRACTICE', action: null, isActive: false },
-  { id: 'progress', icon: '📊', text: 'MY PROGRESS', action: 'progress', isActive: false },
-  { id: 'settings', icon: '⚙️', text: 'SETTINGS', action: null, isActive: false },
-  { id: 'language', icon: '🌐', text: 'SITE LANGUAGE', action: null, isActive: false },
-  { id: 'logout', icon: '↗️', text: 'LOG OUT', action: null, isActive: false }
+  { id: 'overview', icon: '🏠', text: 'Overview', isActive: true },
+  { id: 'practice', icon: '📚', text: 'Practice', isActive: true },
+  { id: 'progress', icon: '📊', text: 'Progress', isActive: true, action: 'progress' },
+  { id: 'settings', icon: '⚙️', text: 'Settings', isActive: false },
+  { id: 'help', icon: '❓', text: 'Help', isActive: false }
 ]);
 
-// Daily target tracking functions
+// Daily targets management
 const DAILY_TARGETS_KEY = 'mrFoxEnglishDailyTargets';
 
 const getTodayString = () => {
-  return new Date().toDateString();
+  const today = new Date();
+  return today.toISOString().split('T')[0]; // YYYY-MM-DD format
 };
 
 const getDailyTargetData = () => {
   try {
     const saved = localStorage.getItem(DAILY_TARGETS_KEY);
-    if (saved) {
-      const data = JSON.parse(saved);
-      const today = getTodayString();
-      
-      // If data is from today, return it, otherwise reset
-      if (data.date === today) {
-        return data.targets;
-      }
+    if (!saved) return {};
+    
+    const parsed = JSON.parse(saved);
+    const today = getTodayString();
+    
+    // Reset if it's a new day
+    if (parsed.date !== today) {
+      console.log('🔄 New day detected, resetting daily targets');
+      return {};
     }
+    
+    return parsed.targets || {};
   } catch (error) {
     console.error('Error loading daily targets:', error);
+    return {};
   }
-  
-  // Return empty targets if no data or new day
-  return {};
 };
 
 const saveDailyTargetData = (targets) => {
@@ -236,22 +198,46 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     return () => clearTimeout(timer);
   }, [isTransitioning]);
 
-  // Improved filtered exercises with better ALL category handling
+  // FIXED: Improved filtered exercises with proper category handling and no duplication
   const filteredExercises = useMemo(() => {
-    console.log('Filtering exercises for category:', selectedCategory);
-    console.log('Total exercises available:', EXERCISES.length);
+    console.log('🔍 Filtering exercises for category:', selectedCategory);
+    console.log('📚 Total exercises available:', EXERCISES.length);
+    
+    // Create a new array to avoid mutation
+    let exercisesToShow = [];
     
     if (selectedCategory === 'ALL') {
-      // Show all exercises when ALL is selected
-      const allExercises = [...EXERCISES];
-      console.log('Showing all exercises:', allExercises.length);
-      return allExercises;
+      // Show all exercises when ALL is selected, in their original order
+      exercisesToShow = [...EXERCISES];
+      console.log('📋 Showing all exercises:', exercisesToShow.length);
+    } else {
+      // Filter by specific category and bring matching exercises to the top
+      const categoryExercises = EXERCISES.filter(exercise => exercise.category === selectedCategory);
+      const otherExercises = EXERCISES.filter(exercise => exercise.category !== selectedCategory);
+      
+      // Put category exercises first, then other exercises
+      exercisesToShow = [...categoryExercises, ...otherExercises];
+      
+      console.log(`📋 Exercises for ${selectedCategory}:`, categoryExercises.length);
+      console.log(`📋 Other exercises:`, otherExercises.length);
+      console.log(`📋 Total exercises shown:`, exercisesToShow.length);
     }
     
-    // Filter by specific category
-    const categoryExercises = EXERCISES.filter(exercise => exercise.category === selectedCategory);
-    console.log(`Exercises for ${selectedCategory}:`, categoryExercises.length);
-    return categoryExercises;
+    // Verify no duplicates by checking for unique exercise types
+    const exerciseTypes = exercisesToShow.map(ex => ex.type);
+    const uniqueTypes = new Set(exerciseTypes);
+    
+    if (exerciseTypes.length !== uniqueTypes.size) {
+      console.error('🚨 DUPLICATE EXERCISES DETECTED!', {
+        totalCount: exerciseTypes.length,
+        uniqueCount: uniqueTypes.size,
+        duplicates: exerciseTypes.filter((type, index) => exerciseTypes.indexOf(type) !== index)
+      });
+    } else {
+      console.log('✅ No duplicate exercises detected');
+    }
+    
+    return exercisesToShow;
   }, [selectedCategory]);
 
   // Memoised exercises with daily target progress
@@ -289,13 +275,19 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
   }, [onProgress, handleMobileMenuClose]);
 
   const handleCategoryChange = useCallback((categoryId) => {
-    console.log('Category changed to:', categoryId);
+    console.log('🔄 Category changed to:', categoryId);
     setSelectedCategory(categoryId);
+    
+    // Add a small delay to allow for smooth visual transition
+    setShowExercises(false);
+    setTimeout(() => {
+      setShowExercises(true);
+    }, 150);
   }, []);
 
   // FIXED: Remove increment from click, only start exercise
   const handleExerciseClick = useCallback((exercise) => {
-    console.log('Exercise clicked:', exercise.type, 'isActive:', exercise.isActive);
+    console.log('🎯 Exercise clicked:', exercise.type, 'isActive:', exercise.isActive);
     if (exercise.isActive) {
       // Don't increment here - this will be handled when exercise is completed
       onSelectExercise(exercise.type);
@@ -355,10 +347,12 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
   ), [selectedCategory, handleCategoryChange]);
 
   const renderExerciseItem = useCallback((exercise, index) => {
+    const isHighlighted = selectedCategory !== 'ALL' && exercise.category === selectedCategory;
+    
     return (
       <div
-        key={exercise.type}
-        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''} ${exercise.isTargetMet ? 'target-met' : ''}`}
+        key={`${exercise.type}-${selectedCategory}`} // Unique key to ensure proper re-rendering
+        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''} ${exercise.isTargetMet ? 'target-met' : ''} ${isHighlighted ? 'category-highlighted' : ''}`}
         onClick={() => handleExerciseClick(exercise)}
         style={{ 
           animationDelay: `${index * 0.1}s`
@@ -383,6 +377,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           {exercise.isNew && <div className="new-badge">NEW</div>}
           {exercise.isDET && <div className="det-badge">DET</div>}
           {exercise.isTargetMet && <div className="target-met-badge">✓</div>}
+          {isHighlighted && <div className="category-badge">{selectedCategory}</div>}
         </div>
         
         <div className="exercise-content">
@@ -413,25 +408,28 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
         </div>
       </div>
     );
-  }, [handleExerciseClick]);
+  }, [handleExerciseClick, selectedCategory]);
 
   // Add debug logging for filtered exercises
   useEffect(() => {
-    console.log('📋 Current exercise order with targets:', exercisesWithTargets.map((e, index) => ({
-      position: index + 1,
-      type: e.type,
-      category: e.category,
-      isActive: e.isActive,
-      title: e.title,
-      dailyTarget: e.target,
-      completed: e.completed,
-      targetMet: e.isTargetMet
-    })));
-    
-    // Specifically log writing exercise position
-    const writingIndex = exercisesWithTargets.findIndex(e => e.type === 'writing');
-    if (writingIndex !== -1) {
-      console.log(`✍️ Writing exercise is at position ${writingIndex + 1} out of ${exercisesWithTargets.length}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📋 Current exercise order with targets:', exercisesWithTargets.map((e, index) => ({
+        position: index + 1,
+        type: e.type,
+        category: e.category,
+        isActive: e.isActive,
+        title: e.title,
+        dailyTarget: e.target,
+        completed: e.completed,
+        targetMet: e.isTargetMet
+      })));
+      
+      // Check for any duplicate types
+      const types = exercisesWithTargets.map(e => e.type);
+      const duplicateTypes = types.filter((type, index) => types.indexOf(type) !== index);
+      if (duplicateTypes.length > 0) {
+        console.error('🚨 DUPLICATE EXERCISE TYPES FOUND:', duplicateTypes);
+      }
     }
   }, [exercisesWithTargets]);
 
@@ -446,7 +444,9 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
               alt="Mr. Fox English logo" 
               className="sidebar-logo-img"
             />
+            <span className="sidebar-title">Mr. Fox English</span>
           </div>
+          
           <nav className="sidebar-nav" role="navigation" aria-label="Main menu">
             {MENU_ITEMS.map((item, index) => renderMenuItem(item, index, false))}
           </nav>
@@ -463,22 +463,23 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
                 alt="Mr. Fox English logo" 
                 className="mobile-menu-logo"
               />
+              <span className="mobile-menu-title">Mr. Fox English</span>
               <button 
-                className="mobile-menu-close" 
+                className="mobile-menu-close"
                 onClick={handleMobileMenuClose}
                 aria-label="Close menu"
               >
                 ✕
               </button>
             </div>
-            <div className="mobile-menu-items">
+            <nav className="mobile-menu-nav" role="navigation" aria-label="Mobile menu">
               {MENU_ITEMS.map((item, index) => renderMenuItem(item, index, true))}
-            </div>
+            </nav>
           </div>
         </div>
       )}
 
-      {/* Header */}
+      {/* Mobile Header */}
       <header className="main-header">
         <div className="header-left">
           <button 
@@ -525,9 +526,24 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
         <section className="categories-section">
           <h3>Skill practice</h3>
           {renderCategoryTabs}
+          
+          {/* Category indicator */}
+          {selectedCategory !== 'ALL' && (
+            <div className="category-indicator">
+              <span className="category-indicator-text">
+                Showing {selectedCategory.toLowerCase()} exercises first
+              </span>
+              <button 
+                className="show-all-btn"
+                onClick={() => handleCategoryChange('ALL')}
+              >
+                Show all exercises
+              </button>
+            </div>
+          )}
         </section>
 
-        {/* Exercises List with Debug Info */}
+        {/* Exercises List */}
         <section className="exercises-list" id="exercises-list">
           {/* Debug information (remove in production) */}
           {process.env.NODE_ENV === 'development' && (
@@ -540,15 +556,15 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
               fontFamily: 'monospace',
               border: '1px solid #ffeaa7'
             }}>
-              <strong>🎯 Daily Targets Debug (Resets each day):</strong><br />
+              <strong>🎯 Exercise Display Debug:</strong><br />
               Today: {getTodayString()}<br />
               Category: "{selectedCategory}" | 
-              Exercises: {exercisesWithTargets.length} | 
-              Writing position: {exercisesWithTargets.findIndex(e => e.type === 'writing') + 1}
+              Total exercises shown: {exercisesWithTargets.length} | 
+              Active exercises: {exercisesWithTargets.filter(e => e.isActive).length}
+              <br />
+              <strong>Exercise order:</strong> {exercisesWithTargets.map(e => `${e.type}(${e.category})`).join(', ')}
               <br />
               <strong>Targets met:</strong> {exercisesWithTargets.filter(e => e.isTargetMet && e.isActive).length} of {exercisesWithTargets.filter(e => e.isActive).length} active exercises
-              <br />
-              <strong>FIXED:</strong> Writing exercise now active and accessible!
             </div>
           )}
           
