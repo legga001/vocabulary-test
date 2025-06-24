@@ -120,6 +120,13 @@ function App() {
     setTestQuestions(null);
   };
 
+  // Logo click handler - always goes back to landing page
+  const handleLogoClick = () => {
+    setCurrentScreen('landing');
+    setQuizResults(null);
+    setTestQuestions(null);
+  };
+
   // Quiz completion handler
   const handleQuizFinish = (userAnswers, questions) => {
     setQuizResults(userAnswers);
@@ -204,6 +211,7 @@ function App() {
             quizType="standard" 
             onFinish={handleQuizFinish}
             onBack={goBack}
+            onLogoClick={handleLogoClick}
           />
         );
       
@@ -211,6 +219,7 @@ function App() {
         return (
           <ArticleSelection 
             onBack={goBack}
+            onLogoClick={handleLogoClick}
             onSelectArticle={handleArticleSelection}
           />
         );
@@ -222,6 +231,7 @@ function App() {
             articleType={selectedArticleType}
             onFinish={handleQuizFinish}
             onBack={() => setCurrentScreen('article-selection')}
+            onLogoClick={handleLogoClick}
           />
         );
 
