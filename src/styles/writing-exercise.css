@@ -1,4 +1,4 @@
-/* src/styles/writing-exercise.css - Complete writing exercise styles */
+/* src/styles/writing-exercise.css - Complete writing exercise styles with enhanced textarea */
 
 /* ==============================================
    1. EXERCISE START SECTION
@@ -145,7 +145,7 @@
 }
 
 /* ==============================================
-   4. WRITING AREA
+   4. WRITING AREA - ENHANCED WITH LARGER TEXTAREA
    ============================================== */
 .writing-area {
   margin-bottom: 20px;
@@ -153,7 +153,8 @@
 
 .writing-textarea {
   width: 100%;
-  min-height: 300px;
+  min-height: 500px; /* Increased from 300px to 500px */
+  max-height: 70vh; /* Prevent it from taking full screen on small devices */
   padding: 20px;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
@@ -164,6 +165,28 @@
   transition: border-color 0.3s ease;
   outline: none;
   box-sizing: border-box;
+  overflow-y: auto; /* Enable vertical scrolling */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #4c51bf #f1f1f1; /* Firefox */
+}
+
+/* Custom scrollbar for Webkit browsers (Chrome, Safari, Edge) */
+.writing-textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.writing-textarea::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.writing-textarea::-webkit-scrollbar-thumb {
+  background: #4c51bf;
+  border-radius: 4px;
+}
+
+.writing-textarea::-webkit-scrollbar-thumb:hover {
+  background: #434190;
 }
 
 .writing-textarea:focus {
@@ -437,7 +460,8 @@
   }
   
   .writing-textarea {
-    min-height: 250px;
+    min-height: 400px; /* Still larger on mobile - increased from 250px */
+    max-height: 60vh; /* Adjust for smaller mobile screens */
     padding: 15px;
     font-size: 1em;
   }
