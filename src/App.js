@@ -1,113 +1,42 @@
-// src/App.js - Completely fixed with direct Quiz navigation
+// src/App.js - Updated with fixed writing exercise navigation
 import React, { useState, useEffect } from 'react';
 import './App.css';
+
+// Import all components
 import SplashPage from './components/SplashPage';
 import LandingPage from './components/LandingPage';
+import ProgressPage from './components/ProgressPage';
 import Quiz from './components/Quiz';
 import Results from './components/Results';
-import WritingExercise from './components/WritingExercise';
-import SpeakingExercise from './components/SpeakingExercise';
-import ListeningExercise from './components/ListeningExercise';
-import ProgressPage from './components/ProgressPage';
 import ArticleSelection from './components/ArticleSelection';
 import RealFakeWordsExercise from './components/RealFakeWordsExercise';
 import ListenAndTypeExercise from './components/ListenAndTypeExercise';
-
-// Storage keys for state management
-const APP_STATE_KEY = 'mrFoxEnglishAppState';
-const SESSION_KEY = 'mrFoxEnglishSession';
-const SPLASH_SHOWN_KEY = 'mrFoxEnglishSplashShown';
+import SpeakingExercise from './components/SpeakingExercise';
+import WritingExercise from './components/WritingExercise'; // Fixed writing exercise
+import ListeningExercise from './components/ListeningExercise';
 
 function App() {
+  // Core state management
   const [currentScreen, setCurrentScreen] = useState('splash');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [quizResults, setQuizResults] = useState(null);
   const [testQuestions, setTestQuestions] = useState(null);
-  const [selectedArticleType, setSelectedArticleType] = useState(null); // Track selected article
+  const [selectedArticleType, setSelectedArticleType] = useState(null);
 
-  // Load saved state on component mount
+  // Transition effect for smooth navigation
   useEffect(() => {
-    // Check for recent saved state first (page refresh scenario)
-    const savedState = localStorage.getItem(APP_STATE_KEY);
-    
-    if (savedState) {
-      try {
-        const parsedState = JSON.parse(savedState);
-        
-        // Check if the saved state is very recent (within 30 seconds = page refresh)
-        const thirtySeconds = 30 * 1000;
-        const now = Date.now();
-        
-        if (parsedState.timestamp && 
-            (now - parsedState.timestamp) < thirtySeconds) {
-          
-          // This is likely a page refresh - restore the previous screen
-          setCurrentScreen(parsedState.currentScreen || 'landing');
-          setSelectedArticleType(parsedState.selectedArticleType || null);
-          console.log('Page refresh detected - restored to:', parsedState.currentScreen);
-          
-          // Maintain session continuity
-          if (!sessionStorage.getItem(SESSION_KEY)) {
-            sessionStorage.setItem(SESSION_KEY, Date.now().toString());
-          }
-          if (!sessionStorage.getItem(SPLASH_SHOWN_KEY)) {
-            sessionStorage.setItem(SPLASH_SHOWN_KEY, 'true');
-          }
-          return;
-        } else {
-          // Old state - clear it
-          localStorage.removeItem(APP_STATE_KEY);
-          console.log('Old state cleared');
-        }
-      } catch (error) {
-        console.error('Error loading saved state:', error);
-        localStorage.removeItem(APP_STATE_KEY);
-      }
+    if (currentScreen !== 'splash') {
+      setIsTransitioning(true);
+      const timer = setTimeout(() => {
+        setIsTransitioning(false);
+      }, 300);
+      return () => clearTimeout(timer);
     }
-    
-    // If we get here, this is NOT a page refresh
-    // Check if this is a new session (new tab, browser restart, etc.)
-    const sessionTimestamp = sessionStorage.getItem(SESSION_KEY);
-    const splashShown = sessionStorage.getItem(SPLASH_SHOWN_KEY);
-    
-    if (sessionTimestamp && splashShown) {
-      // Session exists and splash was shown - go directly to landing
-      setCurrentScreen('landing');
-      console.log('Existing session detected - skipping splash');
-    } else {
-      // New session - show splash
-      setCurrentScreen('splash');
-      console.log('New session - showing splash');
-    }
-  }, []);
-
-  // Save current screen to localStorage for page refresh scenarios
-  useEffect(() => {
-    const stateToSave = {
-      currentScreen,
-      selectedArticleType,
-      timestamp: Date.now()
-    };
-
-    try {
-      localStorage.setItem(APP_STATE_KEY, JSON.stringify(stateToSave));
-    } catch (error) {
-      console.error('Error saving app state:', error);
-    }
-  }, [currentScreen, selectedArticleType]);
+  }, [currentScreen]);
 
   // Navigation functions
   const goToLanding = () => {
-    setIsTransitioning(true);
-    
-    // Mark that splash has been shown in this session
-    sessionStorage.setItem(SPLASH_SHOWN_KEY, 'true');
-    
-    // Start transition
-    setTimeout(() => {
-      setCurrentScreen('landing');
-      setIsTransitioning(false);
-    }, 400);
+    setCurrentScreen('landing');
   };
 
   const goToProgress = () => {
@@ -118,9 +47,9 @@ function App() {
     setCurrentScreen('landing');
     setQuizResults(null);
     setTestQuestions(null);
+    setSelectedArticleType(null);
   };
 
-  // Logo click handler - always goes back to landing page
   const handleLogoClick = () => {
     setCurrentScreen('landing');
     setQuizResults(null);
@@ -158,10 +87,11 @@ function App() {
       case 'speak-and-record':
         setCurrentScreen('speak-and-record');
         break;
-      // Traditional navigation (for non-active exercises)
+      // FIXED: Writing exercise navigation with proper props
       case 'writing':
         setCurrentScreen('writing');
         break;
+      // Traditional navigation (for non-active exercises)
       case 'speaking':
         setCurrentScreen('speaking');
         break;
@@ -248,32 +178,51 @@ function App() {
       // Other exercises
       case 'real-fake-words':
         return (
-          <RealFakeWordsExercise onBack={goBack} />
+          <RealFakeWordsExercise 
+            onBack={goBack} 
+            onLogoClick={handleLogoClick}
+          />
         );
       
       case 'listen-and-type':
         return (
-          <ListenAndTypeExercise onBack={goBack} />
+          <ListenAndTypeExercise 
+            onBack={goBack} 
+            onLogoClick={handleLogoClick}
+          />
         );
       
       case 'speak-and-record':
         return (
-          <SpeakingExercise onBack={goBack} />
+          <SpeakingExercise 
+            onBack={goBack} 
+            onLogoClick={handleLogoClick}
+          />
         );
       
+      // FIXED: Writing exercise with proper props
       case 'writing':
         return (
-          <WritingExercise onBack={goBack} />
+          <WritingExercise 
+            onBack={goBack} 
+            onLogoClick={handleLogoClick}
+          />
         );
       
       case 'speaking':
         return (
-          <SpeakingExercise onBack={goBack} />
+          <SpeakingExercise 
+            onBack={goBack} 
+            onLogoClick={handleLogoClick}
+          />
         );
       
       case 'listening':
         return (
-          <ListeningExercise onBack={goBack} />
+          <ListeningExercise 
+            onBack={goBack} 
+            onLogoClick={handleLogoClick}
+          />
         );
       
       default:
