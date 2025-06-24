@@ -384,16 +384,32 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
         </div>
       </div>
 
-      {/* Feedback - Using separate state with forced visibility */}
+      {/* Feedback - Nuclear option with inline styles */}
       {showFeedback && (
         <div 
           className={`feedback ${feedbackType}`}
           style={{
-            display: 'block !important',
-            visibility: 'visible !important',
-            opacity: '1 !important',
-            position: 'relative !important',
-            zIndex: '999 !important'
+            display: 'block',
+            visibility: 'visible',
+            opacity: '1',
+            position: 'relative',
+            zIndex: '1000',
+            margin: '20px 0',
+            padding: '20px',
+            borderRadius: '12px',
+            fontWeight: '600',
+            textAlign: 'center',
+            border: '2px solid',
+            fontSize: '1.1em',
+            wordWrap: 'break-word',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            fontFamily: "'Nunito', sans-serif",
+            backgroundColor: feedbackType === 'correct' ? '#d4edda' : '#f8d7da',
+            color: feedbackType === 'correct' ? '#155724' : '#721c24',
+            borderColor: feedbackType === 'correct' ? '#48bb78' : '#f56565',
+            clear: 'both',
+            width: '100%',
+            boxSizing: 'border-box'
           }}
         >
           {feedbackMessage}
