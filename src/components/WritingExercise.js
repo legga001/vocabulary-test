@@ -8,6 +8,22 @@ import '../styles/writing-exercise.css';
 // Photo prompts for writing exercises - ready for DALL-E images
 const PHOTO_PROMPTS = [
   {
+    id: 'busy_city_street',
+    image: '/images/writing-prompts/busy_city_street.jpg',
+    title: 'Busy City Street',
+    description: 'Describe this busy urban scene during rush hour',
+    level: 'B1-B2',
+    minWords: 100,
+    maxWords: 180,
+    prompt: "Describe this busy city scene. What are people doing? What can you see? What might people be thinking or feeling? Describe the atmosphere and energy of the street.",
+    suggestedPoints: [
+      'What types of transport can you see?',
+      'Describe the buildings and architecture',
+      'What activities are people doing?',
+      'What is the mood and atmosphere?'
+    ]
+  },
+  {
     id: 'family_picnic',
     image: '/images/writing-prompts/family_picnic.jpg',
     title: 'Family Picnic in Park',
@@ -548,20 +564,4 @@ function WritingExercise({ onBack, onLogoClick }) {
   return null;
 }
 
-export default WritingExercise;'busy_city_street',
-    image: '/images/writing-prompts/busy_city_street.jpg',
-    title: 'Busy City Street',
-    description: 'Describe this busy urban scene during rush hour',
-    level: 'B1-B2',
-    minWords: 100,
-    maxWords: 180,
-    prompt: "Describe this busy city scene. What are people doing? What can you see? What might people be thinking or feeling? Describe the atmosphere and energy of the street.",
-    suggestedPoints: [
-      'What types of transport can you see?',
-      'Describe the buildings and architecture',
-      'What activities are people doing?',
-      'What is the mood and atmosphere?'
-    ]
-  },
-  {
-    id:
+export default WritingExercise;
