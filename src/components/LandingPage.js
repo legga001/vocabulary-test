@@ -67,6 +67,27 @@ const EXERCISES = Object.freeze([
     isNew: true
   },
   
+  // WRITING EXERCISES - FIXED: Made Photo Description active
+  {
+    type: 'writing',
+    category: 'WRITING',
+    icon: '✍️',
+    title: 'Photo Description',
+    subtitle: 'Describe images',
+    dailyTarget: 2,
+    isActive: true,
+    isNew: true
+  },
+  {
+    type: 'writing',
+    category: 'WRITING',
+    icon: '📝',
+    title: 'Essay Writing',
+    subtitle: 'Structured responses',
+    dailyTarget: 1, // Longer exercises: 1 time per day
+    isActive: false
+  },
+  
   // REMAINING LISTENING EXERCISES (Coming Soon)
   {
     type: 'listening',
@@ -104,26 +125,6 @@ const EXERCISES = Object.freeze([
     title: 'Pronunciation Check',
     subtitle: 'Voice analysis',
     dailyTarget: 3,
-    isActive: false
-  },
-  
-  // WRITING EXERCISES
-  {
-    type: 'writing',
-    category: 'WRITING',
-    icon: '✍️',
-    title: 'Grammar Practice',
-    subtitle: 'Sentence building',
-    dailyTarget: 3,
-    isActive: false
-  },
-  {
-    type: 'writing',
-    category: 'WRITING',
-    icon: '📝',
-    title: 'Essay Writing',
-    subtitle: 'Structured responses',
-    dailyTarget: 1, // Longer exercises: 1 time per day
     isActive: false
   }
 ]);
@@ -427,71 +428,66 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
       targetMet: e.isTargetMet
     })));
     
-    // Specifically log speaking exercise position
-    const speakingIndex = exercisesWithTargets.findIndex(e => e.type === 'speak-and-record');
-    if (speakingIndex !== -1) {
-      console.log(`🎤 Speaking exercise is at position ${speakingIndex + 1} out of ${exercisesWithTargets.length}`);
+    // Specifically log writing exercise position
+    const writingIndex = exercisesWithTargets.findIndex(e => e.type === 'writing');
+    if (writingIndex !== -1) {
+      console.log(`✍️ Writing exercise is at position ${writingIndex + 1} out of ${exercisesWithTargets.length}`);
     }
   }, [exercisesWithTargets]);
 
   return (
-    <div className={`landing-duolingo ${isTransitioning === false ? 'fade-in' : ''}`}>
+    <div className={`landing-duolingo ${isTransitioning === false ? 'show' : ''}`}>
+      {/* Mobile Menu Overlay */}
+      {showMobileMenu && (
+        <div className="mobile-menu-overlay" onClick={handleMobileMenuClose}>
+          <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
+            <div className="mobile-menu-header">
+              <img 
+                src="/purple_fox_transparent.png" 
+                alt="Mr. Fox English logo" 
+                className="mobile-menu-logo"
+              />
+              <button 
+                className="mobile-menu-close" 
+                onClick={handleMobileMenuClose}
+                aria-label="Close menu"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mobile-menu-items">
+              {MENU_ITEMS.map((item, index) => renderMenuItem(item, index, true))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Desktop Sidebar */}
-      <aside className="desktop-sidebar" role="navigation" aria-label="Main navigation">
-        <div className="desktop-sidebar-header">
+      <aside className="desktop-sidebar">
+        <div className="sidebar-content">
           <div className="sidebar-logo">
             <img 
               src="/purple_fox_transparent.png" 
               alt="Mr. Fox English logo" 
               className="sidebar-logo-img"
             />
-            <span className="sidebar-title">Mr. Fox English</span>
           </div>
-        </div>
-        
-        <nav className="desktop-sidebar-content">
-          {MENU_ITEMS.map((item, index) => renderMenuItem(item, index, false))}
-        </nav>
-      </aside>
-
-      {/* Mobile Menu Overlay */}
-      {showMobileMenu && (
-        <div className="mobile-menu-overlay" role="dialog" aria-label="Mobile menu">
-          <div className="mobile-menu-header">
-            <div className="mobile-menu-logo">
-              <img 
-                src="/purple_fox_transparent.png" 
-                alt="Mr. Fox English logo" 
-                className="mobile-menu-logo-img"
-              />
-              <span className="mobile-menu-title">Mr. Fox English</span>
-            </div>
-            <button 
-              className="mobile-menu-close" 
-              onClick={handleMobileMenuClose}
-              aria-label="Close menu"
-            >
-              ✕
-            </button>
-          </div>
-          
-          <nav className="mobile-menu-content">
-            {MENU_ITEMS.map((item, index) => renderMenuItem(item, index, true))}
+          <nav className="sidebar-nav" role="navigation" aria-label="Main menu">
+            {MENU_ITEMS.map((item, index) => renderMenuItem(item, index, false))}
           </nav>
         </div>
-      )}
+      </aside>
 
-      {/* Mobile Header */}
-      <header className="mobile-header">
-        <button 
-          className="mobile-menu-btn" 
-          onClick={handleMobileMenuToggle}
-          aria-label="Open menu"
-        >
-          ☰
-        </button>
-        
-        <div className="header-logo">
+      {/* Header */}
+      <header className="main-header">
+        <div className="header-left">
+          <button 
+            className="mobile-menu-toggle"
+            onClick={handleMobileMenuToggle}
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
           <img 
             src="/purple_fox_transparent.png" 
             alt="Mr. Fox English logo" 
@@ -548,11 +544,11 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
               Today: {getTodayString()}<br />
               Category: "{selectedCategory}" | 
               Exercises: {exercisesWithTargets.length} | 
-              Speaking position: {exercisesWithTargets.findIndex(e => e.type === 'speak-and-record') + 1}
+              Writing position: {exercisesWithTargets.findIndex(e => e.type === 'writing') + 1}
               <br />
               <strong>Targets met:</strong> {exercisesWithTargets.filter(e => e.isTargetMet && e.isActive).length} of {exercisesWithTargets.filter(e => e.isActive).length} active exercises
               <br />
-              <strong>FIXED:</strong> Progress only increments on exercise completion, not on click!
+              <strong>FIXED:</strong> Writing exercise now active and accessible!
             </div>
           )}
           
