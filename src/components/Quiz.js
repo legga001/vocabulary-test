@@ -58,6 +58,8 @@ const getLettersToShow = (word) => {
 };
 
 function Quiz({ onFinish, quizType, articleType, onBack }) {
+  console.log('🏗️ Quiz component rendering/re-rendering');
+  
   // State management
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
@@ -69,6 +71,8 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackType, setFeedbackType] = useState('');
+
+  console.log('🎯 Current feedback state in render:', { showFeedback, feedbackMessage, feedbackType });
 
   // Memoized function to get article info
   const getArticleInfo = useCallback(() => {
@@ -242,11 +246,16 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
     }
   };
 
-  // Update user answer
+  // Update user answer - with explicit debugging
   const updateAnswer = (value) => {
+    console.log('🔄 updateAnswer called with:', value);
+    console.log('🔄 Current feedback state before update:', { showFeedback, feedbackMessage, feedbackType });
+    
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestion] = value;
     setUserAnswers(newAnswers);
+    
+    console.log('🔄 Feedback state after update (should be unchanged):', { showFeedback, feedbackMessage, feedbackType });
     
     // DON'T clear feedback when user types - let it stay visible
     // The feedback should only clear when moving to next question
@@ -357,7 +366,7 @@ function Quiz({ onFinish, quizType, articleType, onBack }) {
             value={userAnswers[currentQuestion]}
             onChange={updateAnswer}
             disabled={checkedQuestions[currentQuestion]}
-            className={feedback.show ? feedback.type : ''}
+            className={showFeedback ? feedbackType : ''}
             onEnterPress={!checkedQuestions[currentQuestion] && userAnswers[currentQuestion] ? checkAnswer : null}
           />
           <span>{processedData.afterGap}</span>
