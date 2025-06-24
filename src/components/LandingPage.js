@@ -437,6 +437,22 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
 
   return (
     <div className={`landing-duolingo ${isTransitioning === false ? 'show' : ''}`}>
+      {/* Desktop Sidebar */}
+      <aside className="desktop-sidebar">
+        <div className="sidebar-content">
+          <div className="sidebar-logo">
+            <img 
+              src="/purple_fox_transparent.png" 
+              alt="Mr. Fox English logo" 
+              className="sidebar-logo-img"
+            />
+          </div>
+          <nav className="sidebar-nav" role="navigation" aria-label="Main menu">
+            {MENU_ITEMS.map((item, index) => renderMenuItem(item, index, false))}
+          </nav>
+        </div>
+      </aside>
+
       {/* Mobile Menu Overlay */}
       {showMobileMenu && (
         <div className="mobile-menu-overlay" onClick={handleMobileMenuClose}>
@@ -461,22 +477,6 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           </div>
         </div>
       )}
-
-      {/* Desktop Sidebar */}
-      <aside className="desktop-sidebar">
-        <div className="sidebar-content">
-          <div className="sidebar-logo">
-            <img 
-              src="/purple_fox_transparent.png" 
-              alt="Mr. Fox English logo" 
-              className="sidebar-logo-img"
-            />
-          </div>
-          <nav className="sidebar-nav" role="navigation" aria-label="Main menu">
-            {MENU_ITEMS.map((item, index) => renderMenuItem(item, index, false))}
-          </nav>
-        </div>
-      </aside>
 
       {/* Header */}
       <header className="main-header">
