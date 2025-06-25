@@ -1,4 +1,6 @@
-// src/components/AnswerReview.js - FIXED: Now displays complete words correctly
+// src/components/AnswerReview.js - COMPLETE WORKING VERSION
+// Copy and paste this entire file to replace the existing AnswerReview.js
+
 import React from 'react';
 import PronunciationButton from './PronunciationButton';
 import { hasPronunciation } from '../pronunciationData';
@@ -52,15 +54,41 @@ const getAlternativeSpellings = (word) => {
   return SPELLING_VARIATIONS[normalizedWord] || [];
 };
 
-// FIXED: Function to reconstruct complete user answer from partial input
+// FIXED: Function to check if answer is already complete (from Quiz component)
+const isAnswerComplete = (userAnswer, correctAnswer) => {
+  if (!userAnswer || !correctAnswer) return false;
+  const lengthRatio = userAnswer.length / correctAnswer.length;
+  return lengthRatio >= 0.8; // If 80% or more of the length, consider it complete
+};
+
+// FIXED: Function to reconstruct complete word from partial input (only if needed)
 const reconstructCompleteAnswer = (partialUserAnswer, correctAnswer) => {
   if (!partialUserAnswer || !correctAnswer) return '';
   
+  // Check if answer is already complete (from Quiz component fix)
+  if (isAnswerComplete(partialUserAnswer, correctAnswer)) {
+    console.log('📝 ANSWER REVIEW - ALREADY COMPLETE:', {
+      userAnswer: partialUserAnswer,
+      correctAnswer,
+      using: partialUserAnswer
+    });
+    return partialUserAnswer.toLowerCase().trim();
+  }
+  
+  // Only reconstruct if answer seems partial
   const lettersToShow = getLettersToShow(correctAnswer);
   const preFilledLetters = correctAnswer.substring(0, lettersToShow).toLowerCase();
   const userTypedLetters = partialUserAnswer.toLowerCase().trim();
   
-  // Combine pre-filled and user-typed letters to form complete word
+  console.log('📝 ANSWER REVIEW - RECONSTRUCTING PARTIAL:', {
+    correctAnswer,
+    partialUserAnswer,
+    lettersToShow,
+    preFilledLetters,
+    userTypedLetters,
+    result: preFilledLetters + userTypedLetters
+  });
+  
   return preFilledLetters + userTypedLetters;
 };
 
