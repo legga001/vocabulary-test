@@ -198,29 +198,21 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     return () => clearTimeout(timer);
   }, [isTransitioning]);
 
-  // FIXED: Improved filtered exercises with proper category handling and no duplication
+  // FIXED: True category filtering - only show exercises from selected category
   const filteredExercises = useMemo(() => {
     console.log('🔍 Filtering exercises for category:', selectedCategory);
     console.log('📚 Total exercises available:', EXERCISES.length);
     
-    // Create a new array to avoid mutation
     let exercisesToShow = [];
     
     if (selectedCategory === 'ALL') {
-      // Show all exercises when ALL is selected, in their original order
+      // Show all exercises when ALL is selected
       exercisesToShow = [...EXERCISES];
       console.log('📋 Showing all exercises:', exercisesToShow.length);
     } else {
-      // Filter by specific category and bring matching exercises to the top
-      const categoryExercises = EXERCISES.filter(exercise => exercise.category === selectedCategory);
-      const otherExercises = EXERCISES.filter(exercise => exercise.category !== selectedCategory);
-      
-      // Put category exercises first, then other exercises
-      exercisesToShow = [...categoryExercises, ...otherExercises];
-      
-      console.log(`📋 Exercises for ${selectedCategory}:`, categoryExercises.length);
-      console.log(`📋 Other exercises:`, otherExercises.length);
-      console.log(`📋 Total exercises shown:`, exercisesToShow.length);
+      // Show ONLY exercises from the selected category
+      exercisesToShow = EXERCISES.filter(exercise => exercise.category === selectedCategory);
+      console.log(`📋 Showing only ${selectedCategory} exercises:`, exercisesToShow.length);
     }
     
     // Verify no duplicates by checking for unique exercise types
@@ -347,12 +339,10 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
   ), [selectedCategory, handleCategoryChange]);
 
   const renderExerciseItem = useCallback((exercise, index) => {
-    const isHighlighted = selectedCategory !== 'ALL' && exercise.category === selectedCategory;
-    
     return (
       <div
         key={`${exercise.type}-${selectedCategory}`} // Unique key to ensure proper re-rendering
-        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''} ${exercise.isTargetMet ? 'target-met' : ''} ${isHighlighted ? 'category-highlighted' : ''}`}
+        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''} ${exercise.isTargetMet ? 'target-met' : ''}`}
         onClick={() => handleExerciseClick(exercise)}
         style={{ 
           animationDelay: `${index * 0.1}s`
@@ -377,7 +367,6 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           {exercise.isNew && <div className="new-badge">NEW</div>}
           {exercise.isDET && <div className="det-badge">DET</div>}
           {exercise.isTargetMet && <div className="target-met-badge">✓</div>}
-          {isHighlighted && <div className="category-badge">{selectedCategory}</div>}
         </div>
         
         <div className="exercise-content">
@@ -527,11 +516,11 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           <h3>Skill practice</h3>
           {renderCategoryTabs}
           
-          {/* Category indicator */}
+          {/* Category indicator - show count of exercises */}
           {selectedCategory !== 'ALL' && (
             <div className="category-indicator">
               <span className="category-indicator-text">
-                Showing {selectedCategory.toLowerCase()} exercises first
+                Showing {exercisesWithTargets.length} {selectedCategory.toLowerCase()} exercise{exercisesWithTargets.length !== 1 ? 's' : ''}
               </span>
               <button 
                 className="show-all-btn"
@@ -562,7 +551,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
               Total exercises shown: {exercisesWithTargets.length} | 
               Active exercises: {exercisesWithTargets.filter(e => e.isActive).length}
               <br />
-              <strong>Exercise order:</strong> {exercisesWithTargets.map(e => `${e.type}(${e.category})`).join(', ')}
+              <strong>Exercise types shown:</strong> {exercisesWithTargets.map(e => `${e.type}(${e.category})`).join(', ')}
               <br />
               <strong>Targets met:</strong> {exercisesWithTargets.filter(e => e.isTargetMet && e.isActive).length} of {exercisesWithTargets.filter(e => e.isActive).length} active exercises
             </div>
