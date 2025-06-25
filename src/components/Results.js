@@ -17,7 +17,7 @@ const getLettersToShow = (word) => {
   return 6;
 };
 
-function Results({ userAnswers, questions, quizType, articleType, onRestart }) {
+function Results({ userAnswers, questions, testQuestions, quizType, articleType, onRestart }) {
   console.log('📊 Results component - FRESH VERSION rendering with:', { userAnswers, questions, quizType });
 
   // Enhanced function to reconstruct complete user answers from partial inputs
@@ -84,7 +84,11 @@ function Results({ userAnswers, questions, quizType, articleType, onRestart }) {
     return { questions, articleInfo };
   };
 
-  const { questions: finalQuestions, articleInfo } = getQuestionsAndArticleInfo();
+  // Use testQuestions if provided, otherwise fall back to questions prop or generate new ones
+  const finalQuestions = testQuestions || questions || getQuestionsAndArticleInfo().questions;
+  
+  // Get article info separately
+  const { articleInfo } = getQuestionsAndArticleInfo();
 
   // FIXED: Calculate score using complete words, not just user-typed letters
   const calculateScore = () => {
