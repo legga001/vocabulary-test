@@ -161,7 +161,7 @@ function WritingExercise({ onBack, onLogoClick }) {
   const [currentStep, setCurrentStep] = useState('selection'); // selection, writing, feedback
   const [selectedPrompt, setSelectedPrompt] = useState(null);
   const [userText, setUserText] = useState('');
-  const [timeRemaining, setTimeRemaining] = useState(300); // 5 minutes
+  const [timeRemaining, setTimeRemaining] = useState(60); // Changed to 1 minute
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const [feedback, setFeedback] = useState(null);
@@ -212,7 +212,7 @@ function WritingExercise({ onBack, onLogoClick }) {
     setSelectedPrompt(randomPrompt);
     setCurrentStep('writing');
     setUserText('');
-    setTimeRemaining(300);
+    setTimeRemaining(60); // Changed to 1 minute
     setIsTimerActive(true);
     setStartTime(Date.now());
     
@@ -318,7 +318,7 @@ function WritingExercise({ onBack, onLogoClick }) {
     setCurrentStep('selection');
     setSelectedPrompt(null);
     setUserText('');
-    setTimeRemaining(300);
+    setTimeRemaining(60); // Changed to 1 minute
     setIsTimerActive(false);
     setFeedback(null);
     setStartTime(null);
@@ -335,7 +335,7 @@ function WritingExercise({ onBack, onLogoClick }) {
           <div className="writing-instructions">
             <h3>📝 Photo Description Task</h3>
             <p>You'll see a photo and write a detailed description.
-            You have 5 minutes to write between 80-200 words depending on the difficulty level.</p>
+            You have 1 minute to write between 80-200 words depending on the difficulty level.</p>
             
             <div className="instruction-list">
               <div className="instruction-item">
@@ -344,7 +344,7 @@ function WritingExercise({ onBack, onLogoClick }) {
               </div>
               <div className="instruction-item">
                 <span className="instruction-icon">⏰</span>
-                <span>5-minute time limit</span>
+                <span>1-minute time limit</span>
               </div>
               <div className="instruction-item">
                 <span className="instruction-icon">📊</span>
@@ -378,68 +378,50 @@ function WritingExercise({ onBack, onLogoClick }) {
       <div className="exercise-page">
         <ClickableLogo onLogoClick={onLogoClick} />
         <div className="quiz-container">
-          <div className="writing-header">
-            <h2>✍️ {selectedPrompt.title}</h2>
-            <div className="writing-controls">
-              <div className={`timer ${timeRemaining <= 60 ? 'urgent' : ''}`}>
-                ⏰ {formatTime(timeRemaining)}
-              </div>
-              <div className="word-counter">
-                📝 {wordCount} words
-                <small>({selectedPrompt.minWords}-{selectedPrompt.maxWords})</small>
-              </div>
+          <div className="writing-header-minimal">
+            <h2>Write a description of the image below for 1 minute</h2>
+            <div className="timer-minimal">
+              {formatTime(timeRemaining)}
             </div>
           </div>
 
-          <div className="writing-prompt">
-            <div className="prompt-image-container">
+          <div className="writing-layout">
+            <div className="image-section">
               <img 
                 src={selectedPrompt.image} 
                 alt={selectedPrompt.title}
-                className="prompt-image"
+                className="prompt-image-minimal"
                 onError={(e) => {
                   // Fallback if image fails to load
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'block';
                 }}
               />
-              <div className="photo-placeholder" style={{display: 'none'}}>
+              <div className="photo-placeholder-minimal" style={{display: 'none'}}>
                 <div className="photo-icon">📷</div>
-                <small>{selectedPrompt.title}</small>
-                <p className="placeholder-note">
-                  Image not available - use your imagination!
-                </p>
+                <p>Image not available</p>
               </div>
             </div>
-            <div className="prompt-text">
-              <strong>Your task:</strong> {selectedPrompt.prompt}
-            </div>
-            <div className="level-indicator">
-              <span className="level-badge">{selectedPrompt.level}</span>
+
+            <div className="text-section">
+              <textarea
+                ref={textareaRef}
+                value={userText}
+                onChange={(e) => setUserText(e.target.value)}
+                placeholder="Your response"
+                className="writing-textarea-minimal"
+                spellCheck="true"
+              />
             </div>
           </div>
 
-          <div className="writing-area">
-            <textarea
-              ref={textareaRef}
-              value={userText}
-              onChange={(e) => setUserText(e.target.value)}
-              placeholder="Start writing your description here..."
-              className="writing-textarea"
-              spellCheck="true"
-            />
-          </div>
-
-          <div className="writing-footer">
+          <div className="writing-footer-minimal">
             <button 
               className="btn btn-primary"
               onClick={generateFeedback}
-              disabled={wordCount < 20}
+              disabled={userText.trim().length < 10}
             >
-              ✅ Submit Writing
-            </button>
-            <button className="btn btn-secondary" onClick={restartExercise}>
-              🔄 Start Over
+              Continue
             </button>
           </div>
         </div>
