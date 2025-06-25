@@ -234,58 +234,200 @@ function WritingExercise({ onBack, onLogoClick }) {
     }
   };
 
-  // Generate feedback based on CEFR grammar analysis
+  // Advanced grammar analysis system
+  const analyseGrammar = (text) => {
+    const analysis = {
+      a1_a2: { score: 0, found: [], total: 15 },
+      b1: { score: 0, found: [], total: 15 },
+      b2_plus: { score: 0, found: [], total: 10 },
+      sentences: [],
+      errors: []
+    };
+    
+    // Clean and tokenise text
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 3);
+    analysis.sentences = sentences;
+    
+    sentences.forEach((sentence, index) => {
+      const words = sentence.trim().toLowerCase().split(/\s+/);
+      const originalWords = sentence.trim().split(/\s+/);
+      
+      // A1-A2 Level Analysis
+      analyseBasicGrammar(words, originalWords, analysis.a1_a2, sentence);
+      
+      // B1 Level Analysis  
+      analyseIntermediateGrammar(words, originalWords, analysis.b1, sentence);
+      
+      // B2+ Level Analysis
+      analyseAdvancedGrammar(words, originalWords, analysis.b2_plus, sentence);
+    });
+    
+    return analysis;
+  };
+  
+  // Analyse basic A1-A2 grammar structures
+  const analyseBasicGrammar = (words, originalWords, level, sentence) => {
+    // TO BE verb analysis (present and past)
+    const beVerbs = ['am', 'is', 'are', 'was', 'were'];
+    const foundBe = words.filter(word => beVerbs.includes(word));
+    if (foundBe.length > 0) {
+      level.score += 2;
+      level.found.push(`TO BE verbs: ${foundBe.join(', ')}`);
+    }
+    
+    // Present simple analysis (3rd person -s, regular verbs)
+    const presentSimplePatterns = [
+      /\b(work|works|live|lives|like|likes|go|goes|come|comes|see|sees|play|plays|study|studies)\b/g,
+      /\b(have|has)\b/g
+    ];
+    presentSimplePatterns.forEach(pattern => {
+      const matches = sentence.toLowerCase().match(pattern);
+      if (matches) {
+        level.score += 2;
+        level.found.push(`Present simple: ${matches.join(', ')}`);
+      }
+    });
+    
+    // Past simple analysis (regular -ed and common irregulars)
+    const pastSimplePattern = /\b(worked|lived|liked|played|studied|went|came|saw|did|had|made|got|took|gave)\b/g;
+    const pastMatches = sentence.toLowerCase().match(pastSimplePattern);
+    if (pastMatches) {
+      level.score += 2;
+      level.found.push(`Past simple: ${pastMatches.join(', ')}`);
+    }
+    
+    // Articles analysis
+    const articlePattern = /\b(a|an|the)\b/g;
+    const articleMatches = sentence.toLowerCase().match(articlePattern);
+    if (articleMatches && articleMatches.length >= 2) {
+      level.score += 2;
+      level.found.push(`Articles: ${articleMatches.join(', ')}`);
+    }
+    
+    // HAVE GOT structure
+    const haveGotPattern = /\b(have|has)\s+got\b/g;
+    if (sentence.toLowerCase().match(haveGotPattern)) {
+      level.score += 3;
+      level.found.push('HAVE GOT structure');
+    }
+    
+    // There is/are structure
+    const therePattern = /\bthere\s+(is|are|was|were)\b/g;
+    if (sentence.toLowerCase().match(therePattern)) {
+      level.score += 2;
+      level.found.push('There is/are structure');
+    }
+  };
+  
+  // Analyse intermediate B1 grammar structures
+  const analyseIntermediateGrammar = (words, originalWords, level, sentence) => {
+    // Present perfect analysis (have/has + past participle)
+    const presentPerfectPattern = /\b(have|has)\s+(been|gone|seen|done|made|taken|given|written|eaten|drunk|lived|worked|studied|played|visited|travelled|learned|known|met|found|lost|bought|sold|read|heard|felt|thought|said|told|come|become)\b/g;
+    const ppMatches = sentence.toLowerCase().match(presentPerfectPattern);
+    if (ppMatches) {
+      level.score += 4;
+      level.found.push(`Present perfect: ${ppMatches.join(', ')}`);
+    }
+    
+    // Present progressive analysis (am/is/are + -ing)
+    const presentProgPattern = /\b(am|is|are)\s+\w+ing\b/g;
+    const progMatches = sentence.toLowerCase().match(presentProgPattern);
+    if (progMatches) {
+      level.score += 3;
+      level.found.push(`Present progressive: ${progMatches.join(', ')}`);
+    }
+    
+    // Past progressive analysis (was/were + -ing)
+    const pastProgPattern = /\b(was|were)\s+\w+ing\b/g;
+    const pastProgMatches = sentence.toLowerCase().match(pastProgPattern);
+    if (pastProgMatches) {
+      level.score += 4;
+      level.found.push(`Past progressive: ${pastProgMatches.join(', ')}`);
+    }
+    
+    // Modal verbs analysis
+    const modalPattern = /\b(can|could|should|would|might|may|must|will|shall)\s+\w+/g;
+    const modalMatches = sentence.toLowerCase().match(modalPattern);
+    if (modalMatches) {
+      level.score += 3;
+      level.found.push(`Modal verbs: ${modalMatches.join(', ')}`);
+    }
+    
+    // Conditional structures
+    const conditionalPattern = /\bif\s+\w+.*,.*\w+/g;
+    if (sentence.toLowerCase().match(conditionalPattern)) {
+      level.score += 4;
+      level.found.push('Conditional structure');
+    }
+    
+    // Future with going to
+    const goingToPattern = /\b(am|is|are)\s+going\s+to\s+\w+/g;
+    if (sentence.toLowerCase().match(goingToPattern)) {
+      level.score += 3;
+      level.found.push('Going to future');
+    }
+  };
+  
+  // Analyse advanced B2+ grammar structures
+  const analyseAdvancedGrammar = (words, originalWords, level, sentence) => {
+    // Passive voice analysis (be + past participle)
+    const passivePattern = /\b(is|are|was|were|been|being)\s+(made|done|seen|built|created|designed|written|painted|taken|given|shown|told|asked|opened|closed|finished|started|completed|developed|produced|manufactured|constructed|established|founded|discovered|invented)\b/g;
+    const passiveMatches = sentence.toLowerCase().match(passivePattern);
+    if (passiveMatches) {
+      level.score += 4;
+      level.found.push(`Passive voice: ${passiveMatches.join(', ')}`);
+    }
+    
+    // Relative clauses analysis
+    const relativePattern = /\b(who|which|that|where|when)\s+\w+/g;
+    const relativeMatches = sentence.toLowerCase().match(relativePattern);
+    if (relativeMatches) {
+      level.score += 3;
+      level.found.push(`Relative clauses: ${relativeMatches.join(', ')}`);
+    }
+    
+    // Complex connectors
+    const complexConnectors = /\b(although|however|therefore|moreover|furthermore|nevertheless|meanwhile|consequently|additionally|specifically|particularly)\b/g;
+    const connectorMatches = sentence.toLowerCase().match(complexConnectors);
+    if (connectorMatches) {
+      level.score += 3;
+      level.found.push(`Complex connectors: ${connectorMatches.join(', ')}`);
+    }
+    
+    // Present perfect continuous
+    const ppcPattern = /\b(have|has)\s+been\s+\w+ing\b/g;
+    if (sentence.toLowerCase().match(ppcPattern)) {
+      level.score += 4;
+      level.found.push('Present perfect continuous');
+    }
+  };
+
+  // Generate feedback based on detailed grammar analysis
   const generateFeedback = () => {
     let score = 50; // Base score
-    const text = userText.toLowerCase();
     
-    // Word count scoring (30 points total)
+    // Perform detailed grammar analysis
+    const grammarAnalysis = analyseGrammar(userText);
+    
+    // Word count scoring (25 points total)
     if (wordCount >= selectedPrompt.minWords && wordCount <= selectedPrompt.maxWords) {
-      score += 25;
+      score += 20;
     } else if (wordCount >= selectedPrompt.minWords * 0.8) {
       score += 15;
     } else if (wordCount >= 20) {
       score += 5;
     }
     
-    // Grammar complexity analysis based on CEFR levels (40 points total)
-    let grammarScore = 0;
+    // Grammar scoring based on analysis (40 points total)
+    const a1a2Score = Math.min(grammarAnalysis.a1_a2.score, grammarAnalysis.a1_a2.total);
+    const b1Score = Math.min(grammarAnalysis.b1.score, grammarAnalysis.b1.total);
+    const b2Score = Math.min(grammarAnalysis.b2_plus.score, grammarAnalysis.b2_plus.total);
     
-    // A1-A2 Level Grammar (Basic - 15 points)
-    const presentSimple = /\b(am|is|are|have|has|do|does|work|live|like|go|come|see)\b/g;
-    const pastSimple = /\b(was|were|went|came|saw|had|did|worked|lived|liked)\b/g;
-    const articles = /\b(a|an|the)\b/g;
+    score += a1a2Score + b1Score + b2Score;
     
-    if (text.match(presentSimple)?.length >= 2) grammarScore += 5;
-    if (text.match(pastSimple)?.length >= 1) grammarScore += 5;
-    if (text.match(articles)?.length >= 3) grammarScore += 5;
-    
-    // B1 Level Grammar (Intermediate - 15 points)
-    const presentPerfect = /\b(have|has)\s+\w*ed\b|\b(have|has)\s+(been|gone|seen|done|made)\b/g;
-    const presentProgressive = /\b(am|is|are)\s+\w*ing\b/g;
-    const conditionals = /\bif\s+\w+/g;
-    const modals = /\b(can|could|should|would|might|may|must)\b/g;
-    
-    if (text.match(presentPerfect)?.length >= 1) grammarScore += 4;
-    if (text.match(presentProgressive)?.length >= 1) grammarScore += 4;
-    if (text.match(conditionals)?.length >= 1) grammarScore += 3;
-    if (text.match(modals)?.length >= 1) grammarScore += 4;
-    
-    // B2+ Level Grammar (Advanced - 10 points)
-    const passiveVoice = /\b(is|are|was|were|been)\s+\w*ed\b/g;
-    const relativeClauses = /\b(who|which|that|where|when)\b/g;
-    const complexConnectors = /\b(although|however|therefore|moreover|furthermore|nevertheless)\b/g;
-    
-    if (text.match(passiveVoice)?.length >= 1) grammarScore += 4;
-    if (text.match(relativeClauses)?.length >= 1) grammarScore += 3;
-    if (text.match(complexConnectors)?.length >= 1) grammarScore += 3;
-    
-    score += grammarScore;
-    
-    // Sentence structure (10 points)
-    const sentences = userText.split(/[.!?]+/).filter(s => s.trim().length > 5);
-    if (sentences.length >= 3) score += 5;
-    if (sentences.length >= 5) score += 5;
+    // Sentence variety bonus (5 points)
+    if (grammarAnalysis.sentences.length >= 3) score += 3;
+    if (grammarAnalysis.sentences.length >= 5) score += 2;
     
     // Cap at 100
     score = Math.min(score, 100);
@@ -294,7 +436,8 @@ function WritingExercise({ onBack, onLogoClick }) {
       score: score,
       wordCount: wordCount,
       timeUsed: startTime ? Math.round((Date.now() - startTime) / 1000) : 0,
-      suggestions: generateGrammarSuggestions(text, grammarScore, wordCount, selectedPrompt)
+      suggestions: generateDetailedSuggestions(grammarAnalysis, wordCount, selectedPrompt),
+      grammarAnalysis: grammarAnalysis
     });
     
     setCurrentStep('feedback');
@@ -317,38 +460,44 @@ function WritingExercise({ onBack, onLogoClick }) {
     incrementDailyTarget('writing');
   };
 
-  // Generate ESL-appropriate suggestions based on CEFR grammar
-  const generateGrammarSuggestions = (text, grammarScore, wordCount, prompt) => {
+  // Generate detailed suggestions based on grammar analysis
+  const generateDetailedSuggestions = (analysis, wordCount, prompt) => {
     const suggestions = [];
     
     // Word count feedback
     if (wordCount < prompt.minWords) {
-      suggestions.push("Try to write more words to reach the target length");
+      suggestions.push("💡 Try to write more words to reach the target length");
     } else if (wordCount > prompt.maxWords) {
-      suggestions.push("Try to write fewer words to stay within the target range");
+      suggestions.push("💡 Try to write fewer words to stay within the target range");
     } else {
-      suggestions.push("Good job reaching the target word count!");
+      suggestions.push("✅ Perfect word count!");
     }
     
-    // Grammar suggestions based on what's missing
-    if (grammarScore < 15) {
-      suggestions.push("Try using more basic grammar: present simple (I am, she works), past simple (I went, she was), and articles (a, an, the)");
+    // Grammar feedback based on what was actually found
+    if (analysis.a1_a2.found.length > 0) {
+      suggestions.push(`✅ Good basic grammar: ${analysis.a1_a2.found.join(', ')}`);
+    } else {
+      suggestions.push("📚 Try using basic grammar: present simple (I work, she lives), past simple (I went, she was), articles (a, an, the)");
     }
     
-    if (grammarScore < 25) {
-      suggestions.push("Try using present progressive (I am walking), present perfect (I have seen), or modal verbs (can, should, must)");
+    if (analysis.b1.found.length > 0) {
+      suggestions.push(`🎯 Great intermediate grammar: ${analysis.b1.found.join(', ')}`);
+    } else if (analysis.a1_a2.score >= 10) {
+      suggestions.push("📈 Next step: Try present perfect (I have seen), present progressive (I am working), or modal verbs (can, should, must)");
     }
     
-    if (grammarScore < 35) {
-      suggestions.push("Try using more complex grammar: passive voice (the door was opened), relative clauses (the man who...), or conditionals (if I...)");
+    if (analysis.b2_plus.found.length > 0) {
+      suggestions.push(`🌟 Excellent advanced grammar: ${analysis.b2_plus.found.join(', ')}`);
+    } else if (analysis.b1.score >= 10) {
+      suggestions.push("🚀 Challenge yourself: Try passive voice (it was made), relative clauses (the person who...), or complex connectors (however, therefore)");
     }
     
-    if (grammarScore >= 35) {
-      suggestions.push("Excellent grammar usage! You're using complex structures effectively");
+    // Sentence variety feedback
+    if (analysis.sentences.length < 3) {
+      suggestions.push("📝 Try writing more sentences to show grammar variety");
+    } else if (analysis.sentences.length >= 5) {
+      suggestions.push("✅ Good sentence variety!");
     }
-    
-    // Always encourage variety
-    suggestions.push("Use different sentence types: simple, compound, and complex sentences");
     
     return suggestions;
   };
@@ -506,8 +655,55 @@ function WritingExercise({ onBack, onLogoClick }) {
                 <span className="stat-label">Time Used</span>
                 <span className="stat-value">{Math.floor(feedback.timeUsed / 60)}:{(feedback.timeUsed % 60).toString().padStart(2, '0')}</span>
               </div>
+              <div className="stat-item">
+                <span className="stat-label">Sentences</span>
+                <span className="stat-value">{feedback.grammarAnalysis ? feedback.grammarAnalysis.sentences.length : 0}</span>
+              </div>
             </div>
           </div>
+
+          {feedback.grammarAnalysis && (
+            <div className="feedback-section">
+              <h3>🔍 Grammar Analysis</h3>
+              <div className="grammar-analysis">
+                <div className="grammar-level">
+                  <h4>A1-A2 Level (Basic Grammar)</h4>
+                  <div className="grammar-score">Score: {feedback.grammarAnalysis.a1_a2.score}/{feedback.grammarAnalysis.a1_a2.total}</div>
+                  {feedback.grammarAnalysis.a1_a2.found.length > 0 ? (
+                    <div className="grammar-found">
+                      ✅ Found: {feedback.grammarAnalysis.a1_a2.found.join(' • ')}
+                    </div>
+                  ) : (
+                    <div className="grammar-missing">No basic grammar structures detected</div>
+                  )}
+                </div>
+                
+                <div className="grammar-level">
+                  <h4>B1 Level (Intermediate Grammar)</h4>
+                  <div className="grammar-score">Score: {feedback.grammarAnalysis.b1.score}/{feedback.grammarAnalysis.b1.total}</div>
+                  {feedback.grammarAnalysis.b1.found.length > 0 ? (
+                    <div className="grammar-found">
+                      ✅ Found: {feedback.grammarAnalysis.b1.found.join(' • ')}
+                    </div>
+                  ) : (
+                    <div className="grammar-missing">No intermediate grammar structures detected</div>
+                  )}
+                </div>
+                
+                <div className="grammar-level">
+                  <h4>B2+ Level (Advanced Grammar)</h4>
+                  <div className="grammar-score">Score: {feedback.grammarAnalysis.b2_plus.score}/{feedback.grammarAnalysis.b2_plus.total}</div>
+                  {feedback.grammarAnalysis.b2_plus.found.length > 0 ? (
+                    <div className="grammar-found">
+                      ✅ Found: {feedback.grammarAnalysis.b2_plus.found.join(' • ')}
+                    </div>
+                  ) : (
+                    <div className="grammar-missing">No advanced grammar structures detected</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="feedback-section">
             <h3>📊 Writing Statistics</h3>
