@@ -1,595 +1,340 @@
-// src/pronunciationData.js - Add missing function to fix build error
-// This is a temporary fix until the Results component import is corrected
+// src/components/Results.js - FRESH REWRITE to force build system update
+import React, { useEffect } from 'react';
+import AnswerReview from './AnswerReview';
+import { recordTestResult } from '../utils/progressDataManager';
+import { getNewQuestions } from '../questionsData';
+import { getArticleQuestions, getArticleInfo as getGenericArticleInfo } from '../articleQuestions';
+import { isSpeechSynthesisSupported } from '../utils/pronunciationUtils';
 
-// Helper function to get pronunciation for a word
-export const getPronunciation = (word) => {
-  const normalizedWord = word.toLowerCase().trim();
-  return pronunciationData[normalizedWord] || null;
+// Helper function to determine how many letters to show based on word length
+const getLettersToShow = (word) => {
+  const length = word.length;
+  if (length <= 3) return 1;
+  if (length <= 5) return 2;
+  if (length <= 7) return 3;
+  if (length <= 9) return 4;
+  if (length <= 11) return 5;
+  return 6;
 };
 
-// Helper function to check if pronunciation exists
-export const hasPronunciation = (word) => {
-  const normalizedWord = word.toLowerCase().trim();
-  return normalizedWord in pronunciationData;
-};
+function Results({ userAnswers, questions, testQuestions, quizType, articleType, onRestart }) {
+  console.log('📊 Results component - FRESH VERSION rendering with:', { userAnswers, questions, quizType });
 
-// TEMPORARY FIX: Add missing isSpeechSupported function
-export const isSpeechSupported = () => {
-  return 'speechSynthesis' in window;
-};
-
-// Get statistics about pronunciation coverage
-export const getPronunciationStats = () => {
-  const totalWords = Object.keys(pronunciationData).length;
-  const levels = {
-    A2: 0,
-    B1: 0,
-    B2: 0,
-    C1: 0,
-    Articles: 0
+  // Enhanced function to check if answer is already complete or needs reconstruction
+  const isAnswerComplete = (userAnswer, correctAnswer) => {
+    if (!userAnswer || !correctAnswer) return false;
+    
+    // If the user answer is already the length of the correct answer or close to it,
+    // it's likely already complete (from Quiz component)
+    const lengthRatio = userAnswer.length / correctAnswer.length;
+    return lengthRatio >= 0.8; // If 80% or more of the length, consider it complete
   };
-  
-  // This could be enhanced to categorise words by level
-  // For now, just return total count
-  return {
-    totalWords,
-    coverage: `${totalWords} words with pronunciation data`
+
+  // Enhanced function to reconstruct complete user answers from partial inputs
+  const reconstructCompleteAnswer = (partialUserAnswer, correctAnswer) => {
+    if (!partialUserAnswer || !correctAnswer) return '';
+    
+    // NEW: Check if answer is already complete (from Quiz component fix)
+    if (isAnswerComplete(partialUserAnswer, correctAnswer)) {
+      console.log('🎯 ANSWER ALREADY COMPLETE:', {
+        userAnswer: partialUserAnswer,
+        correctAnswer,
+        using: partialUserAnswer
+      });
+      return partialUserAnswer.toLowerCase().trim();
+    }
+    
+    // OLD: Only reconstruct if answer seems partial
+    const lettersToShow = getLettersToShow(correctAnswer);
+    const preFilledLetters = correctAnswer.substring(0, lettersToShow).toLowerCase();
+    const userTypedLetters = partialUserAnswer.toLowerCase().trim();
+    
+    // Combine pre-filled and user-typed letters to form complete word
+    const completeUserAnswer = preFilledLetters + userTypedLetters;
+    
+    console.log('🔧 RECONSTRUCTING PARTIAL ANSWER (FRESH VERSION):', {
+      correctAnswer,
+      partialUserAnswer,
+      lettersToShow,
+      preFilledLetters,
+      userTypedLetters,
+      completeUserAnswer
+    });
+    
+    return completeUserAnswer;
   };
-};
 
-// Comprehensive pronunciation data for all vocabulary words
-export const pronunciationData = {
-  // ==============================================
-  // A2 LEVEL WORDS (25 words)
-  // ==============================================
-  "buy": {
-    ipa: "/baɪ/",
-    phonetic: "BUY"
-  },
-  "hot": {
-    ipa: "/hɒt/",
-    phonetic: "HOT"
-  },
-  "happy": {
-    ipa: "/ˈhæpi/",
-    phonetic: "HAP-ee"
-  },
-  "works": {
-    ipa: "/wɜːks/",
-    phonetic: "WURKS"
-  },
-  "clean": {
-    ipa: "/kliːn/",
-    phonetic: "KLEEN"
-  },
-  "garden": {
-    ipa: "/ˈɡɑːdn/",
-    phonetic: "GAR-den"
-  },
-  "wake": {
-    ipa: "/weɪk/",
-    phonetic: "WAYK"
-  },
-  "read": {
-    ipa: "/riːd/",
-    phonetic: "REED"
-  },
-  "car": {
-    ipa: "/kɑː/",
-    phonetic: "KAR"
-  },
-  "dinner": {
-    ipa: "/ˈdɪnə/",
-    phonetic: "DIN-er"
-  },
-  "closed": {
-    ipa: "/kləʊzd/",
-    phonetic: "KLOHZD"
-  },
-  "wore": {
-    ipa: "/wɔː/",
-    phonetic: "WAWR"
-  },
-  "sleeping": {
-    ipa: "/ˈsliːpɪŋ/",
-    phonetic: "SLEE-ping"
-  },
-  "take": {
-    ipa: "/teɪk/",
-    phonetic: "TAYK"
-  },
-  "food": {
-    ipa: "/fuːd/",
-    phonetic: "FOOD"
-  },
-  "favourite": {
-    ipa: "/ˈfeɪvərɪt/",
-    phonetic: "FAY-ver-it"
-  },
-  "water": {
-    ipa: "/ˈwɔːtə/",
-    phonetic: "WAW-ter"
-  },
-  "hair": {
-    ipa: "/heə/",
-    phonetic: "HAIR"
-  },
-  "meal": {
-    ipa: "/miːl/",
-    phonetic: "MEEL"
-  },
-  "new": {
-    ipa: "/njuː/",
-    phonetic: "NYOO"
-  },
-  "door": {
-    ipa: "/dɔː/",
-    phonetic: "DAWR"
-  },
-  "live": {
-    ipa: "/lɪv/",
-    phonetic: "LIV"
-  },
-  "train": {
-    ipa: "/treɪn/",
-    phonetic: "TRAYN"
-  },
-  "present": {
-    ipa: "/ˈpreznt/",
-    phonetic: "PREZ-ent"
-  },
-  "weather": {
-    ipa: "/ˈweðə/",
-    phonetic: "WEH-ther"
-  },
+  // Get questions and article info
+  const getQuestionsAndArticleInfo = () => {
+    let questions = [];
+    let articleInfo = null;
 
-  // ==============================================
-  // B1 LEVEL WORDS (35 words)
-  // ==============================================
-  "sad": {
-    ipa: "/sæd/",
-    phonetic: "SAD"
-  },
-  "hire": {
-    ipa: "/ˈhaɪə/",
-    phonetic: "HY-er"
-  },
-  "finish": {
-    ipa: "/ˈfɪnɪʃ/",
-    phonetic: "FIN-ish"
-  },
-  "cancelled": {
-    ipa: "/ˈkænsəld/",
-    phonetic: "KAN-seld"
-  },
-  "avoid": {
-    ipa: "/əˈvɔɪd/",
-    phonetic: "uh-VOYD"
-  },
-  "study": {
-    ipa: "/ˈstʌdi/",
-    phonetic: "STUD-ee"
-  },
-  "decided": {
-    ipa: "/dɪˈsaɪdɪd/",
-    phonetic: "di-SY-ded"
-  },
-  "includes": {
-    ipa: "/ɪnˈkluːdz/",
-    phonetic: "in-KLOODZ"
-  },
-  "change": {
-    ipa: "/tʃeɪndʒ/",
-    phonetic: "CHAYNJ"
-  },
-  "advised": {
-    ipa: "/ədˈvaɪzd/",
-    phonetic: "ad-VYZD"
-  },
-  "bring": {
-    ipa: "/brɪŋ/",
-    phonetic: "BRING"
-  },
-  "delayed": {
-    ipa: "/dɪˈleɪd/",
-    phonetic: "di-LAYD"
-  },
-  "enjoys": {
-    ipa: "/ɪnˈdʒɔɪz/",
-    phonetic: "in-JOYZ"
-  },
-  "return": {
-    ipa: "/rɪˈtɜːn/",
-    phonetic: "ri-TURN"
-  },
-  "excited": {
-    ipa: "/ɪkˈsaɪtɪd/",
-    phonetic: "ik-SY-ted"
-  },
-  "improve": {
-    ipa: "/ɪmˈpruːv/",
-    phonetic: "im-PROOV"
-  },
-  "serves": {
-    ipa: "/sɜːvz/",
-    phonetic: "SURVZ"
-  },
-  "consider": {
-    ipa: "/kənˈsɪdə/",
-    phonetic: "kuhn-SID-er"
-  },
-  "requires": {
-    ipa: "/rɪˈkwaɪəz/",
-    phonetic: "ri-KWY-erz"
-  },
-  "misses": {
-    ipa: "/ˈmɪsɪz/",
-    phonetic: "MIS-ez"
-  },
-  "covers": {
-    ipa: "/ˈkʌvəz/",
-    phonetic: "KUV-erz"
-  },
-  "organise": {
-    ipa: "/ˈɔːɡənaɪz/",
-    phonetic: "AWR-guh-nyz"
-  },
-  "forecast": {
-    ipa: "/ˈfɔːkɑːst/",
-    phonetic: "FAWR-kast"
-  },
-  "attend": {
-    ipa: "/əˈtend/",
-    phonetic: "uh-TEND"
-  },
-  "provides": {
-    ipa: "/prəˈvaɪdz/",
-    phonetic: "pruh-VYDZ"
-  },
-  "refused": {
-    ipa: "/rɪˈfjuːzd/",
-    phonetic: "ri-FYOOZD"
-  },
-  "affect": {
-    ipa: "/əˈfekt/",
-    phonetic: "uh-FEKT"
-  },
-  "discuss": {
-    ipa: "/dɪˈskʌs/",
-    phonetic: "dis-KUSS"
-  },
-  "check": {
-    ipa: "/tʃek/",
-    phonetic: "CHEK"
-  },
-  "offers": {
-    ipa: "/ˈɒfəz/",
-    phonetic: "OF-erz"
-  },
-  "succeeds": {
-    ipa: "/səkˈsiːdz/",
-    phonetic: "suhk-SEEDZ"
-  },
-  "replace": {
-    ipa: "/rɪˈpleɪs/",
-    phonetic: "ri-PLAYS"
-  },
-  "goal": {
-    ipa: "/ɡəʊl/",
-    phonetic: "GOHL"
-  },
-  "prepare": {
-    ipa: "/prɪˈpeə/",
-    phonetic: "pri-PAIR"
-  },
+    if (quizType === 'article') {
+      try {
+        switch (articleType) {
+          case 'smuggling-quiz':
+            const smugglingModule = require('../smugglingVocabularyData');
+            questions = smugglingModule.getSmugglingVocabularyQuestions();
+            articleInfo = smugglingModule.getArticleInfo();
+            break;
+          case 'air-india-quiz':
+            const airIndiaModule = require('../airIndiaVocabularyData');
+            questions = airIndiaModule.getAirIndiaVocabularyQuestions();
+            articleInfo = airIndiaModule.getAirIndiaArticleInfo();
+            break;
+          case 'water-treatment-quiz':
+            const waterTreatmentModule = require('../waterTreatmentVocabularyData');
+            questions = waterTreatmentModule.getWaterTreatmentVocabularyQuestions();
+            articleInfo = waterTreatmentModule.getWaterTreatmentArticleInfo();
+            break;
+          default:
+            const defaultModule = require('../articleQuestions');
+            questions = defaultModule.getArticleQuestions();
+            articleInfo = defaultModule.getArticleInfo();
+        }
+      } catch (error) {
+        console.error('Error loading article questions:', error);
+        const fallbackModule = require('../articleQuestions');
+        questions = fallbackModule.getArticleQuestions();
+        articleInfo = fallbackModule.getArticleInfo();
+      }
+    } else {
+      questions = getNewQuestions();
+    }
+    
+    return { questions, articleInfo };
+  };
 
-  // ==============================================
-  // B2 LEVEL WORDS (30 words)
-  // ==============================================
-  "significant": {
-    ipa: "/sɪɡˈnɪfɪkənt/",
-    phonetic: "sig-NIF-i-kuhnt"
-  },
-  "analyse": {
-    ipa: "/ˈænəlaɪz/",
-    phonetic: "AN-uh-lyz"
-  },
-  "essential": {
-    ipa: "/ɪˈsenʃl/",
-    phonetic: "i-SEN-shuhl"
-  },
-  "evidence": {
-    ipa: "/ˈevɪdəns/",
-    phonetic: "EV-i-duhns"
-  },
-  "establish": {
-    ipa: "/ɪˈstæblɪʃ/",
-    phonetic: "i-STAB-lish"
-  },
-  "approach": {
-    ipa: "/əˈprəʊtʃ/",
-    phonetic: "uh-PROHCH"
-  },
-  "concept": {
-    ipa: "/ˈkɒnsept/",
-    phonetic: "KON-sept"
-  },
-  "context": {
-    ipa: "/ˈkɒntekst/",
-    phonetic: "KON-tekst"
-  },
-  "procedure": {
-    ipa: "/prəˈsiːdʒə/",
-    phonetic: "pruh-SEE-jer"
-  },
-  "elements": {
-    ipa: "/ˈelɪmənts/",
-    phonetic: "EL-i-muhnts"
-  },
-  "fundamental": {
-    ipa: "/ˌfʌndəˈmentl/",
-    phonetic: "fuhn-duh-MEN-tuhl"
-  },
-  "methodology": {
-    ipa: "/ˌmeθəˈdɒlədʒi/",
-    phonetic: "meth-uh-DOL-uh-jee"
-  },
-  "comprehensive": {
-    ipa: "/ˌkɒmprɪˈhensɪv/",
-    phonetic: "kom-pri-HEN-siv"
-  },
-  "assumption": {
-    ipa: "/əˈsʌmpʃn/",
-    phonetic: "uh-SUHMP-shuhn"
-  },
-  "consequence": {
-    ipa: "/ˈkɒnsɪkwəns/",
-    phonetic: "KON-si-kwuhns"
-  },
-  "alternative": {
-    ipa: "/ɔːlˈtɜːnətɪv/",
-    phonetic: "awl-TUR-nuh-tiv"
-  },
-  "criteria": {
-    ipa: "/kraɪˈtɪəriə/",
-    phonetic: "kry-TEER-ee-uh"
-  },
-  "implications": {
-    ipa: "/ˌɪmplɪˈkeɪʃnz/",
-    phonetic: "im-pli-KAY-shuhnz"
-  },
-  "framework": {
-    ipa: "/ˈfreɪmwɜːk/",
-    phonetic: "FRAYM-wurk"
-  },
-  "hypothesis": {
-    ipa: "/haɪˈpɒθəsɪs/",
-    phonetic: "hy-POTH-uh-sis"
-  },
-  "phenomenon": {
-    ipa: "/fəˈnɒmɪnən/",
-    phonetic: "fuh-NOM-i-nuhn"
-  },
-  "dimensions": {
-    ipa: "/daɪˈmenʃnz/",
-    phonetic: "dy-MEN-shuhnz"
-  },
-  "variables": {
-    ipa: "/ˈveəriəblz/",
-    phonetic: "VAIR-ee-uh-buhlz"
-  },
-  "investigate": {
-    ipa: "/ɪnˈvestɪɡeɪt/",
-    phonetic: "in-VES-ti-gayt"
-  },
-  "strategies": {
-    ipa: "/ˈstrætədʒiz/",
-    phonetic: "STRAT-uh-jeez"
-  },
-  "theoretical": {
-    ipa: "/ˌθɪəˈretɪkl/",
-    phonetic: "thee-uh-RET-i-kuhl"
-  },
-  "facilitate": {
-    ipa: "/fəˈsɪlɪteɪt/",
-    phonetic: "fuh-SIL-i-tayt"
-  },
-  "interpretation": {
-    ipa: "/ɪnˌtɜːprɪˈteɪʃn/",
-    phonetic: "in-tur-pri-TAY-shuhn"
-  },
-  "implementation": {
-    ipa: "/ˌɪmplɪmenˈteɪʃn/",
-    phonetic: "im-pli-men-TAY-shuhn"
-  },
-  "predominantly": {
-    ipa: "/prɪˈdɒmɪnəntli/",
-    phonetic: "pri-DOM-i-nuhnt-lee"
-  },
-
-  // ==============================================
-  // C1 LEVEL WORDS (10 words)
-  // ==============================================
-  "unprecedented": {
-    ipa: "/ʌnˈpresɪdentɪd/",
-    phonetic: "uhn-PRES-i-den-tid"
-  },
-  "paradigm": {
-    ipa: "/ˈpærədaɪm/",
-    phonetic: "PAIR-uh-dym"
-  },
-  "discrepancy": {
-    ipa: "/dɪˈskrepənsi/",
-    phonetic: "dis-KREP-uhn-see"
-  },
-  "congruent": {
-    ipa: "/ˈkɒŋɡruənt/",
-    phonetic: "KONG-groo-uhnt"
-  },
-  "empirical": {
-    ipa: "/ɪmˈpɪrɪkl/",
-    phonetic: "im-PEER-i-kuhl"
-  },
-  "substantiate": {
-    ipa: "/səbˈstænʃieɪt/",
-    phonetic: "suhb-STAN-shee-ayt"
-  },
-  "intrinsic": {
-    ipa: "/ɪnˈtrɪnsɪk/",
-    phonetic: "in-TRIN-sik"
-  },
-  "ameliorate": {
-    ipa: "/əˈmiːliəreɪt/",
-    phonetic: "uh-MEEL-yuh-rayt"
-  },
-  "ubiquitous": {
-    ipa: "/juːˈbɪkwɪtəs/",
-    phonetic: "yoo-BIK-wi-tuhs"
-  },
-  "meticulous": {
-    ipa: "/məˈtɪkjələs/",
-    phonetic: "muh-TIK-yuh-luhs"
-  },
-
-  // ==============================================
-  // ARTICLE VOCABULARY
-  // ==============================================
+  // Use testQuestions if provided, otherwise fall back to questions prop or generate new ones
+  const finalQuestions = testQuestions || questions || getQuestionsAndArticleInfo().questions;
   
-  // Smuggling article vocabulary
-  "discovered": {
-    ipa: "/dɪˈskʌvəd/",
-    phonetic: "dis-KUV-erd"
-  },
-  "officials": {
-    ipa: "/əˈfɪʃlz/",
-    phonetic: "uh-FISH-uhlz"
-  },
-  "arrested": {
-    ipa: "/əˈrestɪd/",
-    phonetic: "uh-RES-ted"
-  },
-  "passengers": {
-    ipa: "/ˈpæsɪndʒəz/",
-    phonetic: "PAS-in-jerz"
-  },
-  "authorities": {
-    ipa: "/ɔːˈθɒrɪtiz/",
-    phonetic: "aw-THOR-i-teez"
-  },
-  "investigation": {
-    ipa: "/ɪnˌvestɪˈɡeɪʃn/",
-    phonetic: "in-ves-ti-GAY-shuhn"
-  },
-  "suspicious": {
-    ipa: "/səˈspɪʃəs/",
-    phonetic: "suh-SPISH-uhs"
-  },
-  "criminal": {
-    ipa: "/ˈkrɪmɪnl/",
-    phonetic: "KRIM-i-nuhl"
-  },
-  "illegal": {
-    ipa: "/ɪˈliːɡl/",
-    phonetic: "i-LEE-guhl"
-  },
-  "border": {
-    ipa: "/ˈbɔːdə/",
-    phonetic: "BAWR-der"
-  },
-  "security": {
-    ipa: "/sɪˈkjʊərɪti/",
-    phonetic: "si-KYOOR-i-tee"
-  },
-  "detained": {
-    ipa: "/dɪˈteɪnd/",
-    phonetic: "di-TAYND"
-  },
-  "confiscated": {
-    ipa: "/ˈkɒnfɪskeɪtɪd/",
-    phonetic: "KON-fi-skay-ted"
-  },
-  "contraband": {
-    ipa: "/ˈkɒntrəbænd/",
-    phonetic: "KON-truh-band"
-  },
-  "juvenile": {
-    ipa: "/ˈdʒuːvənaɪl/",
-    phonetic: "JOO-vuh-nyl"
-  },
-  "welcoming": {
-    ipa: "/ˈwelkəmɪŋ/",
-    phonetic: "WEL-kuh-ming"
-  },
+  // Get article info separately
+  const { articleInfo } = getQuestionsAndArticleInfo();
 
-  // Air India article vocabulary
-  "angry": {
-    ipa: "/ˈæŋɡri/",
-    phonetic: "ANG-gree"
-  },
-  "due": {
-    ipa: "/djuː/",
-    phonetic: "DYOO"
-  },
-  "crashed": {
-    ipa: "/kræʃt/",
-    phonetic: "KRASHT"
-  },
-  "disappointed": {
-    ipa: "/ˌdɪsəˈpɔɪntɪd/",
-    phonetic: "dis-uh-POYN-ted"
-  },
-  "frustrated": {
-    ipa: "/frʌˈstreɪtɪd/",
-    phonetic: "fruhs-TRAY-ted"
-  },
-  "dejected": {
-    ipa: "/dɪˈdʒektɪd/",
-    phonetic: "di-JEK-ted"
-  },
-  "requested": {
-    ipa: "/rɪˈkwestɪd/",
-    phonetic: "ri-KWES-ted"
-  },
-  "struggle": {
-    ipa: "/ˈstrʌɡl/",
-    phonetic: "STRUG-uhl"
-  },
-  "debris": {
-    ipa: "/ˈdebriː/",
-    phonetic: "DEB-ree"
-  },
+  // FIXED: Calculate score using complete words, not just user-typed letters
+  const calculateScore = () => {
+    let score = 0;
+    
+    for (let i = 0; i < Math.min(10, finalQuestions.length); i++) {
+      if (userAnswers && userAnswers[i] && finalQuestions[i]) {
+        // Reconstruct the complete word from partial user input
+        const completeUserAnswer = reconstructCompleteAnswer(userAnswers[i], finalQuestions[i].answer);
+        const correctAnswer = finalQuestions[i].answer.toLowerCase();
+        
+        // Check for British/American spelling variations using complete words
+        const isCorrect = checkSpellingVariations(completeUserAnswer, correctAnswer);
+        
+        console.log(`💯 SCORING Q${i + 1} (FRESH VERSION):`, {
+          partialUserInput: userAnswers[i],
+          completeUserAnswer,
+          correctAnswer,
+          isCorrect
+        });
+        
+        if (isCorrect) score++;
+      }
+    }
+    
+    console.log(`🎯 FINAL SCORE (FRESH VERSION): ${score}/${Math.min(10, finalQuestions.length)}`);
+    return score;
+  };
 
-  // Water treatment article vocabulary
-  "worms": {
-    ipa: "/wɜːmz/",
-    phonetic: "WURMZ"
-  },
-  "impact": {
-    ipa: "/ˈɪmpækt/",
-    phonetic: "IM-pakt"
-  },
-  "released": {
-    ipa: "/rɪˈliːst/",
-    phonetic: "ri-LEEST"
-  },
-  "technique": {
-    ipa: "/tekˈniːk/",
-    phonetic: "tek-NEEK"
-  },
-  "replicates": {
-    ipa: "/ˈreplɪkeɪts/",
-    phonetic: "REP-li-kayts"
-  },
-  "conventional": {
-    ipa: "/kənˈvenʃənl/",
-    phonetic: "kuhn-VEN-shuhn-uhl"
-  },
-  "sanitation": {
-    ipa: "/ˌsænɪˈteɪʃn/",
-    phonetic: "san-i-TAY-shuhn"
-  },
-  "organic": {
-    ipa: "/ɔːˈɡænɪk/",
-    phonetic: "awr-GAN-ik"
-  }
-};
+  // Enhanced spelling check function for complete words
+  const checkSpellingVariations = (userAnswer, correctAnswer) => {
+    if (!userAnswer || !correctAnswer) return false;
+    if (userAnswer === correctAnswer) return true;
+
+    // British/American spelling variations
+    const spellingMap = {
+      'analyze': ['analyse'], 'realize': ['realise'], 'organize': ['organise'],
+      'recognize': ['recognise'], 'criticize': ['criticise'], 'apologize': ['apologise'],
+      'optimize': ['optimise'], 'minimize': ['minimise'], 'maximize': ['maximise'],
+      'centralize': ['centralise'], 'normalize': ['normalise'], 'categorize': ['categorise'],
+      'memorize': ['memorise'], 'authorize': ['authorise'], 'modernize': ['modernise'],
+      'utilize': ['utilise'], 'fertilize': ['fertilise'], 'sterilize': ['sterilise'],
+      'stabilize': ['stabilise'], 'summarize': ['summarise'],
+      // Reverse mappings
+      'analyse': ['analyze'], 'realise': ['realize'], 'organise': ['organize'],
+      'recognise': ['recognize'], 'criticise': ['criticize'], 'apologise': ['apologize'],
+      'optimise': ['optimize'], 'minimise': ['minimize'], 'maximise': ['maximize'],
+      'centralise': ['centralize'], 'normalise': ['normalize'], 'categorise': ['categorize'],
+      'memorise': ['memorize'], 'authorise': ['authorize'], 'modernise': ['modernize'],
+      'utilise': ['utilize'], 'fertilise': ['fertilize'], 'sterilise': ['sterilize'],
+      'stabilise': ['stabilize'], 'summarise': ['summarize'],
+      // Colour/color variations
+      'color': ['colour'], 'colour': ['color'], 'colors': ['colours'], 'colours': ['colors'],
+      'colored': ['coloured'], 'coloured': ['colored'], 'coloring': ['colouring'], 'colouring': ['coloring'],
+      // Honour/honor variations
+      'honor': ['honour'], 'honour': ['honor'], 'honors': ['honours'], 'honours': ['honors'],
+      'honored': ['honoured'], 'honoured': ['honored'], 'honoring': ['honouring'], 'honouring': ['honoring'],
+      // Centre/center variations
+      'center': ['centre'], 'centre': ['center'], 'centers': ['centres'], 'centres': ['centers'],
+      'centered': ['centred'], 'centred': ['centered'], 'centering': ['centring'], 'centring': ['centering'],
+      // Theatre/theater variations
+      'theater': ['theatre'], 'theatre': ['theater'], 'theaters': ['theatres'], 'theatres': ['theaters'],
+      // Metre/meter variations
+      'meter': ['metre'], 'metre': ['meter'], 'meters': ['metres'], 'metres': ['meters']
+    };
+
+    // Check if user's answer matches any alternative spelling of the correct answer
+    const correctAlternatives = spellingMap[correctAnswer] || [];
+    if (correctAlternatives.includes(userAnswer)) return true;
+
+    // Check if correct answer matches any alternative spelling of the user's answer
+    const userAlternatives = spellingMap[userAnswer] || [];
+    if (userAlternatives.includes(correctAnswer)) return true;
+
+    return false;
+  };
+
+  const score = calculateScore();
+
+  // Record the test result when component mounts
+  useEffect(() => {
+    try {
+      const formattedUserAnswers = userAnswers ? userAnswers.slice(0, 10).map((answer, index) => {
+        if (!answer || !finalQuestions[index]) return { answer: '', correct: false, score: 0, level: 'B1' };
+        
+        // FIXED: Use complete reconstructed answer for recording results
+        const completeUserAnswer = reconstructCompleteAnswer(answer, finalQuestions[index].answer);
+        const correctAnswer = finalQuestions[index].answer.toLowerCase();
+        const isCorrect = checkSpellingVariations(completeUserAnswer, correctAnswer);
+        
+        return {
+          answer: completeUserAnswer || '', // Store the complete answer
+          correct: isCorrect,
+          score: isCorrect ? 1 : 0,
+          level: finalQuestions[index].level || 'B1'
+        };
+      }) : [];
+
+      const testResult = {
+        type: quizType === 'article' ? 'article-vocabulary' : 'standard-vocabulary',
+        score: score,
+        totalQuestions: 10,
+        userAnswers: formattedUserAnswers,
+        completedAt: new Date().toISOString(),
+        timeSpent: null,
+        articleInfo: articleInfo
+      };
+
+      console.log('📊 RECORDING TEST RESULT (FRESH VERSION):', testResult);
+      recordTestResult(testResult);
+    } catch (error) {
+      console.error('Error recording test result:', error);
+    }
+  }, [score, userAnswers, finalQuestions, quizType, articleInfo]);
+
+  // Get level information based on score
+  const getLevelInfo = (score) => {
+    if (score <= 3) {
+      return {
+        level: "A2-B1 (Elementary)",
+        description: "Keep practising!",
+        feedback: "Focus on building your core vocabulary with everyday words and common expressions. Try reading simple texts and using vocabulary learning apps."
+      };
+    } else if (score <= 5) {
+      return {
+        level: "B1-B2 (Intermediate)",
+        description: "Good progress!",
+        feedback: "You're developing a solid vocabulary foundation. Continue reading intermediate texts and try to learn vocabulary in context rather than isolated words."
+      };
+    } else if (score <= 7) {
+      return {
+        level: "B2-C1 (Upper-Intermediate)",
+        description: "Well done!",
+        feedback: "Your vocabulary knowledge is quite good. Focus on more complex texts, idiomatic expressions, and specialised vocabulary in areas that interest you."
+      };
+    } else if (score <= 8) {
+      return {
+        level: "B2-C1 (Upper-Intermediate)",
+        description: "Excellent vocabulary knowledge!",
+        feedback: "You demonstrate strong command of English vocabulary. Continue with advanced materials and specialised terminology in your areas of interest."
+      };
+    } else {
+      return {
+        level: "C1-C2 (Advanced)",
+        description: "Outstanding vocabulary mastery!",
+        feedback: "Your vocabulary knowledge is impressive! Keep challenging yourself with complex texts and specialised vocabulary in different fields."
+      };
+    }
+  };
+
+  const levelInfo = getLevelInfo(score);
+  const percentage = Math.round((score / 10) * 100);
+
+  return (
+    <div className="quiz-container">
+      <div className="results-header">
+        <h1>📊 Quiz Results</h1>
+        {articleInfo && (
+          <div className="article-result-info">
+            <h2>📰 Article-Based Quiz</h2>
+            <p>Based on: "{articleInfo.title}"</p>
+          </div>
+        )}
+        {quizType !== 'article' && (
+          <div className="standard-result-info">
+            <h2>📚 Standard Vocabulary Quiz</h2>
+            <p>Random selection from our comprehensive question pool</p>
+          </div>
+        )}
+      </div>
+
+      <div className="score-section">
+        <div className="score-display">
+          {score}/10
+        </div>
+        <div className="score-percentage">
+          {percentage}%
+        </div>
+        
+        <div className="level-estimate">
+          <h3>{levelInfo.level}</h3>
+          <p className="level-description">{levelInfo.description}</p>
+          <p className="level-feedback">{levelInfo.feedback}</p>
+        </div>
+      </div>
+
+      {quizType !== 'article' && (
+        <div className="test-info-section">
+          <h3>💡 About This Test</h3>
+          <p>This vocabulary test uses questions from different CEFR levels (A2-C1) to assess your English vocabulary knowledge across various contexts and topics.</p>
+        </div>
+      )}
+
+      {articleInfo && (
+        <div className="article-link-section">
+          <button 
+            className="btn-article-link"
+            onClick={() => window.open(articleInfo.url, '_blank')}
+          >
+            📖 Read the Full Article
+          </button>
+        </div>
+      )}
+
+      {isSpeechSynthesisSupported() && (
+        <div className="pronunciation-feature-highlight">
+          <div className="feature-icon">🎤</div>
+          <h4>Try Pronunciation Practice</h4>
+          <p>Click the speaker icons in your answer review to hear correct pronunciations</p>
+        </div>
+      )}
+
+      <AnswerReview 
+        userAnswers={userAnswers}
+        questions={finalQuestions}
+        quizType={quizType}
+      />
+
+      <div className="results-actions">
+        <button className="btn btn-primary" onClick={onRestart}>
+          Take Another Test
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default Results;
