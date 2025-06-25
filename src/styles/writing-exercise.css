@@ -1,4 +1,4 @@
-/* src/styles/writing-exercise.css - Complete writing exercise styles with enhanced textarea */
+/* src/styles/writing-exercise.css - Complete writing exercise styles with image display */
 
 /* ==============================================
    1. EXERCISE START SECTION
@@ -10,164 +10,6 @@
   background: linear-gradient(135deg, #f0f2ff, #e6f4ff);
   border-radius: 20px;
   border: 2px solid #4c51bf;
-}
-
-.btn-large {
-  font-size: 1.3em;
-  padding: 15px 30px;
-  margin-bottom: 15px;
-}
-
-.start-note {
-  color: #666;
-  font-style: italic;
-  margin: 0;
-}
-
-/* ==============================================
-   2. WRITING INTERFACE
-   ============================================== */
-.writing-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
-.writing-header h2 {
-  color: #4c51bf;
-  margin: 0;
-  font-size: 1.5em;
-}
-
-.writing-controls {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-.timer {
-  background: #4c51bf;
-  color: white;
-  padding: 8px 15px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 1em;
-  transition: all 0.3s ease;
-}
-
-.timer.urgent {
-  background: #e53e3e;
-  animation: pulse 1s infinite;
-}
-
-.word-counter {
-  background: #f8f9fa;
-  border: 2px solid #e2e8f0;
-  padding: 8px 15px;
-  border-radius: 20px;
-  font-weight: 600;
-  color: #4a5568;
-}
-
-.word-counter small {
-  color: #999;
-  font-size: 0.8em;
-  margin-left: 5px;
-}
-
-/* ==============================================
-   3. WRITING PROMPT SECTION
-   ============================================== */
-.writing-prompt {
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.photo-placeholder {
-  background: linear-gradient(135deg, #f0f2ff, #e6f4ff);
-  border: 2px dashed #4c51bf;
-  border-radius: 10px;
-  padding: 40px 20px;
-  text-align: center;
-  margin-bottom: 15px;
-}
-
-.photo-icon {
-  font-size: 3em;
-  margin-bottom: 10px;
-  color: #4c51bf;
-}
-
-.photo-placeholder small {
-  color: #666;
-  font-weight: 600;
-  display: block;
-  margin-bottom: 5px;
-}
-
-.placeholder-note {
-  color: #999;
-  font-size: 0.8em;
-  font-style: italic;
-  margin: 5px 0 0 0;
-}
-
-.prompt-text {
-  background: white;
-  padding: 15px;
-  border-radius: 8px;
-  margin: 15px 0;
-  text-align: left;
-  border-left: 4px solid #4c51bf;
-}
-
-.prompt-text strong {
-  color: #4c51bf;
-}
-
-.level-indicator {
-  margin-top: 10px;
-}
-
-.level-badge {
-  background: #4c51bf;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.8em;
-  font-weight: 600;
-}
-
-/* ==============================================
-   4. WRITING AREA - ENHANCED WITH LARGER TEXTAREA
-   ============================================== */
-.writing-area {
-  margin-bottom: 20px;
-}
-
-.writing-textarea {
-  width: 100%;
-  min-height: 500px; /* Increased from 300px to 500px */
-  max-height: 70vh; /* Prevent it from taking full screen on small devices */
-  padding: 20px;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  font-family: 'Nunito', sans-serif;
-  font-size: 1.1em;
-  line-height: 1.6;
-  resize: vertical;
-  transition: border-color 0.3s ease;
-  outline: none;
-  box-sizing: border-box;
-  overflow-y: auto; /* Enable vertical scrolling */
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #4c51bf #f1f1f1; /* Firefox */
 }
 
 /* Custom scrollbar for Webkit browsers (Chrome, Safari, Edge) */
@@ -443,6 +285,10 @@
   .instruction-list {
     grid-template-columns: 1fr;
   }
+  
+  .prompt-image {
+    max-height: 300px;
+  }
 }
 
 /* Mobile */
@@ -501,6 +347,10 @@
     font-size: 0.9em;
     padding: 6px 12px;
   }
+  
+  .prompt-image {
+    max-height: 250px;
+  }
 }
 
 /* Very small screens */
@@ -520,4 +370,186 @@
   .stat-value {
     font-size: 1.3em;
   }
+  
+  .prompt-image {
+    max-height: 200px;
+  }
+}
+
+.btn-large {
+  font-size: 1.3em;
+  padding: 15px 30px;
+  margin-bottom: 15px;
+}
+
+.start-note {
+  color: #666;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ==============================================
+   2. WRITING INTERFACE
+   ============================================== */
+.writing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.writing-header h2 {
+  color: #4c51bf;
+  margin: 0;
+  font-size: 1.5em;
+}
+
+.writing-controls {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.timer {
+  background: #4c51bf;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 1em;
+  transition: all 0.3s ease;
+}
+
+.timer.urgent {
+  background: #e53e3e;
+  animation: pulse 1s infinite;
+}
+
+.word-counter {
+  background: #f8f9fa;
+  border: 2px solid #e2e8f0;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.word-counter small {
+  color: #999;
+  font-size: 0.8em;
+  margin-left: 5px;
+}
+
+/* ==============================================
+   3. WRITING PROMPT SECTION WITH IMAGE DISPLAY
+   ============================================== */
+.writing-prompt {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.prompt-image-container {
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.prompt-image {
+  max-width: 100%;
+  max-height: 400px;
+  width: auto;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  object-fit: contain;
+  border: 3px solid #4c51bf;
+}
+
+/* Fallback placeholder styles (hidden by default, shown if image fails) */
+.photo-placeholder {
+  background: linear-gradient(135deg, #f0f2ff, #e6f4ff);
+  border: 2px dashed #4c51bf;
+  border-radius: 10px;
+  padding: 40px 20px;
+  text-align: center;
+  margin-bottom: 15px;
+  display: none; /* Hidden by default, shown via JavaScript if image fails */
+}
+
+.photo-icon {
+  font-size: 3em;
+  margin-bottom: 10px;
+  color: #4c51bf;
+}
+
+.photo-placeholder small {
+  color: #666;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.placeholder-note {
+  color: #999;
+  font-size: 0.8em;
+  font-style: italic;
+  margin: 5px 0 0 0;
+}
+
+.prompt-text {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+  text-align: left;
+  border-left: 4px solid #4c51bf;
+}
+
+.prompt-text strong {
+  color: #4c51bf;
+}
+
+.level-indicator {
+  margin-top: 10px;
+}
+
+.level-badge {
+  background: #4c51bf;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: 600;
+}
+
+/* ==============================================
+   4. WRITING AREA - ENHANCED WITH LARGER TEXTAREA
+   ============================================== */
+.writing-area {
+  margin-bottom: 20px;
+}
+
+.writing-textarea {
+  width: 100%;
+  min-height: 500px; /* Increased from 300px to 500px */
+  max-height: 70vh; /* Prevent it from taking full screen on small devices */
+  padding: 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.1em;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+  outline: none;
+  box-sizing: border-box;
+  overflow-y: auto; /* Enable vertical scrolling */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #4c51bf #f1f1f1; /* Firefox */
 }
