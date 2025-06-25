@@ -49,7 +49,7 @@
 }
 
 /* ==============================================
-   5. FEEDBACK SECTION
+   6. FEEDBACK SECTION
    ============================================== */
 .feedback-score {
   text-align: center;
@@ -99,7 +99,7 @@
 }
 
 /* ==============================================
-   6. WRITING STATISTICS
+   7. WRITING STATISTICS
    ============================================== */
 .writing-stats {
   display: grid;
@@ -131,7 +131,7 @@
 }
 
 /* ==============================================
-   7. SUGGESTIONS
+   8. SUGGESTIONS
    ============================================== */
 .suggestions-list {
   display: flex;
@@ -149,7 +149,7 @@
 }
 
 /* ==============================================
-   8. TEXT DISPLAYS
+   9. TEXT DISPLAYS
    ============================================== */
 .user-writing,
 .model-answer {
@@ -202,7 +202,7 @@
 }
 
 /* ==============================================
-   9. ANIMATIONS
+   10. ANIMATIONS
    ============================================== */
 @keyframes pulse {
   0%, 100% { 
@@ -216,7 +216,7 @@
 }
 
 /* ==============================================
-   10. INSTRUCTION LIST
+   11. INSTRUCTION LIST
    ============================================== */
 .writing-instructions {
   background: #f8f9fa;
@@ -262,11 +262,28 @@
 }
 
 /* ==============================================
-   11. RESPONSIVE DESIGN
+   12. RESPONSIVE DESIGN
    ============================================== */
 
 /* Tablet */
 @media (max-width: 768px) {
+  .writing-layout {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .image-section {
+    flex: none;
+  }
+  
+  .prompt-image-minimal {
+    max-height: 300px;
+  }
+  
+  .writing-textarea-minimal {
+    height: 300px;
+  }
+  
   .writing-header {
     flex-direction: column;
     align-items: flex-start;
@@ -293,6 +310,24 @@
 
 /* Mobile */
 @media (max-width: 480px) {
+  .writing-layout {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .prompt-image-minimal {
+    max-height: 250px;
+  }
+  
+  .writing-textarea-minimal {
+    height: 250px;
+    padding: 15px;
+  }
+  
+  .writing-footer-minimal {
+    justify-content: center;
+  }
+  
   .writing-instructions {
     padding: 20px;
   }
@@ -443,7 +478,123 @@
 }
 
 /* ==============================================
-   3. WRITING PROMPT SECTION WITH IMAGE DISPLAY
+   3. MINIMAL WRITING LAYOUT (DET Style)
+   ============================================== */
+
+.writing-header-minimal {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.writing-header-minimal h2 {
+  color: #333;
+  margin: 0 0 15px 0;
+  font-size: 1.4em;
+  font-weight: 600;
+}
+
+.timer-minimal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: #f8f9fa;
+  border: 2px solid #e2e8f0;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.writing-layout {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+.image-section {
+  flex: 0 0 45%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.text-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.prompt-image-minimal {
+  max-width: 100%;
+  max-height: 400px;
+  width: auto;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  object-fit: contain;
+}
+
+.photo-placeholder-minimal {
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.writing-textarea-minimal {
+  width: 100%;
+  height: 400px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1em;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.writing-textarea-minimal:focus {
+  border-color: #4c51bf;
+}
+
+.writing-textarea-minimal::placeholder {
+  color: #999;
+}
+
+.writing-footer-minimal {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.writing-footer-minimal .btn {
+  background: #d1d5db;
+  color: #374151;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.writing-footer-minimal .btn:hover:not(:disabled) {
+  background: #9ca3af;
+}
+
+.writing-footer-minimal .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==============================================
+   4. LEGACY WRITING PROMPT SECTION (for feedback screen)
    ============================================== */
 .writing-prompt {
   background: #f8f9fa;
@@ -529,7 +680,7 @@
 }
 
 /* ==============================================
-   4. WRITING AREA - ENHANCED WITH LARGER TEXTAREA
+   5. WRITING AREA - ENHANCED WITH LARGER TEXTAREA (Legacy)
    ============================================== */
 .writing-area {
   margin-bottom: 20px;
