@@ -539,3 +539,5 @@ function WritingExercise({ onBack, onLogoClick }) {
 
   return null;
 }
+
+export default WritingExercise;
