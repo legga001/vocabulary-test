@@ -64,13 +64,20 @@ const reconstructCompleteAnswer = (partialUserAnswer, correctAnswer) => {
   return preFilledLetters + userTypedLetters;
 };
 
-// FIXED: Enhanced function to check if answer is correct (accounting for spelling variations)
+// FIXED: Enhanced function to check if answer is correct (handles both complete and partial answers)
 const isAnswerCorrect = (partialUserAnswer, correctAnswer) => {
   if (!partialUserAnswer || !correctAnswer) return false;
   
-  // Reconstruct the complete user answer
+  // Reconstruct the complete user answer (handles both cases)
   const completeUserAnswer = reconstructCompleteAnswer(partialUserAnswer, correctAnswer);
   const correctAnswerNormalized = correctAnswer.toLowerCase();
+  
+  console.log('📝 CHECKING ANSWER CORRECTNESS:', {
+    originalInput: partialUserAnswer,
+    reconstructed: completeUserAnswer,
+    correct: correctAnswerNormalized,
+    isMatch: completeUserAnswer === correctAnswerNormalized
+  });
   
   // Get alternative spellings for both directions
   const correctAnswerAlternatives = getAlternativeSpellings(correctAnswer);
