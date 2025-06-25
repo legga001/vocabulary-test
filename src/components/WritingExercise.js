@@ -234,6 +234,57 @@ function WritingExercise({ onBack, onLogoClick }) {
     }
   };
 
+  // Vocabulary complexity analysis
+  const analyseVocabulary = (tokens) => {
+    const vocabulary = {
+      basic: { words: [], score: 0 },
+      intermediate: { words: [], score: 0 },
+      advanced: { words: [], score: 0 },
+      total: tokens.length,
+      unique: new Set(tokens.map(t => t.word)).size
+    };
+    
+    // Basic vocabulary (A1-A2 level)
+    const basicWords = [
+      'good', 'bad', 'big', 'small', 'happy', 'sad', 'old', 'new', 'nice', 'beautiful',
+      'family', 'house', 'car', 'food', 'work', 'school', 'friend', 'time', 'day', 'year',
+      'like', 'love', 'want', 'need', 'go', 'come', 'see', 'know', 'think', 'say'
+    ];
+    
+    // Intermediate vocabulary (B1-B2 level)
+    const intermediateWords = [
+      'amazing', 'terrible', 'enormous', 'tiny', 'delighted', 'disappointed', 'ancient', 'modern',
+      'fantastic', 'awful', 'brilliant', 'dreadful', 'excellent', 'wonderful', 'comfortable',
+      'environment', 'opportunity', 'experience', 'situation', 'development', 'improvement',
+      'relationship', 'communication', 'information', 'education', 'transportation', 'organization',
+      'appreciate', 'recommend', 'suggest', 'consider', 'discuss', 'explain', 'describe', 'compare'
+    ];
+    
+    // Advanced vocabulary (C1+ level)
+    const advancedWords = [
+      'magnificent', 'devastating', 'colossal', 'minuscule', 'ecstatic', 'distraught', 'archaic', 'contemporary',
+      'extraordinary', 'abysmal', 'exceptional', 'appalling', 'outstanding', 'remarkable', 'sophisticated',
+      'phenomenon', 'consequence', 'significance', 'perspective', 'methodology', 'implementation',
+      'comprehensive', 'substantial', 'considerable', 'fundamental', 'essential', 'crucial',
+      'contemplate', 'demonstrate', 'illustrate', 'investigate', 'establish', 'acknowledge', 'emphasize'
+    ];
+    
+    tokens.forEach(token => {
+      const word = token.word;
+      if (advancedWords.includes(word)) {
+        vocabulary.advanced.words.push(word);
+        vocabulary.advanced.score += 3;
+      } else if (intermediateWords.includes(word)) {
+        vocabulary.intermediate.words.push(word);
+        vocabulary.intermediate.score += 2;
+      } else if (basicWords.includes(word)) {
+        vocabulary.basic.words.push(word);
+        vocabulary.basic.score += 1;
+      }
+    });
+    
+    return vocabulary;
+  };
   // Advanced tokenizer and POS tagger
   const tokenize = (text) => {
     return text.toLowerCase()
@@ -494,30 +545,32 @@ function WritingExercise({ onBack, onLogoClick }) {
   const analyseGrammar = (text) => {
     const tokens = tagPOS(tokenize(text));
     const patterns = detectGrammarPatterns(tokens, text);
+    const vocabulary = analyseVocabulary(tokens);
     
     const analysis = {
       a1_a2: { score: 0, found: [], total: 15 },
       b1: { score: 0, found: [], total: 15 },
       b2_plus: { score: 0, found: [], total: 10 },
+      vocabulary: vocabulary,
       sentences: text.split(/[.!?]+/).filter(s => s.trim().length > 3),
       totalTokens: tokens.length,
       uniqueWords: new Set(tokens.map(t => t.word)).size
     };
     
-    // Calculate scores and examples for each level
+    // Calculate scores and create user-friendly messages
     patterns.a1_a2.forEach(pattern => {
       analysis.a1_a2.score += pattern.score;
-      analysis.a1_a2.found.push(`${pattern.type}: ${pattern.example}`);
+      analysis.a1_a2.found.push(createFriendlyMessage(pattern.type, pattern.example));
     });
     
     patterns.b1.forEach(pattern => {
       analysis.b1.score += pattern.score;
-      analysis.b1.found.push(`${pattern.type}: ${pattern.example}`);
+      analysis.b1.found.push(createFriendlyMessage(pattern.type, pattern.example));
     });
     
     patterns.b2_plus.forEach(pattern => {
       analysis.b2_plus.score += pattern.score;
-      analysis.b2_plus.found.push(`${pattern.type}: ${pattern.example}`);
+      analysis.b2_plus.found.push(createFriendlyMessage(pattern.type, pattern.example));
     });
     
     // Cap scores at maximum
@@ -526,6 +579,31 @@ function WritingExercise({ onBack, onLogoClick }) {
     analysis.b2_plus.score = Math.min(analysis.b2_plus.score, analysis.b2_plus.total);
     
     return analysis;
+  };
+
+  // Create user-friendly messages for grammar patterns
+  const createFriendlyMessage = (type, example) => {
+    const messages = {
+      'TO_BE': 'Well done! You used "to be" verbs correctly',
+      'PRESENT_SIMPLE': 'Great! You used present simple tense',
+      'ARTICLES': 'Nice work using articles (a, an, the)',
+      'HAVE_GOT': 'Excellent! You used "have got" structure',
+      'THERE_BE': 'Good! You used "there is/are" construction',
+      'PAST_SIMPLE': 'Well done! You used past simple tense',
+      'PRESENT_PERFECT': 'Fantastic! You used present perfect tense',
+      'PRESENT_CONTINUOUS': 'Great! You used present continuous',
+      'PAST_CONTINUOUS': 'Excellent! You used past continuous',
+      'MODAL_VERB': 'Nice! You used modal verbs',
+      'GOING_TO_FUTURE': 'Good! You used "going to" future',
+      'CONDITIONAL': 'Amazing! You used conditional sentences',
+      'PASSIVE_VOICE': 'Outstanding! You used passive voice',
+      'RELATIVE_CLAUSE': 'Brilliant! You used relative clauses',
+      'COMPLEX_CONNECTORS': 'Superb! You used advanced connectors',
+      'PRESENT_PERFECT_CONTINUOUS': 'Exceptional! You used present perfect continuous',
+      'REPORTED_SPEECH': 'Excellent! You used reported speech'
+    };
+    
+    return messages[type] || `Great! You used ${type.toLowerCase().replace(/_/g, ' ')}`;
   };
 
   // Generate feedback based on detailed grammar analysis
@@ -544,12 +622,21 @@ function WritingExercise({ onBack, onLogoClick }) {
       score += 5;
     }
     
-    // Grammar scoring based on analysis (40 points total)
+    // Grammar scoring based on analysis (35 points total)
     const a1a2Score = Math.min(grammarAnalysis.a1_a2.score, grammarAnalysis.a1_a2.total);
     const b1Score = Math.min(grammarAnalysis.b1.score, grammarAnalysis.b1.total);
     const b2Score = Math.min(grammarAnalysis.b2_plus.score, grammarAnalysis.b2_plus.total);
     
     score += a1a2Score + b1Score + b2Score;
+    
+    // Vocabulary complexity scoring (10 points total)
+    const vocabScore = Math.min(
+      grammarAnalysis.vocabulary.basic.score + 
+      grammarAnalysis.vocabulary.intermediate.score + 
+      grammarAnalysis.vocabulary.advanced.score, 
+      10
+    );
+    score += vocabScore;
     
     // Sentence variety bonus (5 points)
     if (grammarAnalysis.sentences.length >= 3) score += 3;
@@ -599,30 +686,34 @@ function WritingExercise({ onBack, onLogoClick }) {
       suggestions.push("✅ Perfect word count!");
     }
     
-    // Grammar feedback based on what was actually found
-    if (analysis.a1_a2.found.length > 0) {
-      suggestions.push(`✅ Good basic grammar: ${analysis.a1_a2.found.join(', ')}`);
+    // Grammar achievements - show what they did well
+    const allGrammar = [
+      ...analysis.a1_a2.found,
+      ...analysis.b1.found,
+      ...analysis.b2_plus.found
+    ];
+    
+    if (allGrammar.length === 0) {
+      suggestions.push("📚 Try using basic grammar: present simple (I work, she lives), past simple (I went), articles (a, an, the)");
     } else {
-      suggestions.push("📚 Try using basic grammar: present simple (I work, she lives), past simple (I went, she was), articles (a, an, the)");
+      // Show positive feedback for what they achieved
+      allGrammar.slice(0, 3).forEach(achievement => {
+        suggestions.push(achievement);
+      });
     }
     
-    if (analysis.b1.found.length > 0) {
-      suggestions.push(`🎯 Great intermediate grammar: ${analysis.b1.found.join(', ')}`);
-    } else if (analysis.a1_a2.score >= 10) {
-      suggestions.push("📈 Next step: Try present perfect (I have seen), present progressive (I am working), or modal verbs (can, should, must)");
+    // Vocabulary feedback
+    if (analysis.vocabulary.advanced.words.length > 0) {
+      suggestions.push(`🌟 Great advanced vocabulary: ${analysis.vocabulary.advanced.words.slice(0, 3).join(', ')}`);
+    } else if (analysis.vocabulary.intermediate.words.length > 0) {
+      suggestions.push(`🎯 Good intermediate vocabulary: ${analysis.vocabulary.intermediate.words.slice(0, 3).join(', ')}`);
     }
     
-    if (analysis.b2_plus.found.length > 0) {
-      suggestions.push(`🌟 Excellent advanced grammar: ${analysis.b2_plus.found.join(', ')}`);
-    } else if (analysis.b1.score >= 10) {
-      suggestions.push("🚀 Challenge yourself: Try passive voice (it was made), relative clauses (the person who...), or complex connectors (however, therefore)");
-    }
-    
-    // Sentence variety feedback
-    if (analysis.sentences.length < 3) {
-      suggestions.push("📝 Try writing more sentences to show grammar variety");
-    } else if (analysis.sentences.length >= 5) {
-      suggestions.push("✅ Good sentence variety!");
+    // Next level suggestions
+    if (analysis.a1_a2.score >= 10 && analysis.b1.score < 5) {
+      suggestions.push("📈 Next challenge: Try present perfect (I have seen) or modal verbs (can, should, must)");
+    } else if (analysis.b1.score >= 10 && analysis.b2_plus.score < 5) {
+      suggestions.push("🚀 Ready for advanced grammar: Try passive voice (it was made) or relative clauses (the person who...)");
     }
     
     return suggestions;
@@ -790,43 +881,41 @@ function WritingExercise({ onBack, onLogoClick }) {
 
           {feedback.grammarAnalysis && (
             <div className="feedback-section">
-              <h3>🔍 Grammar Analysis</h3>
-              <div className="grammar-analysis">
-                <div className="grammar-level">
-                  <h4>A1-A2 Level (Basic Grammar)</h4>
-                  <div className="grammar-score">Score: {feedback.grammarAnalysis.a1_a2.score}/{feedback.grammarAnalysis.a1_a2.total}</div>
-                  {feedback.grammarAnalysis.a1_a2.found.length > 0 ? (
-                    <div className="grammar-found">
-                      ✅ Found: {feedback.grammarAnalysis.a1_a2.found.join(' • ')}
-                    </div>
-                  ) : (
-                    <div className="grammar-missing">No basic grammar structures detected</div>
-                  )}
-                </div>
+              <h3>🎯 What You Did Well</h3>
+              <div className="achievements-grid">
+                {[
+                  ...feedback.grammarAnalysis.a1_a2.found,
+                  ...feedback.grammarAnalysis.b1.found,
+                  ...feedback.grammarAnalysis.b2_plus.found
+                ].slice(0, 6).map((achievement, index) => (
+                  <div key={index} className="achievement-item">
+                    {achievement}
+                  </div>
+                ))}
                 
-                <div className="grammar-level">
-                  <h4>B1 Level (Intermediate Grammar)</h4>
-                  <div className="grammar-score">Score: {feedback.grammarAnalysis.b1.score}/{feedback.grammarAnalysis.b1.total}</div>
-                  {feedback.grammarAnalysis.b1.found.length > 0 ? (
-                    <div className="grammar-found">
-                      ✅ Found: {feedback.grammarAnalysis.b1.found.join(' • ')}
-                    </div>
-                  ) : (
-                    <div className="grammar-missing">No intermediate grammar structures detected</div>
-                  )}
-                </div>
+                {feedback.grammarAnalysis.vocabulary.intermediate.words.length > 0 && (
+                  <div className="achievement-item">
+                    🎯 Good vocabulary: {feedback.grammarAnalysis.vocabulary.intermediate.words.slice(0, 3).join(', ')}
+                  </div>
+                )}
                 
-                <div className="grammar-level">
-                  <h4>B2+ Level (Advanced Grammar)</h4>
-                  <div className="grammar-score">Score: {feedback.grammarAnalysis.b2_plus.score}/{feedback.grammarAnalysis.b2_plus.total}</div>
-                  {feedback.grammarAnalysis.b2_plus.found.length > 0 ? (
-                    <div className="grammar-found">
-                      ✅ Found: {feedback.grammarAnalysis.b2_plus.found.join(' • ')}
-                    </div>
-                  ) : (
-                    <div className="grammar-missing">No advanced grammar structures detected</div>
-                  )}
-                </div>
+                {feedback.grammarAnalysis.vocabulary.advanced.words.length > 0 && (
+                  <div className="achievement-item">
+                    🌟 Advanced vocabulary: {feedback.grammarAnalysis.vocabulary.advanced.words.slice(0, 3).join(', ')}
+                  </div>
+                )}
+                
+                {([
+                  ...feedback.grammarAnalysis.a1_a2.found,
+                  ...feedback.grammarAnalysis.b1.found,
+                  ...feedback.grammarAnalysis.b2_plus.found
+                ].length === 0 && 
+                  feedback.grammarAnalysis.vocabulary.intermediate.words.length === 0 && 
+                  feedback.grammarAnalysis.vocabulary.advanced.words.length === 0) && (
+                  <div className="achievement-item">
+                    👍 Good effort! Keep practising to improve your grammar and vocabulary
+                  </div>
+                )}
               </div>
             </div>
           )}
