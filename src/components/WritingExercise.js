@@ -137,23 +137,23 @@ const PHOTO_PROMPTS = [
   }
 ];
 
-// Model answers for comparison
+// Model answers focused on grammatical structures for ESL students
 const MODEL_ANSWERS = {
-  busy_city_street: "This vibrant urban scene captures the essence of city life during rush hour. The streets buzz with activity as people hurry along pavements, their faces focused and determined. Double-decker buses weave through traffic whilst cyclists navigate between cars, creating a symphony of urban movement. The towering buildings create narrow corridors filled with the energy of commerce and daily life. You can sense the urgency in people's body language - some clutching mobile phones, others carrying briefcases or shopping bags. The atmosphere is electric with purpose and ambition, representing the heartbeat of modern metropolitan life where thousands of individual stories intersect briefly before diverging towards their separate destinations.",
+  busy_city_street: "This is a busy city street. Many people are walking on the pavement. Cars and buses are driving on the road. Some people are waiting at the bus stop. A woman is carrying a bag. Traffic lights are controlling the traffic. The buildings are tall and modern.",
 
-  family_picnic: "This charming park scene depicts a perfect family gathering on a sunny afternoon. Parents and children have spread colourful blankets on the grass, creating a cosy outdoor dining space. The children appear delighted, some playing catch whilst others help unpack sandwiches and fruit from wicker baskets. The adults chat leisurely, occasionally calling out encouragement to the playing children. Tall trees provide dappled shade, and the warm sunlight suggests an ideal day for outdoor activities. The atmosphere radiates contentment and togetherness, showing how simple pleasures like sharing food in nature can strengthen family bonds and create lasting memories.",
+  family_picnic: "This family is having a picnic in the park. The parents are sitting on a blanket. Children are playing with a ball. They have brought sandwiches and drinks. The weather is sunny and warm. Everyone looks happy and relaxed.",
 
-  coffee_shop: "The bustling coffee shop creates a warm, inviting atmosphere where diverse activities unfold simultaneously. Students hunched over laptops occupy corner tables, occasionally glancing up from their screens to people-watch. Business professionals engage in animated discussions over steaming mugs whilst mothers with pushchairs enjoy brief respites from daily routines. The baristas work efficiently behind the counter, creating a rhythmic soundtrack of grinding, steaming, and friendly conversation. Rich aromas of freshly brewed coffee mingle with the gentle hum of conversation, creating an environment that serves as both workspace and social hub for the local community.",
+  coffee_shop: "This coffee shop is very busy. Customers are sitting at tables. Some people are reading newspapers. A barista is making coffee behind the counter. Students are studying with their laptops. The atmosphere is friendly and comfortable.",
 
-  playground: "This lively playground buzzes with childhood joy and energy. Children of various ages engage in different activities - some conquering climbing frames with determined concentration whilst others soar high on swings, their laughter carrying across the space. Parents and guardians watch from nearby benches, occasionally offering encouragement or gentle guidance. The colourful equipment contrasts beautifully with the green grass and blue sky, creating an environment designed for both fun and development. The atmosphere is one of pure happiness and freedom, where children can express themselves naturally whilst developing social skills and physical confidence.",
+  playground: "Children are playing at this playground. Some kids are using the swings. Others are climbing on the equipment. Parents are watching their children. Everyone is having fun. The playground is safe and colourful.",
 
-  farmers_market: "This vibrant farmers' market showcases the best of local community life and fresh produce. Colourful stalls display an abundance of seasonal vegetables, fragrant herbs, and artisanal products whilst vendors enthusiastically describe their offerings to interested customers. Families wander between stalls, children marvelling at the variety whilst parents make thoughtful selections. The atmosphere combines the energy of commerce with the warmth of community connection, as regular customers greet familiar farmers by name. Rich colours of red tomatoes, green lettuce, and golden bread create a feast for the eyes, representing the connection between rural producers and urban consumers.",
+  farmers_market: "This is a farmers' market. Vendors are selling fresh vegetables and fruits. Customers are walking between the stalls. People are buying organic food. The market is open every weekend. There are many different products available.",
 
-  library: "The peaceful library environment facilitates deep concentration and learning. Students occupy individual desks and study tables, surrounded by towering bookshelves that reach towards high ceilings. Some work silently through textbooks whilst others collaborate quietly on group projects. The soft lighting and comfortable seating create an atmosphere conducive to extended study sessions. Librarians move discretely amongst the stacks, always ready to assist with research enquiries. The space represents a sanctuary of knowledge where academic pursuits flourish, combining traditional books with modern technology to support diverse learning styles and educational goals.",
+  library: "Students are studying in this library. Some people are reading books at tables. Others are using computers. The librarian is helping visitors. The environment is quiet and peaceful. Many books are arranged on the shelves.",
 
-  beach_scene: "This idyllic beach scene captures the essence of a perfect holiday day. Families have claimed spots on the golden sand, some building elaborate sandcastles whilst others simply relax under colourful umbrellas. Children splash joyfully in the gentle waves whilst adults alternate between swimming and sunbathing. Beach volleyball players add energy to one corner whilst dog walkers enjoy the vast open space. The brilliant blue sky and warm sunshine create an atmosphere of complete relaxation and escape from daily routines. This scene represents the rejuvenating power of natural coastal environments.",
+  beach_scene: "People are enjoying a day at the beach. Families are sitting on the sand. Children are building sandcastles. Some people are swimming in the sea. The sun is shining brightly. Everyone is having a good time.",
 
-  train_station: "The bustling train station serves as a fascinating microcosm of modern travel and human connectivity. Commuters check departure boards anxiously whilst families navigate with heavy luggage towards holiday destinations. The impressive Victorian architecture contrasts with modern electronic displays, creating a bridge between historical grandeur and contemporary efficiency. Announcements echo across the vast space as people from diverse backgrounds briefly share this transitional moment in their journeys. The atmosphere combines excitement and routine, representing how transportation hubs facilitate both ordinary commutes and extraordinary adventures across the country and beyond."
+  train_station: "This train station is very busy. Passengers are waiting for their trains. Some people are carrying suitcases. The departure board shows train times. Announcements are being made regularly. Travelers are going to different destinations."
 };
 
 function WritingExercise({ onBack, onLogoClick }) {
@@ -557,20 +557,32 @@ function WritingExercise({ onBack, onLogoClick }) {
       uniqueWords: new Set(tokens.map(t => t.word)).size
     };
     
-    // Calculate scores and create user-friendly messages
+    // Track unique pattern types to avoid duplicates
+    const foundTypes = new Set();
+    
+    // Calculate scores and create user-friendly messages (no duplicates)
     patterns.a1_a2.forEach(pattern => {
       analysis.a1_a2.score += pattern.score;
-      analysis.a1_a2.found.push(createFriendlyMessage(pattern.type, pattern.example));
+      if (!foundTypes.has(pattern.type)) {
+        analysis.a1_a2.found.push(createFriendlyMessage(pattern.type, pattern.example));
+        foundTypes.add(pattern.type);
+      }
     });
     
     patterns.b1.forEach(pattern => {
       analysis.b1.score += pattern.score;
-      analysis.b1.found.push(createFriendlyMessage(pattern.type, pattern.example));
+      if (!foundTypes.has(pattern.type)) {
+        analysis.b1.found.push(createFriendlyMessage(pattern.type, pattern.example));
+        foundTypes.add(pattern.type);
+      }
     });
     
     patterns.b2_plus.forEach(pattern => {
       analysis.b2_plus.score += pattern.score;
-      analysis.b2_plus.found.push(createFriendlyMessage(pattern.type, pattern.example));
+      if (!foundTypes.has(pattern.type)) {
+        analysis.b2_plus.found.push(createFriendlyMessage(pattern.type, pattern.example));
+        foundTypes.add(pattern.type);
+      }
     });
     
     // Cap scores at maximum
