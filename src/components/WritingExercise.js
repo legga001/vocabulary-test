@@ -234,172 +234,298 @@ function WritingExercise({ onBack, onLogoClick }) {
     }
   };
 
-  // Advanced grammar analysis system
+  // Advanced tokenizer and POS tagger
+  const tokenize = (text) => {
+    return text.toLowerCase()
+      .replace(/[^\w\s']/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 0);
+  };
+
+  const tagPOS = (tokens) => {
+    const tagged = [];
+    const verbPrefixes = ['be', 'have', 'do', 'will', 'would', 'could', 'should', 'might', 'may', 'can', 'must'];
+    const prepositions = ['in', 'on', 'at', 'by', 'for', 'with', 'from', 'to', 'of', 'about', 'under', 'over'];
+    const determiners = ['the', 'a', 'an', 'this', 'that', 'these', 'those', 'my', 'your', 'his', 'her', 'its', 'our', 'their'];
+    
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      const nextToken = tokens[i + 1];
+      const prevToken = tokens[i - 1];
+      
+      let pos = 'UNKNOWN';
+      
+      // Verb detection
+      if (verbPrefixes.includes(token) || token.endsWith('ing') || token.endsWith('ed') || 
+          token.endsWith('s') && !token.endsWith('ss')) {
+        pos = 'VERB';
+      }
+      // Modal detection
+      else if (['can', 'could', 'should', 'would', 'might', 'may', 'must', 'will', 'shall'].includes(token)) {
+        pos = 'MODAL';
+      }
+      // Auxiliary detection
+      else if (['be', 'am', 'is', 'are', 'was', 'were', 'being', 'been', 'have', 'has', 'had', 'having', 'do', 'does', 'did'].includes(token)) {
+        pos = 'AUX';
+      }
+      // Determiner detection
+      else if (determiners.includes(token)) {
+        pos = 'DET';
+      }
+      // Preposition detection
+      else if (prepositions.includes(token)) {
+        pos = 'PREP';
+      }
+      // Pronoun detection
+      else if (['i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them'].includes(token)) {
+        pos = 'PRON';
+      }
+      // Conjunction detection
+      else if (['and', 'but', 'or', 'so', 'because', 'although', 'however', 'therefore', 'moreover'].includes(token)) {
+        pos = 'CONJ';
+      }
+      else {
+        pos = 'NOUN'; // Default assumption
+      }
+      
+      tagged.push({ word: token, pos: pos, index: i });
+    }
+    
+    return tagged;
+  };
+
+  // Advanced grammar pattern detector
+  const detectGrammarPatterns = (tokens, originalText) => {
+    const patterns = {
+      a1_a2: [],
+      b1: [],
+      b2_plus: []
+    };
+    
+    // Convert to sentences for better analysis
+    const sentences = originalText.split(/[.!?]+/).filter(s => s.trim().length > 3);
+    
+    sentences.forEach(sentence => {
+      const sentenceTokens = tagPOS(tokenize(sentence));
+      const sentenceLower = sentence.toLowerCase();
+      
+      // A1-A2 Pattern Detection
+      detectA1A2Patterns(sentenceTokens, sentenceLower, patterns.a1_a2);
+      
+      // B1 Pattern Detection  
+      detectB1Patterns(sentenceTokens, sentenceLower, patterns.b1);
+      
+      // B2+ Pattern Detection
+      detectB2Patterns(sentenceTokens, sentenceLower, patterns.b2_plus);
+    });
+    
+    return patterns;
+  };
+
+  const detectA1A2Patterns = (tokens, sentence, patterns) => {
+    // TO BE + complement structures
+    const bePattern = tokens.find((token, i) => 
+      token.pos === 'AUX' && ['am', 'is', 'are', 'was', 'were'].includes(token.word) &&
+      i < tokens.length - 1
+    );
+    if (bePattern) {
+      patterns.push({ type: 'TO_BE', example: `"${bePattern.word}"`, score: 3 });
+    }
+    
+    // Present simple with subject-verb agreement
+    const presentSimple = tokens.find((token, i) => {
+      if (token.pos === 'VERB') {
+        const prevToken = tokens[i - 1];
+        if (prevToken && ['he', 'she', 'it'].includes(prevToken.word) && token.word.endsWith('s')) {
+          return true;
+        }
+        if (prevToken && ['i', 'you', 'we', 'they'].includes(prevToken.word) && !token.word.endsWith('s')) {
+          return true;
+        }
+      }
+      return false;
+    });
+    if (presentSimple) {
+      patterns.push({ type: 'PRESENT_SIMPLE', example: `"${presentSimple.word}"`, score: 3 });
+    }
+    
+    // Article usage
+    const articles = tokens.filter(token => token.pos === 'DET' && ['a', 'an', 'the'].includes(token.word));
+    if (articles.length >= 2) {
+      patterns.push({ type: 'ARTICLES', example: `"${articles.map(a => a.word).join(', ')}"`, score: 2 });
+    }
+    
+    // HAVE GOT construction
+    if (/\b(have|has)\s+got\b/.test(sentence)) {
+      patterns.push({ type: 'HAVE_GOT', example: '"have/has got"', score: 4 });
+    }
+    
+    // There is/are existential
+    if (/\bthere\s+(is|are|was|were)\b/.test(sentence)) {
+      patterns.push({ type: 'THERE_BE', example: '"there is/are"', score: 3 });
+    }
+    
+    // Past simple (regular and irregular)
+    const pastVerbs = tokens.filter(token => 
+      (token.word.endsWith('ed') && token.pos === 'VERB') ||
+      ['went', 'came', 'saw', 'did', 'had', 'made', 'got', 'took', 'gave'].includes(token.word)
+    );
+    if (pastVerbs.length > 0) {
+      patterns.push({ type: 'PAST_SIMPLE', example: `"${pastVerbs[0].word}"`, score: 3 });
+    }
+  };
+
+  const detectB1Patterns = (tokens, sentence, patterns) => {
+    // Present perfect detection
+    const perfectPattern = tokens.find((token, i) => {
+      if (['have', 'has'].includes(token.word) && i < tokens.length - 1) {
+        const nextToken = tokens[i + 1];
+        const perfectVerbs = ['been', 'done', 'seen', 'gone', 'made', 'taken', 'given', 'written', 'eaten', 'lived', 'worked', 'studied', 'visited'];
+        return perfectVerbs.includes(nextToken.word) || nextToken.word.endsWith('ed');
+      }
+      return false;
+    });
+    if (perfectPattern) {
+      patterns.push({ type: 'PRESENT_PERFECT', example: `"${perfectPattern.word} + past participle"`, score: 5 });
+    }
+    
+    // Present continuous/progressive
+    const continuousPattern = tokens.find((token, i) => {
+      if (['am', 'is', 'are'].includes(token.word) && i < tokens.length - 1) {
+        const nextToken = tokens[i + 1];
+        return nextToken.word.endsWith('ing');
+      }
+      return false;
+    });
+    if (continuousPattern) {
+      patterns.push({ type: 'PRESENT_CONTINUOUS', example: '"am/is/are + -ing"', score: 4 });
+    }
+    
+    // Past continuous
+    const pastContinuous = tokens.find((token, i) => {
+      if (['was', 'were'].includes(token.word) && i < tokens.length - 1) {
+        const nextToken = tokens[i + 1];
+        return nextToken.word.endsWith('ing');
+      }
+      return false;
+    });
+    if (pastContinuous) {
+      patterns.push({ type: 'PAST_CONTINUOUS', example: '"was/were + -ing"', score: 5 });
+    }
+    
+    // Modal + base verb
+    const modalPattern = tokens.find((token, i) => {
+      if (token.pos === 'MODAL' && i < tokens.length - 1) {
+        const nextToken = tokens[i + 1];
+        return nextToken.pos === 'VERB' && !nextToken.word.endsWith('ing') && !nextToken.word.endsWith('ed');
+      }
+      return false;
+    });
+    if (modalPattern) {
+      patterns.push({ type: 'MODAL_VERB', example: `"${modalPattern.word} + verb"`, score: 4 });
+    }
+    
+    // Going to future
+    if (/\b(am|is|are)\s+going\s+to\s+\w+/.test(sentence)) {
+      patterns.push({ type: 'GOING_TO_FUTURE', example: '"going to + verb"', score: 4 });
+    }
+    
+    // Conditional structures
+    if (/\bif\s+\w+.*,.*\w+|\w+.*\bif\s+\w+/.test(sentence)) {
+      patterns.push({ type: 'CONDITIONAL', example: '"if + clause"', score: 5 });
+    }
+  };
+
+  const detectB2Patterns = (tokens, sentence, patterns) => {
+    // Passive voice detection
+    const passivePattern = tokens.find((token, i) => {
+      if (['is', 'are', 'was', 'were', 'been', 'being'].includes(token.word) && i < tokens.length - 1) {
+        const nextToken = tokens[i + 1];
+        const pastParticiples = ['made', 'done', 'seen', 'built', 'created', 'written', 'taken', 'given', 'opened', 'closed'];
+        return pastParticiples.includes(nextToken.word) || (nextToken.word.endsWith('ed') && nextToken.word.length > 3);
+      }
+      return false;
+    });
+    if (passivePattern) {
+      patterns.push({ type: 'PASSIVE_VOICE', example: '"be + past participle"', score: 5 });
+    }
+    
+    // Relative clauses
+    const relativePattern = tokens.find((token, i) => {
+      if (['who', 'which', 'that', 'where', 'when'].includes(token.word)) {
+        // Check if it's actually starting a relative clause (has subject/verb after)
+        const hasSubjectVerb = tokens.slice(i + 1, i + 4).some(t => t.pos === 'VERB');
+        return hasSubjectVerb;
+      }
+      return false;
+    });
+    if (relativePattern) {
+      patterns.push({ type: 'RELATIVE_CLAUSE', example: `"${relativePattern.word} + clause"`, score: 4 });
+    }
+    
+    // Complex connectors
+    const complexConnectors = tokens.filter(token => 
+      ['although', 'however', 'therefore', 'moreover', 'furthermore', 'nevertheless', 'consequently'].includes(token.word)
+    );
+    if (complexConnectors.length > 0) {
+      patterns.push({ type: 'COMPLEX_CONNECTORS', example: `"${complexConnectors[0].word}"`, score: 4 });
+    }
+    
+    // Present perfect continuous
+    const ppcPattern = tokens.find((token, i) => {
+      if (['have', 'has'].includes(token.word) && i < tokens.length - 2) {
+        const nextToken = tokens[i + 1];
+        const thirdToken = tokens[i + 2];
+        return nextToken.word === 'been' && thirdToken.word.endsWith('ing');
+      }
+      return false;
+    });
+    if (ppcPattern) {
+      patterns.push({ type: 'PRESENT_PERFECT_CONTINUOUS', example: '"have/has been + -ing"', score: 6 });
+    }
+    
+    // Reported speech indicators
+    if (/\b(said|told|asked|explained|mentioned)\s+(that|to)\b/.test(sentence)) {
+      patterns.push({ type: 'REPORTED_SPEECH', example: '"said that/told to"', score: 4 });
+    }
+  };
+
+  // Enhanced grammar analysis using the advanced system
   const analyseGrammar = (text) => {
+    const tokens = tagPOS(tokenize(text));
+    const patterns = detectGrammarPatterns(tokens, text);
+    
     const analysis = {
       a1_a2: { score: 0, found: [], total: 15 },
       b1: { score: 0, found: [], total: 15 },
       b2_plus: { score: 0, found: [], total: 10 },
-      sentences: [],
-      errors: []
+      sentences: text.split(/[.!?]+/).filter(s => s.trim().length > 3),
+      totalTokens: tokens.length,
+      uniqueWords: new Set(tokens.map(t => t.word)).size
     };
     
-    // Clean and tokenise text
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 3);
-    analysis.sentences = sentences;
-    
-    sentences.forEach((sentence, index) => {
-      const words = sentence.trim().toLowerCase().split(/\s+/);
-      const originalWords = sentence.trim().split(/\s+/);
-      
-      // A1-A2 Level Analysis
-      analyseBasicGrammar(words, originalWords, analysis.a1_a2, sentence);
-      
-      // B1 Level Analysis  
-      analyseIntermediateGrammar(words, originalWords, analysis.b1, sentence);
-      
-      // B2+ Level Analysis
-      analyseAdvancedGrammar(words, originalWords, analysis.b2_plus, sentence);
+    // Calculate scores and examples for each level
+    patterns.a1_a2.forEach(pattern => {
+      analysis.a1_a2.score += pattern.score;
+      analysis.a1_a2.found.push(`${pattern.type}: ${pattern.example}`);
     });
+    
+    patterns.b1.forEach(pattern => {
+      analysis.b1.score += pattern.score;
+      analysis.b1.found.push(`${pattern.type}: ${pattern.example}`);
+    });
+    
+    patterns.b2_plus.forEach(pattern => {
+      analysis.b2_plus.score += pattern.score;
+      analysis.b2_plus.found.push(`${pattern.type}: ${pattern.example}`);
+    });
+    
+    // Cap scores at maximum
+    analysis.a1_a2.score = Math.min(analysis.a1_a2.score, analysis.a1_a2.total);
+    analysis.b1.score = Math.min(analysis.b1.score, analysis.b1.total);
+    analysis.b2_plus.score = Math.min(analysis.b2_plus.score, analysis.b2_plus.total);
     
     return analysis;
-  };
-  
-  // Analyse basic A1-A2 grammar structures
-  const analyseBasicGrammar = (words, originalWords, level, sentence) => {
-    // TO BE verb analysis (present and past)
-    const beVerbs = ['am', 'is', 'are', 'was', 'were'];
-    const foundBe = words.filter(word => beVerbs.includes(word));
-    if (foundBe.length > 0) {
-      level.score += 2;
-      level.found.push(`TO BE verbs: ${foundBe.join(', ')}`);
-    }
-    
-    // Present simple analysis (3rd person -s, regular verbs)
-    const presentSimplePatterns = [
-      /\b(work|works|live|lives|like|likes|go|goes|come|comes|see|sees|play|plays|study|studies)\b/g,
-      /\b(have|has)\b/g
-    ];
-    presentSimplePatterns.forEach(pattern => {
-      const matches = sentence.toLowerCase().match(pattern);
-      if (matches) {
-        level.score += 2;
-        level.found.push(`Present simple: ${matches.join(', ')}`);
-      }
-    });
-    
-    // Past simple analysis (regular -ed and common irregulars)
-    const pastSimplePattern = /\b(worked|lived|liked|played|studied|went|came|saw|did|had|made|got|took|gave)\b/g;
-    const pastMatches = sentence.toLowerCase().match(pastSimplePattern);
-    if (pastMatches) {
-      level.score += 2;
-      level.found.push(`Past simple: ${pastMatches.join(', ')}`);
-    }
-    
-    // Articles analysis
-    const articlePattern = /\b(a|an|the)\b/g;
-    const articleMatches = sentence.toLowerCase().match(articlePattern);
-    if (articleMatches && articleMatches.length >= 2) {
-      level.score += 2;
-      level.found.push(`Articles: ${articleMatches.join(', ')}`);
-    }
-    
-    // HAVE GOT structure
-    const haveGotPattern = /\b(have|has)\s+got\b/g;
-    if (sentence.toLowerCase().match(haveGotPattern)) {
-      level.score += 3;
-      level.found.push('HAVE GOT structure');
-    }
-    
-    // There is/are structure
-    const therePattern = /\bthere\s+(is|are|was|were)\b/g;
-    if (sentence.toLowerCase().match(therePattern)) {
-      level.score += 2;
-      level.found.push('There is/are structure');
-    }
-  };
-  
-  // Analyse intermediate B1 grammar structures
-  const analyseIntermediateGrammar = (words, originalWords, level, sentence) => {
-    // Present perfect analysis (have/has + past participle)
-    const presentPerfectPattern = /\b(have|has)\s+(been|gone|seen|done|made|taken|given|written|eaten|drunk|lived|worked|studied|played|visited|travelled|learned|known|met|found|lost|bought|sold|read|heard|felt|thought|said|told|come|become)\b/g;
-    const ppMatches = sentence.toLowerCase().match(presentPerfectPattern);
-    if (ppMatches) {
-      level.score += 4;
-      level.found.push(`Present perfect: ${ppMatches.join(', ')}`);
-    }
-    
-    // Present progressive analysis (am/is/are + -ing)
-    const presentProgPattern = /\b(am|is|are)\s+\w+ing\b/g;
-    const progMatches = sentence.toLowerCase().match(presentProgPattern);
-    if (progMatches) {
-      level.score += 3;
-      level.found.push(`Present progressive: ${progMatches.join(', ')}`);
-    }
-    
-    // Past progressive analysis (was/were + -ing)
-    const pastProgPattern = /\b(was|were)\s+\w+ing\b/g;
-    const pastProgMatches = sentence.toLowerCase().match(pastProgPattern);
-    if (pastProgMatches) {
-      level.score += 4;
-      level.found.push(`Past progressive: ${pastProgMatches.join(', ')}`);
-    }
-    
-    // Modal verbs analysis
-    const modalPattern = /\b(can|could|should|would|might|may|must|will|shall)\s+\w+/g;
-    const modalMatches = sentence.toLowerCase().match(modalPattern);
-    if (modalMatches) {
-      level.score += 3;
-      level.found.push(`Modal verbs: ${modalMatches.join(', ')}`);
-    }
-    
-    // Conditional structures
-    const conditionalPattern = /\bif\s+\w+.*,.*\w+/g;
-    if (sentence.toLowerCase().match(conditionalPattern)) {
-      level.score += 4;
-      level.found.push('Conditional structure');
-    }
-    
-    // Future with going to
-    const goingToPattern = /\b(am|is|are)\s+going\s+to\s+\w+/g;
-    if (sentence.toLowerCase().match(goingToPattern)) {
-      level.score += 3;
-      level.found.push('Going to future');
-    }
-  };
-  
-  // Analyse advanced B2+ grammar structures
-  const analyseAdvancedGrammar = (words, originalWords, level, sentence) => {
-    // Passive voice analysis (be + past participle)
-    const passivePattern = /\b(is|are|was|were|been|being)\s+(made|done|seen|built|created|designed|written|painted|taken|given|shown|told|asked|opened|closed|finished|started|completed|developed|produced|manufactured|constructed|established|founded|discovered|invented)\b/g;
-    const passiveMatches = sentence.toLowerCase().match(passivePattern);
-    if (passiveMatches) {
-      level.score += 4;
-      level.found.push(`Passive voice: ${passiveMatches.join(', ')}`);
-    }
-    
-    // Relative clauses analysis
-    const relativePattern = /\b(who|which|that|where|when)\s+\w+/g;
-    const relativeMatches = sentence.toLowerCase().match(relativePattern);
-    if (relativeMatches) {
-      level.score += 3;
-      level.found.push(`Relative clauses: ${relativeMatches.join(', ')}`);
-    }
-    
-    // Complex connectors
-    const complexConnectors = /\b(although|however|therefore|moreover|furthermore|nevertheless|meanwhile|consequently|additionally|specifically|particularly)\b/g;
-    const connectorMatches = sentence.toLowerCase().match(complexConnectors);
-    if (connectorMatches) {
-      level.score += 3;
-      level.found.push(`Complex connectors: ${connectorMatches.join(', ')}`);
-    }
-    
-    // Present perfect continuous
-    const ppcPattern = /\b(have|has)\s+been\s+\w+ing\b/g;
-    if (sentence.toLowerCase().match(ppcPattern)) {
-      level.score += 4;
-      level.found.push('Present perfect continuous');
-    }
   };
 
   // Generate feedback based on detailed grammar analysis
@@ -656,8 +782,8 @@ function WritingExercise({ onBack, onLogoClick }) {
                 <span className="stat-value">{Math.floor(feedback.timeUsed / 60)}:{(feedback.timeUsed % 60).toString().padStart(2, '0')}</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">Sentences</span>
-                <span className="stat-value">{feedback.grammarAnalysis ? feedback.grammarAnalysis.sentences.length : 0}</span>
+                <span className="stat-label">Vocabulary</span>
+                <span className="stat-value">{feedback.grammarAnalysis ? feedback.grammarAnalysis.uniqueWords : 0} unique</span>
               </div>
             </div>
           </div>
