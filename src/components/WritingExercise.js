@@ -375,7 +375,7 @@ function WritingExercise({ onBack, onLogoClick }) {
   // WRITING SCREEN
   if (currentStep === 'writing') {
     return (
-      <div className="exercise-page">
+      <div className="exercise-page writing-fullscreen">
         <ClickableLogo onLogoClick={onLogoClick} />
         <div className="quiz-container">
           <div className="writing-header-minimal">
