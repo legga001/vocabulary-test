@@ -13,8 +13,8 @@ const PHOTO_PROMPTS = [
     title: 'Busy City Street',
     description: 'Describe this busy urban scene during rush hour',
     level: 'B1-B2',
-    minWords: 100,
-    maxWords: 180,
+    minWords: 50,
+    maxWords: 80,
     prompt: "Describe this busy city scene. What are people doing? What can you see? What might people be thinking or feeling? Describe the atmosphere and energy of the street.",
     suggestedPoints: [
       'What types of transport can you see?',
@@ -29,8 +29,8 @@ const PHOTO_PROMPTS = [
     title: 'Family Picnic in Park',
     description: 'Describe this family gathering in the park',
     level: 'A2-B1',
-    minWords: 80,
-    maxWords: 150,
+    minWords: 40,
+    maxWords: 60,
     prompt: "Describe this family picnic scene. Who might these people be? What activities are they doing? Describe the setting and atmosphere.",
     suggestedPoints: [
       'Who are the people and what are their relationships?',
@@ -45,8 +45,8 @@ const PHOTO_PROMPTS = [
     title: 'Busy Coffee Shop',
     description: 'Describe the atmosphere and activities in this coffee shop',
     level: 'B1-B2',
-    minWords: 90,
-    maxWords: 160,
+    minWords: 50,
+    maxWords: 80,
     prompt: "Describe what's happening in this coffee shop. What are people doing? Describe the atmosphere and the different types of customers.",
     suggestedPoints: [
       'What are different people doing?',
@@ -61,8 +61,8 @@ const PHOTO_PROMPTS = [
     title: 'Children\'s Playground',
     description: 'Describe the activities and atmosphere at this playground',
     level: 'A2-B1',
-    minWords: 80,
-    maxWords: 140,
+    minWords: 40,
+    maxWords: 60,
     prompt: "Describe what's happening at this playground. What games are children playing? What do you notice about the atmosphere?",
     suggestedPoints: [
       'What equipment and activities can you see?',
@@ -77,8 +77,8 @@ const PHOTO_PROMPTS = [
     title: 'Farmer\'s Market',
     description: 'Describe the vibrant atmosphere of this outdoor market',
     level: 'B1-B2',
-    minWords: 100,
-    maxWords: 170,
+    minWords: 50,
+    maxWords: 80,
     prompt: "Describe this market scene. What products can you see? How do people interact? Describe the colours, atmosphere, and community feeling.",
     suggestedPoints: [
       'What types of food and products are available?',
@@ -93,8 +93,8 @@ const PHOTO_PROMPTS = [
     title: 'Library Study Scene',
     description: 'Describe the academic atmosphere in this library',
     level: 'B1-B2',
-    minWords: 90,
-    maxWords: 160,
+    minWords: 50,
+    maxWords: 80,
     prompt: "Describe what's happening in this library. What are students doing? Describe the environment and atmosphere for learning.",
     suggestedPoints: [
       'What study activities can you see?',
@@ -109,8 +109,8 @@ const PHOTO_PROMPTS = [
     title: 'Beach Holiday Scene',
     description: 'Describe this relaxing day at the beach',
     level: 'A2-B1',
-    minWords: 80,
-    maxWords: 150,
+    minWords: 40,
+    maxWords: 60,
     prompt: "Describe this beach scene. What holiday activities are taking place? Describe the weather, people, and atmosphere.",
     suggestedPoints: [
       'What beach activities can you see?',
@@ -125,8 +125,8 @@ const PHOTO_PROMPTS = [
     title: 'Train Station',
     description: 'Describe the busy atmosphere of this transport hub',
     level: 'B1-B2',
-    minWords: 100,
-    maxWords: 170,
+    minWords: 50,
+    maxWords: 80,
     prompt: "Describe this train station scene. What are people doing? Where might they be going? Describe the atmosphere and energy.",
     suggestedPoints: [
       'What travel activities can you see?',
@@ -234,35 +234,58 @@ function WritingExercise({ onBack, onLogoClick }) {
     }
   };
 
-  // Generate feedback
+  // Generate feedback based on CEFR grammar analysis
   const generateFeedback = () => {
     let score = 50; // Base score
+    const text = userText.toLowerCase();
     
-    // Word count scoring
+    // Word count scoring (30 points total)
     if (wordCount >= selectedPrompt.minWords && wordCount <= selectedPrompt.maxWords) {
-      score += 20;
+      score += 25;
     } else if (wordCount >= selectedPrompt.minWords * 0.8) {
-      score += 10;
+      score += 15;
+    } else if (wordCount >= 20) {
+      score += 5;
     }
     
-    // Length and effort scoring
-    if (wordCount >= 100) score += 10;
-    if (wordCount >= 150) score += 5;
+    // Grammar complexity analysis based on CEFR levels (40 points total)
+    let grammarScore = 0;
     
-    // Simple quality indicators
+    // A1-A2 Level Grammar (Basic - 15 points)
+    const presentSimple = /\b(am|is|are|have|has|do|does|work|live|like|go|come|see)\b/g;
+    const pastSimple = /\b(was|were|went|came|saw|had|did|worked|lived|liked)\b/g;
+    const articles = /\b(a|an|the)\b/g;
+    
+    if (text.match(presentSimple)?.length >= 2) grammarScore += 5;
+    if (text.match(pastSimple)?.length >= 1) grammarScore += 5;
+    if (text.match(articles)?.length >= 3) grammarScore += 5;
+    
+    // B1 Level Grammar (Intermediate - 15 points)
+    const presentPerfect = /\b(have|has)\s+\w*ed\b|\b(have|has)\s+(been|gone|seen|done|made)\b/g;
+    const presentProgressive = /\b(am|is|are)\s+\w*ing\b/g;
+    const conditionals = /\bif\s+\w+/g;
+    const modals = /\b(can|could|should|would|might|may|must)\b/g;
+    
+    if (text.match(presentPerfect)?.length >= 1) grammarScore += 4;
+    if (text.match(presentProgressive)?.length >= 1) grammarScore += 4;
+    if (text.match(conditionals)?.length >= 1) grammarScore += 3;
+    if (text.match(modals)?.length >= 1) grammarScore += 4;
+    
+    // B2+ Level Grammar (Advanced - 10 points)
+    const passiveVoice = /\b(is|are|was|were|been)\s+\w*ed\b/g;
+    const relativeClauses = /\b(who|which|that|where|when)\b/g;
+    const complexConnectors = /\b(although|however|therefore|moreover|furthermore|nevertheless)\b/g;
+    
+    if (text.match(passiveVoice)?.length >= 1) grammarScore += 4;
+    if (text.match(relativeClauses)?.length >= 1) grammarScore += 3;
+    if (text.match(complexConnectors)?.length >= 1) grammarScore += 3;
+    
+    score += grammarScore;
+    
+    // Sentence structure (10 points)
     const sentences = userText.split(/[.!?]+/).filter(s => s.trim().length > 5);
-    if (sentences.length >= 5) score += 10;
-    
-    // Descriptive vocabulary bonus
-    const descriptiveWords = ['beautiful', 'vibrant', 'peaceful', 'busy', 'colourful', 'atmosphere', 'energy', 'feeling', 'emotion'];
-    const foundDescriptive = descriptiveWords.filter(word => 
-      userText.toLowerCase().includes(word)
-    );
-    score += Math.min(foundDescriptive.length * 2, 10);
-    
-    // Time bonus
-    const timeUsed = 300 - timeRemaining;
-    if (timeUsed >= 180) score += 5; // Used at least 3 minutes
+    if (sentences.length >= 3) score += 5;
+    if (sentences.length >= 5) score += 5;
     
     // Cap at 100
     score = Math.min(score, 100);
@@ -271,7 +294,7 @@ function WritingExercise({ onBack, onLogoClick }) {
       score: score,
       wordCount: wordCount,
       timeUsed: startTime ? Math.round((Date.now() - startTime) / 1000) : 0,
-      suggestions: generateSuggestions(wordCount, selectedPrompt)
+      suggestions: generateGrammarSuggestions(text, grammarScore, wordCount, selectedPrompt)
     });
     
     setCurrentStep('feedback');
@@ -294,21 +317,38 @@ function WritingExercise({ onBack, onLogoClick }) {
     incrementDailyTarget('writing');
   };
 
-  // Generate basic suggestions
-  const generateSuggestions = (wordCount, prompt) => {
+  // Generate ESL-appropriate suggestions based on CEFR grammar
+  const generateGrammarSuggestions = (text, grammarScore, wordCount, prompt) => {
     const suggestions = [];
     
+    // Word count feedback
     if (wordCount < prompt.minWords) {
-      suggestions.push("Try to write more details about what you see in the image");
-      suggestions.push("Describe the emotions and atmosphere more fully");
+      suggestions.push("Try to write more words to reach the target length");
+    } else if (wordCount > prompt.maxWords) {
+      suggestions.push("Try to write fewer words to stay within the target range");
+    } else {
+      suggestions.push("Good job reaching the target word count!");
     }
     
-    if (wordCount > prompt.maxWords) {
-      suggestions.push("Try to be more concise while keeping the essential details");
+    // Grammar suggestions based on what's missing
+    if (grammarScore < 15) {
+      suggestions.push("Try using more basic grammar: present simple (I am, she works), past simple (I went, she was), and articles (a, an, the)");
     }
     
-    suggestions.push("Compare your writing with the model answer to see different ways to express ideas");
-    suggestions.push("Pay attention to how the model answer uses descriptive vocabulary");
+    if (grammarScore < 25) {
+      suggestions.push("Try using present progressive (I am walking), present perfect (I have seen), or modal verbs (can, should, must)");
+    }
+    
+    if (grammarScore < 35) {
+      suggestions.push("Try using more complex grammar: passive voice (the door was opened), relative clauses (the man who...), or conditionals (if I...)");
+    }
+    
+    if (grammarScore >= 35) {
+      suggestions.push("Excellent grammar usage! You're using complex structures effectively");
+    }
+    
+    // Always encourage variety
+    suggestions.push("Use different sentence types: simple, compound, and complex sentences");
     
     return suggestions;
   };
@@ -335,7 +375,7 @@ function WritingExercise({ onBack, onLogoClick }) {
           <div className="writing-instructions">
             <h3>📝 Photo Description Task</h3>
             <p>You'll see a photo and write a detailed description.
-            You have 1 minute to write between 80-200 words depending on the difficulty level.</p>
+            You have 1 minute to write between 40-80 words depending on the difficulty level.</p>
             
             <div className="instruction-list">
               <div className="instruction-item">
@@ -452,19 +492,19 @@ function WritingExercise({ onBack, onLogoClick }) {
           </div>
 
           <div className="feedback-section">
-            <h3>📊 How Your Score Was Calculated</h3>
-            <div className="score-breakdown">
-              <div className="score-explanation">
-                <p><strong>Your score is based on several factors:</strong></p>
-                <ul>
-                  <li><strong>Word Count (20 points):</strong> Writing the target number of words ({selectedPrompt.minWords}-{selectedPrompt.maxWords})</li>
-                  <li><strong>Length Bonus (15 points):</strong> Writing substantial content (100+ words gets 10 points, 150+ gets extra 5)</li>
-                  <li><strong>Sentence Structure (10 points):</strong> Using complete sentences (you wrote {userText.split(/[.!?]+/).filter(s => s.trim().length > 5).length} sentences)</li>
-                  <li><strong>Descriptive Language (10 points):</strong> Using descriptive words and phrases</li>
-                  <li><strong>Time Management (5 points):</strong> Using most of the available time effectively</li>
-                  <li><strong>Base Score (50 points):</strong> Starting points for attempting the task</li>
-                </ul>
-                <p><strong>Your word count:</strong> {feedback.wordCount} words {wordCount >= selectedPrompt.minWords && wordCount <= selectedPrompt.maxWords ? '✅ (Perfect!)' : wordCount >= selectedPrompt.minWords * 0.8 ? '⚠️ (Close to target)' : '❌ (Too short)'}</p>
+            <h3>📊 Writing Statistics</h3>
+            <div className="writing-stats">
+              <div className="stat-item">
+                <span className="stat-label">Words Written</span>
+                <span className="stat-value">{feedback.wordCount}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Target Range</span>
+                <span className="stat-value">{selectedPrompt.minWords}-{selectedPrompt.maxWords}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Time Used</span>
+                <span className="stat-value">{Math.floor(feedback.timeUsed / 60)}:{(feedback.timeUsed % 60).toString().padStart(2, '0')}</span>
               </div>
             </div>
           </div>
@@ -511,7 +551,7 @@ function WritingExercise({ onBack, onLogoClick }) {
           </div>
 
           <div className="feedback-section">
-            <h3>💡 Suggestions for Improvement</h3>
+            <h3>💡 Grammar and Improvement Tips</h3>
             <div className="suggestions-list">
               {feedback.suggestions.map((suggestion, index) => (
                 <div key={index} className="suggestion-item">
