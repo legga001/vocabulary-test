@@ -265,6 +265,28 @@
    12. RESPONSIVE DESIGN
    ============================================== */
 
+/* Tablet and below - revert to non-fullscreen */
+@media (max-width: 1024px) {
+  .exercise-page .quiz-container {
+    max-width: 1000px;
+    width: auto;
+    height: auto;
+    margin: 0 auto;
+    padding: 20px;
+    display: block;
+  }
+  
+  .writing-layout {
+    height: auto;
+    padding: 0;
+  }
+  
+  .writing-footer-minimal {
+    padding: 20px 0;
+    border-top: none;
+  }
+}
+
 /* Tablet */
 @media (max-width: 768px) {
   .writing-layout {
@@ -274,6 +296,11 @@
   
   .image-section {
     flex: none;
+    height: auto;
+  }
+  
+  .text-section {
+    height: auto;
   }
   
   .prompt-image-minimal {
@@ -282,6 +309,7 @@
   
   .writing-textarea-minimal {
     height: 300px;
+    font-size: 1em;
   }
   
   .writing-header {
@@ -315,6 +343,14 @@
     gap: 15px;
   }
   
+  .image-section {
+    height: auto;
+  }
+  
+  .text-section {
+    height: auto;
+  }
+  
   .prompt-image-minimal {
     max-height: 250px;
   }
@@ -322,10 +358,20 @@
   .writing-textarea-minimal {
     height: 250px;
     padding: 15px;
+    font-size: 1em;
   }
   
   .writing-footer-minimal {
     justify-content: center;
+    padding: 15px 0;
+  }
+  
+  .writing-header-minimal {
+    padding: 15px 0;
+  }
+  
+  .writing-header-minimal h2 {
+    font-size: 1.2em;
   }
   
   .writing-instructions {
@@ -478,12 +524,13 @@
 }
 
 /* ==============================================
-   3. MINIMAL WRITING LAYOUT (DET Style)
+   3. MINIMAL WRITING LAYOUT (DET Style) - FULLSCREEN
    ============================================== */
 
 .writing-header-minimal {
   text-align: center;
   margin-bottom: 30px;
+  padding: 20px 0;
 }
 
 .writing-header-minimal h2 {
@@ -507,11 +554,27 @@
   color: #333;
 }
 
+/* Fullscreen container for writing exercise */
+.exercise-page .quiz-container {
+  max-width: none;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
 .writing-layout {
   display: flex;
-  gap: 30px;
+  gap: 40px;
   align-items: flex-start;
+  flex: 1;
+  padding: 0 40px;
   margin-bottom: 30px;
+  height: calc(100vh - 200px); /* Account for header and footer */
+  box-sizing: border-box;
 }
 
 .image-section {
@@ -519,17 +582,19 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 100%;
 }
 
 .text-section {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .prompt-image-minimal {
   max-width: 100%;
-  max-height: 400px;
+  max-height: 100%;
   width: auto;
   height: auto;
   border-radius: 8px;
@@ -548,12 +613,12 @@
 
 .writing-textarea-minimal {
   width: 100%;
-  height: 400px;
+  height: 100%;
   padding: 20px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-family: 'Nunito', sans-serif;
-  font-size: 1em;
+  font-size: 1.1em;
   line-height: 1.5;
   resize: none;
   outline: none;
@@ -571,17 +636,21 @@
 .writing-footer-minimal {
   display: flex;
   justify-content: flex-end;
+  padding: 20px 40px;
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
 }
 
 .writing-footer-minimal .btn {
   background: #d1d5db;
   color: #374151;
   border: none;
-  padding: 10px 30px;
+  padding: 12px 40px;
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  font-size: 1em;
 }
 
 .writing-footer-minimal .btn:hover:not(:disabled) {
