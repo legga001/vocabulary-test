@@ -1,16 +1,17 @@
 /* ==============================================
    LANDING PAGE STYLES - ENHANCED WITH CATEGORY FILTERING
    Fixed exercise display and filtering behaviour
+   Matches existing light grey background design
    ============================================== */
 
 /* ==============================================
-   1. MAIN LAYOUT STRUCTURE
+   1. MAIN LAYOUT STRUCTURE - FIXED BACKGROUND
    ============================================== */
 .landing-duolingo {
   position: relative;
   height: 100vh;
   width: 100vw;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #f8f9fa; /* Light grey background to match existing design */
   overflow-x: hidden;
   overflow-y: auto;
   opacity: 0;
@@ -275,7 +276,7 @@
 }
 
 /* ==============================================
-   4. MAIN CONTENT AREA
+   4. MAIN CONTENT AREA - RESPONSIVE CONTAINER
    ============================================== */
 .main-content-area {
   margin-left: 280px;
@@ -283,17 +284,26 @@
   min-height: 100vh;
   padding: 30px;
   animation: slideInFromTop 0.8s ease-out;
+  background: transparent; /* Let the parent background show through */
+}
+
+/* Content sections should have white backgrounds like existing design */
+.main-content-area > section {
+  background: white;
+  border-radius: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* ==============================================
-   5. PRACTICE TEST SECTION
+   5. PRACTICE TEST SECTION - WHITE CONTAINER
    ============================================== */
 .full-test-section {
   background: white;
-  border-radius: 12px;
+  border-radius: 15px;
   padding: 25px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   text-align: center;
 }
 
@@ -329,10 +339,14 @@
 }
 
 /* ==============================================
-   6. CATEGORIES SECTION - ENHANCED
+   6. CATEGORIES SECTION - WHITE CONTAINER
    ============================================== */
 .categories-section {
-  margin-bottom: 30px;
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .categories-section h3 {
@@ -424,19 +438,23 @@
 }
 
 /* ==============================================
-   7. EXERCISES LIST - ENHANCED
+   7. EXERCISES LIST - WHITE CONTAINERS
    ============================================== */
 .exercises-list {
   display: grid;
   gap: 20px;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .exercise-item {
-  background: white;
+  background: #f8f9fa; /* Light grey background for individual exercises */
   border-radius: 15px;
   padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
@@ -449,8 +467,9 @@
 }
 
 .exercise-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  background: white; /* White background on hover for better contrast */
 }
 
 .exercise-item.active {
@@ -464,7 +483,8 @@
 
 .exercise-item.disabled:hover {
   transform: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: #f8f9fa; /* Keep original background for disabled items */
 }
 
 /* NEW: Category highlighting */
