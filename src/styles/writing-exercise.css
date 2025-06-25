@@ -56,11 +56,12 @@
   margin-bottom: 30px;
 }
 
-.score-circle {
+.score-display {
   display: inline-flex;
   align-items: baseline;
   justify-content: center;
   margin-bottom: 15px;
+  gap: 5px;
 }
 
 .score-number {
@@ -73,7 +74,6 @@
 .score-label {
   font-size: 1.5em;
   color: #666;
-  margin-left: 5px;
 }
 
 .score-message {
@@ -96,6 +96,32 @@
   font-size: 1.3em;
   border-bottom: 2px solid #f0f2ff;
   padding-bottom: 10px;
+}
+
+.score-breakdown {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  border-left: 4px solid #4c51bf;
+}
+
+.score-explanation ul {
+  margin: 15px 0;
+  padding-left: 25px;
+}
+
+.score-explanation li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.score-explanation p {
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.score-explanation strong {
+  color: #4c51bf;
 }
 
 /* ==============================================
