@@ -265,9 +265,9 @@
    12. RESPONSIVE DESIGN
    ============================================== */
 
-/* Tablet and below - revert to non-fullscreen */
+/* Tablet and below - revert to non-fullscreen for writing screen */
 @media (max-width: 1024px) {
-  .exercise-page .quiz-container {
+  .exercise-page.writing-fullscreen .quiz-container {
     max-width: 1000px;
     width: auto;
     height: auto;
