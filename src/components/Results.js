@@ -1,4 +1,4 @@
-// src/components/Results.js - FIXED: Now grades complete words correctly
+// src/components/Results.js - FRESH REWRITE to force build system update
 import React, { useEffect } from 'react';
 import AnswerReview from './AnswerReview';
 import { recordTestResult } from '../utils/progressDataManager';
@@ -18,7 +18,7 @@ const getLettersToShow = (word) => {
 };
 
 function Results({ userAnswers, questions, quizType, articleType, onRestart }) {
-  console.log('📊 Results component rendering with:', { userAnswers, questions, quizType });
+  console.log('📊 Results component - FRESH VERSION rendering with:', { userAnswers, questions, quizType });
 
   // Enhanced function to reconstruct complete user answers from partial inputs
   const reconstructCompleteAnswer = (partialUserAnswer, correctAnswer) => {
@@ -31,7 +31,7 @@ function Results({ userAnswers, questions, quizType, articleType, onRestart }) {
     // Combine pre-filled and user-typed letters to form complete word
     const completeUserAnswer = preFilledLetters + userTypedLetters;
     
-    console.log('🔧 RECONSTRUCTING ANSWER:', {
+    console.log('🔧 RECONSTRUCTING ANSWER (FRESH VERSION):', {
       correctAnswer,
       partialUserAnswer,
       lettersToShow,
@@ -99,7 +99,7 @@ function Results({ userAnswers, questions, quizType, articleType, onRestart }) {
         // Check for British/American spelling variations using complete words
         const isCorrect = checkSpellingVariations(completeUserAnswer, correctAnswer);
         
-        console.log(`💯 SCORING Q${i + 1}:`, {
+        console.log(`💯 SCORING Q${i + 1} (FRESH VERSION):`, {
           partialUserInput: userAnswers[i],
           completeUserAnswer,
           correctAnswer,
@@ -110,7 +110,7 @@ function Results({ userAnswers, questions, quizType, articleType, onRestart }) {
       }
     }
     
-    console.log(`🎯 FINAL SCORE: ${score}/${Math.min(10, finalQuestions.length)}`);
+    console.log(`🎯 FINAL SCORE (FRESH VERSION): ${score}/${Math.min(10, finalQuestions.length)}`);
     return score;
   };
 
@@ -193,6 +193,7 @@ function Results({ userAnswers, questions, quizType, articleType, onRestart }) {
         articleInfo: articleInfo
       };
 
+      console.log('📊 RECORDING TEST RESULT (FRESH VERSION):', testResult);
       recordTestResult(testResult);
     } catch (error) {
       console.error('Error recording test result:', error);
