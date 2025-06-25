@@ -438,7 +438,7 @@ function WritingExercise({ onBack, onLogoClick }) {
           <h1>📊 Writing Feedback</h1>
           
           <div className="feedback-score">
-            <div className="score-circle">
+            <div className="score-display">
               <span className="score-number">{feedback.score}</span>
               <span className="score-label">/ 100</span>
             </div>
@@ -448,6 +448,24 @@ function WritingExercise({ onBack, onLogoClick }) {
                feedback.score >= 70 ? '👍 Good effort!' :
                feedback.score >= 60 ? '📈 Keep improving!' :
                '💪 Practice makes perfect!'}
+            </div>
+          </div>
+
+          <div className="feedback-section">
+            <h3>📊 How Your Score Was Calculated</h3>
+            <div className="score-breakdown">
+              <div className="score-explanation">
+                <p><strong>Your score is based on several factors:</strong></p>
+                <ul>
+                  <li><strong>Word Count (20 points):</strong> Writing the target number of words ({selectedPrompt.minWords}-{selectedPrompt.maxWords})</li>
+                  <li><strong>Length Bonus (15 points):</strong> Writing substantial content (100+ words gets 10 points, 150+ gets extra 5)</li>
+                  <li><strong>Sentence Structure (10 points):</strong> Using complete sentences (you wrote {userText.split(/[.!?]+/).filter(s => s.trim().length > 5).length} sentences)</li>
+                  <li><strong>Descriptive Language (10 points):</strong> Using descriptive words and phrases</li>
+                  <li><strong>Time Management (5 points):</strong> Using most of the available time effectively</li>
+                  <li><strong>Base Score (50 points):</strong> Starting points for attempting the task</li>
+                </ul>
+                <p><strong>Your word count:</strong> {feedback.wordCount} words {wordCount >= selectedPrompt.minWords && wordCount <= selectedPrompt.maxWords ? '✅ (Perfect!)' : wordCount >= selectedPrompt.minWords * 0.8 ? '⚠️ (Close to target)' : '❌ (Too short)'}</p>
+              </div>
             </div>
           </div>
 
