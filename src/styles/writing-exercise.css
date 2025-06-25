@@ -554,8 +554,8 @@
   color: #333;
 }
 
-/* Fullscreen container for writing exercise */
-.exercise-page .quiz-container {
+/* Fullscreen container ONLY for writing exercise screen */
+.exercise-page.writing-fullscreen .quiz-container {
   max-width: none;
   width: 100vw;
   height: 100vh;
@@ -564,6 +564,13 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+/* Keep normal container for selection/feedback screens */
+.exercise-page:not(.writing-fullscreen) .quiz-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .writing-layout {
