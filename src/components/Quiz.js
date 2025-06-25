@@ -1,16 +1,12 @@
-// src/components/Quiz.js - Complete rewrite with fixed answer checking logic
+// src/components/Quiz.js - FIXED: Now passes complete words to Results component
 import React, { useState, useEffect, useCallback } from 'react';
-import { getNewQuestions, correctMessages } from '../questionsData';
-import LetterInput from './LetterInput';
 import ClickableLogo from './ClickableLogo';
+import LetterInput from './LetterInput';
+import { correctMessages } from '../questionsData';
 import { processSentence } from '../utils/quizHelpers';
 
-// Key for localStorage
-const QUIZ_STATE_KEY = 'mrFoxEnglishQuizState';
-
-// British vs American spelling variations
+// British/American spelling variations
 const SPELLING_VARIATIONS = {
-  // American to British
   'analyze': ['analyse'], 'realize': ['realise'], 'organize': ['organise'],
   'recognize': ['recognise'], 'criticize': ['criticise'], 'apologize': ['apologise'],
   'optimize': ['optimise'], 'minimize': ['minimise'], 'maximize': ['maximise'],
@@ -18,7 +14,7 @@ const SPELLING_VARIATIONS = {
   'memorize': ['memorise'], 'authorize': ['authorise'], 'modernize': ['modernise'],
   'utilize': ['utilise'], 'fertilize': ['fertilise'], 'sterilize': ['sterilise'],
   'stabilize': ['stabilise'], 'summarize': ['summarise'],
-  // British to American
+  // Reverse mappings
   'analyse': ['analyze'], 'realise': ['realize'], 'organise': ['organize'],
   'recognise': ['recognize'], 'criticise': ['criticize'], 'apologise': ['apologize'],
   'optimise': ['optimize'], 'minimise': ['minimize'], 'maximise': ['maximize'],
@@ -26,19 +22,19 @@ const SPELLING_VARIATIONS = {
   'memorise': ['memorize'], 'authorise': ['authorize'], 'modernise': ['modernize'],
   'utilise': ['utilize'], 'fertilise': ['fertilize'], 'sterilise': ['sterilize'],
   'stabilise': ['stabilize'], 'summarise': ['summarize'],
-  // Color/colour variations
-  'color': ['colour'], 'colour': ['color'], 'colors': ['colours'], 'colours': ['colors'],
-  'colored': ['coloured'], 'coloured': ['colored'], 'coloring': ['colouring'], 'colouring': ['coloring'],
-  // Honor/honour variations
-  'honor': ['honour'], 'honour': ['honor'], 'honors': ['honours'], 'honours': ['honors'],
-  'honored': ['honoured'], 'honoured': ['honored'], 'honoring': ['honouring'], 'honouring': ['honoring'],
-  // Center/centre variations
-  'center': ['centre'], 'centre': ['center'], 'centers': ['centres'], 'centres': ['centers'],
-  'centered': ['centred'], 'centred': ['centered'], 'centering': ['centring'], 'centring': ['centering'],
-  // Theater/theatre variations
-  'theater': ['theatre'], 'theatre': ['theater'], 'theaters': ['theatres'], 'theatres': ['theaters'],
-  // Meter/metre variations
-  'meter': ['metre'], 'metre': ['meter'], 'meters': ['metres'], 'metres': ['meters']
+  // Colour/color variations
+  'color': ['colour'], 'colours': ['colors'], 'colored': ['coloured'], 'coloring': ['colouring'],
+  'colour': ['color'], 'colors': ['colours'], 'coloured': ['colored'], 'colouring': ['coloring'],
+  // Honour/honor variations
+  'honor': ['honour'], 'honors': ['honours'], 'honored': ['honoured'], 'honoring': ['honouring'],
+  'honour': ['honor'], 'honours': ['honors'], 'honoured': ['honored'], 'honouring': ['honoring'],
+  // Centre/center variations
+  'center': ['centre'], 'centers': ['centres'], 'centered': ['centred'], 'centering': ['centring'],
+  'centre': ['center'], 'centres': ['centers'], 'centred': ['centered'], 'centring': ['centering'],
+  // Theatre/theater variations
+  'theater': ['theatre'], 'theaters': ['theatres'], 'theatre': ['theater'], 'theatres': ['theaters'],
+  // Metre/meter variations
+  'meter': ['metre'], 'meters': ['metres'], 'metre': ['meter'], 'metres': ['meters']
 };
 
 // Helper function to get alternative spellings
@@ -73,106 +69,95 @@ function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackType, setFeedbackType] = useState('');
 
-  console.log('🎯 Current feedback state in render:', { showFeedback, feedbackMessage, feedbackType });
+  const QUIZ_STATE_KEY = `quiz_state_${quizType}_${articleType || 'standard'}`;
 
-  // Memoized function to get article info
-  const getArticleInfo = useCallback(() => {
-    if (quizType !== 'article' || !articleType) return null;
-    
+  // Load questions based on quiz type
+  useEffect(() => {
+    const loadQuestions = async () => {
+      try {
+        let questionData = [];
+        
+        if (quizType === 'article') {
+          console.log('📚 Loading article questions for type:', articleType);
+          
+          switch (articleType) {
+            case 'smuggling-quiz':
+              const smugglingModule = await import('../smugglingVocabularyData');
+              questionData = smugglingModule.getSmugglingVocabularyQuestions();
+              break;
+            case 'air-india-quiz':
+              const airIndiaModule = await import('../airIndiaVocabularyData');
+              questionData = airIndiaModule.getAirIndiaVocabularyQuestions();
+              break;
+            case 'water-treatment-quiz':
+              const waterTreatmentModule = await import('../waterTreatmentVocabularyData');
+              questionData = waterTreatmentModule.getWaterTreatmentVocabularyQuestions();
+              break;
+            default:
+              const defaultModule = await import('../articleQuestions');
+              questionData = defaultModule.getArticleQuestions();
+          }
+        } else {
+          console.log('📚 Loading standard vocabulary questions');
+          const standardModule = await import('../questionsData');
+          questionData = standardModule.getNewQuestions();
+        }
+        
+        console.log('✅ Questions loaded:', questionData);
+        setQuestions(questionData);
+      } catch (error) {
+        console.error('❌ Error loading questions:', error);
+        // Fallback to default questions
+        import('../questionsData').then(module => {
+          setQuestions(module.getNewQuestions());
+        });
+      }
+    };
+
+    loadQuestions();
+  }, [quizType, articleType]);
+
+  // Get article info
+  const getArticleInfo = () => {
     try {
-      switch (articleType) {
-        case 'killer-whale-quiz': {
-          const module = require('../killerWhaleVocabularyData');
-          return module.getKillerWhaleArticleInfo();
+      if (quizType === 'article') {
+        switch (articleType) {
+          case 'smuggling-quiz':
+            const smugglingModule = require('../smugglingVocabularyData');
+            return smugglingModule.getArticleInfo();
+          case 'air-india-quiz':
+            const airIndiaModule = require('../airIndiaVocabularyData');
+            return airIndiaModule.getAirIndiaArticleInfo();
+          case 'water-treatment-quiz':
+            const waterTreatmentModule = require('../waterTreatmentVocabularyData');
+            return waterTreatmentModule.getWaterTreatmentArticleInfo();
+          default:
+            const defaultModule = require('../articleQuestions');
+            return defaultModule.getArticleInfo();
         }
-        case 'octopus-quiz': {
-          const module = require('../readingVocabularyData');
-          return module.getReadingArticleInfo();
-        }
-        case 'smuggling-quiz': {
-          const module = require('../articleQuestions');
-          return module.getArticleInfo();
-        }
-        case 'air-india-quiz': {
-          const module = require('../airIndiaVocabularyData');
-          return module.getAirIndiaArticleInfo();
-        }
-        case 'water-treatment-quiz': {
-          const module = require('../waterTreatmentVocabularyData');
-          return module.getWaterTreatmentArticleInfo();
-        }
-        default:
-          console.warn('Unknown article type:', articleType);
-          return null;
       }
     } catch (error) {
-      console.error('Error loading article info for', articleType, ':', error);
-      return null;
+      console.error('Error getting article info:', error);
     }
-  }, [quizType, articleType]);
-
-  // Memoized function to load questions
-  const loadQuestions = useCallback(() => {
-    if (quizType === 'article' && articleType) {
-      try {
-        switch (articleType) {
-          case 'killer-whale-quiz': {
-            const module = require('../killerWhaleVocabularyData');
-            return module.getKillerWhaleVocabularyQuestions();
-          }
-          case 'octopus-quiz': {
-            const module = require('../readingVocabularyData');
-            return module.getReadingVocabularyQuestions();
-          }
-          case 'smuggling-quiz': {
-            const module = require('../articleQuestions');
-            return module.getArticleQuestions();
-          }
-          case 'air-india-quiz': {
-            const module = require('../airIndiaVocabularyData');
-            return module.getAirIndiaVocabularyQuestions();
-          }
-          case 'water-treatment-quiz': {
-            const module = require('../waterTreatmentVocabularyData');
-            return module.getWaterTreatmentVocabularyQuestions();
-          }
-          default:
-            console.warn('Unknown article type, using smuggling questions:', articleType);
-            const fallback = require('../articleQuestions');
-            return fallback.getArticleQuestions();
-        }
-      } catch (error) {
-        console.error('Error loading article questions for', articleType, ':', error);
-        // Fallback to smuggling questions
-        const fallback = require('../articleQuestions');
-        return fallback.getArticleQuestions();
-      }
-    } else {
-      // Standard vocabulary quiz
-      return getNewQuestions();
-    }
-  }, [quizType, articleType]);
-
-  // Load questions when component mounts or quiz type changes
-  useEffect(() => {
-    const newQuestions = loadQuestions();
-    setQuestions(newQuestions);
-    
-    // ALWAYS start fresh - clear any saved state
-    localStorage.removeItem(QUIZ_STATE_KEY);
-    
-    // Reset quiz state
-    setCurrentQuestion(0);
-    setUserAnswers(new Array(10).fill(''));
-    setCheckedQuestions(new Array(10).fill(false));
-    setFeedback({ show: false, type: '', message: '', persistent: false });
-  }, [loadQuestions]);
+    return null;
+  };
 
   // Current question and progress
   const question = questions[currentQuestion];
-  const progress = ((currentQuestion) / 10) * 100;
+  const progress = ((currentQuestion + 1) / 10) * 100;
   const processedData = question ? processSentence(question.sentence, question.answer) : null;
   const articleInfo = getArticleInfo();
+
+  // CRITICAL FUNCTION: Reconstruct complete word from partial user input
+  const reconstructCompleteWord = (partialUserInput, correctAnswer) => {
+    if (!partialUserInput || !correctAnswer) return '';
+    
+    const lettersToShow = getLettersToShow(correctAnswer);
+    const preFilledLetters = correctAnswer.substring(0, lettersToShow).toLowerCase();
+    const userTypedLetters = partialUserInput.toLowerCase().trim();
+    
+    return preFilledLetters + userTypedLetters;
+  };
 
   // Enter key listener for checking answers
   useEffect(() => {
@@ -188,16 +173,6 @@ function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
     document.addEventListener('keypress', handleKeyPress);
     return () => document.removeEventListener('keypress', handleKeyPress);
   }, [userAnswers, currentQuestion, checkedQuestions, question]);
-
-  // DON'T load saved quiz state - always start fresh
-  // useEffect(() => {
-  //   // Removed localStorage restoration to always start fresh
-  // }, [quizType, articleType]);
-
-  // DON'T save quiz state - always start fresh
-  // useEffect(() => {
-  //   // Removed state saving to always start fresh
-  // }, [currentQuestion, userAnswers, checkedQuestions, quizType, articleType, questions]);
 
   // Check answer function with persistent feedback
   const checkAnswer = () => {
@@ -272,11 +247,24 @@ function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
     }
   };
 
+  // FIXED: Modified nextQuestion to pass complete words to Results
   const nextQuestion = () => {
     if (currentQuestion === 9) {
-      // Clear quiz state and finish
+      // CRITICAL FIX: Convert partial answers to complete words before passing to Results
+      const completeUserAnswers = userAnswers.map((partialAnswer, index) => {
+        if (!partialAnswer || !questions[index]) return '';
+        return reconstructCompleteWord(partialAnswer, questions[index].answer);
+      });
+      
+      console.log('🎯 QUIZ COMPLETE - SENDING TO RESULTS:', {
+        originalAnswers: userAnswers,
+        completeAnswers: completeUserAnswers,
+        questions: questions.map(q => q.answer)
+      });
+      
+      // Clear quiz state and finish with complete words
       localStorage.removeItem(QUIZ_STATE_KEY);
-      onFinish(userAnswers, questions);
+      onFinish(completeUserAnswers, questions);
     } else {
       setCurrentQuestion(currentQuestion + 1);
       // Clear feedback when moving between questions
@@ -332,7 +320,7 @@ function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
         </div>
       )}
 
-      {/* Quiz Header - Removed red X button */}
+      {/* Quiz Header */}
       <div className="quiz-header">
         <div className="quiz-type-badge">
           {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
@@ -423,11 +411,12 @@ function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
           fontSize: '0.8em',
           fontFamily: 'monospace'
         }}>
-          <strong>🐛 Feedback Debug:</strong><br />
+          <strong>🐛 Quiz Debug:</strong><br />
           Show Feedback: {showFeedback ? 'YES' : 'NO'}<br />
           Feedback Type: "{feedbackType}"<br />
           Feedback Message: "{feedbackMessage}"<br />
           Current Answer: "{userAnswers[currentQuestion]}"<br />
+          Complete Word: "{question ? reconstructCompleteWord(userAnswers[currentQuestion], question.answer) : 'N/A'}"<br />
           Question Checked: {checkedQuestions[currentQuestion] ? 'YES' : 'NO'}
         </div>
       )}
