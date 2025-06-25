@@ -4,7 +4,7 @@ import AnswerReview from './AnswerReview';
 import { recordTestResult } from '../utils/progressDataManager';
 import { getNewQuestions } from '../questionsData';
 import { getArticleQuestions, getArticleInfo as getGenericArticleInfo } from '../articleQuestions';
-import { isSpeechSupported } from '../pronunciationData';
+import { isSpeechSynthesisSupported } from '../utils/pronunciationUtils';
 
 // Helper function to determine how many letters to show based on word length
 const getLettersToShow = (word) => {
@@ -293,7 +293,7 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
         </div>
       )}
 
-      {isSpeechSupported && (
+      {isSpeechSynthesisSupported() && (
         <div className="pronunciation-feature-highlight">
           <div className="feature-icon">🎤</div>
           <h4>Try Pronunciation Practice</h4>
