@@ -1,37 +1,59 @@
-// src/components/Results.js - Fixed Results component with proper responsive layout
+// src/components/Results.js - FIXED: Now grades complete words correctly
 import React, { useEffect } from 'react';
-import { getNewQuestions } from '../questionsData';
 import AnswerReview from './AnswerReview';
-import PronunciationButton from './PronunciationButton';
-import { isSpeechSynthesisSupported } from '../utils/pronunciationUtils';
-import { recordTestResult } from '../utils/progressDataManager';
+import { recordTestResult } from '../utils/progressStorage';
+import { getNewQuestions } from '../questionsData';
+import { getArticleQuestions, getArticleInfo as getGenericArticleInfo } from '../articleQuestions';
+import { isSpeechSupported } from '../pronunciationData';
 
-function Results({ onRestart, userAnswers, quizType, testQuestions = null, articleType = null }) {
-  const isSpeechSupported = isSpeechSynthesisSupported();
+// Helper function to determine how many letters to show based on word length
+const getLettersToShow = (word) => {
+  const length = word.length;
+  if (length <= 3) return 1;
+  if (length <= 5) return 2;
+  if (length <= 7) return 3;
+  if (length <= 9) return 4;
+  if (length <= 11) return 5;
+  return 6;
+};
 
-  // Get the correct questions and article info
-  const getQuestionsAndArticleInfo = () => {
-    let questions, articleInfo = null;
+function Results({ userAnswers, questions, quizType, articleType, onRestart }) {
+  console.log('📊 Results component rendering with:', { userAnswers, questions, quizType });
+
+  // Enhanced function to reconstruct complete user answers from partial inputs
+  const reconstructCompleteAnswer = (partialUserAnswer, correctAnswer) => {
+    if (!partialUserAnswer || !correctAnswer) return '';
     
-    if (testQuestions) {
-      questions = testQuestions;
-    } else if (quizType === 'article') {
-      // Load questions and info based on article type
+    const lettersToShow = getLettersToShow(correctAnswer);
+    const preFilledLetters = correctAnswer.substring(0, lettersToShow).toLowerCase();
+    const userTypedLetters = partialUserAnswer.toLowerCase().trim();
+    
+    // Combine pre-filled and user-typed letters to form complete word
+    const completeUserAnswer = preFilledLetters + userTypedLetters;
+    
+    console.log('🔧 RECONSTRUCTING ANSWER:', {
+      correctAnswer,
+      partialUserAnswer,
+      lettersToShow,
+      preFilledLetters,
+      userTypedLetters,
+      completeUserAnswer
+    });
+    
+    return completeUserAnswer;
+  };
+
+  // Get questions and article info
+  const getQuestionsAndArticleInfo = () => {
+    let questions = [];
+    let articleInfo = null;
+
+    if (quizType === 'article') {
       try {
         switch (articleType) {
-          case 'killer-whale-quiz':
-            const killerWhaleModule = require('../killerWhaleVocabularyData');
-            questions = killerWhaleModule.getKillerWhaleVocabularyQuestions();
-            articleInfo = killerWhaleModule.getKillerWhaleArticleInfo();
-            break;
-          case 'octopus-quiz':
-            const octopusModule = require('../readingVocabularyData');
-            questions = octopusModule.getReadingVocabularyQuestions();
-            articleInfo = octopusModule.getReadingArticleInfo();
-            break;
           case 'smuggling-quiz':
-            const smugglingModule = require('../articleQuestions');
-            questions = smugglingModule.getArticleQuestions();
+            const smugglingModule = require('../smugglingVocabularyData');
+            questions = smugglingModule.getSmugglingVocabularyQuestions();
             articleInfo = smugglingModule.getArticleInfo();
             break;
           case 'air-india-quiz':
@@ -62,26 +84,39 @@ function Results({ onRestart, userAnswers, quizType, testQuestions = null, artic
     return { questions, articleInfo };
   };
 
-  const { questions, articleInfo } = getQuestionsAndArticleInfo();
+  const { questions: finalQuestions, articleInfo } = getQuestionsAndArticleInfo();
 
-  // Calculate score with enhanced spelling support
+  // FIXED: Calculate score using complete words, not just user-typed letters
   const calculateScore = () => {
     let score = 0;
-    for (let i = 0; i < Math.min(10, questions.length); i++) {
-      if (userAnswers && userAnswers[i] && questions[i]) {
-        const userAnswer = userAnswers[i].toLowerCase().trim();
-        const correctAnswer = questions[i].answer.toLowerCase();
+    
+    for (let i = 0; i < Math.min(10, finalQuestions.length); i++) {
+      if (userAnswers && userAnswers[i] && finalQuestions[i]) {
+        // Reconstruct the complete word from partial user input
+        const completeUserAnswer = reconstructCompleteAnswer(userAnswers[i], finalQuestions[i].answer);
+        const correctAnswer = finalQuestions[i].answer.toLowerCase();
         
-        // Check for British/American spelling variations
-        const isCorrect = checkSpellingVariations(userAnswer, correctAnswer);
+        // Check for British/American spelling variations using complete words
+        const isCorrect = checkSpellingVariations(completeUserAnswer, correctAnswer);
+        
+        console.log(`💯 SCORING Q${i + 1}:`, {
+          partialUserInput: userAnswers[i],
+          completeUserAnswer,
+          correctAnswer,
+          isCorrect
+        });
+        
         if (isCorrect) score++;
       }
     }
+    
+    console.log(`🎯 FINAL SCORE: ${score}/${Math.min(10, finalQuestions.length)}`);
     return score;
   };
 
-  // Enhanced spelling check function
+  // Enhanced spelling check function for complete words
   const checkSpellingVariations = (userAnswer, correctAnswer) => {
+    if (!userAnswer || !correctAnswer) return false;
     if (userAnswer === correctAnswer) return true;
 
     // British/American spelling variations
@@ -101,18 +136,18 @@ function Results({ onRestart, userAnswers, quizType, testQuestions = null, artic
       'memorise': ['memorize'], 'authorise': ['authorize'], 'modernise': ['modernize'],
       'utilise': ['utilize'], 'fertilise': ['fertilize'], 'sterilise': ['sterilize'],
       'stabilise': ['stabilize'], 'summarise': ['summarize'],
-      // Color/colour variations
+      // Colour/color variations
       'color': ['colour'], 'colour': ['color'], 'colors': ['colours'], 'colours': ['colors'],
       'colored': ['coloured'], 'coloured': ['colored'], 'coloring': ['colouring'], 'colouring': ['coloring'],
-      // Honor/honour variations
+      // Honour/honor variations
       'honor': ['honour'], 'honour': ['honor'], 'honors': ['honours'], 'honours': ['honors'],
       'honored': ['honoured'], 'honoured': ['honored'], 'honoring': ['honouring'], 'honouring': ['honoring'],
-      // Center/centre variations
+      // Centre/center variations
       'center': ['centre'], 'centre': ['center'], 'centers': ['centres'], 'centres': ['centers'],
       'centered': ['centred'], 'centred': ['centered'], 'centering': ['centring'], 'centring': ['centering'],
-      // Theater/theatre variations
+      // Theatre/theater variations
       'theater': ['theatre'], 'theatre': ['theater'], 'theaters': ['theatres'], 'theatres': ['theaters'],
-      // Meter/metre variations
+      // Metre/meter variations
       'meter': ['metre'], 'metre': ['meter'], 'meters': ['metres'], 'metres': ['meters']
     };
 
@@ -133,17 +168,18 @@ function Results({ onRestart, userAnswers, quizType, testQuestions = null, artic
   useEffect(() => {
     try {
       const formattedUserAnswers = userAnswers ? userAnswers.slice(0, 10).map((answer, index) => {
-        if (!answer || !questions[index]) return { answer: '', correct: false, score: 0, level: 'B1' };
+        if (!answer || !finalQuestions[index]) return { answer: '', correct: false, score: 0, level: 'B1' };
         
-        const userAnswer = answer.toLowerCase().trim();
-        const correctAnswer = questions[index].answer.toLowerCase();
-        const isCorrect = checkSpellingVariations(userAnswer, correctAnswer);
+        // FIXED: Use complete reconstructed answer for recording results
+        const completeUserAnswer = reconstructCompleteAnswer(answer, finalQuestions[index].answer);
+        const correctAnswer = finalQuestions[index].answer.toLowerCase();
+        const isCorrect = checkSpellingVariations(completeUserAnswer, correctAnswer);
         
         return {
-          answer: answer || '',
+          answer: completeUserAnswer || '', // Store the complete answer
           correct: isCorrect,
           score: isCorrect ? 1 : 0,
-          level: questions[index].level || 'B1'
+          level: finalQuestions[index].level || 'B1'
         };
       }) : [];
 
@@ -161,7 +197,7 @@ function Results({ onRestart, userAnswers, quizType, testQuestions = null, artic
     } catch (error) {
       console.error('Error recording test result:', error);
     }
-  }, [score, userAnswers, questions, quizType, articleInfo]);
+  }, [score, userAnswers, finalQuestions, quizType, articleInfo]);
 
   // Get level information based on score
   const getLevelInfo = (score) => {
@@ -262,7 +298,7 @@ function Results({ onRestart, userAnswers, quizType, testQuestions = null, artic
 
       <AnswerReview 
         userAnswers={userAnswers}
-        questions={questions}
+        questions={finalQuestions}
         quizType={quizType}
       />
 
