@@ -1,7 +1,7 @@
 // src/components/Results.js - FIXED: Now grades complete words correctly
 import React, { useEffect } from 'react';
 import AnswerReview from './AnswerReview';
-import { recordTestResult } from '../utils/progressStorage';
+import { recordTestResult } from '../utils/progressDataManager';
 import { getNewQuestions } from '../questionsData';
 import { getArticleQuestions, getArticleInfo as getGenericArticleInfo } from '../articleQuestions';
 import { isSpeechSupported } from '../pronunciationData';
