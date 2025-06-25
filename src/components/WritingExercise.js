@@ -161,7 +161,7 @@ function WritingExercise({ onBack, onLogoClick }) {
   const [currentStep, setCurrentStep] = useState('selection'); // selection, writing, feedback
   const [selectedPrompt, setSelectedPrompt] = useState(null);
   const [userText, setUserText] = useState('');
-  const [timeRemaining, setTimeRemaining] = useState(60); // Changed to 1 minute
+  const [timeRemaining, setTimeRemaining] = useState(180); // Changed to 3 minutes
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const [feedback, setFeedback] = useState(null);
@@ -212,7 +212,7 @@ function WritingExercise({ onBack, onLogoClick }) {
     setSelectedPrompt(randomPrompt);
     setCurrentStep('writing');
     setUserText('');
-    setTimeRemaining(60); // Changed to 1 minute
+    setTimeRemaining(180); // Changed to 3 minutes
     setIsTimerActive(true);
     setStartTime(Date.now());
     
@@ -698,34 +698,46 @@ function WritingExercise({ onBack, onLogoClick }) {
       suggestions.push("✅ Perfect word count!");
     }
     
-    // Grammar achievements - show what they did well
-    const allGrammar = [
-      ...analysis.a1_a2.found,
-      ...analysis.b1.found,
-      ...analysis.b2_plus.found
-    ];
+    // Grammar improvement suggestions based on current level
+    const totalGrammarScore = analysis.a1_a2.score + analysis.b1.score + analysis.b2_plus.score;
     
-    if (allGrammar.length === 0) {
-      suggestions.push("📚 Try using basic grammar: present simple (I work, she lives), past simple (I went), articles (a, an, the)");
-    } else {
-      // Show positive feedback for what they achieved
-      allGrammar.slice(0, 3).forEach(achievement => {
-        suggestions.push(achievement);
-      });
+    // A1-A2 Level suggestions
+    if (analysis.a1_a2.score < 10) {
+      suggestions.push("📚 Try using basic grammar: present simple (I work, she lives), past simple (I went), or articles (a, an, the)");
     }
     
-    // Vocabulary feedback
-    if (analysis.vocabulary.advanced.words.length > 0) {
-      suggestions.push(`🌟 Great advanced vocabulary: ${analysis.vocabulary.advanced.words.slice(0, 3).join(', ')}`);
-    } else if (analysis.vocabulary.intermediate.words.length > 0) {
-      suggestions.push(`🎯 Good intermediate vocabulary: ${analysis.vocabulary.intermediate.words.slice(0, 3).join(', ')}`);
+    // B1 Level suggestions  
+    if (analysis.a1_a2.score >= 8 && analysis.b1.score < 8) {
+      suggestions.push("📈 Next level: Try present perfect (I have seen), present continuous (I am working), or modal verbs (can, should, must)");
     }
     
-    // Next level suggestions
-    if (analysis.a1_a2.score >= 10 && analysis.b1.score < 5) {
-      suggestions.push("📈 Next challenge: Try present perfect (I have seen) or modal verbs (can, should, must)");
-    } else if (analysis.b1.score >= 10 && analysis.b2_plus.score < 5) {
-      suggestions.push("🚀 Ready for advanced grammar: Try passive voice (it was made) or relative clauses (the person who...)");
+    // B2+ Level suggestions
+    if (analysis.b1.score >= 8 && analysis.b2_plus.score < 5) {
+      suggestions.push("🚀 Advanced grammar: Try passive voice (it was built), relative clauses (the person who...), or complex connectors (however, therefore)");
+    }
+    
+    // Vocabulary improvement suggestions
+    if (analysis.vocabulary.advanced.words.length === 0 && analysis.vocabulary.intermediate.words.length === 0) {
+      suggestions.push("📖 Use more varied vocabulary: Try words like 'beautiful', 'comfortable', 'interesting' instead of 'good' or 'nice'");
+    } else if (analysis.vocabulary.advanced.words.length === 0 && analysis.vocabulary.intermediate.words.length > 0) {
+      suggestions.push("🌟 Challenge yourself: Try advanced vocabulary like 'magnificent', 'extraordinary', or 'comprehensive'");
+    }
+    
+    // Sentence structure suggestions
+    if (analysis.sentences.length < 3) {
+      suggestions.push("📝 Write more sentences to show variety in your grammar structures");
+    } else if (analysis.sentences.length >= 5) {
+      suggestions.push("✅ Good sentence variety! Try connecting them with words like 'and', 'but', 'because', or 'although'");
+    }
+    
+    // Specific grammar structure suggestions based on what's missing
+    const missingStructures = [];
+    if (analysis.a1_a2.found.length === 0) missingStructures.push("basic tenses");
+    if (analysis.b1.found.length === 0) missingStructures.push("perfect tenses or modal verbs");
+    if (analysis.b2_plus.found.length === 0) missingStructures.push("passive voice or relative clauses");
+    
+    if (missingStructures.length > 0) {
+      suggestions.push(`🎯 To improve your score, focus on: ${missingStructures.join(', ')}`);
     }
     
     return suggestions;
@@ -736,7 +748,7 @@ function WritingExercise({ onBack, onLogoClick }) {
     setCurrentStep('selection');
     setSelectedPrompt(null);
     setUserText('');
-    setTimeRemaining(60); // Changed to 1 minute
+    setTimeRemaining(180); // Changed to 3 minutes
     setIsTimerActive(false);
     setFeedback(null);
     setStartTime(null);
@@ -753,7 +765,7 @@ function WritingExercise({ onBack, onLogoClick }) {
           <div className="writing-instructions">
             <h3>📝 Photo Description Task</h3>
             <p>You'll see a photo and write a detailed description.
-            You have 1 minute to write between 40-80 words depending on the difficulty level.</p>
+            You have 3 minutes to write between 40-80 words depending on the difficulty level.</p>
             
             <div className="instruction-list">
               <div className="instruction-item">
@@ -762,7 +774,7 @@ function WritingExercise({ onBack, onLogoClick }) {
               </div>
               <div className="instruction-item">
                 <span className="instruction-icon">⏰</span>
-                <span>1-minute time limit</span>
+                <span>3-minute time limit</span>
               </div>
               <div className="instruction-item">
                 <span className="instruction-icon">📊</span>
@@ -797,7 +809,7 @@ function WritingExercise({ onBack, onLogoClick }) {
         <ClickableLogo onLogoClick={onLogoClick} />
         <div className="quiz-container">
           <div className="writing-header-minimal">
-            <h2>Write a description of the image below for 1 minute</h2>
+            <h2>Write a description of the image below for 3 minutes</h2>
             <div className="timer-minimal">
               {formatTime(timeRemaining)}
             </div>
