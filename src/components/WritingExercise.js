@@ -1,11 +1,11 @@
-// src/components/WritingExercise.js - Complete writing exercise with photo description
+// src/components/WritingExercise.js - Complete writing exercise with actual image display
 import React, { useState, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { recordTestResult } from '../utils/progressDataManager';
 import { incrementDailyTarget } from './LandingPage';
 import '../styles/writing-exercise.css';
 
-// Photo prompts for writing exercises - ready for DALL-E images
+// Photo prompts for writing exercises - with uploaded images
 const PHOTO_PROMPTS = [
   {
     id: 'busy_city_street',
@@ -134,62 +134,26 @@ const PHOTO_PROMPTS = [
       'What emotions might people be feeling?',
       'What does this tell us about modern travel?'
     ]
-  },
-  {
-    id: 'restaurant_kitchen',
-    image: '/images/writing-prompts/restaurant_kitchen.jpg',
-    title: 'Restaurant Kitchen',
-    description: 'Describe the professional atmosphere in this busy kitchen',
-    level: 'B2-C1',
-    minWords: 120,
-    maxWords: 200,
-    prompt: "Describe what's happening in this professional kitchen. How do the chefs work together? Describe the pace, atmosphere, and teamwork.",
-    suggestedPoints: [
-      'What cooking activities are taking place?',
-      'How do the chefs work as a team?',
-      'Describe the pace and energy',
-      'What challenges might they face?'
-    ]
-  },
-  {
-    id: 'hospital_waiting',
-    image: '/images/writing-prompts/hospital_waiting.jpg',
-    title: 'Hospital Waiting Room',
-    description: 'Describe the atmosphere and emotions in this healthcare setting',
-    level: 'B1-B2',
-    minWords: 90,
-    maxWords: 160,
-    prompt: "Describe this hospital waiting room. What are people doing? What emotions can you sense? Describe the atmosphere.",
-    suggestedPoints: [
-      'What activities are people doing while waiting?',
-      'What emotions might people be feeling?',
-      'Describe the physical environment',
-      'How do people interact in this setting?'
-    ]
   }
 ];
 
 // Model answers for comparison
 const MODEL_ANSWERS = {
-  busy_city_street: "This bustling city street captures the energy of modern urban life during rush hour. People hurry along crowded pavements, their faces focused and determined as they navigate their daily commutes. Red buses and black taxis weave through heavy traffic whilst pedestrians wait at crossings. The tall glass buildings reflect the afternoon sunlight, creating interesting patterns of light and shadow. Street vendors add colour to the scene, and the overall atmosphere feels purposeful and dynamic, representing the fast pace of city living.",
-  
-  family_picnic: "This heartwarming family picnic shows multiple generations enjoying quality time together in a beautiful park setting. Children play happily on the grass whilst adults chat and prepare food on a colourful picnic blanket. The sunny weather creates a perfect backdrop for outdoor family bonding. Everyone appears relaxed and content, with genuine smiles and laughter filling the air. The scene represents the simple pleasures of family life and the importance of spending time together away from daily routines.",
-  
-  coffee_shop: "This vibrant coffee shop buzzes with activity as diverse customers enjoy their beverages and social time. Some people work quietly on laptops whilst others engage in animated conversations with friends. The barista moves skillfully behind the counter, creating steaming drinks with practiced efficiency. The warm lighting and comfortable seating create an inviting atmosphere that encourages people to linger and relax. This scene perfectly captures how coffee shops serve as modern community gathering spaces.",
-  
-  playground: "This delightful playground scene shows children experiencing pure joy through play and physical activity. Kids swing high into the air with expressions of excitement whilst others navigate colourful climbing equipment with determination. Parents watch carefully from nearby benches, ensuring safety whilst allowing independence. The bright playground equipment contrasts beautifully with the green grass and blue sky, creating a perfect environment for childhood development and fun.",
-  
-  farmers_market: "This vibrant farmer's market showcases the beauty of local community commerce and fresh, healthy food. Colourful displays of seasonal fruits and vegetables create an attractive rainbow of natural produce. Vendors interact warmly with customers, sharing knowledge about their products and creating personal connections. The outdoor setting adds to the authentic, traditional atmosphere whilst supporting local agriculture and sustainable shopping practices.",
-  
-  library: "This peaceful library environment demonstrates the importance of quiet study spaces in academic life. Students work diligently at individual desks, surrounded by towering bookshelves filled with knowledge. The natural light streaming through windows creates an ideal atmosphere for concentration and learning. The respectful silence and focused energy show how libraries continue to serve as essential havens for education and personal development in our digital age.",
-  
-  beach_scene: "This idyllic beach scene captures the essence of relaxation and holiday enjoyment. Families spread across golden sand, engaging in various leisure activities from swimming in crystal-clear water to building elaborate sandcastles. The warm sunshine and gentle waves create perfect conditions for unwinding from everyday stress. Beach umbrellas provide colourful focal points whilst people of all ages embrace the freedom and joy that comes with seaside holidays.",
-  
-  train_station: "This busy train station embodies the constant movement and energy of modern transportation hubs. Passengers move purposefully through the concourse, dragging wheeled luggage and checking departure information. The architectural design efficiently manages large crowds whilst the mixture of artificial and natural lighting creates a functional yet welcoming environment. This scene represents how public transport connects communities and enables countless daily journeys.",
-  
-  restaurant_kitchen: "This professional kitchen demonstrates the intense coordination and skill required in commercial food preparation. Chefs work with precision and speed, each focused on their specific tasks whilst contributing to the collective goal of creating exceptional meals. The stainless steel equipment and organised workspace reflect the high standards of cleanliness and efficiency essential in professional catering. The atmosphere combines pressure with passion, showing the dedication required in culinary careers.",
-  
-  hospital_waiting: "This hospital waiting room captures the complex emotions and experiences of healthcare environments. Patients and family members sit quietly, some reading magazines whilst others engage in hushed conversations or simply wait in contemplative silence. The clean, modern surroundings aim to provide comfort during potentially stressful times. The atmosphere reflects a mixture of hope, concern, and patience as people navigate important healthcare experiences together."
+  busy_city_street: "This vibrant urban scene captures the essence of city life during rush hour. The streets buzz with activity as people hurry along pavements, their faces focused and determined. Double-decker buses weave through traffic whilst cyclists navigate between cars, creating a symphony of urban movement. The towering buildings create narrow corridors filled with the energy of commerce and daily life. You can sense the urgency in people's body language - some clutching mobile phones, others carrying briefcases or shopping bags. The atmosphere is electric with purpose and ambition, representing the heartbeat of modern metropolitan life where thousands of individual stories intersect briefly before diverging towards their separate destinations.",
+
+  family_picnic: "This charming park scene depicts a perfect family gathering on a sunny afternoon. Parents and children have spread colourful blankets on the grass, creating a cosy outdoor dining space. The children appear delighted, some playing catch whilst others help unpack sandwiches and fruit from wicker baskets. The adults chat leisurely, occasionally calling out encouragement to the playing children. Tall trees provide dappled shade, and the warm sunlight suggests an ideal day for outdoor activities. The atmosphere radiates contentment and togetherness, showing how simple pleasures like sharing food in nature can strengthen family bonds and create lasting memories.",
+
+  coffee_shop: "The bustling coffee shop creates a warm, inviting atmosphere where diverse activities unfold simultaneously. Students hunched over laptops occupy corner tables, occasionally glancing up from their screens to people-watch. Business professionals engage in animated discussions over steaming mugs whilst mothers with pushchairs enjoy brief respites from daily routines. The baristas work efficiently behind the counter, creating a rhythmic soundtrack of grinding, steaming, and friendly conversation. Rich aromas of freshly brewed coffee mingle with the gentle hum of conversation, creating an environment that serves as both workspace and social hub for the local community.",
+
+  playground: "This lively playground buzzes with childhood joy and energy. Children of various ages engage in different activities - some conquering climbing frames with determined concentration whilst others soar high on swings, their laughter carrying across the space. Parents and guardians watch from nearby benches, occasionally offering encouragement or gentle guidance. The colourful equipment contrasts beautifully with the green grass and blue sky, creating an environment designed for both fun and development. The atmosphere is one of pure happiness and freedom, where children can express themselves naturally whilst developing social skills and physical confidence.",
+
+  farmers_market: "This vibrant farmers' market showcases the best of local community life and fresh produce. Colourful stalls display an abundance of seasonal vegetables, fragrant herbs, and artisanal products whilst vendors enthusiastically describe their offerings to interested customers. Families wander between stalls, children marvelling at the variety whilst parents make thoughtful selections. The atmosphere combines the energy of commerce with the warmth of community connection, as regular customers greet familiar farmers by name. Rich colours of red tomatoes, green lettuce, and golden bread create a feast for the eyes, representing the connection between rural producers and urban consumers.",
+
+  library: "The peaceful library environment facilitates deep concentration and learning. Students occupy individual desks and study tables, surrounded by towering bookshelves that reach towards high ceilings. Some work silently through textbooks whilst others collaborate quietly on group projects. The soft lighting and comfortable seating create an atmosphere conducive to extended study sessions. Librarians move discretely amongst the stacks, always ready to assist with research enquiries. The space represents a sanctuary of knowledge where academic pursuits flourish, combining traditional books with modern technology to support diverse learning styles and educational goals.",
+
+  beach_scene: "This idyllic beach scene captures the essence of a perfect holiday day. Families have claimed spots on the golden sand, some building elaborate sandcastles whilst others simply relax under colourful umbrellas. Children splash joyfully in the gentle waves whilst adults alternate between swimming and sunbathing. Beach volleyball players add energy to one corner whilst dog walkers enjoy the vast open space. The brilliant blue sky and warm sunshine create an atmosphere of complete relaxation and escape from daily routines. This scene represents the rejuvenating power of natural coastal environments.",
+
+  train_station: "The bustling train station serves as a fascinating microcosm of modern travel and human connectivity. Commuters check departure boards anxiously whilst families navigate with heavy luggage towards holiday destinations. The impressive Victorian architecture contrasts with modern electronic displays, creating a bridge between historical grandeur and contemporary efficiency. Announcements echo across the vast space as people from diverse backgrounds briefly share this transitional moment in their journeys. The atmosphere combines excitement and routine, representing how transportation hubs facilitate both ordinary commutes and extraordinary adventures across the country and beyond."
 };
 
 function WritingExercise({ onBack, onLogoClick }) {
@@ -270,42 +234,43 @@ function WritingExercise({ onBack, onLogoClick }) {
     }
   };
 
-  // Submit writing early
-  const submitWriting = () => {
-    if (userText.trim().split(/\s+/).length < 20) {
-      alert('Please write at least 20 words before submitting.');
-      return;
-    }
-    
-    setIsTimerActive(false);
-    generateFeedback();
-  };
-
-  // Basic feedback generation
+  // Generate feedback
   const generateFeedback = () => {
-    // Simple scoring for now
-    let score = 70; // Base score
+    let score = 50; // Base score
     
-    // Length bonus/penalty
+    // Word count scoring
     if (wordCount >= selectedPrompt.minWords && wordCount <= selectedPrompt.maxWords) {
-      score += 15;
-    } else if (wordCount < selectedPrompt.minWords) {
-      score -= Math.min(20, (selectedPrompt.minWords - wordCount) * 0.5);
-    } else if (wordCount > selectedPrompt.maxWords) {
-      score -= Math.min(10, (wordCount - selectedPrompt.maxWords) * 0.2);
+      score += 20;
+    } else if (wordCount >= selectedPrompt.minWords * 0.8) {
+      score += 10;
     }
     
-    // Basic vocabulary bonus
-    const sentences = userText.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    if (sentences.length > 3) score += 5;
+    // Length and effort scoring
+    if (wordCount >= 100) score += 10;
+    if (wordCount >= 150) score += 5;
     
-    score = Math.max(0, Math.min(100, Math.round(score)));
+    // Simple quality indicators
+    const sentences = userText.split(/[.!?]+/).filter(s => s.trim().length > 5);
+    if (sentences.length >= 5) score += 10;
+    
+    // Descriptive vocabulary bonus
+    const descriptiveWords = ['beautiful', 'vibrant', 'peaceful', 'busy', 'colourful', 'atmosphere', 'energy', 'feeling', 'emotion'];
+    const foundDescriptive = descriptiveWords.filter(word => 
+      userText.toLowerCase().includes(word)
+    );
+    score += Math.min(foundDescriptive.length * 2, 10);
+    
+    // Time bonus
+    const timeUsed = 300 - timeRemaining;
+    if (timeUsed >= 180) score += 5; // Used at least 3 minutes
+    
+    // Cap at 100
+    score = Math.min(score, 100);
     
     setFeedback({
-      score,
-      wordCount,
-      modelAnswer: MODEL_ANSWERS[selectedPrompt.id],
-      timeSpent: startTime ? Math.round((Date.now() - startTime) / 1000) : 0,
+      score: score,
+      wordCount: wordCount,
+      timeUsed: startTime ? Math.round((Date.now() - startTime) / 1000) : 0,
       suggestions: generateSuggestions(wordCount, selectedPrompt)
     });
     
@@ -369,7 +334,8 @@ function WritingExercise({ onBack, onLogoClick }) {
           
           <div className="writing-instructions">
             <h3>📝 Photo Description Task</h3>
-            <p>You'll see a photo and write a detailed description. You have 5 minutes to write between 80-200 words depending on the difficulty level.</p>
+            <p>You'll see a photo and write a detailed description.
+            You have 5 minutes to write between 80-200 words depending on the difficulty level.</p>
             
             <div className="instruction-list">
               <div className="instruction-item">
@@ -426,12 +392,24 @@ function WritingExercise({ onBack, onLogoClick }) {
           </div>
 
           <div className="writing-prompt">
-            <div className="photo-placeholder">
-              <div className="photo-icon">📷</div>
-              <small>{selectedPrompt.title}</small>
-              <p className="placeholder-note">
-                [Image placeholder - Upload: {selectedPrompt.image}]
-              </p>
+            <div className="prompt-image-container">
+              <img 
+                src={selectedPrompt.image} 
+                alt={selectedPrompt.title}
+                className="prompt-image"
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }}
+              />
+              <div className="photo-placeholder" style={{display: 'none'}}>
+                <div className="photo-icon">📷</div>
+                <small>{selectedPrompt.title}</small>
+                <p className="placeholder-note">
+                  Image not available - use your imagination!
+                </p>
+              </div>
             </div>
             <div className="prompt-text">
               <strong>Your task:</strong> {selectedPrompt.prompt}
@@ -455,7 +433,7 @@ function WritingExercise({ onBack, onLogoClick }) {
           <div className="writing-footer">
             <button 
               className="btn btn-primary"
-              onClick={submitWriting}
+              onClick={generateFeedback}
               disabled={wordCount < 20}
             >
               ✅ Submit Writing
@@ -491,26 +469,47 @@ function WritingExercise({ onBack, onLogoClick }) {
             </div>
           </div>
 
-          {/* WRITING STATISTICS */}
           <div className="feedback-section">
             <h3>📊 Writing Statistics</h3>
             <div className="writing-stats">
               <div className="stat-item">
-                <span className="stat-label">Words written:</span>
+                <span className="stat-label">Words Written</span>
                 <span className="stat-value">{feedback.wordCount}</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">Target range:</span>
+                <span className="stat-label">Target Range</span>
                 <span className="stat-value">{selectedPrompt.minWords}-{selectedPrompt.maxWords}</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">Time used:</span>
-                <span className="stat-value">{Math.round(feedback.timeSpent / 60)} minutes</span>
+                <span className="stat-label">Time Used</span>
+                <span className="stat-value">{Math.floor(feedback.timeUsed / 60)}:{(feedback.timeUsed % 60).toString().padStart(2, '0')}</span>
               </div>
             </div>
           </div>
 
-          {/* SUGGESTIONS */}
+          <div className="feedback-section">
+            <h3>📝 Your Writing</h3>
+            <div className="user-writing">
+              {userText}
+            </div>
+          </div>
+
+          <div className="feedback-section">
+            <h3>🎯 Model Answer</h3>
+            <div className="model-answer">
+              {MODEL_ANSWERS[selectedPrompt.id]}
+            </div>
+            <div className="comparison-tips">
+              <h4>💡 Comparison Tips</h4>
+              <ul>
+                <li>Notice how the model answer uses varied vocabulary</li>
+                <li>Look at the sentence structure and transitions</li>
+                <li>See how emotions and atmosphere are described</li>
+                <li>Compare the level of detail and specific observations</li>
+              </ul>
+            </div>
+          </div>
+
           <div className="feedback-section">
             <h3>💡 Suggestions for Improvement</h3>
             <div className="suggestions-list">
@@ -522,38 +521,15 @@ function WritingExercise({ onBack, onLogoClick }) {
             </div>
           </div>
 
-          {/* YOUR WRITING */}
-          <div className="feedback-section">
-            <h3>✍️ Your Writing</h3>
-            <div className="user-writing">
-              {userText}
-            </div>
-          </div>
-
-          {/* MODEL ANSWER */}
-          <div className="feedback-section">
-            <h3>🎯 Model Answer</h3>
-            <div className="model-answer">
-              {feedback.modelAnswer}
-            </div>
-            <div className="comparison-tips">
-              <h4>💡 Comparison Tips:</h4>
-              <ul>
-                <li>Notice the variety of vocabulary used</li>
-                <li>Observe how sentences are structured</li>
-                <li>Look at descriptive techniques and imagery</li>
-                <li>See how ideas flow logically</li>
-                <li>Compare sentence length and complexity</li>
-              </ul>
-            </div>
-          </div>
-
           <div className="feedback-actions">
-            <button className="btn btn-primary" onClick={restartExercise}>
-              ✍️ Try Another Exercise
+            <button className="btn btn-primary" onClick={startWriting}>
+              📝 Try Another Writing
+            </button>
+            <button className="btn btn-secondary" onClick={restartExercise}>
+              🔄 Back to Start
             </button>
             <button className="btn btn-secondary" onClick={onBack}>
-              ← Back to Exercises
+              ← Exercise Selection
             </button>
           </div>
         </div>
@@ -563,5 +539,3 @@ function WritingExercise({ onBack, onLogoClick }) {
 
   return null;
 }
-
-export default WritingExercise;
