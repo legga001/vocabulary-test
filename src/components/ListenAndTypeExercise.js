@@ -1,4 +1,4 @@
-// src/components/ListenAndTypeExercise.js - Fixed with Traffic Light System
+// src/components/ListenAndTypeExercise.js - Fixed with Detailed Answer Review
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { LISTEN_AND_TYPE_SENTENCES, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
@@ -61,8 +61,6 @@ const checkAnswer = (userAnswer, correctText) => {
   }
 
   const similarity = calculateSimilarity(normalisedUser, normalisedCorrect);
-  const maxLength = Math.max(normalisedUser.length, normalisedCorrect.length);
-  const distance = levenshteinDistance(normalisedUser, normalisedCorrect);
   
   if (similarity >= 0.85) {
     return { type: 'close', score: 0.8 };
@@ -166,6 +164,233 @@ const TrafficLight = ({ percentage }) => {
         color: getScoreColor(percentage)
       }}>
         {percentage >= 80 ? 'Excellent' : percentage >= 60 ? 'Good' : 'Keep Practising'}
+      </div>
+    </div>
+  );
+};
+
+// Word-by-word comparison component
+const WordComparison = ({ userText, correctText }) => {
+  const normaliseText = (text) => {
+    return text.toLowerCase()
+      .replace(/[.,!?;:"']/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  const userWords = normaliseText(userText || '').split(' ').filter(word => word.length > 0);
+  const correctWords = normaliseText(correctText || '').split(' ').filter(word => word.length > 0);
+
+  const getWordStatus = (userWord, correctWord, index) => {
+    if (!userWord && correctWord) {
+      return { status: 'missing', word: correctWord };
+    }
+    if (userWord && !correctWord) {
+      return { status: 'extra', word: userWord };
+    }
+    if (userWord === correctWord) {
+      return { status: 'correct', word: userWord };
+    }
+    if (userWord && correctWord) {
+      // Check if it's a close match (1-2 character difference)
+      const distance = levenshteinDistance(userWord, correctWord);
+      if (distance <= 2 && userWord.length > 2) {
+        return { status: 'close', word: userWord, correct: correctWord };
+      }
+      return { status: 'wrong', word: userWord, correct: correctWord };
+    }
+    return { status: 'unknown', word: userWord || correctWord };
+  };
+
+  const maxLength = Math.max(userWords.length, correctWords.length);
+  const comparison = [];
+
+  for (let i = 0; i < maxLength; i++) {
+    const userWord = userWords[i];
+    const correctWord = correctWords[i];
+    comparison.push(getWordStatus(userWord, correctWord, i));
+  }
+
+  const getWordStyle = (status) => {
+    const baseStyle = {
+      padding: '4px 8px',
+      borderRadius: '4px',
+      margin: '2px',
+      display: 'inline-block',
+      fontSize: '0.95em',
+      fontWeight: '500'
+    };
+
+    switch (status) {
+      case 'correct':
+        return { ...baseStyle, backgroundColor: '#c6f6d5', color: '#2d6930', border: '1px solid #68d391' };
+      case 'wrong':
+        return { ...baseStyle, backgroundColor: '#fed7d7', color: '#c53030', border: '1px solid #fc8181' };
+      case 'close':
+        return { ...baseStyle, backgroundColor: '#feebc8', color: '#dd6b20', border: '1px solid #f6ad55' };
+      case 'missing':
+        return { ...baseStyle, backgroundColor: '#e6fffa', color: '#319795', border: '1px dashed #81e6d9' };
+      case 'extra':
+        return { ...baseStyle, backgroundColor: '#faf5ff', color: '#805ad5', border: '1px dashed #b794f6' };
+      default:
+        return { ...baseStyle, backgroundColor: '#f7fafc', color: '#4a5568', border: '1px solid #e2e8f0' };
+    }
+  };
+
+  return (
+    <div style={{ marginTop: '15px' }}>
+      <div style={{ marginBottom: '10px' }}>
+        <strong style={{ color: '#4c51bf' }}>Word-by-word Comparison:</strong>
+      </div>
+      <div style={{ lineHeight: '2', marginBottom: '15px' }}>
+        {comparison.map((item, index) => (
+          <span key={index} style={getWordStyle(item.status)}>
+            {item.status === 'missing' && '+ '}
+            {item.status === 'extra' && '- '}
+            {item.word}
+            {(item.status === 'wrong' || item.status === 'close') && item.correct && 
+              <span style={{ fontSize: '0.8em', opacity: '0.8' }}> → {item.correct}</span>
+            }
+          </span>
+        ))}
+      </div>
+      <div style={{ fontSize: '0.85em', color: '#666', marginTop: '10px' }}>
+        <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+          <span><span style={{ color: '#2d6930', fontWeight: 'bold' }}>Green:</span> Correct</span>
+          <span><span style={{ color: '#dd6b20', fontWeight: 'bold' }}>Orange:</span> Close match</span>
+          <span><span style={{ color: '#c53030', fontWeight: 'bold' }}>Red:</span> Incorrect</span>
+          <span><span style={{ color: '#319795', fontWeight: 'bold' }}>+:</span> Missing word</span>
+          <span><span style={{ color: '#805ad5', fontWeight: 'bold' }}>-:</span> Extra word</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Detailed Answer Review Component
+const DetailedAnswerReview = ({ answers }) => {
+  if (!answers || answers.length === 0) return null;
+
+  return (
+    <div style={{ 
+      margin: '30px 0', 
+      textAlign: 'left',
+      background: '#f8f9fa',
+      borderRadius: '12px',
+      padding: '20px',
+      border: '1px solid #e2e8f0'
+    }}>
+      <h3 style={{ 
+        textAlign: 'center', 
+        color: '#4c51bf', 
+        marginBottom: '25px',
+        fontSize: '1.3em'
+      }}>
+        📝 Detailed Answer Review
+      </h3>
+      
+      <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+        {answers.map((answer, index) => (
+          <div key={index} style={{
+            background: 'white',
+            borderRadius: '10px',
+            padding: '20px',
+            marginBottom: '15px',
+            border: `2px solid ${
+              answer.result.type === 'perfect' ? '#48bb78' :
+              answer.result.type === 'close' ? '#ed8936' :
+              answer.result.type === 'partial' ? '#4299e1' : '#f56565'
+            }`
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: '15px'
+            }}>
+              <div>
+                <strong style={{ color: '#4c51bf' }}>Question {index + 1}</strong>
+                <span style={{ 
+                  marginLeft: '10px',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontSize: '0.8em',
+                  fontWeight: 'bold',
+                  backgroundColor: '#e2e8f0',
+                  color: '#4a5568'
+                }}>
+                  {answer.sentence.level}
+                </span>
+              </div>
+              <div style={{
+                fontSize: '1.5em'
+              }}>
+                {answer.result.type === 'perfect' ? '💯' :
+                 answer.result.type === 'close' ? '✨' :
+                 answer.result.type === 'partial' ? '👍' : '❌'}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <div style={{ marginBottom: '8px' }}>
+                <strong style={{ color: '#2d6930' }}>Correct text:</strong>
+              </div>
+              <div style={{
+                padding: '10px',
+                backgroundColor: '#f0fff4',
+                borderRadius: '6px',
+                fontFamily: 'monospace',
+                fontSize: '1.05em',
+                border: '1px solid #c6f6d5'
+              }}>
+                "{answer.sentence.correctText}"
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <div style={{ marginBottom: '8px' }}>
+                <strong style={{ color: '#c53030' }}>Your answer:</strong>
+              </div>
+              <div style={{
+                padding: '10px',
+                backgroundColor: answer.userInput.trim() ? '#fff5f5' : '#faf5ff',
+                borderRadius: '6px',
+                fontFamily: 'monospace',
+                fontSize: '1.05em',
+                border: `1px solid ${answer.userInput.trim() ? '#fed7d7' : '#e9d8fd'}`,
+                fontStyle: answer.userInput.trim() ? 'normal' : 'italic',
+                color: answer.userInput.trim() ? '#2d3748' : '#805ad5'
+              }}>
+                {answer.userInput.trim() || '(No answer provided)'}
+              </div>
+            </div>
+
+            {answer.userInput.trim() && (
+              <WordComparison 
+                userText={answer.userInput} 
+                correctText={answer.sentence.correctText} 
+              />
+            )}
+
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginTop: '15px',
+              paddingTop: '15px',
+              borderTop: '1px solid #e2e8f0',
+              fontSize: '0.9em',
+              color: '#666'
+            }}>
+              <span>
+                <strong>Score:</strong> {Math.round(answer.result.score * 100)}%
+              </span>
+              <span>
+                <strong>Time taken:</strong> {answer.timeTaken}s
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -338,10 +563,12 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     setTestSentences(sentences);
   }, []);
 
+  // Initialize test sentences on component mount
   useEffect(() => {
     generateTestSentences();
   }, [generateTestSentences]);
 
+  // Timer effect
   useEffect(() => {
     if (!hasStarted || showResults || timeLeft <= 0) return;
 
@@ -358,6 +585,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearInterval(timer);
   }, [hasStarted, showResults, timeLeft, moveToNextQuestion]);
 
+  // Audio event handlers
   useEffect(() => {
     if (!audioRef.current) return;
 
@@ -387,6 +615,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     };
   }, [currentData]);
 
+  // Auto-play first audio
   useEffect(() => {
     if (!hasStarted || showResults || !currentData || playCount > 0) return;
 
@@ -397,12 +626,14 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearTimeout(autoPlayTimer);
   }, [hasStarted, currentData, playCount, showResults, currentQuestion, playAudio]);
 
+  // Focus input when question changes
   useEffect(() => {
     if (hasStarted && inputRef.current && !showResults) {
       inputRef.current.focus();
     }
   }, [hasStarted, currentQuestion, showResults]);
 
+  // Enter key handler
   useEffect(() => {
     if (!hasStarted || showResults) return;
 
@@ -449,7 +680,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             <div className="score-display">{score.totalScore}/{score.maxScore}</div>
             <div className="score-percentage">({score.percentage}%)</div>
             
-            {/* TRAFFIC LIGHT SYSTEM - This was missing! */}
+            {/* TRAFFIC LIGHT SYSTEM */}
             <TrafficLight percentage={score.percentage} />
             
             <div className="score-breakdown">
@@ -484,6 +715,9 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
                  "Keep working on your listening and spelling. Practice will help!"}
               </p>
             </div>
+            
+            {/* DETAILED ANSWER REVIEW - This was missing! */}
+            <DetailedAnswerReview answers={answers} />
             
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '30px', flexWrap: 'wrap' }}>
               <button className="btn btn-primary" onClick={restartTest}>
