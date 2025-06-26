@@ -1,7 +1,7 @@
 // src/components/ListenAndTypeExercise.js - Fixed with Detailed Answer Review
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import ClickableLogo from './ClickableLogo';
-import { LISTEN_AND_TYPE_SENTENCES, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
+import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
 import { recordTestResult } from '../utils/progressDataManager';
 
 // Function to calculate similarity between strings
@@ -547,7 +547,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     const sentences = [];
     
     TEST_STRUCTURE.forEach(({ level, count }) => {
-      const levelSentences = LISTEN_AND_TYPE_SENTENCES[level] || [];
+      const levelSentences = SENTENCE_POOLS[level] || [];
       
       for (let i = 0; i < count; i++) {
         if (levelSentences.length > 0) {
