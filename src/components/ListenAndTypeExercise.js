@@ -599,15 +599,16 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     generateTestSentences();
   }, [generateTestSentences]);
 
-  // Timer effect
+  // Timer effect - Fixed to not conflict with audio state
   useEffect(() => {
     if (!hasStarted || showResults || timeLeft <= 0) return;
 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          moveToNextQuestion();
-          return 60;
+          // Use setTimeout to avoid state conflicts
+          setTimeout(() => moveToNextQuestion(), 100);
+          return 60; // Reset for next question
         }
         return prev - 1;
       });
@@ -671,16 +672,20 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     };
   }, [currentData]);
 
-  // Auto-play first audio
+  // Auto-play first audio - Simplified and fixed
   useEffect(() => {
-    if (!hasStarted || showResults || !currentData || playCount > 0) return;
+    if (!hasStarted || showResults || !currentData) return;
+    
+    // Only auto-play if this is a fresh question (playCount is 0)
+    if (playCount === 0) {
+      console.log('🎵 Auto-playing audio for question', currentQuestion + 1);
+      const autoPlayTimer = setTimeout(() => {
+        playAudio();
+      }, 1000);
 
-    const autoPlayTimer = setTimeout(() => {
-      playAudio();
-    }, 1000);
-
-    return () => clearTimeout(autoPlayTimer);
-  }, [hasStarted, currentData, playCount, showResults, currentQuestion, playAudio]);
+      return () => clearTimeout(autoPlayTimer);
+    }
+  }, [hasStarted, currentData, showResults, currentQuestion]); // Removed playCount and playAudio from dependencies
 
   // Focus input when question changes
   useEffect(() => {
