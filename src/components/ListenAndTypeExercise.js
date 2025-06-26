@@ -417,25 +417,50 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   }, [testSentences, currentQuestion]);
 
   const playAudio = useCallback(() => {
-    if (!audioRef.current || !currentData || playCount >= 3 || isPlaying || audioError) {
+    if (!audioRef.current || !currentData || playCount >= 3 || audioError) {
+      console.log('🚫 Play blocked:', { 
+        hasAudio: !!audioRef.current, 
+        hasData: !!currentData, 
+        playCount, 
+        audioError 
+      });
+      return;
+    }
+
+    // Prevent multiple simultaneous play attempts
+    if (isPlaying) {
+      console.log('🔄 Already playing, ignoring play request');
       return;
     }
 
     const audio = audioRef.current;
-    setIsPlaying(true);
+    console.log('🎵 Attempting to play audio:', currentData.audioFile);
+    
+    // Reset audio to beginning
     audio.currentTime = 0;
+    
+    // Set playing state immediately to prevent double-clicks
+    setIsPlaying(true);
     
     const playPromise = audio.play();
     if (playPromise) {
       playPromise
         .then(() => {
-          setPlayCount(prev => prev + 1);
+          console.log('✅ Audio play successful');
+          setPlayCount(prev => {
+            const newCount = prev + 1;
+            console.log(`📊 Play count updated: ${newCount}/3`);
+            return newCount;
+          });
         })
         .catch(error => {
-          console.error('Audio play error:', error);
+          console.error('❌ Audio play failed:', error);
           setAudioError(true);
-          setIsPlaying(false);
+          setIsPlaying(false); // Reset playing state on error
         });
+    } else {
+      // Fallback if play() doesn't return a promise
+      setPlayCount(prev => prev + 1);
     }
   }, [currentData, playCount, isPlaying, audioError]);
 
@@ -453,6 +478,8 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   const moveToNextQuestion = useCallback(() => {
     if (!currentData) return;
 
+    console.log('➡️ Moving to next question');
+
     const result = checkAnswer(userInput, currentData.correctText);
     
     setAnswers(prev => [...prev, {
@@ -466,9 +493,13 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       setCurrentQuestion(prev => prev + 1);
       setUserInput('');
       setTimeLeft(60);
+      
+      // CRITICAL: Reset audio states when moving to next question
       setIsPlaying(false);
       setPlayCount(0);
       setAudioError(false);
+      
+      console.log('🔄 Audio states reset for next question');
     } else {
       finishExercise([...answers, {
         sentence: currentData,
@@ -585,33 +616,58 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return () => clearInterval(timer);
   }, [hasStarted, showResults, timeLeft, moveToNextQuestion]);
 
-  // Audio event handlers
+  // Audio event handlers - Fixed to properly reset playing state
   useEffect(() => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || !currentData) return;
 
     const audio = audioRef.current;
     
     const handleEnded = () => {
+      console.log('🎵 Audio ended - resetting play state');
       setIsPlaying(false);
     };
 
-    const handleError = () => {
+    const handleError = (e) => {
+      console.error('🔴 Audio error:', e);
       setAudioError(true);
       setIsPlaying(false);
     };
 
     const handleLoadedData = () => {
+      console.log('✅ Audio loaded successfully');
       setAudioError(false);
     };
 
+    const handleCanPlay = () => {
+      console.log('🎵 Audio ready to play');
+      setAudioError(false);
+    };
+
+    const handlePause = () => {
+      console.log('⏸️ Audio paused - resetting play state');
+      setIsPlaying(false);
+    };
+
+    const handlePlay = () => {
+      console.log('▶️ Audio started playing');
+      setIsPlaying(true);
+    };
+
+    // Add all necessary event listeners
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
     audio.addEventListener('loadeddata', handleLoadedData);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('play', handlePlay);
 
     return () => {
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('loadeddata', handleLoadedData);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('play', handlePlay);
     };
   }, [currentData]);
 
@@ -834,14 +890,58 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
                 className={`play-btn-compact ${isPlaying ? 'playing' : ''}`}
                 onClick={playAudio}
                 disabled={playCount >= 3 || audioError}
+                style={{
+                  background: isPlaying 
+                    ? 'linear-gradient(135deg, #ed8936, #dd6b20)' 
+                    : (playCount >= 3 || audioError)
+                      ? '#a0aec0'
+                      : 'linear-gradient(135deg, #48bb78, #38a169)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50px',
+                  padding: '15px 30px',
+                  fontSize: '1.1em',
+                  fontWeight: '600',
+                  cursor: (playCount >= 3 || audioError) ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  minWidth: '180px',
+                  justifyContent: 'center',
+                  opacity: (playCount >= 3 || audioError) ? 0.6 : 1
+                }}
               >
                 {isPlaying ? '🔊' : '▶️'} 
-                {audioError ? 'Audio Error' : `Play${playCount > 0 ? ` (${playCount}/3)` : ''}`}
+                {isPlaying ? 'Playing...' : 
+                 audioError ? 'Audio Error' : 
+                 playCount >= 3 ? 'No plays left' :
+                 `Play Audio ${playCount > 0 ? `(${playCount}/3)` : ''}`}
               </button>
               
+              {!audioError && (
+                <div style={{
+                  color: '#666',
+                  fontSize: '0.9em',
+                  fontWeight: '500',
+                  textAlign: 'center',
+                  marginTop: '10px'
+                }}>
+                  Plays remaining: {Math.max(0, 3 - playCount)}
+                </div>
+              )}
+              
               {audioError && (
-                <div className="audio-error">
-                  ⚠️ Audio unavailable for this sentence
+                <div style={{
+                  background: '#fff5f5',
+                  color: '#e53e3e',
+                  padding: '15px',
+                  borderRadius: '8px',
+                  marginTop: '15px',
+                  textAlign: 'center',
+                  border: '1px solid #feb2b2'
+                }}>
+                  ⚠️ Audio playback error. Please try again or skip this question.
                 </div>
               )}
             </div>
