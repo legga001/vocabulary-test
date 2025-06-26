@@ -7,88 +7,46 @@ export const getScoreColor = (percentage) => {
   return '#f56565';
 };
 
-// Performance Level component for final results only
+// Simple Performance Level component for final results only
 export const PerformanceLevel = ({ percentage }) => {
-  const lightStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '20px',
-    background: 'white',
-    borderRadius: '15px',
-    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
-    border: '2px solid #e2e8f0',
-    margin: '20px auto',
-    width: 'fit-content'
+  const getPerformanceData = () => {
+    if (percentage >= 80) return { emoji: '🌟', text: 'Excellent!', color: '#48bb78' };
+    if (percentage >= 60) return { emoji: '👍', text: 'Good Progress', color: '#ed8936' };
+    return { emoji: '📈', text: 'Keep Practising', color: '#f56565' };
   };
 
-  const lightCircleBase = {
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    border: '2px solid #e2e8f0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '1.2em',
-    fontWeight: 'bold',
-    transition: 'all 0.3s ease'
-  };
-
-  const getActiveLight = () => {
-    if (percentage >= 80) return 'green';
-    if (percentage >= 60) return 'yellow';
-    return 'red';
-  };
-
-  const activeLight = getActiveLight();
+  const performance = getPerformanceData();
 
   return (
-    <div style={lightStyle}>
-      <h4 style={{ margin: '0 0 15px 0', color: '#4c51bf', fontSize: '1.1em' }}>Performance Level</h4>
-      
-      <div style={{
-        ...lightCircleBase,
-        backgroundColor: activeLight === 'green' ? '#48bb78' : '#f7fafc',
-        color: activeLight === 'green' ? 'white' : '#a0aec0',
-        borderColor: activeLight === 'green' ? '#48bb78' : '#e2e8f0',
-        transform: activeLight === 'green' ? 'scale(1.1)' : 'scale(1)',
-        boxShadow: activeLight === 'green' ? '0 0 15px rgba(72, 187, 120, 0.5)' : 'none'
-      }}>
-        ✓
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '12px',
+      padding: '15px 25px',
+      background: 'white',
+      borderRadius: '12px',
+      border: `2px solid ${performance.color}`,
+      margin: '20px auto',
+      width: 'fit-content'
+    }}>
+      <div style={{ fontSize: '1.5em' }}>
+        {performance.emoji}
       </div>
-      
-      <div style={{
-        ...lightCircleBase,
-        backgroundColor: activeLight === 'yellow' ? '#ed8936' : '#f7fafc',
-        color: activeLight === 'yellow' ? 'white' : '#a0aec0',
-        borderColor: activeLight === 'yellow' ? '#ed8936' : '#e2e8f0',
-        transform: activeLight === 'yellow' ? 'scale(1.1)' : 'scale(1)',
-        boxShadow: activeLight === 'yellow' ? '0 0 15px rgba(237, 137, 54, 0.5)' : 'none'
-      }}>
-        ~
-      </div>
-      
-      <div style={{
-        ...lightCircleBase,
-        backgroundColor: activeLight === 'red' ? '#f56565' : '#f7fafc',
-        color: activeLight === 'red' ? 'white' : '#a0aec0',
-        borderColor: activeLight === 'red' ? '#f56565' : '#e2e8f0',
-        transform: activeLight === 'red' ? 'scale(1.1)' : 'scale(1)',
-        boxShadow: activeLight === 'red' ? '0 0 15px rgba(245, 101, 101, 0.5)' : 'none'
-      }}>
-        ✗
-      </div>
-      
-      <div style={{ 
-        marginTop: '12px', 
-        fontSize: '0.9em', 
-        fontWeight: '600',
-        color: getScoreColor(percentage),
-        textAlign: 'center'
-      }}>
-        {percentage >= 80 ? 'Excellent' : percentage >= 60 ? 'Good Progress' : 'Keep Practising'}
+      <div>
+        <div style={{ 
+          fontWeight: '600',
+          color: performance.color,
+          fontSize: '1.1em'
+        }}>
+          {performance.text}
+        </div>
+        <div style={{ 
+          fontSize: '0.9em',
+          color: '#718096'
+        }}>
+          Performance Level
+        </div>
       </div>
     </div>
   );
