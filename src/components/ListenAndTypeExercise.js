@@ -1,4 +1,4 @@
-// src/components/ListenAndTypeExercise.js - Complete Fixed Version
+// src/components/ListenAndTypeExercise.js - Clean Complete Version
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
@@ -178,7 +178,7 @@ const WordComparison = ({ userText, correctText }) => {
   const userWords = normaliseText(userText || '').split(' ').filter(word => word.length > 0);
   const correctWords = normaliseText(correctText || '').split(' ').filter(word => word.length > 0);
 
-  const getWordStatus = (userWord, correctWord, index) => {
+  const getWordStatus = (userWord, correctWord) => {
     if (!userWord && correctWord) {
       return { status: 'missing', word: correctWord };
     }
@@ -204,7 +204,7 @@ const WordComparison = ({ userText, correctText }) => {
   for (let i = 0; i < maxLength; i++) {
     const userWord = userWords[i];
     const correctWord = correctWords[i];
-    comparison.push(getWordStatus(userWord, correctWord, i));
+    comparison.push(getWordStatus(userWord, correctWord));
   }
 
   const getWordStyle = (status) => {
@@ -413,28 +413,8 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   const playAudio = useCallback(() => {
     console.log('🎵 playAudio called - Question:', currentQuestion, 'PlayCount:', playCount, 'IsPlaying:', isPlaying);
     
-    if (!audioRef.current) {
-      console.log('❌ No audio ref');
-      return false;
-    }
-    
-    if (!currentData) {
-      console.log('❌ No current data');
-      return false;
-    }
-    
-    if (playCount >= 3) {
-      console.log('❌ Max plays reached');
-      return false;
-    }
-    
-    if (audioError) {
-      console.log('❌ Audio error state');
-      return false;
-    }
-
-    if (isPlaying) {
-      console.log('❌ Already playing');
+    if (!audioRef.current || !currentData || playCount >= 3 || audioError || isPlaying) {
+      console.log('❌ Play blocked');
       return false;
     }
 
@@ -616,7 +596,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
 
   useEffect(() => {
     if (!audioRef.current || !currentData) {
-      console.log('⚠️ No audio ref or data for event listeners');
       return;
     }
 
@@ -639,22 +618,15 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       setAudioError(false);
     };
 
-    const handleCanPlay = () => {
-      console.log('▶️ Audio can play for question', currentQuestion);
-      setAudioError(false);
-    };
-
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
     audio.addEventListener('loadeddata', handleLoadedData);
-    audio.addEventListener('canplay', handleCanPlay);
 
     return () => {
       console.log('🧹 Cleaning up audio event listeners');
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('loadeddata', handleLoadedData);
-      audio.removeEventListener('canplay', handleCanPlay);
     };
   }, [currentData, currentQuestion]);
 
@@ -706,90 +678,6 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       <div className="listen-type-container">
         <div className="listen-type-quiz-container">
           <ClickableLogo onLogoClick={onLogoClick} />
-          <h1>🎧 Listen and Type</h1>
-          <div className="loading-message">
-            <p>🎲 Generating your test...</p>
-          </div>
-          <button className="btn btn-secondary" onClick={onBack}>
-            ← Back to Exercises
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (showResults) {
-    const score = calculateScore();
-
-    return (
-      <div className="listen-type-container">
-        <div className="listen-type-quiz-container">
-          <ClickableLogo onLogoClick={onLogoClick} />
-          
-          <h1>🎧 Listen and Type Results</h1>
-          
-          <div className="results">
-            <h2>🎉 Test Complete!</h2>
-            <div className="score-display">{score.totalScore}/{score.maxScore}</div>
-            <div className="score-percentage">({score.percentage}%)</div>
-            
-            <TrafficLight percentage={score.percentage} />
-            
-            <div className="score-breakdown">
-              <div className="breakdown-item perfect">
-                <span className="breakdown-icon">💯</span>
-                <span className="breakdown-count">{score.perfect}</span>
-                <span className="breakdown-label">Perfect</span>
-              </div>
-              <div className="breakdown-item close">
-                <span className="breakdown-icon">✨</span>
-                <span className="breakdown-count">{score.close}</span>
-                <span className="breakdown-label">Close</span>
-              </div>
-              <div className="breakdown-item partial">
-                <span className="breakdown-icon">👍</span>
-                <span className="breakdown-count">{score.partial}</span>
-                <span className="breakdown-label">Partial</span>
-              </div>
-              <div className="breakdown-item incorrect">
-                <span className="breakdown-icon">❌</span>
-                <span className="breakdown-count">{score.incorrect}</span>
-                <span className="breakdown-label">Incorrect</span>
-              </div>
-            </div>
-            
-            <div className="level-estimate">
-              <h3>Listening and Typing Skills</h3>
-              <p>
-                {score.percentage >= 90 ? "Outstanding! You have excellent listening and typing accuracy." :
-                 score.percentage >= 75 ? "Great work! Your listening comprehension is very strong." :
-                 score.percentage >= 60 ? "Good effort! Keep practising to improve your listening skills." :
-                 "Keep working on your listening and spelling. Practice will help!"}
-              </p>
-            </div>
-            
-            <DetailedAnswerReview answers={answers} />
-            
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '30px', flexWrap: 'wrap' }}>
-              <button className="btn btn-primary" onClick={restartTest}>
-                🔄 Try Again
-              </button>
-              <button className="btn btn-secondary" onClick={onBack}>
-                ← Back to Exercises
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!hasStarted) {
-    return (
-      <div className="listen-type-container">
-        <div className="listen-type-quiz-container">
-          <ClickableLogo onLogoClick={onLogoClick} />
-          
           <h1>🎧 Listen and Type</h1>
           
           <div className="instructions-container">
@@ -1050,4 +938,88 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   );
 }
 
-export default ListenAndTypeExercise;>
+export default ListenAndTypeExercise;</h1>
+          <div className="loading-message">
+            <p>🎲 Generating your test...</p>
+          </div>
+          <button className="btn btn-secondary" onClick={onBack}>
+            ← Back to Exercises
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showResults) {
+    const score = calculateScore();
+
+    return (
+      <div className="listen-type-container">
+        <div className="listen-type-quiz-container">
+          <ClickableLogo onLogoClick={onLogoClick} />
+          
+          <h1>🎧 Listen and Type Results</h1>
+          
+          <div className="results">
+            <h2>🎉 Test Complete!</h2>
+            <div className="score-display">{score.totalScore}/{score.maxScore}</div>
+            <div className="score-percentage">({score.percentage}%)</div>
+            
+            <TrafficLight percentage={score.percentage} />
+            
+            <div className="score-breakdown">
+              <div className="breakdown-item perfect">
+                <span className="breakdown-icon">💯</span>
+                <span className="breakdown-count">{score.perfect}</span>
+                <span className="breakdown-label">Perfect</span>
+              </div>
+              <div className="breakdown-item close">
+                <span className="breakdown-icon">✨</span>
+                <span className="breakdown-count">{score.close}</span>
+                <span className="breakdown-label">Close</span>
+              </div>
+              <div className="breakdown-item partial">
+                <span className="breakdown-icon">👍</span>
+                <span className="breakdown-count">{score.partial}</span>
+                <span className="breakdown-label">Partial</span>
+              </div>
+              <div className="breakdown-item incorrect">
+                <span className="breakdown-icon">❌</span>
+                <span className="breakdown-count">{score.incorrect}</span>
+                <span className="breakdown-label">Incorrect</span>
+              </div>
+            </div>
+            
+            <div className="level-estimate">
+              <h3>Listening and Typing Skills</h3>
+              <p>
+                {score.percentage >= 90 ? "Outstanding! You have excellent listening and typing accuracy." :
+                 score.percentage >= 75 ? "Great work! Your listening comprehension is very strong." :
+                 score.percentage >= 60 ? "Good effort! Keep practising to improve your listening skills." :
+                 "Keep working on your listening and spelling. Practice will help!"}
+              </p>
+            </div>
+            
+            <DetailedAnswerReview answers={answers} />
+            
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '30px', flexWrap: 'wrap' }}>
+              <button className="btn btn-primary" onClick={restartTest}>
+                🔄 Try Again
+              </button>
+              <button className="btn btn-secondary" onClick={onBack}>
+                ← Back to Exercises
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasStarted) {
+    return (
+      <div className="listen-type-container">
+        <div className="listen-type-quiz-container">
+          <ClickableLogo onLogoClick={onLogoClick} />
+          
+          <h1>🎧 Listen and Type
