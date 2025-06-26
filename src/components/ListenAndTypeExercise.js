@@ -1,74 +1,68 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+// src/components/ListenAndTypeExercise.js - Fixed with Traffic Light System
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import ClickableLogo from './ClickableLogo';
-import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
+import { LISTEN_AND_TYPE_SENTENCES, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
 import { recordTestResult } from '../utils/progressDataManager';
 
-const generateTestSentences = () => {
-  const testSentences = [];
-  let sentenceCounter = 1;
-
-  TEST_STRUCTURE.forEach(({ level, count }) => {
-    const availableSentences = [...SENTENCE_POOLS[level]];
-    
-    for (let i = availableSentences.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [availableSentences[i], availableSentences[j]] = [availableSentences[j], availableSentences[i]];
-    }
-    
-    for (let i = 0; i < count && i < availableSentences.length; i++) {
-      testSentences.push({
-        id: sentenceCounter,
-        level: level,
-        audioFile: availableSentences[i].audioFile,
-        correctText: availableSentences[i].correctText,
-        difficulty: availableSentences[i].difficulty
-      });
-      sentenceCounter++;
-    }
-  });
-
-  return testSentences;
+// Function to calculate similarity between strings
+const calculateSimilarity = (str1, str2) => {
+  const longer = str1.length > str2.length ? str1 : str2;
+  const shorter = str1.length > str2.length ? str2 : str1;
+  
+  if (longer.length === 0) return 1.0;
+  
+  const distance = levenshteinDistance(longer, shorter);
+  return (longer.length - distance) / longer.length;
 };
 
-const normaliseText = (text) => {
-  return text
-    .toLowerCase()
-    .replace(/[.,!?;:'"()-]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-};
-
-const getLevenshteinDistance = (str1, str2) => {
-  const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
-  
-  for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
-  for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
-  
-  for (let j = 1; j <= str2.length; j++) {
-    for (let i = 1; i <= str1.length; i++) {
-      const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-      matrix[j][i] = Math.min(
-        matrix[j][i - 1] + 1,
-        matrix[j - 1][i] + 1,
-        matrix[j - 1][i - 1] + indicator
-      );
+// Levenshtein distance algorithm
+const levenshteinDistance = (str1, str2) => {
+  const matrix = [];
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= str1.length; j++) {
+    matrix[0][j] = j;
+  }
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
     }
   }
-  
   return matrix[str2.length][str1.length];
 };
 
-const checkAnswer = (userInput, correctText) => {
-  const userNormalised = normaliseText(userInput);
-  const correctNormalised = normaliseText(correctText);
-  
-  if (userNormalised === correctNormalised) {
-    return { type: 'perfect', score: 1.0 };
+// Function to check user's answer against correct text
+const checkAnswer = (userAnswer, correctText) => {
+  if (!userAnswer || !correctText) {
+    return { type: 'incorrect', score: 0 };
   }
-  
-  const distance = getLevenshteinDistance(userNormalised, correctNormalised);
-  const maxLength = Math.max(userNormalised.length, correctNormalised.length);
-  const similarity = maxLength > 0 ? 1 - (distance / maxLength) : 0;
+
+  const normaliseText = (text) => {
+    return text.toLowerCase()
+      .replace(/[.,!?;:"']/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  const normalisedUser = normaliseText(userAnswer);
+  const normalisedCorrect = normaliseText(correctText);
+
+  if (normalisedUser === normalisedCorrect) {
+    return { type: 'perfect', score: 1 };
+  }
+
+  const similarity = calculateSimilarity(normalisedUser, normalisedCorrect);
+  const maxLength = Math.max(normalisedUser.length, normalisedCorrect.length);
+  const distance = levenshteinDistance(normalisedUser, normalisedCorrect);
   
   if (similarity >= 0.85) {
     return { type: 'close', score: 0.8 };
@@ -77,6 +71,104 @@ const checkAnswer = (userInput, correctText) => {
   } else {
     return { type: 'incorrect', score: 0 };
   }
+};
+
+// Traffic Light Score Colour Function
+const getScoreColor = (percentage) => {
+  if (percentage >= 80) return '#48bb78'; // Green
+  if (percentage >= 60) return '#ed8936'; // Orange/Yellow
+  return '#f56565'; // Red
+};
+
+// Traffic Light Component
+const TrafficLight = ({ percentage }) => {
+  const lightStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '5px',
+    padding: '15px',
+    background: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    border: '2px solid #e2e8f0',
+    margin: '20px auto',
+    width: 'fit-content'
+  };
+
+  const lightCircleBase = {
+    width: '30px',
+    height: '30px',
+    borderRadius: '50%',
+    border: '2px solid #e2e8f0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '0.8em',
+    fontWeight: 'bold'
+  };
+
+  const getActiveLight = () => {
+    if (percentage >= 80) return 'green';
+    if (percentage >= 60) return 'yellow';
+    return 'red';
+  };
+
+  const activeLight = getActiveLight();
+
+  return (
+    <div style={lightStyle}>
+      <h4 style={{ margin: '0 0 10px 0', color: '#4c51bf', fontSize: '1em' }}>Performance Level</h4>
+      
+      {/* Green Light */}
+      <div style={{
+        ...lightCircleBase,
+        backgroundColor: activeLight === 'green' ? '#48bb78' : '#f7fafc',
+        color: activeLight === 'green' ? 'white' : '#a0aec0',
+        borderColor: activeLight === 'green' ? '#48bb78' : '#e2e8f0',
+        transform: activeLight === 'green' ? 'scale(1.1)' : 'scale(1)',
+        boxShadow: activeLight === 'green' ? '0 0 15px rgba(72, 187, 120, 0.5)' : 'none',
+        transition: 'all 0.3s ease'
+      }}>
+        ✓
+      </div>
+      
+      {/* Yellow Light */}
+      <div style={{
+        ...lightCircleBase,
+        backgroundColor: activeLight === 'yellow' ? '#ed8936' : '#f7fafc',
+        color: activeLight === 'yellow' ? 'white' : '#a0aec0',
+        borderColor: activeLight === 'yellow' ? '#ed8936' : '#e2e8f0',
+        transform: activeLight === 'yellow' ? 'scale(1.1)' : 'scale(1)',
+        boxShadow: activeLight === 'yellow' ? '0 0 15px rgba(237, 137, 54, 0.5)' : 'none',
+        transition: 'all 0.3s ease'
+      }}>
+        ~
+      </div>
+      
+      {/* Red Light */}
+      <div style={{
+        ...lightCircleBase,
+        backgroundColor: activeLight === 'red' ? '#f56565' : '#f7fafc',
+        color: activeLight === 'red' ? 'white' : '#a0aec0',
+        borderColor: activeLight === 'red' ? '#f56565' : '#e2e8f0',
+        transform: activeLight === 'red' ? 'scale(1.1)' : 'scale(1)',
+        boxShadow: activeLight === 'red' ? '0 0 15px rgba(245, 101, 101, 0.5)' : 'none',
+        transition: 'all 0.3s ease'
+      }}>
+        ✗
+      </div>
+      
+      <div style={{ 
+        marginTop: '8px', 
+        fontSize: '0.85em', 
+        fontWeight: '600',
+        color: getScoreColor(percentage)
+      }}>
+        {percentage >= 80 ? 'Excellent' : percentage >= 60 ? 'Good' : 'Keep Practising'}
+      </div>
+    </div>
+  );
 };
 
 function ListenAndTypeExercise({ onBack, onLogoClick }) {
@@ -223,36 +315,54 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     setIsPlaying(false);
     setPlayCount(0);
     setAudioError(false);
-    
-    const newSentences = generateTestSentences();
-    setTestSentences(newSentences);
+    generateTestSentences();
   }, []);
 
-  useEffect(() => {
-    const sentences = generateTestSentences();
+  const generateTestSentences = useCallback(() => {
+    const sentences = [];
+    
+    TEST_STRUCTURE.forEach(({ level, count }) => {
+      const levelSentences = LISTEN_AND_TYPE_SENTENCES[level] || [];
+      
+      for (let i = 0; i < count; i++) {
+        if (levelSentences.length > 0) {
+          const randomIndex = Math.floor(Math.random() * levelSentences.length);
+          const selectedSentence = { ...levelSentences[randomIndex], level };
+          sentences.push(selectedSentence);
+          
+          levelSentences.splice(randomIndex, 1);
+        }
+      }
+    });
+    
     setTestSentences(sentences);
   }, []);
 
   useEffect(() => {
+    generateTestSentences();
+  }, [generateTestSentences]);
+
+  useEffect(() => {
     if (!hasStarted || showResults || timeLeft <= 0) return;
 
-    const timer = setTimeout(() => {
+    const timer = setInterval(() => {
       setTimeLeft(prev => {
-        const newTime = prev - 1;
-        if (newTime === 0) {
-          setTimeout(() => moveToNextQuestion(), 100);
+        if (prev <= 1) {
+          moveToNextQuestion();
+          return 60;
         }
-        return newTime;
+        return prev - 1;
       });
     }, 1000);
 
-    return () => clearTimeout(timer);
+    return () => clearInterval(timer);
   }, [hasStarted, showResults, timeLeft, moveToNextQuestion]);
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !currentData) return;
+    if (!audioRef.current) return;
 
+    const audio = audioRef.current;
+    
     const handleEnded = () => {
       setIsPlaying(false);
     };
@@ -262,21 +372,27 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
       setIsPlaying(false);
     };
 
+    const handleLoadedData = () => {
+      setAudioError(false);
+    };
+
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
+    audio.addEventListener('loadeddata', handleLoadedData);
 
     return () => {
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
+      audio.removeEventListener('loadeddata', handleLoadedData);
     };
-  }, [currentQuestion, currentData]);
+  }, [currentData]);
 
   useEffect(() => {
-    if (!hasStarted || !currentData || playCount > 0 || showResults || currentQuestion !== 0) return;
+    if (!hasStarted || showResults || !currentData || playCount > 0) return;
 
     const autoPlayTimer = setTimeout(() => {
       playAudio();
-    }, 2000);
+    }, 1000);
 
     return () => clearTimeout(autoPlayTimer);
   }, [hasStarted, currentData, playCount, showResults, currentQuestion, playAudio]);
@@ -332,6 +448,9 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             <h2>🎉 Test Complete!</h2>
             <div className="score-display">{score.totalScore}/{score.maxScore}</div>
             <div className="score-percentage">({score.percentage}%)</div>
+            
+            {/* TRAFFIC LIGHT SYSTEM - This was missing! */}
+            <TrafficLight percentage={score.percentage} />
             
             <div className="score-breakdown">
               <div className="breakdown-item perfect">
@@ -469,67 +588,51 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             >
               Your browser does not support the audio element.
             </audio>
-            
+
             <div className="audio-controls-compact">
               <button 
                 className={`play-btn-compact ${isPlaying ? 'playing' : ''}`}
                 onClick={playAudio}
-                disabled={playCount >= 3 || isPlaying || audioError}
+                disabled={playCount >= 3 || audioError}
               >
-                <span className="play-icon">
-                  {isPlaying ? '🔊' : '▶️'}
-                </span>
-                <span className="play-text">
-                  {isPlaying ? 'Playing...' : 'Play Audio'}
-                </span>
+                {isPlaying ? '🔊' : '▶️'} 
+                {audioError ? 'Audio Error' : `Play${playCount > 0 ? ` (${playCount}/3)` : ''}`}
               </button>
               
-              <div className="play-counter-compact">
-                Plays remaining: {3 - playCount}
-              </div>
+              {audioError && (
+                <div className="audio-error">
+                  ⚠️ Audio unavailable for this sentence
+                </div>
+              )}
             </div>
-
-            {audioError && (
-              <div className="audio-error">
-                ⚠️ Audio playback error. Please try again or skip this question.
-              </div>
-            )}
           </div>
 
           <div className="input-section-compact">
-            <h3>Type what you hear:</h3>
             <textarea
               ref={inputRef}
-              className="typing-input-compact"
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
-              placeholder="Type the sentence here..."
-              rows={3}
+              placeholder="Type what you hear..."
+              className="listen-input-compact"
+              rows="3"
             />
             
-            <div className="input-info-compact">
-              <p>💡 <strong>Tip:</strong> Just type what you hear - spelling variations and missing punctuation are fine!</p>
-            </div>
-
             <div className="action-buttons-compact">
               <button 
-                className="btn btn-primary btn-submit"
+                className="btn-submit" 
                 onClick={handleSubmit}
                 disabled={!userInput.trim()}
               >
-                Submit Answer
+                ✅ Submit Answer
               </button>
+              
               <button 
-                className="btn btn-secondary btn-skip"
+                className="btn-skip" 
                 onClick={moveToNextQuestion}
               >
-                {currentQuestion + 1 === testSentences.length ? 'Finish Test' : 'Skip Question'}
+                ⏭️ Skip
               </button>
             </div>
-            
-            <p className="keyboard-hint-compact">
-              <small>💻 Press <strong>Enter</strong> to submit</small>
-            </p>
           </div>
         </div>
       </div>
