@@ -168,8 +168,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             🎧 Listen & Type Results
           </h1>
 
-          {/* Performance Level indicator - only shown in results */}
-          <PerformanceLevel percentage={scoreData.totalScore} />
+
 
           <div style={{
             background: 'linear-gradient(135deg, #4c51bf, #667eea)',
