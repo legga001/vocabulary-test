@@ -771,3 +771,283 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             <DetailedAnswerReview answers={answers} />
             
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '30px', flexWrap: 'wrap' }}>
+              <button className="btn btn-primary" onClick={restartTest}>
+                🔄 Try Again
+              </button>
+              <button className="btn btn-secondary" onClick={onBack}>
+                ← Back to Exercises
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasStarted) {
+    return (
+      <div className="listen-type-container">
+        <div className="listen-type-quiz-container">
+          <ClickableLogo onLogoClick={onLogoClick} />
+          
+          <h1>🎧 Listen and Type</h1>
+          
+          <div className="instructions-container">
+            <div className="instruction-content">
+              <h3>📋 Instructions</h3>
+              <div className="instruction-list">
+                <div className="instruction-item">
+                  <span className="instruction-icon">🎵</span>
+                  <span>Listen carefully to the audio sentence</span>
+                </div>
+                <div className="instruction-item">
+                  <span className="instruction-icon">✍️</span>
+                  <span>Type exactly what you hear</span>
+                </div>
+                <div className="instruction-item">
+                  <span className="instruction-icon">🔁</span>
+                  <span>You can replay each audio up to 3 times</span>
+                </div>
+                <div className="instruction-item">
+                  <span className="instruction-icon">⏱️</span>
+                  <span>You have 1 minute per sentence</span>
+                </div>
+                <div className="instruction-item">
+                  <span className="instruction-icon">✅</span>
+                  <span>Spelling variations and missing punctuation are accepted</span>
+                </div>
+              </div>
+              
+              <div className="difficulty-info">
+                <h4>📊 Test Structure</h4>
+                <p>Progressive difficulty through levels:</p>
+                <ul>
+                  <li>2 A2 level sentences (elementary)</li>
+                  <li>3 B1 level sentences (intermediate)</li>
+                  <li>3 B2 level sentences (upper-intermediate)</li>
+                  <li>2 C1 level sentences (advanced)</li>
+                </ul>
+              </div>
+            </div>
+            
+            <button className="btn btn-primary btn-large" onClick={startExercise}>
+              🎧 Start Listening Exercise
+            </button>
+          </div>
+
+          <button className="btn btn-secondary" onClick={onBack}>
+            ← Back to Exercises
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="listen-type-container">
+      <div className="listen-type-quiz-container">
+        <div className="listen-header">
+          <div className="timer-section">
+            <span className="timer-icon">⏱️</span>
+            <span className="timer-text" style={{ color: timeLeft <= 10 ? '#e53e3e' : '#4c51bf' }}>
+              {formatTime(timeLeft)}
+            </span>
+          </div>
+          <div className="progress-section">
+            Question {currentQuestion + 1} of {testSentences.length}
+          </div>
+          <button className="close-btn" onClick={onBack}>✕</button>
+        </div>
+
+        <div className="listen-main-compact">
+          <div className="level-indicator">
+            <span className="level-badge">{currentData?.level}</span>
+            <span className="level-description">{currentData?.difficulty}</span>
+          </div>
+
+          <div className="audio-section-compact">
+            <audio 
+              ref={audioRef} 
+              preload="auto"
+              src={currentData ? `/${currentData.audioFile}` : ''}
+            >
+              Your browser does not support the audio element.
+            </audio>
+
+            <div className="audio-controls-compact">
+              <button 
+                onClick={playAudio}
+                disabled={playCount >= 3 || audioError}
+                style={{
+                  background: isPlaying 
+                    ? 'linear-gradient(135deg, #ed8936, #dd6b20)' 
+                    : (playCount >= 3 || audioError)
+                      ? '#a0aec0'
+                      : 'linear-gradient(135deg, #48bb78, #38a169)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50px',
+                  padding: '15px 30px',
+                  fontSize: '1.1em',
+                  fontWeight: '600',
+                  cursor: (playCount >= 3 || audioError) ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  minWidth: '200px',
+                  justifyContent: 'center',
+                  opacity: (playCount >= 3 || audioError) ? 0.6 : 1
+                }}
+              >
+                {isPlaying ? '🔊' : '▶️'} 
+                {isPlaying ? 'Playing...' : 
+                 audioError ? 'Audio Error' : 
+                 playCount >= 3 ? 'No plays left' :
+                 `Play Audio ${playCount > 0 ? `(${playCount}/3)` : ''}`}
+              </button>
+              
+              <div style={{
+                color: '#666',
+                fontSize: '0.9em',
+                fontWeight: '500',
+                textAlign: 'center',
+                marginTop: '10px'
+              }}>
+                Plays remaining: {Math.max(0, 3 - playCount)}
+              </div>
+              
+              {audioError && (
+                <div style={{
+                  background: '#fff5f5',
+                  color: '#e53e3e',
+                  padding: '15px',
+                  borderRadius: '8px',
+                  marginTop: '15px',
+                  textAlign: 'center',
+                  border: '1px solid #feb2b2'
+                }}>
+                  ⚠️ Audio playback error. Please try again or skip this question.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="input-section-compact">
+            <h3>Type what you hear:</h3>
+            <textarea
+              ref={inputRef}
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              placeholder="Type the sentence here..."
+              rows="4"
+              autoFocus
+              style={{
+                width: '100%',
+                minHeight: '120px',
+                padding: '15px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '12px',
+                fontSize: '1.1em',
+                fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+                resize: 'vertical',
+                transition: 'all 0.3s ease',
+                backgroundColor: '#ffffff',
+                lineHeight: '1.5'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#4c51bf';
+                e.target.style.boxShadow = '0 0 15px rgba(76, 81, 191, 0.2)';
+                e.target.style.backgroundColor = '#f8f9ff';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0';
+                e.target.style.boxShadow = 'none';
+                e.target.style.backgroundColor = '#ffffff';
+              }}
+            />
+            
+            <div style={{ 
+              margin: '15px 0', 
+              textAlign: 'center',
+              padding: '10px',
+              backgroundColor: '#f0f8ff',
+              borderRadius: '8px',
+              border: '1px solid #bee3f8'
+            }}>
+              <p style={{ 
+                color: '#2b6cb0', 
+                fontSize: '0.95em', 
+                margin: '0',
+                fontWeight: '500'
+              }}>
+                💡 <strong>Tip:</strong> Just type what you hear - spelling variations and missing punctuation are fine!
+              </p>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              gap: '15px',
+              justifyContent: 'center',
+              margin: '20px 0',
+              flexWrap: 'wrap'
+            }}>
+              <button 
+                onClick={handleSubmit}
+                disabled={!userInput.trim()}
+                style={{
+                  padding: '14px 28px',
+                  border: 'none',
+                  borderRadius: '25px',
+                  fontWeight: '600',
+                  cursor: userInput.trim() ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.3s ease',
+                  fontSize: '1em',
+                  minWidth: '160px',
+                  background: userInput.trim() 
+                    ? 'linear-gradient(135deg, #4c51bf, #667eea)' 
+                    : '#a0aec0',
+                  color: 'white'
+                }}
+              >
+                ✅ Submit Answer
+              </button>
+              
+              <button 
+                onClick={moveToNextQuestion}
+                style={{
+                  padding: '14px 28px',
+                  border: 'none',
+                  borderRadius: '25px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  fontSize: '1em',
+                  minWidth: '160px',
+                  background: '#e2e8f0',
+                  color: '#4a5568'
+                }}
+              >
+                ⏭️ {currentQuestion + 1 === testSentences.length ? 'Finish Test' : 'Skip'}
+              </button>
+            </div>
+            
+            <div style={{ 
+              textAlign: 'center', 
+              marginTop: '15px' 
+            }}>
+              <small style={{ 
+                color: '#718096', 
+                fontSize: '0.85em' 
+              }}>
+                💻 Press <strong>Enter</strong> to submit your answer
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default ListenAndTypeExercise;>
