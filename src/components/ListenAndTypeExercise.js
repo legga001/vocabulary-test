@@ -1,4 +1,4 @@
-// src/components/ListenAndTypeExercise.js - Fixed version with working audio
+// src/components/ListenAndTypeExercise.js - Final fixed version
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { recordTestResult } from '../utils/progressDataManager';
@@ -7,10 +7,8 @@ import { useAutoPlay } from '../hooks/useAutoPlay';
 import { checkAnswer } from '../utils/answerAnalysis';
 import { generateTestSentences, calculateTestScore } from '../utils/sentenceGenerator';
 import { 
-  TrafficLight, 
   PerformanceLevel,
-  DetailedAnswerReview, 
-  AudioControls 
+  DetailedAnswerReview
 } from './ListenTypeComponents';
 
 function ListenAndTypeExercise({ onBack, onLogoClick }) {
@@ -495,7 +493,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           }} />
         </div>
 
-        {/* Audio section */}
+        {/* Simplified Audio section - no traffic light */}
         {currentData && (
           <div style={{
             background: '#f7fafc',
@@ -504,20 +502,50 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             marginBottom: '30px',
             textAlign: 'center'
           }}>
+            <h3 style={{
+              color: '#4a5568',
+              marginBottom: '20px',
+              fontSize: '1.2em'
+            }}>
+              🎵 Listen to the sentence
+            </h3>
+            
             <div style={{
               display: 'flex',
-              alignItems: 'center',
               justifyContent: 'center',
-              gap: '20px',
               marginBottom: '20px'
             }}>
-              <TrafficLight playCount={playCount} />
-              <AudioControls 
-                onPlay={playAudio}
-                isPlaying={isPlaying}
-                disabled={audioError}
-                playCount={playCount}
-              />
+              <button 
+                onClick={playAudio}
+                disabled={playCount >= 3 || audioError}
+                style={{
+                  background: isPlaying 
+                    ? 'linear-gradient(135deg, #ed8936, #dd6b20)' 
+                    : (playCount >= 3 || audioError)
+                      ? '#a0aec0'
+                      : 'linear-gradient(135deg, #48bb78, #38a169)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50px',
+                  padding: '15px 30px',
+                  fontSize: '1.1em',
+                  fontWeight: '600',
+                  cursor: (playCount >= 3 || audioError) ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  minWidth: '200px',
+                  justifyContent: 'center',
+                  opacity: (playCount >= 3 || audioError) ? 0.6 : 1
+                }}
+              >
+                {isPlaying ? '🔊' : '▶️'} 
+                {isPlaying ? 'Playing...' : 
+                 audioError ? 'Audio Error' : 
+                 playCount >= 3 ? 'No plays left' :
+                 `Play Audio ${playCount > 0 ? `(${playCount}/3)` : ''}`}
+              </button>
             </div>
             
             <audio 
@@ -528,6 +556,15 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             >
               Your browser does not support the audio element.
             </audio>
+            
+            <div style={{
+              color: '#718096',
+              fontSize: '0.9em',
+              fontWeight: '500',
+              textAlign: 'center'
+            }}>
+              Plays remaining: {Math.max(0, 3 - playCount)}
+            </div>
             
             {audioError && (
               <div style={{
