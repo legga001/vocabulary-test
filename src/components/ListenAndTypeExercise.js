@@ -1,4 +1,4 @@
-// src/components/ListenAndTypeExercise.js - Clean rewrite fixing duplicate imports
+// src/components/ListenAndTypeExercise.js - Fixed version with working audio
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { recordTestResult } from '../utils/progressDataManager';
@@ -8,6 +8,7 @@ import { checkAnswer } from '../utils/answerAnalysis';
 import { generateTestSentences, calculateTestScore } from '../utils/sentenceGenerator';
 import { 
   TrafficLight, 
+  PerformanceLevel,
   DetailedAnswerReview, 
   AudioControls 
 } from './ListenTypeComponents';
@@ -168,6 +169,9 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           }}>
             🎧 Listen & Type Results
           </h1>
+
+          {/* Performance Level indicator - only shown in results */}
+          <PerformanceLevel percentage={scoreData.totalScore} />
 
           <div style={{
             background: 'linear-gradient(135deg, #4c51bf, #667eea)',
@@ -511,7 +515,8 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               <AudioControls 
                 onPlay={playAudio}
                 isPlaying={isPlaying}
-                disabled={!currentData}
+                disabled={audioError}
+                playCount={playCount}
               />
             </div>
             
@@ -519,16 +524,23 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               ref={audioRef}
               preload="auto"
               style={{ display: 'none' }}
-            />
+              src={currentData?.audioFile ? `/${currentData.audioFile}` : ''}
+            >
+              Your browser does not support the audio element.
+            </audio>
             
             {audioError && (
-              <p style={{ 
+              <div style={{
+                background: '#fff5f5',
                 color: '#e53e3e',
-                margin: '10px 0 0 0',
-                fontSize: '0.9em'
+                padding: '15px',
+                borderRadius: '8px',
+                marginTop: '15px',
+                textAlign: 'center',
+                border: '1px solid #feb2b2'
               }}>
-                ⚠️ Audio not available for this sentence
-              </p>
+                ⚠️ Audio playback error. Please try again or skip this question.
+              </div>
             )}
           </div>
         )}
