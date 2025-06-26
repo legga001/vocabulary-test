@@ -629,7 +629,13 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   // Focus input when question changes
   useEffect(() => {
     if (hasStarted && inputRef.current && !showResults) {
-      inputRef.current.focus();
+      // Small delay to ensure the element is rendered and visible
+      const timer = setTimeout(() => {
+        inputRef.current.focus();
+        inputRef.current.select(); // This will select any existing text if there is any
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
   }, [hasStarted, currentQuestion, showResults]);
 
@@ -842,20 +848,91 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           </div>
 
           <div className="input-section-compact">
+            <h3>Type what you hear:</h3>
             <textarea
               ref={inputRef}
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
-              placeholder="Type what you hear..."
-              className="listen-input-compact"
-              rows="3"
+              placeholder="Type the sentence here..."
+              className="typing-input-compact"
+              rows="4"
+              autoFocus
+              style={{
+                width: '100%',
+                minHeight: '120px',
+                padding: '15px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '12px',
+                fontSize: '1.1em',
+                fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+                resize: 'vertical',
+                transition: 'all 0.3s ease',
+                backgroundColor: '#ffffff',
+                lineHeight: '1.5'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#4c51bf';
+                e.target.style.boxShadow = '0 0 15px rgba(76, 81, 191, 0.2)';
+                e.target.style.backgroundColor = '#f8f9ff';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0';
+                e.target.style.boxShadow = 'none';
+                e.target.style.backgroundColor = '#ffffff';
+              }}
             />
             
+            <div style={{ 
+              margin: '15px 0', 
+              textAlign: 'center',
+              padding: '10px',
+              backgroundColor: '#f0f8ff',
+              borderRadius: '8px',
+              border: '1px solid #bee3f8'
+            }}>
+              <p style={{ 
+                color: '#2b6cb0', 
+                fontSize: '0.95em', 
+                margin: '0',
+                fontWeight: '500'
+              }}>
+                💡 <strong>Tip:</strong> Just type what you hear - spelling variations and missing punctuation are fine!
+              </p>
+            </div>
+
             <div className="action-buttons-compact">
               <button 
                 className="btn-submit" 
                 onClick={handleSubmit}
                 disabled={!userInput.trim()}
+                style={{
+                  padding: '14px 28px',
+                  border: 'none',
+                  borderRadius: '25px',
+                  fontWeight: '600',
+                  cursor: userInput.trim() ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.3s ease',
+                  fontSize: '1em',
+                  minWidth: '160px',
+                  background: userInput.trim() 
+                    ? 'linear-gradient(135deg, #4c51bf, #667eea)' 
+                    : '#a0aec0',
+                  color: 'white'
+                }}
+                onMouseEnter={(e) => {
+                  if (userInput.trim()) {
+                    e.target.style.background = 'linear-gradient(135deg, #3c41a5, #5a67d8)';
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 8px 25px rgba(76, 81, 191, 0.3)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (userInput.trim()) {
+                    e.target.style.background = 'linear-gradient(135deg, #4c51bf, #667eea)';
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = 'none';
+                  }
+                }}
               >
                 ✅ Submit Answer
               </button>
@@ -863,9 +940,41 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               <button 
                 className="btn-skip" 
                 onClick={moveToNextQuestion}
+                style={{
+                  padding: '14px 28px',
+                  border: 'none',
+                  borderRadius: '25px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  fontSize: '1em',
+                  minWidth: '160px',
+                  background: '#e2e8f0',
+                  color: '#4a5568'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#cbd5e0';
+                  e.target.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#e2e8f0';
+                  e.target.style.transform = 'translateY(0)';
+                }}
               >
-                ⏭️ Skip
+                ⏭️ {currentQuestion + 1 === testSentences.length ? 'Finish Test' : 'Skip'}
               </button>
+            </div>
+            
+            <div style={{ 
+              textAlign: 'center', 
+              marginTop: '15px' 
+            }}>
+              <small style={{ 
+                color: '#718096', 
+                fontSize: '0.85em' 
+              }}>
+                💻 Press <strong>Enter</strong> to submit your answer
+              </small>
             </div>
           </div>
         </div>
