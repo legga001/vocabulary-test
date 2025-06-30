@@ -1,4 +1,4 @@
-// src/components/SpeakingExercise.js - Backend enhanced, frontend unchanged
+// src/components/SpeakingExercise.js - Backend enhanced, frontend unchanged - FIXED
 import React, { useState, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
@@ -27,7 +27,6 @@ const HOMOPHONES = {
   'threw': ['through'], 'through': ['threw'],
   'mail': ['male'], 'male': ['mail'],
   'principal': ['principle'], 'principle': ['principal'],
-  // ENHANCED: Additional homophones
   'whole': ['hole'], 'hole': ['whole'],
   'one': ['won'], 'won': ['one'],
   'son': ['sun'], 'sun': ['son'],
@@ -38,7 +37,6 @@ const HOMOPHONES = {
   'knew': ['new'], 'new': ['knew'],
   'night': ['knight'], 'knight': ['night'],
   'sight': ['site'], 'site': ['sight'],
-  'right': ['write', 'rite'], 'write': ['right', 'rite'], 'rite': ['right', 'write'],
   'sail': ['sale'], 'sale': ['sail'],
   'tale': ['tail'], 'tail': ['tale'],
   'wait': ['weight'], 'weight': ['wait'],
@@ -58,10 +56,8 @@ const advancedSoundex = (word) => {
   word = word.toUpperCase().replace(/[^A-Z]/g, '');
   if (word.length === 0) return '';
   
-  // Keep first letter
   let result = word[0];
   
-  // Enhanced replacement map
   const replacements = {
     'B': '1', 'F': '1', 'P': '1', 'V': '1',
     'C': '2', 'G': '2', 'J': '2', 'K': '2', 'Q': '2', 'S': '2', 'X': '2', 'Z': '2',
@@ -77,7 +73,6 @@ const advancedSoundex = (word) => {
     const char = word[i];
     const code = replacements[char];
     
-    // Skip vowels and similar consonants, avoid duplicates
     if (code && code !== prev) {
       result += code;
       if (result.length === 4) break;
@@ -85,7 +80,6 @@ const advancedSoundex = (word) => {
     prev = code || prev;
   }
   
-  // Pad with zeros or truncate to 4 characters
   return (result + '000').substring(0, 4);
 };
 
@@ -94,17 +88,16 @@ const getPhoneticSimilarity = (word1, word2) => {
   const soundex1 = advancedSoundex(word1);
   const soundex2 = advancedSoundex(word2);
   
-  if (soundex1 === soundex2) return 90; // High score for phonetic match
+  if (soundex1 === soundex2) return 90;
   
-  // Check for partial phonetic similarity
   let matches = 0;
   const minLength = Math.min(soundex1.length, soundex2.length);
   for (let i = 0; i < minLength; i++) {
     if (soundex1[i] === soundex2[i]) matches++;
   }
   
-  const similarity = (matches / 4) * 80; // Max 80% for partial phonetic similarity
-  return similarity >= 40 ? similarity : 0; // Only return if reasonably similar
+  const similarity = (matches / 4) * 80;
+  return similarity >= 40 ? similarity : 0;
 };
 
 // ENHANCED: Check for common speech recognition errors
@@ -112,7 +105,6 @@ const checkCommonErrors = (spoken, target) => {
   const spokenLower = spoken.toLowerCase();
   const targetLower = target.toLowerCase();
   
-  // Common substitutions that speech recognition makes
   const commonSubs = {
     'a': ['ah', 'uh'], 'the': ['thee', 'thuh'], 'of': ['ov'], 'and': ['an'],
     'to': ['tuh'], 'in': ['een'], 'is': ['iz'], 'it': ['et'], 'that': ['dat'],
@@ -121,7 +113,7 @@ const checkCommonErrors = (spoken, target) => {
   };
   
   if (commonSubs[targetLower] && commonSubs[targetLower].includes(spokenLower)) {
-    return 85; // Good score for common pronunciation variants
+    return 85;
   }
   
   return 0;
@@ -140,9 +132,9 @@ const getEditDistance = (word1, word2) => {
     for (let j = 1; j <= len2; j++) {
       const cost = word1[i - 1] === word2[j - 1] ? 0 : 1;
       matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1,      // deletion
-        matrix[i][j - 1] + 1,      // insertion
-        matrix[i - 1][j - 1] + cost // substitution
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
       );
     }
   }
@@ -151,11 +143,10 @@ const getEditDistance = (word1, word2) => {
   if (maxLen === 0) return 100;
   
   const similarity = ((maxLen - matrix[len1][len2]) / maxLen) * 100;
-  return similarity >= 60 ? similarity : 0; // Only return if reasonably similar
+  return similarity >= 60 ? similarity : 0;
 };
 
 function SpeakingExercise({ onBack, onLogoClick }) {
-  // Core state - keeping exactly the same as original
   const [step, setStep] = useState('checking');
   const [sentences, setSentences] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -164,8 +155,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   const [results, setResults] = useState([]);
   const [feedback, setFeedback] = useState('');
   const [exerciseStartTime, setExerciseStartTime] = useState(null);
-
-  // ENHANCED: Hidden state for better recognition (not displayed)
   const [speechAlternatives, setSpeechAlternatives] = useState([]);
   const [confidenceScore, setConfidenceScore] = useState(0);
 
@@ -179,7 +168,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     
     if (spokenWords.length === 0) return { percentage: 0, matched: 0, total: targetWords.length };
 
-    // Create word frequency maps
     const targetMap = {};
     targetWords.forEach(word => targetMap[word] = (targetMap[word] || 0) + 1);
 
@@ -189,18 +177,15 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     let totalScore = 0;
     let maxPossibleScore = 0;
 
-    // Score each target word with multiple matching strategies
     Object.entries(targetMap).forEach(([targetWord, targetCount]) => {
-      maxPossibleScore += targetCount * 100; // Max score per word
+      maxPossibleScore += targetCount * 100;
       let bestWordScore = 0;
 
-      // Strategy 1: Exact match (100 points)
       const exactCount = spokenMap[targetWord] || 0;
       if (exactCount > 0) {
         bestWordScore = Math.min(targetCount, exactCount) * 100;
       }
 
-      // Strategy 2: Homophone match (95 points)
       if (bestWordScore < targetCount * 100 && HOMOPHONES[targetWord]) {
         for (const homophone of HOMOPHONES[targetWord]) {
           const homophoneCount = spokenMap[homophone] || 0;
@@ -211,7 +196,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         }
       }
 
-      // Strategy 3: Common pronunciation errors (85 points)
       if (bestWordScore < targetCount * 85) {
         Object.keys(spokenMap).forEach(spokenWord => {
           const errorScore = checkCommonErrors(spokenWord, targetWord);
@@ -222,7 +206,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         });
       }
 
-      // Strategy 4: Phonetic similarity (60-90 points)
       if (bestWordScore < targetCount * 80) {
         Object.keys(spokenMap).forEach(spokenWord => {
           const phoneticScore = getPhoneticSimilarity(targetWord, spokenWord);
@@ -233,7 +216,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         });
       }
 
-      // Strategy 5: Edit distance similarity (50-80 points)
       if (bestWordScore < targetCount * 70) {
         Object.keys(spokenMap).forEach(spokenWord => {
           const editScore = getEditDistance(targetWord, spokenWord);
@@ -247,17 +229,14 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       totalScore += bestWordScore;
     });
 
-    // Calculate percentage
     let percentage = maxPossibleScore > 0 ? Math.round((totalScore / maxPossibleScore) * 100) : 0;
 
-    // ENHANCED: Apply confidence bonus (hidden from user)
     if (confidenceScore > 0.8) {
-      percentage = Math.min(100, Math.round(percentage * 1.05)); // 5% bonus for high confidence
+      percentage = Math.min(100, Math.round(percentage * 1.05));
     } else if (confidenceScore < 0.5) {
-      percentage = Math.round(percentage * 0.95); // 5% penalty for low confidence
+      percentage = Math.round(percentage * 0.95);
     }
 
-    // Apply length penalty for excessively long responses
     const lengthRatio = spokenWords.length / targetWords.length;
     if (lengthRatio > 2.5) {
       percentage = Math.max(0, percentage - 15);
@@ -265,7 +244,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       percentage = Math.max(0, percentage - 10);
     }
 
-    // Calculate matched words for display (simplified for user)
     const matchedDisplay = Math.round((percentage / 100) * targetWords.length);
 
     return { 
@@ -275,7 +253,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     };
   };
 
-  // Initialize sentences - keeping exactly the same
   const initializeSentences = () => {
     const exerciseSentences = [];
     
@@ -300,7 +277,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     return exerciseSentences.length > 0;
   };
 
-  // Check browser support - keeping exactly the same
   const checkSpeechSupport = async () => {
     console.log('🎤 Checking speech recognition support...');
     
@@ -323,23 +299,20 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     }
   };
 
-  // ENHANCED: Create speech recognition with better configuration
   const createSpeechRecognition = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     
-    // ENHANCED: Better configuration for accuracy
-    recognition.continuous = false; // Changed to false for better word-level analysis
+    recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = 'en-GB';
-    recognition.maxAlternatives = 5; // ENHANCED: Get multiple alternatives
+    recognition.maxAlternatives = 5;
 
     recognition.onstart = () => {
       console.log('🎤 Recording started');
       setIsRecording(true);
       setTranscript('');
       setFeedback('');
-      // ENHANCED: Reset hidden state
       setSpeechAlternatives([]);
       setConfidenceScore(0);
     };
@@ -348,15 +321,12 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       let finalText = '';
       let interimText = '';
       let bestConfidence = 0;
-
-      // ENHANCED: Capture alternatives and confidence (hidden from user)
       const alternatives = [];
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         
         if (result.isFinal) {
-          // ENHANCED: Process all alternatives
           for (let j = 0; j < Math.min(result.length, 5); j++) {
             const alternative = result[j];
             alternatives.push({
@@ -375,7 +345,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       }
 
       setTranscript(finalText || interimText);
-      // ENHANCED: Store confidence and alternatives (hidden)
       setConfidenceScore(bestConfidence);
       setSpeechAlternatives(alternatives);
     };
@@ -402,7 +371,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     return recognition;
   };
 
-  // Start recording - keeping exactly the same
   const startRecording = () => {
     if (!recognitionRef.current) {
       recognitionRef.current = createSpeechRecognition();
@@ -417,16 +385,16 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     }
   };
 
- analysis (same display)
   const stopRecording = () => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
+  };
 
+  const submitRecording = () => {
     const currentSentence = sentences[currentIndex];
     if (!currentSentence) return;
 
-    // ENHANCED: Use improved scoring but keep same result structure
     const scoreData = calculateScore(transcript.trim(), currentSentence.text);
     
     const result = {
@@ -440,7 +408,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
     setResults(prev => [...prev, result]);
 
-    // Keep exactly the same feedback messages
     const feedbackMessages = [
       { min: 95, message: 'Perfect! Outstanding pronunciation! 🌟', type: 'success' },
       { min: 85, message: 'Excellent work! Great pronunciation! 🎉', type: 'success' },
@@ -452,7 +419,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     const feedbackObj = feedbackMessages.find(f => scoreData.percentage >= f.min);
     setFeedback(`${feedbackObj.message} (${scoreData.percentage}%)`);
 
-    // Keep exactly the same timing
     setTimeout(() => {
       if (currentIndex + 1 < sentences.length) {
         setCurrentIndex(prev => prev + 1);
@@ -462,9 +428,8 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         finishExercise();
       }
     }, 2500);
-  };;
+  };
 
-  // All remaining functions stay exactly the same...
   const skipSentence = () => {
     const currentSentence = sentences[currentIndex];
     if (!currentSentence) return;
@@ -565,7 +530,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     };
   }, []);
 
-  // All computed values stay exactly the same
   const currentSentence = sentences[currentIndex];
   const progress = sentences.length > 0 ? ((currentIndex + 1) / sentences.length) * 100 : 0;
   const finalStats = results.length > 0 ? {
@@ -574,8 +538,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     total: sentences.length,
     duration: exerciseStartTime ? Math.round((Date.now() - exerciseStartTime) / 60) : 0
   } : null;
-
-  // ALL RENDER METHODS STAY EXACTLY THE SAME - NO VISUAL CHANGES
 
   if (step === 'error') {
     return (
@@ -629,8 +591,8 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                   <span>Click "Stop Recording" when you've finished speaking</span>
                 </div>
                 <div className="instruction-item">
-                  <span className="instruction-icon">📊</span>
-                  <span>Get instant feedback on your pronunciation accuracy</span>
+                  <span className="instruction-icon">✅</span>
+                  <span>Click "Submit Recording" to score your pronunciation</span>
                 </div>
                 <div className="instruction-item">
                   <span className="instruction-icon">🎯</span>
@@ -645,7 +607,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                   <li>Find a quiet environment for best results</li>
                   <li>Pronounce each word distinctly</li>
                   <li>Both British and American pronunciations are accepted</li>
-                  <li>Don't worry about hesitations - the scoring is forgiving</li>
+                  <li>Review your transcript before submitting</li>
                 </ul>
               </div>
               
@@ -763,7 +725,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
               {transcript && (
                 <div className="transcript-display">
-                  <div className="transcript-label">You're saying:</div>
+                  <div className="transcript-label">You said:</div>
                   <div className="transcript-text">"{transcript}"</div>
                 </div>
               )}
@@ -796,14 +758,12 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                   </>
                 )}
                 
-                {/* Submit button appears when recording is stopped and transcript exists */}
                 {!isRecording && transcript && (
                   <button className="btn btn-success btn-large" onClick={submitRecording}>
                     ✅ Submit Recording
                   </button>
                 )}
               </div>
-
             </>
           )}
 
@@ -815,7 +775,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Loading/checking state
   return (
     <div className="exercise-page">
       <ClickableLogo onLogoClick={onLogoClick} />
