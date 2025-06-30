@@ -462,7 +462,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         finishExercise();
       }
     }, 2500);
-  };
+  };;
 
   // All remaining functions stay exactly the same...
   const skipSentence = () => {
