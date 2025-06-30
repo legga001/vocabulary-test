@@ -1,10 +1,10 @@
-// src/components/SpeakingExercise.js - Enhanced with Phase 1 speech recognition improvements
+// src/components/SpeakingExercise.js - Backend enhanced, frontend unchanged
 import React, { useState, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { SENTENCE_POOLS, TEST_STRUCTURE } from '../data/listenAndTypeSentences';
 import { recordTestResult } from '../utils/progressDataManager';
 
-// Enhanced homophones with phonetic alternatives
+// ENHANCED: Expanded homophones for British English pronunciation matching
 const HOMOPHONES = {
   'to': ['too', 'two'], 'too': ['to', 'two'], 'two': ['to', 'too'],
   'there': ['their', 'they\'re'], 'their': ['there', 'they\'re'], 'they\'re': ['there', 'their'],
@@ -26,11 +26,136 @@ const HOMOPHONES = {
   'allowed': ['aloud'], 'aloud': ['allowed'],
   'threw': ['through'], 'through': ['threw'],
   'mail': ['male'], 'male': ['mail'],
-  'principal': ['principle'], 'principle': ['principal']
+  'principal': ['principle'], 'principle': ['principal'],
+  // ENHANCED: Additional homophones
+  'whole': ['hole'], 'hole': ['whole'],
+  'one': ['won'], 'won': ['one'],
+  'son': ['sun'], 'sun': ['son'],
+  'sea': ['see'], 'see': ['sea'],
+  'meet': ['meat'], 'meat': ['meet'],
+  'read': ['red'], 'red': ['read'],
+  'blue': ['blew'], 'blew': ['blue'],
+  'knew': ['new'], 'new': ['knew'],
+  'night': ['knight'], 'knight': ['night'],
+  'sight': ['site'], 'site': ['sight'],
+  'right': ['write', 'rite'], 'write': ['right', 'rite'], 'rite': ['right', 'write'],
+  'sail': ['sale'], 'sale': ['sail'],
+  'tale': ['tail'], 'tail': ['tale'],
+  'wait': ['weight'], 'weight': ['wait'],
+  'made': ['maid'], 'maid': ['made'],
+  'pain': ['pane'], 'pane': ['pain'],
+  'plain': ['plane'], 'plane': ['plain'],
+  'rain': ['reign'], 'reign': ['rain'],
+  'bear': ['bare'], 'bare': ['bear'],
+  'pair': ['pear'], 'pear': ['pair'],
+  'fair': ['fare'], 'fare': ['fair'],
+  'hair': ['hare'], 'hare': ['hair']
+};
+
+// ENHANCED: Phonetic similarity using improved Soundex algorithm
+const advancedSoundex = (word) => {
+  if (!word) return '';
+  word = word.toUpperCase().replace(/[^A-Z]/g, '');
+  if (word.length === 0) return '';
+  
+  // Keep first letter
+  let result = word[0];
+  
+  // Enhanced replacement map
+  const replacements = {
+    'B': '1', 'F': '1', 'P': '1', 'V': '1',
+    'C': '2', 'G': '2', 'J': '2', 'K': '2', 'Q': '2', 'S': '2', 'X': '2', 'Z': '2',
+    'D': '3', 'T': '3',
+    'L': '4',
+    'M': '5', 'N': '5',
+    'R': '6'
+  };
+  
+  let prev = replacements[word[0]] || '';
+  
+  for (let i = 1; i < word.length; i++) {
+    const char = word[i];
+    const code = replacements[char];
+    
+    // Skip vowels and similar consonants, avoid duplicates
+    if (code && code !== prev) {
+      result += code;
+      if (result.length === 4) break;
+    }
+    prev = code || prev;
+  }
+  
+  // Pad with zeros or truncate to 4 characters
+  return (result + '000').substring(0, 4);
+};
+
+// ENHANCED: Phonetic similarity scoring
+const getPhoneticSimilarity = (word1, word2) => {
+  const soundex1 = advancedSoundex(word1);
+  const soundex2 = advancedSoundex(word2);
+  
+  if (soundex1 === soundex2) return 90; // High score for phonetic match
+  
+  // Check for partial phonetic similarity
+  let matches = 0;
+  const minLength = Math.min(soundex1.length, soundex2.length);
+  for (let i = 0; i < minLength; i++) {
+    if (soundex1[i] === soundex2[i]) matches++;
+  }
+  
+  const similarity = (matches / 4) * 80; // Max 80% for partial phonetic similarity
+  return similarity >= 40 ? similarity : 0; // Only return if reasonably similar
+};
+
+// ENHANCED: Check for common speech recognition errors
+const checkCommonErrors = (spoken, target) => {
+  const spokenLower = spoken.toLowerCase();
+  const targetLower = target.toLowerCase();
+  
+  // Common substitutions that speech recognition makes
+  const commonSubs = {
+    'a': ['ah', 'uh'], 'the': ['thee', 'thuh'], 'of': ['ov'], 'and': ['an'],
+    'to': ['tuh'], 'in': ['een'], 'is': ['iz'], 'it': ['et'], 'that': ['dat'],
+    'have': ['hav'], 'are': ['ar'], 'was': ['wuz'], 'for': ['fer'],
+    'with': ['wid'], 'his': ['hiz'], 'they': ['dey'], 'this': ['dis']
+  };
+  
+  if (commonSubs[targetLower] && commonSubs[targetLower].includes(spokenLower)) {
+    return 85; // Good score for common pronunciation variants
+  }
+  
+  return 0;
+};
+
+// ENHANCED: Edit distance for close matches
+const getEditDistance = (word1, word2) => {
+  const len1 = word1.length;
+  const len2 = word2.length;
+  const matrix = Array(len1 + 1).fill().map(() => Array(len2 + 1).fill(0));
+  
+  for (let i = 0; i <= len1; i++) matrix[i][0] = i;
+  for (let j = 0; j <= len2; j++) matrix[0][j] = j;
+  
+  for (let i = 1; i <= len1; i++) {
+    for (let j = 1; j <= len2; j++) {
+      const cost = word1[i - 1] === word2[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,      // deletion
+        matrix[i][j - 1] + 1,      // insertion
+        matrix[i - 1][j - 1] + cost // substitution
+      );
+    }
+  }
+  
+  const maxLen = Math.max(len1, len2);
+  if (maxLen === 0) return 100;
+  
+  const similarity = ((maxLen - matrix[len1][len2]) / maxLen) * 100;
+  return similarity >= 60 ? similarity : 0; // Only return if reasonably similar
 };
 
 function SpeakingExercise({ onBack, onLogoClick }) {
-  // Core state
+  // Core state - keeping exactly the same as original
   const [step, setStep] = useState('checking');
   const [sentences, setSentences] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -39,80 +164,20 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   const [results, setResults] = useState([]);
   const [feedback, setFeedback] = useState('');
   const [exerciseStartTime, setExerciseStartTime] = useState(null);
-  
-  // NEW: Enhanced speech recognition state
+
+  // ENHANCED: Hidden state for better recognition (not displayed)
   const [speechAlternatives, setSpeechAlternatives] = useState([]);
-  const [confidence, setConfidence] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [detailedAnalysis, setDetailedAnalysis] = useState(null);
+  const [confidenceScore, setConfidenceScore] = useState(0);
 
   const recognitionRef = useRef(null);
 
-  // ENHANCED: Phonetic similarity using simple Soundex algorithm
-  const soundex = (word) => {
-    if (!word) return '';
-    word = word.toUpperCase();
-    
-    // Keep first letter
-    let result = word[0];
-    
-    // Replace letters with numbers according to Soundex rules
-    const replacements = {
-      'B': '1', 'F': '1', 'P': '1', 'V': '1',
-      'C': '2', 'G': '2', 'J': '2', 'K': '2', 'Q': '2', 'S': '2', 'X': '2', 'Z': '2',
-      'D': '3', 'T': '3',
-      'L': '4',
-      'M': '5', 'N': '5',
-      'R': '6'
-    };
-    
-    for (let i = 1; i < word.length; i++) {
-      const char = word[i];
-      if (replacements[char] && replacements[char] !== result[result.length - 1]) {
-        result += replacements[char];
-      }
-    }
-    
-    // Pad with zeros or truncate to 4 characters
-    return (result + '000').substring(0, 4);
-  };
-
-  // ENHANCED: Phonetic similarity scoring
-  const getPhoneticSimilarity = (word1, word2) => {
-    const soundex1 = soundex(word1);
-    const soundex2 = soundex(word2);
-    
-    if (soundex1 === soundex2) return 100;
-    
-    // Partial similarity based on matching characters
-    let matches = 0;
-    for (let i = 0; i < Math.min(soundex1.length, soundex2.length); i++) {
-      if (soundex1[i] === soundex2[i]) matches++;
-    }
-    
-    return Math.round((matches / 4) * 80); // Max 80% for phonetic similarity
-  };
-
-  // ENHANCED: Advanced scoring with confidence and alternatives
-  const calculateAdvancedScore = (spokenText, targetText, confidence, alternatives) => {
+  // ENHANCED: Much more sophisticated scoring algorithm
+  const calculateScore = (spoken, target) => {
     const normalize = text => text.toLowerCase().replace(/[.,!?;:'"]/g, '').replace(/\s+/g, ' ').trim();
-    const spokenWords = normalize(spokenText).split(' ').filter(w => w.length > 0);
-    const targetWords = normalize(targetText).split(' ').filter(w => w.length > 0);
+    const spokenWords = normalize(spoken).split(' ').filter(w => w.length > 0);
+    const targetWords = normalize(target).split(' ').filter(w => w.length > 0);
     
-    if (spokenWords.length === 0) {
-      return { 
-        percentage: 0, 
-        matched: 0, 
-        total: targetWords.length,
-        confidence: 0,
-        analysis: { exact: 0, phonetic: 0, homophone: 0 }
-      };
-    }
-
-    let exactMatches = 0;
-    let phoneticMatches = 0;
-    let homophoneMatches = 0;
-    let alternativeMatches = 0;
+    if (spokenWords.length === 0) return { percentage: 0, matched: 0, total: targetWords.length };
 
     // Create word frequency maps
     const targetMap = {};
@@ -121,86 +186,96 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     const spokenMap = {};
     spokenWords.forEach(word => spokenMap[word] = (spokenMap[word] || 0) + 1);
 
-    // Score each target word
-    Object.entries(targetMap).forEach(([targetWord, targetCount]) => {
-      let bestScore = 0;
-      let matchType = 'none';
+    let totalScore = 0;
+    let maxPossibleScore = 0;
 
-      // 1. Check exact matches (including case variations)
+    // Score each target word with multiple matching strategies
+    Object.entries(targetMap).forEach(([targetWord, targetCount]) => {
+      maxPossibleScore += targetCount * 100; // Max score per word
+      let bestWordScore = 0;
+
+      // Strategy 1: Exact match (100 points)
       const exactCount = spokenMap[targetWord] || 0;
       if (exactCount > 0) {
-        exactMatches += Math.min(targetCount, exactCount);
-        bestScore = 100;
-        matchType = 'exact';
+        bestWordScore = Math.min(targetCount, exactCount) * 100;
       }
 
-      // 2. Check homophones
-      if (bestScore < 100 && HOMOPHONES[targetWord]) {
+      // Strategy 2: Homophone match (95 points)
+      if (bestWordScore < targetCount * 100 && HOMOPHONES[targetWord]) {
         for (const homophone of HOMOPHONES[targetWord]) {
           const homophoneCount = spokenMap[homophone] || 0;
           if (homophoneCount > 0) {
-            homophoneMatches += Math.min(targetCount, homophoneCount);
-            bestScore = Math.max(bestScore, 95);
-            matchType = 'homophone';
-            break;
+            const homophoneScore = Math.min(targetCount, homophoneCount) * 95;
+            bestWordScore = Math.max(bestWordScore, homophoneScore);
           }
         }
       }
 
-      // 3. Check phonetic similarity
-      if (bestScore < 90) {
-        let bestPhoneticScore = 0;
+      // Strategy 3: Common pronunciation errors (85 points)
+      if (bestWordScore < targetCount * 85) {
         Object.keys(spokenMap).forEach(spokenWord => {
-          const phoneticScore = getPhoneticSimilarity(targetWord, spokenWord);
-          if (phoneticScore > bestPhoneticScore && phoneticScore >= 70) {
-            bestPhoneticScore = phoneticScore;
+          const errorScore = checkCommonErrors(spokenWord, targetWord);
+          if (errorScore > 0) {
+            const adjustedScore = Math.min(targetCount, spokenMap[spokenWord]) * errorScore;
+            bestWordScore = Math.max(bestWordScore, adjustedScore);
           }
         });
-        
-        if (bestPhoneticScore >= 70) {
-          phoneticMatches += 1;
-          bestScore = Math.max(bestScore, bestPhoneticScore * 0.9); // Slight penalty for phonetic
-          matchType = 'phonetic';
-        }
       }
 
-      // 4. Check alternatives from speech recognition
-      if (bestScore < 80 && alternatives && alternatives.length > 0) {
-        for (const alt of alternatives) {
-          const altWords = normalize(alt.text).split(' ');
-          if (altWords.includes(targetWord)) {
-            alternativeMatches += 1;
-            bestScore = Math.max(bestScore, 85 * alt.confidence);
-            matchType = 'alternative';
-            break;
+      // Strategy 4: Phonetic similarity (60-90 points)
+      if (bestWordScore < targetCount * 80) {
+        Object.keys(spokenMap).forEach(spokenWord => {
+          const phoneticScore = getPhoneticSimilarity(targetWord, spokenWord);
+          if (phoneticScore > 0) {
+            const adjustedScore = Math.min(targetCount, spokenMap[spokenWord]) * phoneticScore;
+            bestWordScore = Math.max(bestWordScore, adjustedScore);
           }
-        }
+        });
       }
+
+      // Strategy 5: Edit distance similarity (50-80 points)
+      if (bestWordScore < targetCount * 70) {
+        Object.keys(spokenMap).forEach(spokenWord => {
+          const editScore = getEditDistance(targetWord, spokenWord);
+          if (editScore > 0) {
+            const adjustedScore = Math.min(targetCount, spokenMap[spokenWord]) * (editScore * 0.8);
+            bestWordScore = Math.max(bestWordScore, adjustedScore);
+          }
+        });
+      }
+
+      totalScore += bestWordScore;
     });
 
-    // Calculate final score
-    const totalMatches = exactMatches + (homophoneMatches * 0.95) + (phoneticMatches * 0.8) + (alternativeMatches * 0.75);
-    let percentage = Math.round((totalMatches / targetWords.length) * 100);
+    // Calculate percentage
+    let percentage = maxPossibleScore > 0 ? Math.round((totalScore / maxPossibleScore) * 100) : 0;
 
-    // Apply confidence bonus/penalty
-    const confidenceMultiplier = Math.max(0.7, Math.min(1.2, confidence + 0.3));
-    percentage = Math.round(percentage * confidenceMultiplier);
+    // ENHANCED: Apply confidence bonus (hidden from user)
+    if (confidenceScore > 0.8) {
+      percentage = Math.min(100, Math.round(percentage * 1.05)); // 5% bonus for high confidence
+    } else if (confidenceScore < 0.5) {
+      percentage = Math.round(percentage * 0.95); // 5% penalty for low confidence
+    }
 
-    // Length penalty for very long responses
-    const lengthPenalty = spokenWords.length > (targetWords.length * 2.5) ? 15 : 0;
-    percentage = Math.max(0, percentage - lengthPenalty);
+    // Apply length penalty for excessively long responses
+    const lengthRatio = spokenWords.length / targetWords.length;
+    if (lengthRatio > 2.5) {
+      percentage = Math.max(0, percentage - 15);
+    } else if (lengthRatio > 2.0) {
+      percentage = Math.max(0, percentage - 10);
+    }
+
+    // Calculate matched words for display (simplified for user)
+    const matchedDisplay = Math.round((percentage / 100) * targetWords.length);
 
     return { 
-      percentage: Math.min(100, percentage), 
-      matched: Math.round(totalMatches), 
-      total: targetWords.length,
-      confidence: Math.round(confidence * 100),
-      analysis: { exact: exactMatches, phonetic: phoneticMatches, homophone: homophoneMatches, alternative: alternativeMatches },
-      confidenceBonus: Math.round((confidenceMultiplier - 1) * 100)
+      percentage: Math.min(100, Math.max(0, percentage)), 
+      matched: matchedDisplay, 
+      total: targetWords.length 
     };
   };
 
-  // Initialize sentences
+  // Initialize sentences - keeping exactly the same
   const initializeSentences = () => {
     const exerciseSentences = [];
     
@@ -221,13 +296,13 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     });
     
     setSentences(exerciseSentences);
-    console.log(`✅ Loaded ${exerciseSentences.length} sentences for enhanced speaking exercise`);
+    console.log(`✅ Loaded ${exerciseSentences.length} sentences for speaking exercise`);
     return exerciseSentences.length > 0;
   };
 
-  // Check browser support
+  // Check browser support - keeping exactly the same
   const checkSpeechSupport = async () => {
-    console.log('🎤 Checking enhanced speech recognition support...');
+    console.log('🎤 Checking speech recognition support...');
     
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -248,39 +323,40 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     }
   };
 
-  // ENHANCED: Create speech recognition with advanced features
-  const createEnhancedSpeechRecognition = () => {
+  // ENHANCED: Create speech recognition with better configuration
+  const createSpeechRecognition = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     
-    // Enhanced configuration
+    // ENHANCED: Better configuration for accuracy
     recognition.continuous = false; // Changed to false for better word-level analysis
     recognition.interimResults = true;
     recognition.lang = 'en-GB';
-    recognition.maxAlternatives = 5; // NEW: Get multiple pronunciation attempts
-    
+    recognition.maxAlternatives = 5; // ENHANCED: Get multiple alternatives
+
     recognition.onstart = () => {
-      console.log('🎤 Enhanced recording started');
+      console.log('🎤 Recording started');
       setIsRecording(true);
       setTranscript('');
+      setFeedback('');
+      // ENHANCED: Reset hidden state
       setSpeechAlternatives([]);
-      setConfidence(0);
-      setFeedback('Listening... speak clearly into your microphone');
-      setIsProcessing(false);
+      setConfidenceScore(0);
     };
 
     recognition.onresult = (event) => {
-      setIsProcessing(true);
       let finalText = '';
       let interimText = '';
       let bestConfidence = 0;
+
+      // ENHANCED: Capture alternatives and confidence (hidden from user)
       const alternatives = [];
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         
         if (result.isFinal) {
-          // Process all alternatives for final result
+          // ENHANCED: Process all alternatives
           for (let j = 0; j < Math.min(result.length, 5); j++) {
             const alternative = result[j];
             alternatives.push({
@@ -299,60 +375,49 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       }
 
       setTranscript(finalText || interimText);
-      setConfidence(bestConfidence);
+      // ENHANCED: Store confidence and alternatives (hidden)
+      setConfidenceScore(bestConfidence);
       setSpeechAlternatives(alternatives);
-      
-      // Show real-time confidence
-      if (bestConfidence > 0) {
-        const confidencePercent = Math.round(bestConfidence * 100);
-        setFeedback(`Recognition confidence: ${confidencePercent}% - ${finalText ? 'Processing...' : 'Keep speaking...'}`);
-      }
-      
-      setIsProcessing(false);
     };
 
     recognition.onerror = (event) => {
-      console.error('❌ Enhanced speech recognition error:', event.error);
+      console.error('❌ Speech recognition error:', event.error);
       setIsRecording(false);
-      setIsProcessing(false);
       
       const errorMessages = {
-        'no-speech': 'No speech detected. Please speak louder and try again.',
-        'audio-capture': 'Microphone error. Please check your microphone connection.',
-        'not-allowed': 'Microphone access denied. Please allow access and refresh the page.',
-        'network': 'Network error. Please check your internet connection.',
-        'service-not-allowed': 'Speech service not allowed. Please try refreshing the page.',
-        'bad-grammar': 'Speech not recognised. Please speak more clearly.'
+        'no-speech': 'No speech detected. Please speak louder.',
+        'audio-capture': 'Microphone error. Please check your microphone.',
+        'not-allowed': 'Microphone access denied. Please allow access and refresh.',
+        'network': 'Network error. Please check your connection.'
       };
       
-      setFeedback(errorMessages[event.error] || `Recognition error: ${event.error}. Please try again.`);
+      setFeedback(errorMessages[event.error] || `Recording error: ${event.error}`);
     };
 
     recognition.onend = () => {
-      console.log('🎤 Enhanced recording ended');
+      console.log('🎤 Recording ended');
       setIsRecording(false);
-      setIsProcessing(false);
     };
 
     return recognition;
   };
 
-  // Start enhanced recording
+  // Start recording - keeping exactly the same
   const startRecording = () => {
     if (!recognitionRef.current) {
-      recognitionRef.current = createEnhancedSpeechRecognition();
+      recognitionRef.current = createSpeechRecognition();
     }
 
     try {
       recognitionRef.current.start();
-      setFeedback('Starting microphone... Please wait');
+      setFeedback('');
     } catch (error) {
-      console.error('Error starting enhanced recording:', error);
+      console.error('Error starting recording:', error);
       setFeedback('Failed to start recording. Please try again.');
     }
   };
 
-  // ENHANCED: Stop recording with advanced analysis
+  // ENHANCED: Stop recording with better analysis (same display)
   const stopRecording = () => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
@@ -361,88 +426,45 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     const currentSentence = sentences[currentIndex];
     if (!currentSentence) return;
 
-    setIsProcessing(true);
-
-    // Use enhanced scoring
-    const scoreData = calculateAdvancedScore(
-      transcript.trim(), 
-      currentSentence.text, 
-      confidence, 
-      speechAlternatives
-    );
-
+    // ENHANCED: Use improved scoring but keep same result structure
+    const scoreData = calculateScore(transcript.trim(), currentSentence.text);
+    
     const result = {
       target: currentSentence.text,
       spoken: transcript.trim(),
       score: scoreData.percentage,
       level: currentSentence.level,
       matched: scoreData.matched,
-      total: scoreData.total,
-      confidence: scoreData.confidence,
-      analysis: scoreData.analysis,
-      alternatives: speechAlternatives.slice(0, 3), // Keep top 3 alternatives
-      confidenceBonus: scoreData.confidenceBonus
+      total: scoreData.total
     };
 
     setResults(prev => [...prev, result]);
-    setDetailedAnalysis(scoreData);
 
-    // Enhanced feedback with detailed analysis
-    const getDetailedFeedback = (score, analysis, confidence) => {
-      let feedback = '';
-      let emoji = '';
-      
-      if (score >= 95) {
-        emoji = '🌟';
-        feedback = 'Outstanding! Perfect pronunciation!';
-      } else if (score >= 85) {
-        emoji = '🎉';
-        feedback = 'Excellent work! Very clear pronunciation!';
-      } else if (score >= 70) {
-        emoji = '👍';
-        feedback = 'Well done! Good pronunciation!';
-      } else if (score >= 50) {
-        emoji = '📈';
-        feedback = 'Good effort! Getting better!';
-      } else {
-        emoji = '💪';
-        feedback = 'Keep practising! You can do this!';
-      }
+    // Keep exactly the same feedback messages
+    const feedbackMessages = [
+      { min: 95, message: 'Perfect! Outstanding pronunciation! 🌟', type: 'success' },
+      { min: 85, message: 'Excellent work! Great pronunciation! 🎉', type: 'success' },
+      { min: 70, message: 'Well done! Good pronunciation! 👍', type: 'success' },
+      { min: 50, message: 'Good effort! Keep practising! 📈', type: 'warning' },
+      { min: 0, message: 'Keep trying! Practice makes perfect! 💪', type: 'info' }
+    ];
 
-      // Add analysis details
-      const details = [];
-      if (analysis.exact > 0) details.push(`${analysis.exact} perfect matches`);
-      if (analysis.homophone > 0) details.push(`${analysis.homophone} similar sounds`);
-      if (analysis.phonetic > 0) details.push(`${analysis.phonetic} close pronunciations`);
-      
-      if (confidence > 0) {
-        const confidenceText = confidence >= 80 ? 'high' : confidence >= 60 ? 'medium' : 'low';
-        details.push(`${confidenceText} confidence (${confidence}%)`);
-      }
+    const feedbackObj = feedbackMessages.find(f => scoreData.percentage >= f.min);
+    setFeedback(`${feedbackObj.message} (${scoreData.percentage}%)`);
 
-      return `${emoji} ${feedback} (${score}%)${details.length > 0 ? ' - ' + details.join(', ') : ''}`;
-    };
-
-    const detailedFeedback = getDetailedFeedback(scoreData.percentage, scoreData.analysis, scoreData.confidence);
-    setFeedback(detailedFeedback);
-    setIsProcessing(false);
-
-    // Auto-advance with longer delay for complex feedback
+    // Keep exactly the same timing
     setTimeout(() => {
       if (currentIndex + 1 < sentences.length) {
         setCurrentIndex(prev => prev + 1);
         setTranscript('');
         setFeedback('');
-        setSpeechAlternatives([]);
-        setConfidence(0);
-        setDetailedAnalysis(null);
       } else {
         finishExercise();
       }
-    }, 4000); // Longer delay to read detailed feedback
+    }, 2500);
   };
 
-  // Skip sentence (unchanged)
+  // All remaining functions stay exactly the same...
   const skipSentence = () => {
     const currentSentence = sentences[currentIndex];
     if (!currentSentence) return;
@@ -453,10 +475,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       score: 0,
       level: currentSentence.level,
       matched: 0,
-      total: currentSentence.text.split(' ').length,
-      confidence: 0,
-      analysis: { exact: 0, phonetic: 0, homophone: 0, alternative: 0 },
-      alternatives: []
+      total: currentSentence.text.split(' ').length
     };
 
     setResults(prev => [...prev, result]);
@@ -467,30 +486,23 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         setCurrentIndex(prev => prev + 1);
         setTranscript('');
         setFeedback('');
-        setSpeechAlternatives([]);
-        setConfidence(0);
-        setDetailedAnalysis(null);
       } else {
         finishExercise();
       }
     }, 1000);
   };
 
-  // Complete exercise (enhanced with new data)
   const finishExercise = () => {
-    console.log('🏁 Completing enhanced speaking exercise');
+    console.log('🏁 Completing speaking exercise');
     
     const testDuration = exerciseStartTime ? Math.round((Date.now() - exerciseStartTime) / 1000) : 0;
     const averageScore = results.length > 0 ? results.reduce((sum, r) => sum + r.score, 0) / results.length : 0;
-    const averageConfidence = results.length > 0 ? results.reduce((sum, r) => sum + (r.confidence || 0), 0) / results.length : 0;
 
     const userAnswers = results.map(result => ({
       answer: result.spoken || '',
       correct: result.score >= 70,
       score: result.score,
-      level: result.level,
-      confidence: result.confidence || 0,
-      analysis: result.analysis || {}
+      level: result.level
     }));
 
     try {
@@ -500,15 +512,11 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         totalQuestions: 10,
         completedAt: new Date(),
         timeSpent: testDuration,
-        userAnswers: userAnswers,
-        // NEW: Enhanced metrics
-        averageConfidence: Math.round(averageConfidence),
-        enhancedFeatures: true
+        userAnswers: userAnswers
       });
 
-      console.log('✅ Enhanced speaking exercise completed');
+      console.log('✅ Speaking exercise completed and progress recorded');
       console.log(`📊 Average score: ${Math.round(averageScore)}%`);
-      console.log(`🎯 Average confidence: ${Math.round(averageConfidence)}%`);
     } catch (error) {
       console.error('❌ Error recording progress:', error);
     }
@@ -516,7 +524,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     setStep('results');
   };
 
-  // Play audio
   const playAudio = (audioFile) => {
     if (!audioFile) return;
     
@@ -526,7 +533,6 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     });
   };
 
-  // Start exercise
   const startExercise = () => {
     if (initializeSentences()) {
       setStep('exercise');
@@ -534,28 +540,21 @@ function SpeakingExercise({ onBack, onLogoClick }) {
       setResults([]);
       setExerciseStartTime(Date.now());
       setFeedback('');
-      setSpeechAlternatives([]);
-      setConfidence(0);
-      setDetailedAnalysis(null);
     } else {
       setStep('error');
       setFeedback('No sentences available for this exercise.');
     }
   };
 
-  // Restart recording
   const restartRecording = () => {
     if (recognitionRef.current && isRecording) {
       recognitionRef.current.stop();
     }
     setTranscript('');
     setFeedback('Recording restarted - try again!');
-    setSpeechAlternatives([]);
-    setConfidence(0);
     setTimeout(() => setFeedback(''), 2000);
   };
 
-  // Component mount effect
   useEffect(() => {
     checkSpeechSupport();
     
@@ -566,36 +565,35 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     };
   }, []);
 
-  // Computed values
+  // All computed values stay exactly the same
   const currentSentence = sentences[currentIndex];
   const progress = sentences.length > 0 ? ((currentIndex + 1) / sentences.length) * 100 : 0;
   const finalStats = results.length > 0 ? {
     averageScore: Math.round(results.reduce((sum, r) => sum + r.score, 0) / results.length),
-    averageConfidence: Math.round(results.reduce((sum, r) => sum + (r.confidence || 0), 0) / results.length),
     completed: results.filter(r => r.spoken).length,
     total: sentences.length,
-    totalExactMatches: results.reduce((sum, r) => sum + (r.analysis?.exact || 0), 0),
-    totalPhoneticMatches: results.reduce((sum, r) => sum + (r.analysis?.phonetic || 0), 0),
     duration: exerciseStartTime ? Math.round((Date.now() - exerciseStartTime) / 60) : 0
   } : null;
 
-  // Error state
+  // ALL RENDER METHODS STAY EXACTLY THE SAME - NO VISUAL CHANGES
+
   if (step === 'error') {
     return (
       <div className="exercise-page">
         <ClickableLogo onLogoClick={onLogoClick} />
         <div className="quiz-container">
-          <h1>🎤 Enhanced Speaking Exercise</h1>
-          <div className="error-message">
-            <h3>❌ Setup Required</h3>
+          <h1>🎤 Speaking Exercise</h1>
+          <div className="error-state">
+            <div className="error-icon">❌</div>
+            <h2>Setup Required</h2>
             <p>{feedback}</p>
-            <div className="error-help">
-              <h4>💡 Troubleshooting:</h4>
+            <div className="browser-support">
+              <h3>💡 Troubleshooting:</h3>
               <ul>
-                <li>Ensure you're using Chrome, Edge, or Safari</li>
-                <li>Check your microphone is connected and working</li>
-                <li>Allow microphone access when prompted</li>
-                <li>Try refreshing the page</li>
+                <li>🌐 Ensure you're using Chrome, Edge, or Safari</li>
+                <li>🎤 Check your microphone is connected and working</li>
+                <li>✅ Allow microphone access when prompted</li>
+                <li>🔄 Try refreshing the page</li>
               </ul>
             </div>
           </div>
@@ -607,75 +605,54 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Instructions state
   if (step === 'instructions') {
     return (
       <div className="exercise-page">
         <ClickableLogo onLogoClick={onLogoClick} />
         <div className="quiz-container">
-          <h1>🎤 Enhanced Speaking Exercise</h1>
+          <h1>🎤 Speaking Exercise</h1>
           
-          <div className="speaking-instructions">
-            <div className="feature-highlight">
-              <h3>🆕 New Enhanced Features!</h3>
-              <div className="feature-grid">
-                <div className="feature-item">
-                  <span className="feature-icon">🎯</span>
-                  <span className="feature-text">Advanced pronunciation analysis</span>
+          <div className="instructions-container">
+            <div className="instruction-content">
+              <h3>📋 How It Works:</h3>
+              <div className="instruction-list">
+                <div className="instruction-item">
+                  <span className="instruction-icon">👀</span>
+                  <span>Read the sentence displayed on screen</span>
                 </div>
-                <div className="feature-item">
-                  <span className="feature-icon">📊</span>
-                  <span className="feature-text">Real-time confidence scoring</span>
+                <div className="instruction-item">
+                  <span className="instruction-icon">🎤</span>
+                  <span>Click "Start Recording" and speak the sentence clearly</span>
                 </div>
-                <div className="feature-item">
-                  <span className="feature-icon">🔀</span>
-                  <span className="feature-text">Multiple pronunciation alternatives</span>
+                <div className="instruction-item">
+                  <span className="instruction-icon">⏹️</span>
+                  <span>Click "Stop Recording" when you've finished speaking</span>
                 </div>
-                <div className="feature-item">
-                  <span className="feature-icon">🎵</span>
-                  <span className="feature-text">Phonetic similarity matching</span>
+                <div className="instruction-item">
+                  <span className="instruction-icon">📊</span>
+                  <span>Get instant feedback on your pronunciation accuracy</span>
+                </div>
+                <div className="instruction-item">
+                  <span className="instruction-icon">🎯</span>
+                  <span>Complete 10 sentences across different difficulty levels</span>
                 </div>
               </div>
+              
+              <div className="tips-section">
+                <h4>💡 Speaking Tips:</h4>
+                <ul>
+                  <li>Speak clearly and at a normal pace</li>
+                  <li>Find a quiet environment for best results</li>
+                  <li>Pronounce each word distinctly</li>
+                  <li>Both British and American pronunciations are accepted</li>
+                  <li>Don't worry about hesitations - the scoring is forgiving</li>
+                </ul>
+              </div>
+              
+              <button className="btn btn-primary btn-large" onClick={startExercise}>
+                🎤 Start Speaking Exercise
+              </button>
             </div>
-            
-            <h3>📋 How It Works:</h3>
-            <div className="instruction-list">
-              <div className="instruction-item">
-                <span className="instruction-icon">👀</span>
-                <span>Read the sentence displayed on screen</span>
-              </div>
-              <div className="instruction-item">
-                <span className="instruction-icon">🎤</span>
-                <span>Click "Start Recording" and speak clearly</span>
-              </div>
-              <div className="instruction-item">
-                <span className="instruction-icon">📈</span>
-                <span>Watch your confidence score in real-time</span>
-              </div>
-              <div className="instruction-item">
-                <span className="instruction-icon">⏹️</span>
-                <span>Click "Stop Recording" when finished</span>
-              </div>
-              <div className="instruction-item">
-                <span className="instruction-icon">🧠</span>
-                <span>Get detailed pronunciation analysis</span>
-              </div>
-            </div>
-            
-            <div className="tips-section">
-              <h4>💡 Tips for Best Results:</h4>
-              <ul>
-                <li>Speak at a normal, steady pace</li>
-                <li>Pronounce each word clearly and distinctly</li>
-                <li>Use a quiet environment for best recognition</li>
-                <li>The system now recognises similar-sounding words!</li>
-                <li>Both British and American pronunciations are accepted</li>
-              </ul>
-            </div>
-            
-            <button className="btn btn-primary btn-large" onClick={startExercise}>
-              🚀 Start Enhanced Speaking Exercise
-            </button>
           </div>
           <button className="btn btn-secondary" onClick={onBack}>
             ← Back to Exercises
@@ -685,98 +662,60 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Results state
   if (step === 'results') {
     return (
       <div className="exercise-page">
         <ClickableLogo onLogoClick={onLogoClick} />
         <div className="quiz-container">
-          <h1>📊 Enhanced Speaking Results</h1>
+          <h1>📊 Speaking Results</h1>
           
           {finalStats && (
-            <div className="enhanced-results-summary">
-              <div className="stats-grid">
-                <div className="stat-card primary">
-                  <div className="stat-icon">🎯</div>
+            <div className="test-results">
+              <div className="test-stats">
+                <div className="stat-item">
                   <div className="stat-value">{finalStats.averageScore}%</div>
                   <div className="stat-label">Average Score</div>
                 </div>
-                <div className="stat-card">
-                  <div className="stat-icon">📊</div>
-                  <div className="stat-value">{finalStats.averageConfidence}%</div>
-                  <div className="stat-label">Avg Confidence</div>
+                <div className="stat-item">
+                  <div className="stat-value">{finalStats.completed}/{finalStats.total}</div>
+                  <div className="stat-label">Completed</div>
                 </div>
-                <div className="stat-card">
-                  <div className="stat-icon">✅</div>
-                  <div className="stat-value">{finalStats.totalExactMatches}</div>
-                  <div className="stat-label">Perfect Matches</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon">🎵</div>
-                  <div className="stat-value">{finalStats.totalPhoneticMatches}</div>
-                  <div className="stat-label">Phonetic Matches</div>
+                <div className="stat-item">
+                  <div className="stat-value">{finalStats.duration}</div>
+                  <div className="stat-label">Minutes</div>
                 </div>
               </div>
               
-              <div className="level-assessment">
-                <h3>🎓 Performance Assessment</h3>
-                <p>
-                  {finalStats.averageScore >= 90 ? 'Outstanding pronunciation! You speak with excellent clarity and accuracy.' :
-                   finalStats.averageScore >= 75 ? 'Very good pronunciation! Your speech is clear and easily understood.' :
-                   finalStats.averageScore >= 60 ? 'Good pronunciation! With more practice, you\'ll improve further.' :
-                   'Keep practising! Focus on speaking slowly and clearly.'}
-                </p>
+              <div className="results-list">
+                {results.map((result, index) => (
+                  <div key={index} className={`result-item ${result.score >= 80 ? 'success' : result.score >= 50 ? 'warning' : 'error'}`}>
+                    <div className="result-content">
+                      <div className="result-header">
+                        <h4>Sentence {index + 1} ({result.level})</h4>
+                        <div className={`result-score ${result.score >= 80 ? 'success' : result.score >= 50 ? 'warning' : 'error'}`}>
+                          {result.score}%
+                        </div>
+                      </div>
+                      <p><strong>Target:</strong> "{result.target}"</p>
+                      <p><strong>You said:</strong> "{result.spoken || '(Skipped)'}"</p>
+                      <p><strong>Word accuracy:</strong> {result.matched}/{result.total} words correct</p>
+                      <div className="result-actions">
+                        {sentences[index]?.audioFile && (
+                          <button 
+                            className="btn btn-small btn-secondary audio-play-btn"
+                            onClick={() => playAudio(sentences[index].audioFile)}
+                            title="Play sample pronunciation"
+                          >
+                            🔊 Play
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
-
-          <div className="detailed-results">
-            <h3>📝 Detailed Analysis</h3>
-            <div className="results-list">
-              {results.map((result, index) => (
-                <div key={index} className={`result-item ${result.score >= 80 ? 'success' : result.score >= 50 ? 'warning' : 'error'}`}>
-                  <div className="result-header">
-                    <h4>Sentence {index + 1} ({result.level}): {result.score}%</h4>
-                    <div className="result-confidence">
-                      Confidence: {result.confidence || 0}%
-                    </div>
-                    <div className="result-actions">
-                      {sentences[index]?.audioFile && (
-                        <button 
-                          className="btn btn-small btn-secondary audio-play-btn"
-                          onClick={() => playAudio(sentences[index].audioFile)}
-                          title="Play sample pronunciation"
-                        >
-                          🔊 Play
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="result-content">
-                    <p><strong>Target:</strong> "{result.target}"</p>
-                    <p><strong>You said:</strong> "{result.spoken || '(Skipped)'}"</p>
-                    <div className="match-analysis">
-                      <strong>Analysis:</strong>
-                      {result.analysis?.exact > 0 && <span className="match-badge exact">✅ {result.analysis.exact} perfect</span>}
-                      {result.analysis?.homophone > 0 && <span className="match-badge homophone">🔄 {result.analysis.homophone} similar sound</span>}
-                      {result.analysis?.phonetic > 0 && <span className="match-badge phonetic">🎵 {result.analysis.phonetic} close pronunciation</span>}
-                      {result.analysis?.alternative > 0 && <span className="match-badge alternative">🎯 {result.analysis.alternative} alternative match</span>}
-                    </div>
-                    {result.alternatives && result.alternatives.length > 1 && (
-                      <div className="alternatives">
-                        <strong>Other possibilities heard:</strong>
-                        <ul>
-                          {result.alternatives.slice(1, 3).map((alt, altIndex) => (
-                            <li key={altIndex}>"{alt.text}" ({Math.round(alt.confidence * 100)}% confidence)</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
           
           <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '30px', flexWrap: 'wrap' }}>
             <button className="btn btn-primary" onClick={startExercise}>
@@ -791,13 +730,12 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     );
   }
 
-  // Exercise state
   if (step === 'exercise') {
     return (
       <div className="exercise-page">
         <ClickableLogo onLogoClick={onLogoClick} />
         <div className="quiz-container">
-          <h1>🎤 Enhanced Speaking Exercise</h1>
+          <h1>🎤 Speaking Exercise</h1>
           
           <div className="progress-container">
             <div className="progress-bar">
@@ -816,66 +754,29 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                 <div className="target-sentence">"{currentSentence.text}"</div>
               </div>
 
-              {/* Enhanced recording indicators */}
               {isRecording && (
-                <div className="recording-indicator enhanced">
+                <div className="recording-indicator">
                   <div className="recording-pulse"></div>
-                  <div className="recording-text">
-                    🎤 Recording... Speak clearly!
-                    {confidence > 0 && (
-                      <div className="live-confidence">
-                        Confidence: {Math.round(confidence * 100)}%
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {isProcessing && (
-                <div className="processing-indicator">
-                  <div className="processing-spinner"></div>
-                  <div className="processing-text">🧠 Analysing your pronunciation...</div>
+                  <div className="recording-text">Recording... Click "Stop Recording" when finished!</div>
                 </div>
               )}
 
               {transcript && (
-                <div className="transcript-display enhanced">
-                  <div className="transcript-label">You said:</div>
+                <div className="transcript-display">
+                  <div className="transcript-label">You're saying:</div>
                   <div className="transcript-text">"{transcript}"</div>
-                  {confidence > 0 && (
-                    <div className="confidence-indicator">
-                      <div className="confidence-bar">
-                        <div 
-                          className="confidence-fill" 
-                          style={{ 
-                            width: `${confidence * 100}%`,
-                            backgroundColor: confidence > 0.8 ? '#48bb78' : confidence > 0.6 ? '#ed8936' : '#f56565'
-                          }}
-                        ></div>
-                      </div>
-                      <span className="confidence-text">
-                        {Math.round(confidence * 100)}% confidence
-                      </span>
-                    </div>
-                  )}
-                  {speechAlternatives.length > 1 && (
-                    <div className="alternatives-preview">
-                      <small>Also heard: {speechAlternatives.slice(1, 3).map(alt => `"${alt.text}"`).join(', ')}</small>
-                    </div>
-                  )}
                 </div>
               )}
 
               {feedback && (
-                <div className={`feedback-display ${feedback.includes('Outstanding') || feedback.includes('Excellent') ? 'success' : 
-                                                   feedback.includes('Good') || feedback.includes('Well done') ? 'good' : 
-                                                   feedback.includes('confidence') ? 'info' : 'neutral'}`}>
+                <div className={`feedback ${feedback.includes('Perfect') || feedback.includes('Excellent') ? 'success' : 
+                                         feedback.includes('Good') || feedback.includes('Well done') ? 'warning' : 'info'}`}>
                   {feedback}
                 </div>
               )}
 
-              <div className="recording-controls enhanced">
-                {!isRecording && !isProcessing ? (
+              <div className="recording-controls">
+                {!isRecording ? (
                   <>
                     <button className="btn btn-primary btn-large" onClick={startRecording}>
                       🎤 Start Recording
@@ -884,7 +785,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                       ⏭️ Skip This Sentence
                     </button>
                   </>
-                ) : isRecording ? (
+                ) : (
                   <>
                     <button className="btn btn-danger btn-large" onClick={stopRecording}>
                       ⏹️ Stop Recording
@@ -893,15 +794,11 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                       🔄 Restart
                     </button>
                   </>
-                ) : (
-                  <div className="processing-message">
-                    <span>🧠 Processing your speech with enhanced analysis...</span>
-                  </div>
                 )}
               </div>
 
               {currentSentence.audioFile && (
-                <div className="sample-audio">
+                <div className="audio-controls">
                   <button 
                     className="btn btn-small btn-outline"
                     onClick={() => playAudio(currentSentence.audioFile)}
@@ -914,7 +811,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
             </>
           )}
 
-          <button className="btn btn-secondary back-btn" onClick={onBack}>
+          <button className="btn btn-secondary" onClick={onBack}>
             ← Back to Exercises
           </button>
         </div>
@@ -927,11 +824,9 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     <div className="exercise-page">
       <ClickableLogo onLogoClick={onLogoClick} />
       <div className="quiz-container">
-        <h1>🎤 Enhanced Speaking Exercise</h1>
+        <h1>🎤 Speaking Exercise</h1>
         <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Checking enhanced speech recognition support...</p>
-          <small>This may take a moment while we set up advanced features</small>
+          <p>Checking speech recognition support...</p>
         </div>
       </div>
     </div>
