@@ -417,7 +417,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     }
   };
 
-  // ENHANCED: Stop recording with better analysis (same display)
+ analysis (same display)
   const stopRecording = () => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
@@ -795,19 +795,15 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                     </button>
                   </>
                 )}
+                
+                {/* Submit button appears when recording is stopped and transcript exists */}
+                {!isRecording && transcript && (
+                  <button className="btn btn-success btn-large" onClick={submitRecording}>
+                    ✅ Submit Recording
+                  </button>
+                )}
               </div>
 
-              {currentSentence.audioFile && (
-                <div className="audio-controls">
-                  <button 
-                    className="btn btn-small btn-outline"
-                    onClick={() => playAudio(currentSentence.audioFile)}
-                    title="Play sample pronunciation"
-                  >
-                    🔊 Play Sample Pronunciation
-                  </button>
-                </div>
-              )}
             </>
           )}
 
