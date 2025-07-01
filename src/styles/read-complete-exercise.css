@@ -231,7 +231,7 @@
 }
 
 /* ==============================================
-   6. PARAGRAPH TEXT WITH INPUTS
+   6. PARAGRAPH TEXT WITH LETTER INPUT COMPONENTS
    ============================================== */
 .paragraph-container {
   background: #f8f9fa;
@@ -247,55 +247,72 @@
   color: #343a40;
   text-align: justify;
   font-family: 'Georgia', serif;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
 }
 
-.input-wrapper {
-  position: relative;
+.text-segment {
+  display: inline;
+}
+
+.letter-input-wrapper {
   display: inline-flex;
-  align-items: baseline;
-  margin: 0 2px;
+  align-items: center;
+  margin: 0 3px;
+  vertical-align: baseline;
 }
 
-.visible-letters {
-  color: #4c51bf;
-  font-weight: 700;
-  font-size: 1em;
-  background: #e8f2ff;
-  padding: 2px 4px;
-  border-radius: 4px;
-  border: 2px solid #4c51bf;
-  border-right: none;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+/* Style the LetterInput component within Read and Complete */
+.letter-input-wrapper .letter-input-container {
+  display: inline-flex !important;
+  gap: 2px !important;
+  align-items: center !important;
+  margin: 0 !important;
+  vertical-align: baseline !important;
 }
 
-.word-input {
-  border: 2px solid #4c51bf;
-  border-left: none;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 1em;
-  font-weight: 600;
-  background: white;
-  color: #343a40;
-  font-family: 'Georgia', serif;
-  min-width: 60px;
-  text-align: center;
-  outline: none;
-  transition: all 0.3s ease;
+.letter-input-wrapper .letter-input-box {
+  width: 35px !important;
+  height: 35px !important;
+  font-size: 1em !important;
+  font-weight: 600 !important;
+  border: 2px solid #4c51bf !important;
+  border-radius: 6px !important;
+  text-align: center !important;
+  background: white !important;
+  color: #343a40 !important;
+  font-family: 'Georgia', serif !important;
+  outline: none !important;
+  transition: all 0.3s ease !important;
+  margin: 0 1px !important;
 }
 
-.word-input:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.2);
-  background: #fffbf0;
+.letter-input-wrapper .letter-input-box.pre-filled {
+  background: #e8f2ff !important;
+  color: #4c51bf !important;
+  font-weight: 700 !important;
+  border-color: #4c51bf !important;
 }
 
-.word-input::placeholder {
-  color: #adb5bd;
-  font-weight: 400;
+.letter-input-wrapper .letter-input-box.editable:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.2) !important;
+  background: #fffbf0 !important;
+}
+
+.letter-input-wrapper .letter-input-box:disabled {
+  cursor: default !important;
+}
+
+/* Ensure proper spacing around letter inputs */
+.text-segment + .letter-input-wrapper {
+  margin-left: 2px;
+}
+
+.letter-input-wrapper + .text-segment {
+  margin-left: 2px;
 }
 
 /* ==============================================
