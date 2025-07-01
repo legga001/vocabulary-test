@@ -1,70 +1,16 @@
-// src/components/LandingPage.js - Updated without notification bubbles
+// src/components/LandingPage.js - Fresh implementation with working display
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 
-// Constants for better performance - moved outside component
-const CATEGORIES = Object.freeze([
+// Constants
+const CATEGORIES = [
   { id: 'ALL', name: 'ALL', icon: '📚' },
   { id: 'READING', name: 'READING', icon: '📖' },
   { id: 'WRITING', name: 'WRITING', icon: '✍️' },
   { id: 'LISTENING', name: 'LISTENING', icon: '🎧' },
   { id: 'SPEAKING', name: 'SPEAKING', icon: '🎤' }
-]);
+];
 
-// Daily targets storage utilities
-const TARGETS_STORAGE_KEY = 'mr-fox-daily-targets';
-
-const getTodayString = () => {
-  return new Date().toISOString().split('T')[0];
-};
-
-const getDailyTargetData = () => {
-  try {
-    const stored = localStorage.getItem(TARGETS_STORAGE_KEY);
-    if (!stored) return {};
-    
-    const data = JSON.parse(stored);
-    const today = getTodayString();
-    
-    // Return today's data or empty object if it's a different day
-    return data.date === today ? data.targets : {};
-  } catch (error) {
-    console.error('Error reading daily targets:', error);
-    return {};
-  }
-};
-
-const setDailyTargetData = (targets) => {
-  try {
-    const data = {
-      date: getTodayString(),
-      targets
-    };
-    localStorage.setItem(TARGETS_STORAGE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.error('Error saving daily targets:', error);
-  }
-};
-
-// Export function to increment daily target from other components
-export const incrementDailyTarget = (exerciseType) => {
-  const current = getDailyTargetData();
-  const updated = {
-    ...current,
-    [exerciseType]: (current[exerciseType] || 0) + 1
-  };
-  setDailyTargetData(updated);
-  
-  // Trigger storage event for other components to update
-  window.dispatchEvent(new StorageEvent('storage', {
-    key: TARGETS_STORAGE_KEY,
-    newValue: JSON.stringify({ date: getTodayString(), targets: updated })
-  }));
-  
-  return updated;
-};
-
-// UPDATED: Exercises with daily targets including new Read and Complete exercise
-const EXERCISES = Object.freeze([
+const EXERCISES = [
   // READING EXERCISES
   {
     type: 'standard-vocabulary',
@@ -72,7 +18,7 @@ const EXERCISES = Object.freeze([
     icon: '📖',
     title: 'Standard Vocabulary',
     subtitle: 'Fill in the gaps',
-    dailyTarget: 3, // Quick exercises: 3 times per day
+    dailyTarget: 3,
     isActive: true
   },
   {
@@ -81,7 +27,7 @@ const EXERCISES = Object.freeze([
     icon: '📰',
     title: 'Article-Based Vocab',
     subtitle: 'Real news stories',
-    dailyTarget: 1, // Article exercises: 1 time per day
+    dailyTarget: 1,
     isActive: true
   },
   {
@@ -90,7 +36,7 @@ const EXERCISES = Object.freeze([
     icon: '🎯',
     title: 'Real or Fake Words',
     subtitle: 'Quick recognition',
-    dailyTarget: 2, // Quick exercises: 2 times per day
+    dailyTarget: 2,
     isActive: true
   },
   {
@@ -99,7 +45,7 @@ const EXERCISES = Object.freeze([
     icon: '📝',
     title: 'Read and Complete',
     subtitle: 'Complete missing words in paragraphs',
-    dailyTarget: 1, // Comprehensive exercise: 1 time per day
+    dailyTarget: 1,
     isActive: true
   },
   
@@ -110,7 +56,7 @@ const EXERCISES = Object.freeze([
     icon: '🎧',
     title: 'Listen and Type',
     subtitle: 'Type what you hear',
-    dailyTarget: 2, // Moderate exercises: 2 times per day
+    dailyTarget: 2,
     isActive: true
   },
   
@@ -121,7 +67,7 @@ const EXERCISES = Object.freeze([
     icon: '🎤',
     title: 'Speak and Record',
     subtitle: 'Practice pronunciation',
-    dailyTarget: 2, // Speaking exercises: 2 times per day
+    dailyTarget: 2,
     isActive: true
   },
   
@@ -132,7 +78,7 @@ const EXERCISES = Object.freeze([
     icon: '✍️',
     title: 'Photo Description',
     subtitle: 'Describe what you see',
-    dailyTarget: 1, // Writing exercises: 1 time per day (longer tasks)
+    dailyTarget: 1,
     isActive: true
   },
   
@@ -164,36 +110,85 @@ const EXERCISES = Object.freeze([
     dailyTarget: 1,
     isActive: false
   }
-]);
+];
 
-// Menu items for sidebar navigation
-const MENU_ITEMS = Object.freeze([
+const MENU_ITEMS = [
   { id: 'exercises', icon: '📚', text: 'Exercises', isActive: true, action: null },
   { id: 'progress', icon: '📊', text: 'Progress', isActive: false, action: 'progress' },
   { id: 'achievements', icon: '🏆', text: 'Achievements', isActive: false, action: 'achievements' },
   { id: 'settings', icon: '⚙️', text: 'Settings', isActive: false, action: 'settings' }
-]);
+];
+
+// Daily targets utility functions
+const TARGETS_STORAGE_KEY = 'mr-fox-daily-targets';
+
+const getTodayString = () => {
+  return new Date().toISOString().split('T')[0];
+};
+
+const getDailyTargetData = () => {
+  try {
+    const stored = localStorage.getItem(TARGETS_STORAGE_KEY);
+    if (!stored) return {};
+    
+    const data = JSON.parse(stored);
+    const today = getTodayString();
+    
+    return data.date === today ? data.targets : {};
+  } catch (error) {
+    console.error('Error reading daily targets:', error);
+    return {};
+  }
+};
+
+const setDailyTargetData = (targets) => {
+  try {
+    const data = {
+      date: getTodayString(),
+      targets
+    };
+    localStorage.setItem(TARGETS_STORAGE_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.error('Error saving daily targets:', error);
+  }
+};
+
+// Export function for other components
+export const incrementDailyTarget = (exerciseType) => {
+  const current = getDailyTargetData();
+  const updated = {
+    ...current,
+    [exerciseType]: (current[exerciseType] || 0) + 1
+  };
+  setDailyTargetData(updated);
+  
+  window.dispatchEvent(new StorageEvent('storage', {
+    key: TARGETS_STORAGE_KEY,
+    newValue: JSON.stringify({ date: getTodayString(), targets: updated })
+  }));
+  
+  return updated;
+};
 
 function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
-  // State management
+  // State
   const [selectedCategory, setSelectedCategory] = useState('ALL');
-  const [showExercises, setShowExercises] = useState(false);
+  const [showExercises, setShowExercises] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
   const [dailyTargets, setDailyTargets] = useState({});
 
-  // Load daily targets on mount and set up listener
+  // Load daily targets
   useEffect(() => {
-    const loadDailyTargets = () => {
+    const loadTargets = () => {
       setDailyTargets(getDailyTargetData());
     };
     
-    loadDailyTargets();
+    loadTargets();
     
-    // Listen for storage changes to update targets in real-time
     const handleStorageChange = (e) => {
       if (e.key === TARGETS_STORAGE_KEY) {
-        loadDailyTargets();
+        loadTargets();
       }
     };
     
@@ -201,19 +196,21 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Get completion data from localStorage (using daily targets)
-  const getCompletionData = useCallback(() => {
-    return dailyTargets;
-  }, [dailyTargets]);
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-  // Calculate exercises with targets and progress
+  const isMobile = windowWidth < 1025;
+
+  // Calculate exercises with progress
   const exercisesWithTargets = useMemo(() => {
-    const completionData = getCompletionData();
-    
     return EXERCISES
       .filter(exercise => selectedCategory === 'ALL' || exercise.category === selectedCategory)
       .map(exercise => {
-        const completed = completionData[exercise.type] || 0;
+        const completed = dailyTargets[exercise.type] || 0;
         const target = exercise.dailyTarget || 1;
         const progressPercentage = Math.min((completed / target) * 100, 100);
         const isTargetMet = completed >= target;
@@ -226,67 +223,34 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
           isTargetMet
         };
       });
-  }, [selectedCategory, getCompletionData]);
+  }, [selectedCategory, dailyTargets]);
 
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Determine if mobile layout should be used
-  const isMobile = windowWidth < 1025;
-
-  // Show exercises with staggered animation on mount
-  useEffect(() => {
-    const timer = setTimeout(() => setShowExercises(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Handle category changes
+  // Event handlers
   const handleCategoryChange = useCallback((categoryId) => {
-    if (categoryId !== selectedCategory) {
-      setIsTransitioning(true);
-      setShowExercises(false);
-      
-      setTimeout(() => {
-        setSelectedCategory(categoryId);
-        setShowExercises(true);
-        setIsTransitioning(false);
-      }, 200);
-    }
-  }, [selectedCategory]);
+    setSelectedCategory(categoryId);
+  }, []);
 
-  // Handle exercise clicks
   const handleExerciseClick = useCallback((exercise) => {
     if (!exercise.isActive) return;
-    
     console.log(`🎯 Launching exercise: ${exercise.type}`);
-    
-    // Use the onSelectExercise prop passed from App.js
     if (onSelectExercise) {
       onSelectExercise(exercise.type);
-    } else {
-      console.warn('onSelectExercise function not provided');
     }
   }, [onSelectExercise]);
 
-  // Handle menu item clicks for sidebar
   const handleMenuItemClick = useCallback((action) => {
-    console.log(`Menu action: ${action}`);
     if (action === 'progress' && onProgress) {
       onProgress();
     }
+    setIsMobileMenuOpen(false);
   }, [onProgress]);
 
-  // Toggle mobile menu
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen(prev => !prev);
   }, []);
 
-  // Render menu items (shared between desktop sidebar and mobile menu)
-  const renderMenuItem = useCallback((item, index) => {
+  // Render functions
+  const renderMenuItem = (item, index) => {
     const baseClass = isMobile ? 'mobile-menu-item' : 'desktop-sidebar-item';
     const iconClass = isMobile ? 'mobile-menu-icon' : 'sidebar-icon';
     const textClass = isMobile ? 'mobile-menu-text' : 'sidebar-text';
@@ -298,8 +262,6 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
           className={`${baseClass} ${item.isActive ? 'active' : ''}`}
           onClick={() => item.action && handleMenuItemClick(item.action)}
           style={{ cursor: item.action ? 'pointer' : 'default' }}
-          role={item.action ? 'button' : 'text'}
-          tabIndex={item.action ? 0 : -1}
         >
           <span className={iconClass}>{item.icon}</span>
           <span className={textClass}>{item.text}</span>
@@ -307,26 +269,9 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
         {index < MENU_ITEMS.length - 1 && <div className={dividerClass}></div>}
       </React.Fragment>
     );
-  }, [isMobile, handleMenuItemClick]);
+  };
 
-  const renderCategoryTabs = useMemo(() => {
-    return (
-      <div className="category-tabs">
-        {CATEGORIES.map((category) => (
-          <button
-            key={category.id}
-            className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
-            onClick={() => handleCategoryChange(category.id)}
-          >
-            <span className="category-icon">{category.icon}</span>
-            <span className="category-name">{category.name}</span>
-          </button>
-        ))}
-      </div>
-    );
-  }, [selectedCategory, handleCategoryChange]);
-
-  const renderExerciseItem = useCallback((exercise, index) => {
+  const renderExerciseItem = (exercise, index) => {
     return (
       <div
         key={exercise.type}
@@ -334,18 +279,6 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
         onClick={() => handleExerciseClick(exercise)}
         style={{ 
           animationDelay: `${index * 0.1}s`
-        }}
-        role={exercise.isActive ? 'button' : 'text'}
-        tabIndex={exercise.isActive ? 0 : -1}
-        aria-label={`${exercise.title}: ${exercise.subtitle}${exercise.isActive ? ', clickable' : ', coming soon'}`}
-        data-type={exercise.type}
-        data-category={exercise.category}
-        data-title={exercise.title}
-        onKeyDown={(e) => {
-          if (exercise.isActive && (e.key === 'Enter' || e.key === ' ')) {
-            e.preventDefault();
-            handleExerciseClick(exercise);
-          }
         }}
       >
         <div className="exercise-icon-container">
@@ -383,30 +316,7 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
         </div>
       </div>
     );
-  }, [handleExerciseClick]);
-
-  // Add debug logging for filtered exercises
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('📋 Current exercise order with targets:', exercisesWithTargets.map((e, index) => ({
-        position: index + 1,
-        type: e.type,
-        category: e.category,
-        isActive: e.isActive,
-        title: e.title,
-        dailyTarget: e.target,
-        completed: e.completed,
-        targetMet: e.isTargetMet
-      })));
-      
-      // Check for any duplicate types
-      const types = exercisesWithTargets.map(e => e.type);
-      const duplicateTypes = types.filter((type, index) => types.indexOf(type) !== index);
-      if (duplicateTypes.length > 0) {
-        console.error('🚨 DUPLICATE EXERCISE TYPES FOUND:', duplicateTypes);
-      }
-    }
-  }, [exercisesWithTargets]);
+  };
 
   return (
     <div className={`landing-duolingo ${isTransitioning === false ? 'show' : ''}`}>
@@ -495,7 +405,18 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
 
         {/* Category Tabs */}
         <section className="category-section">
-          {renderCategoryTabs}
+          <div className="category-tabs">
+            {CATEGORIES.map((category) => (
+              <button
+                key={category.id}
+                className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
+                onClick={() => handleCategoryChange(category.id)}
+              >
+                <span className="category-icon">{category.icon}</span>
+                <span className="category-name">{category.name}</span>
+              </button>
+            ))}
+          </div>
           {selectedCategory !== 'ALL' && (
             <div className="category-info">
               <span className="category-description">
@@ -513,29 +434,6 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
 
         {/* Exercises List */}
         <section className="exercises-list" id="exercises-list">
-          {/* Debug information (remove in production) */}
-          {process.env.NODE_ENV === 'development' && (
-            <div style={{
-              background: '#fff3cd',
-              padding: '10px',
-              margin: '10px 0',
-              borderRadius: '5px',
-              fontSize: '0.8em',
-              fontFamily: 'monospace',
-              border: '1px solid #ffeaa7'
-            }}>
-              <strong>🎯 Exercise Display Debug:</strong><br />
-              Today: {getTodayString()}<br />
-              Category: "{selectedCategory}" | 
-              Total exercises shown: {exercisesWithTargets.length} | 
-              Active exercises: {exercisesWithTargets.filter(e => e.isActive).length}
-              <br />
-              <strong>Exercise types shown:</strong> {exercisesWithTargets.map(e => `${e.type}(${e.category})`).join(', ')}
-              <br />
-              <strong>Targets met:</strong> {exercisesWithTargets.filter(e => e.isTargetMet && e.isActive).length} of {exercisesWithTargets.filter(e => e.isActive).length} active exercises
-            </div>
-          )}
-          
           {showExercises && exercisesWithTargets.map((exercise, index) => 
             renderExerciseItem(exercise, index)
           )}
