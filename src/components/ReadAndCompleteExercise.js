@@ -48,10 +48,33 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
   const calculateScore = useCallback((userInputs, correctAnswers) => {
     let correct = 0;
     userInputs.forEach((input, index) => {
-      if (input.toLowerCase().trim() === correctAnswers[index].toLowerCase()) {
+      const correctAnswer = correctAnswers[index].toLowerCase();
+      const userAnswer = input.toLowerCase().trim();
+      
+      // LetterInput only returns the letters the user typed (after the pre-filled ones)
+      // We need to reconstruct the full word to compare
+      const getLettersToShow = (word) => {
+        const length = word.length;
+        if (length <= 3) return 1;
+        if (length <= 5) return 2;
+        if (length <= 7) return 3;
+        if (length <= 9) return 4;
+        if (length <= 11) return 5;
+        return 6;
+      };
+      
+      const lettersToShow = getLettersToShow(correctAnswer);
+      const preFilledPart = correctAnswer.substring(0, lettersToShow);
+      const expectedUserPart = correctAnswer.substring(lettersToShow);
+      
+      // Check if user typed the correct remaining letters
+      if (userAnswer === expectedUserPart) {
         correct++;
       }
+      
+      console.log(`Word ${index + 1}: "${correctAnswer}" - Pre-filled: "${preFilledPart}" - Expected: "${expectedUserPart}" - User typed: "${userAnswer}" - Correct: ${userAnswer === expectedUserPart}`);
     });
+    
     return { correct, total: correctAnswers.length, percentage: Math.round((correct / correctAnswers.length) * 100) };
   }, []);
 
@@ -185,7 +208,9 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
             <div className="paragraph-transition">
               <h3>Well done! 🎉</h3>
               <p>You completed paragraph {currentParagraph} ({levelLabels[currentParagraph - 1]} level)</p>
-              <p>Score: {scores[scores.length - 1]?.correct}/{scores[scores.length - 1]?.total} ({scores[scores.length - 1]?.percentage}%)</p>
+              {scores.length > 0 && (
+                <p>Score: {scores[scores.length - 1]?.correct}/{scores[scores.length - 1]?.total} ({scores[scores.length - 1]?.percentage}%)</p>
+              )}
             </div>
           )}
           
