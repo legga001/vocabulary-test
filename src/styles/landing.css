@@ -402,16 +402,18 @@
 }
 
 /* ==============================================
-   7. EXERCISES LIST - WHITE CONTAINERS
+   7. EXERCISES LIST - WHITE CONTAINERS (2 COLUMN LAYOUT)
    ============================================== */
 .exercises-list {
   display: grid;
+  grid-template-columns: 1fr 1fr; /* Exactly 2 columns */
   gap: 20px;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   background: white;
   border-radius: 15px;
   padding: 25px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-width: 1000px; /* Limit maximum width for better readability */
+  margin: 0 auto; /* Centre the grid */
 }
 
 .exercise-item {
@@ -651,7 +653,7 @@
   }
   
   .exercises-list {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Single column on mobile */
     gap: 15px;
     padding: 20px;
   }
@@ -693,6 +695,7 @@
   
   .exercises-list {
     padding: 15px;
+    grid-template-columns: 1fr; /* Ensure single column on very small screens */
   }
   
   .exercise-item {
@@ -704,5 +707,17 @@
     width: 55px;
     height: 55px;
     font-size: 1.6em;
+  }
+}
+
+/* Tablet adjustments - maintain 2 columns */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .exercises-list {
+    grid-template-columns: 1fr 1fr; /* Keep 2 columns on tablets */
+    max-width: 900px;
+  }
+  
+  .exercise-item {
+    padding: 18px;
   }
 }
