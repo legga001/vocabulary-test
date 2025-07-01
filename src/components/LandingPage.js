@@ -10,6 +10,59 @@ const CATEGORIES = Object.freeze([
   { id: 'SPEAKING', name: 'SPEAKING', icon: '🎤' }
 ]);
 
+// Daily targets storage utilities
+const TARGETS_STORAGE_KEY = 'mr-fox-daily-targets';
+
+const getTodayString = () => {
+  return new Date().toISOString().split('T')[0];
+};
+
+const getDailyTargetData = () => {
+  try {
+    const stored = localStorage.getItem(TARGETS_STORAGE_KEY);
+    if (!stored) return {};
+    
+    const data = JSON.parse(stored);
+    const today = getTodayString();
+    
+    // Return today's data or empty object if it's a different day
+    return data.date === today ? data.targets : {};
+  } catch (error) {
+    console.error('Error reading daily targets:', error);
+    return {};
+  }
+};
+
+const setDailyTargetData = (targets) => {
+  try {
+    const data = {
+      date: getTodayString(),
+      targets
+    };
+    localStorage.setItem(TARGETS_STORAGE_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.error('Error saving daily targets:', error);
+  }
+};
+
+// Export function to increment daily target from other components
+export const incrementDailyTarget = (exerciseType) => {
+  const current = getDailyTargetData();
+  const updated = {
+    ...current,
+    [exerciseType]: (current[exerciseType] || 0) + 1
+  };
+  setDailyTargetData(updated);
+  
+  // Trigger storage event for other components to update
+  window.dispatchEvent(new StorageEvent('storage', {
+    key: TARGETS_STORAGE_KEY,
+    newValue: JSON.stringify({ date: getTodayString(), targets: updated })
+  }));
+  
+  return updated;
+};
+
 // UPDATED: Exercises with daily targets including new Read and Complete exercise
 const EXERCISES = Object.freeze([
   // READING EXERCISES
@@ -130,22 +183,22 @@ function LandingPage() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   // Helper function to get today's date string
-  const getTodayString = useCallback(() => {
+  const getTodayStringHelper = useCallback(() => {
     return new Date().toISOString().split('T')[0];
   }, []);
 
   // Get completion data from localStorage
   const getCompletionData = useCallback(() => {
-    const today = getTodayString();
+    const today = getTodayStringHelper();
     const stored = localStorage.getItem(`daily-completions-${today}`);
     return stored ? JSON.parse(stored) : {};
-  }, [getTodayString]);
+  }, [getTodayStringHelper]);
 
   // Save completion data to localStorage
   const saveCompletionData = useCallback((data) => {
-    const today = getTodayString();
+    const today = getTodayStringHelper();
     localStorage.setItem(`daily-completions-${today}`, JSON.stringify(data));
-  }, [getTodayString]);
+  }, [getTodayStringHelper]);
 
   // Calculate exercises with targets and progress
   const exercisesWithTargets = useMemo(() => {
@@ -246,7 +299,7 @@ function LandingPage() {
         {index < MENU_ITEMS.length - 1 && <div className={dividerClass}></div>}
       </React.Fragment>
     );
-  }, [handleMenuItemClick]);
+  }, [isMobile, handleMenuItemClick]);
 
   const renderCategoryTabs = useMemo(() => {
     return (
@@ -322,7 +375,7 @@ function LandingPage() {
         </div>
       </div>
     );
-  }, [handleExerciseClick, selectedCategory]);
+  }, [handleExerciseClick]);
 
   // Add debug logging for filtered exercises
   useEffect(() => {
@@ -464,7 +517,7 @@ function LandingPage() {
               border: '1px solid #ffeaa7'
             }}>
               <strong>🎯 Exercise Display Debug:</strong><br />
-              Today: {getTodayString()}<br />
+              Today: {getTodayStringHelper()}<br />
               Category: "{selectedCategory}" | 
               Total exercises shown: {exercisesWithTargets.length} | 
               Active exercises: {exercisesWithTargets.filter(e => e.isActive).length}
