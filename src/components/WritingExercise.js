@@ -1,4 +1,4 @@
-// src/components/WritingExercise.js - Complete writing exercise with proper JSX structure
+// src/components/WritingExercise.js - Complete writing exercise with proper structure
 import React, { useState, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { recordTestResult } from '../utils/progressDataManager';
