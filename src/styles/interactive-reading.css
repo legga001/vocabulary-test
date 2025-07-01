@@ -337,3 +337,44 @@
     gap: 15px;
     text-align: center;
   }
+  
+  .feedback-modal {
+    margin: 10px;
+    padding: 25px;
+  }
+  
+  .option-label {
+    padding: 12px;
+  }
+  
+  .option-text {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dropdown-select {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+  
+  .question-number {
+    width: 25px;
+    height: 25px;
+    font-size: 12px;
+  }
+  
+  .passage-content {
+    font-size: 14px;
+    max-height: 250px;
+  }
+  
+  .feedback-modal {
+    padding: 20px;
+  }
+  
+  .next-button-container .btn {
+    padding: 12px;
+    font-size: 14px;
+  }
+}
