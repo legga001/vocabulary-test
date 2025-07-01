@@ -1,4 +1,4 @@
-// src/App.js - Updated with fixed writing exercise navigation
+// src/App.js - Updated with Read and Complete exercise navigation
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
@@ -12,8 +12,9 @@ import ArticleSelection from './components/ArticleSelection';
 import RealFakeWordsExercise from './components/RealFakeWordsExercise';
 import ListenAndTypeExercise from './components/ListenAndTypeExercise';
 import SpeakingExercise from './components/SpeakingExercise';
-import WritingExercise from './components/WritingExercise'; // Fixed writing exercise
+import WritingExercise from './components/WritingExercise';
 import ListeningExercise from './components/ListeningExercise';
+import ReadAndCompleteExercise from './components/ReadAndCompleteExercise'; // NEW: Read and Complete exercise
 
 function App() {
   // Core state management
@@ -91,6 +92,10 @@ function App() {
       case 'writing':
         setCurrentScreen('writing');
         break;
+      // NEW: Read and Complete exercise navigation
+      case 'read-and-complete':
+        setCurrentScreen('read-and-complete');
+        break;
       // Traditional navigation (for non-active exercises)
       case 'speaking':
         setCurrentScreen('speaking');
@@ -105,134 +110,139 @@ function App() {
 
   // Article selection handler - DIRECT to article quiz with type tracking
   const handleArticleSelection = (articleType) => {
-    setSelectedArticleType(articleType); // Store which article was selected
-    setCurrentScreen('article-quiz');
+    setSelectedArticleType(articleType);
+    setCurrentScreen('article-vocabulary-quiz');
   };
 
-  // Main render function - COMPLETELY FIXED
+  // Render current screen
   const renderCurrentScreen = () => {
-    switch(currentScreen) {
+    switch (currentScreen) {
       case 'splash':
-        return (
-          <SplashPage 
-            onStartPracticing={goToLanding}
-            isTransitioning={isTransitioning}
-          />
-        );
+        return <SplashPage onComplete={goToLanding} />;
       
       case 'landing':
         return (
-          <LandingPage
-            onProgress={goToProgress}
+          <LandingPage 
             onSelectExercise={handleSelectExercise}
+            onProgress={goToProgress}
             isTransitioning={isTransitioning}
           />
         );
       
       case 'progress':
-        return (
-          <ProgressPage onBack={goBack} />
-        );
-
-      // DIRECT QUIZ NAVIGATION - FIXED
+        return <ProgressPage onBack={goBack} onLogoClick={handleLogoClick} />;
+      
+      // Standard vocabulary quiz
       case 'standard-vocabulary-quiz':
         return (
-          <Quiz 
-            quizType="standard" 
+          <Quiz
             onFinish={handleQuizFinish}
+            quizType="standard"
             onBack={goBack}
             onLogoClick={handleLogoClick}
           />
         );
       
+      // Article selection
       case 'article-selection':
         return (
-          <ArticleSelection 
+          <ArticleSelection
+            onSelectArticle={handleArticleSelection}
             onBack={goBack}
             onLogoClick={handleLogoClick}
-            onSelectArticle={handleArticleSelection}
           />
         );
       
-      case 'article-quiz':
+      // Article-based vocabulary quiz
+      case 'article-vocabulary-quiz':
         return (
-          <Quiz 
-            quizType="article" 
-            articleType={selectedArticleType}
+          <Quiz
             onFinish={handleQuizFinish}
+            quizType="article"
+            articleType={selectedArticleType}
             onBack={() => setCurrentScreen('article-selection')}
             onLogoClick={handleLogoClick}
           />
         );
-
+      
+      // Quiz results
       case 'results':
         return (
-          <Results 
+          <Results
             userAnswers={quizResults}
-            quizType={currentScreen.includes('article') ? 'article' : 'standard'}
-            testQuestions={testQuestions}
+            questions={testQuestions}
             onRestart={handleResultsFinish}
+            quizType={selectedArticleType ? 'article' : 'standard'}
+            articleInfo={selectedArticleType}
           />
         );
       
-      // Other exercises
+      // Real/Fake Words Exercise
       case 'real-fake-words':
         return (
-          <RealFakeWordsExercise 
-            onBack={goBack} 
+          <RealFakeWordsExercise
+            onBack={goBack}
             onLogoClick={handleLogoClick}
           />
         );
       
+      // Listen and Type Exercise
       case 'listen-and-type':
         return (
-          <ListenAndTypeExercise 
-            onBack={goBack} 
+          <ListenAndTypeExercise
+            onBack={goBack}
             onLogoClick={handleLogoClick}
           />
         );
       
+      // Speaking Exercise
       case 'speak-and-record':
         return (
-          <SpeakingExercise 
-            onBack={goBack} 
+          <SpeakingExercise
+            onBack={goBack}
             onLogoClick={handleLogoClick}
           />
         );
       
-      // FIXED: Writing exercise with proper props
+      // Writing Exercise
       case 'writing':
         return (
-          <WritingExercise 
-            onBack={goBack} 
+          <WritingExercise
+            onBack={goBack}
             onLogoClick={handleLogoClick}
           />
         );
       
+      // NEW: Read and Complete Exercise
+      case 'read-and-complete':
+        return (
+          <ReadAndCompleteExercise
+            onBack={goBack}
+            onLogoClick={handleLogoClick}
+          />
+        );
+      
+      // Speaking Exercise (Traditional - may not be active)
       case 'speaking':
         return (
-          <SpeakingExercise 
-            onBack={goBack} 
+          <SpeakingExercise
+            onBack={goBack}
             onLogoClick={handleLogoClick}
           />
         );
       
+      // Listening Exercise (Traditional - may not be active)
       case 'listening':
         return (
-          <ListeningExercise 
-            onBack={goBack} 
+          <ListeningExercise
+            onBack={goBack}
             onLogoClick={handleLogoClick}
           />
         );
       
       default:
-        return (
-          <LandingPage
-            onProgress={goToProgress}
-            onSelectExercise={handleSelectExercise}
-            isTransitioning={isTransitioning}
-          />
-        );
+        console.error('Unknown screen:', currentScreen);
+        return <LandingPage onSelectExercise={handleSelectExercise} onProgress={goToProgress} />;
     }
   };
 
