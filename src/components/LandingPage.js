@@ -1,4 +1,4 @@
-// src/components/LandingPage.js - Updated with Read and Complete exercise
+// src/components/LandingPage.js - Updated without notification bubbles
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 
 // Constants for better performance - moved outside component
@@ -38,8 +38,7 @@ const EXERCISES = Object.freeze([
     title: 'Real or Fake Words',
     subtitle: 'Quick recognition',
     dailyTarget: 2, // Quick exercises: 2 times per day
-    isActive: true,
-    isNew: true
+    isActive: true
   },
   {
     type: 'read-and-complete',
@@ -48,8 +47,7 @@ const EXERCISES = Object.freeze([
     title: 'Read and Complete',
     subtitle: 'Complete missing words in paragraphs',
     dailyTarget: 1, // Comprehensive exercise: 1 time per day
-    isActive: true,
-    isNew: true
+    isActive: true
   },
   
   // LISTENING EXERCISES
@@ -60,9 +58,7 @@ const EXERCISES = Object.freeze([
     title: 'Listen and Type',
     subtitle: 'Type what you hear',
     dailyTarget: 2, // Moderate exercises: 2 times per day
-    isActive: true,
-    isNew: true,
-    isDET: true
+    isActive: true
   },
   
   // SPEAKING EXERCISES
@@ -73,9 +69,7 @@ const EXERCISES = Object.freeze([
     title: 'Speak and Record',
     subtitle: 'Practice pronunciation',
     dailyTarget: 2, // Speaking exercises: 2 times per day
-    isActive: true,
-    isNew: true,
-    isDET: true
+    isActive: true
   },
   
   // WRITING EXERCISES
@@ -86,220 +80,152 @@ const EXERCISES = Object.freeze([
     title: 'Photo Description',
     subtitle: 'Describe what you see',
     dailyTarget: 1, // Writing exercises: 1 time per day (longer tasks)
-    isActive: true,
-    isDET: true
+    isActive: true
   },
   
   // INACTIVE EXERCISES (Coming Soon)
   {
-    type: 'speaking',
-    category: 'SPEAKING',
-    icon: '🗣️',
-    title: 'Conversation Practice',
-    subtitle: 'Interactive dialogue',
+    type: 'sentence-completion',
+    category: 'READING',
+    icon: '📚',
+    title: 'Sentence Completion',
+    subtitle: 'Complete the sentences',
     dailyTarget: 2,
     isActive: false
   },
   {
-    type: 'listening',
-    category: 'LISTENING',
-    icon: '🎵',
-    title: 'Audio Comprehension',
-    subtitle: 'Understand spoken English',
-    dailyTarget: 2,
+    type: 'conversation',
+    category: 'SPEAKING',
+    icon: '💬',
+    title: 'Conversation Practice',
+    subtitle: 'Interactive dialogues',
+    dailyTarget: 1,
+    isActive: false
+  },
+  {
+    type: 'essay-writing',
+    category: 'WRITING',
+    icon: '📄',
+    title: 'Essay Writing',
+    subtitle: 'Structured writing tasks',
+    dailyTarget: 1,
     isActive: false
   }
 ]);
 
 // Menu items for sidebar navigation
 const MENU_ITEMS = Object.freeze([
-  { id: 'exercises', text: 'Exercises', icon: '📚', isActive: true },
-  { id: 'progress', text: 'Progress', icon: '📊', isActive: true, action: 'progress' },
-  { id: 'settings', text: 'Settings', icon: '⚙️', isActive: false },
-  { id: 'help', text: 'Help & Support', icon: '❓', isActive: false }
+  { id: 'exercises', icon: '📚', text: 'Exercises', isActive: true, action: null },
+  { id: 'progress', icon: '📊', text: 'Progress', isActive: false, action: 'progress' },
+  { id: 'achievements', icon: '🏆', text: 'Achievements', isActive: false, action: 'achievements' },
+  { id: 'settings', icon: '⚙️', text: 'Settings', isActive: false, action: 'settings' }
 ]);
 
-// Daily targets storage utilities
-const TARGETS_STORAGE_KEY = 'mr-fox-daily-targets';
-
-const getTodayString = () => {
-  return new Date().toISOString().split('T')[0];
-};
-
-const getDailyTargetData = () => {
-  try {
-    const stored = localStorage.getItem(TARGETS_STORAGE_KEY);
-    if (!stored) return {};
-    
-    const data = JSON.parse(stored);
-    const today = getTodayString();
-    
-    // Return today's data or empty object if it's a different day
-    return data.date === today ? data.targets : {};
-  } catch (error) {
-    console.error('Error reading daily targets:', error);
-    return {};
-  }
-};
-
-const setDailyTargetData = (targets) => {
-  try {
-    const data = {
-      date: getTodayString(),
-      targets
-    };
-    localStorage.setItem(TARGETS_STORAGE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.error('Error saving daily targets:', error);
-  }
-};
-
-// Export function to increment daily target from other components
-export const incrementDailyTarget = (exerciseType) => {
-  const current = getDailyTargetData();
-  const updated = {
-    ...current,
-    [exerciseType]: (current[exerciseType] || 0) + 1
-  };
-  setDailyTargetData(updated);
-  
-  // Trigger storage event for other components to update
-  window.dispatchEvent(new StorageEvent('storage', {
-    key: TARGETS_STORAGE_KEY,
-    newValue: JSON.stringify({ date: getTodayString(), targets: updated })
-  }));
-  
-  return updated;
-};
-
-function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
+function LandingPage() {
+  // State management
   const [selectedCategory, setSelectedCategory] = useState('ALL');
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showExercises, setShowExercises] = useState(false);
-  const [dailyTargets, setDailyTargets] = useState({});
+  const [isTransitioning, setIsTransitioning] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
-  // Load daily targets on mount
-  useEffect(() => {
-    const targets = getDailyTargetData();
-    setDailyTargets(targets);
-    console.log('📊 Daily targets loaded:', targets);
+  // Helper function to get today's date string
+  const getTodayString = useCallback(() => {
+    return new Date().toISOString().split('T')[0];
   }, []);
 
-  // Listen for daily target updates from other components
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === TARGETS_STORAGE_KEY) {
-        const targets = getDailyTargetData();
-        setDailyTargets(targets);
-        console.log('📊 Daily targets updated from storage:', targets);
-      }
-    };
+  // Get completion data from localStorage
+  const getCompletionData = useCallback(() => {
+    const today = getTodayString();
+    const stored = localStorage.getItem(`daily-completions-${today}`);
+    return stored ? JSON.parse(stored) : {};
+  }, [getTodayString]);
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  // Save completion data to localStorage
+  const saveCompletionData = useCallback((data) => {
+    const today = getTodayString();
+    localStorage.setItem(`daily-completions-${today}`, JSON.stringify(data));
+  }, [getTodayString]);
 
-  // Trigger exercise animations after component mounts
-  useEffect(() => {
-    if (isTransitioning) return;
+  // Calculate exercises with targets and progress
+  const exercisesWithTargets = useMemo(() => {
+    const completionData = getCompletionData();
     
-    const timer = setTimeout(() => {
-      setShowExercises(true);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [isTransitioning]);
-
-  // True category filtering - only show exercises from selected category
-  const filteredExercises = useMemo(() => {
-    console.log('🔍 Filtering exercises for category:', selectedCategory);
-    console.log('📚 Total exercises available:', EXERCISES.length);
-    
-    let exercisesToShow = [];
-    
-    if (selectedCategory === 'ALL') {
-      // Show all exercises when ALL is selected
-      exercisesToShow = [...EXERCISES];
-      console.log('📋 Showing all exercises:', exercisesToShow.length);
-    } else {
-      // Show ONLY exercises from the selected category
-      exercisesToShow = EXERCISES.filter(exercise => exercise.category === selectedCategory);
-      console.log(`📋 Showing only ${selectedCategory} exercises:`, exercisesToShow.length);
-    }
-    
-    // Verify no duplicates by checking for unique exercise types
-    const exerciseTypes = exercisesToShow.map(ex => ex.type);
-    const uniqueTypes = new Set(exerciseTypes);
-    
-    if (exerciseTypes.length !== uniqueTypes.size) {
-      console.error('🚨 DUPLICATE EXERCISES DETECTED!', {
-        totalCount: exerciseTypes.length,
-        uniqueCount: uniqueTypes.size,
-        duplicates: exerciseTypes.filter((type, index) => exerciseTypes.indexOf(type) !== index)
+    return EXERCISES
+      .filter(exercise => selectedCategory === 'ALL' || exercise.category === selectedCategory)
+      .map(exercise => {
+        const completed = completionData[exercise.type] || 0;
+        const target = exercise.dailyTarget || 1;
+        const progressPercentage = Math.min((completed / target) * 100, 100);
+        const isTargetMet = completed >= target;
+        
+        return {
+          ...exercise,
+          completed,
+          target,
+          progressPercentage,
+          isTargetMet
+        };
       });
-    } else {
-      console.log('✅ No duplicate exercises detected');
+  }, [selectedCategory, getCompletionData]);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Determine if mobile layout should be used
+  const isMobile = windowWidth < 1025;
+
+  // Show exercises with staggered animation on mount
+  useEffect(() => {
+    const timer = setTimeout(() => setShowExercises(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Handle category changes
+  const handleCategoryChange = useCallback((categoryId) => {
+    if (categoryId !== selectedCategory) {
+      setIsTransitioning(true);
+      setShowExercises(false);
+      
+      setTimeout(() => {
+        setSelectedCategory(categoryId);
+        setShowExercises(true);
+        setIsTransitioning(false);
+      }, 200);
     }
-    
-    return exercisesToShow;
   }, [selectedCategory]);
 
-  // Memoised exercises with daily target progress
-  const exercisesWithTargets = useMemo(() => {
-    return filteredExercises.map(exercise => {
-      const completed = dailyTargets[exercise.type] || 0;
-      const target = exercise.dailyTarget;
-      const progressPercentage = Math.min((completed / target) * 100, 100);
-      const isTargetMet = completed >= target;
-      
-      return {
-        ...exercise,
-        completed,
-        target,
-        progressPercentage,
-        isTargetMet
-      };
-    });
-  }, [filteredExercises, dailyTargets]);
-
-  // Event handlers with useCallback for performance
-  const handleMobileMenuToggle = useCallback(() => {
-    setShowMobileMenu(prev => !prev);
-  }, []);
-
-  const handleMobileMenuClose = useCallback(() => {
-    setShowMobileMenu(false);
-  }, []);
-
-  const handleMenuItemClick = useCallback((action) => {
-    handleMobileMenuClose();
-    if (action === 'progress') {
-      onProgress();
-    }
-  }, [onProgress, handleMobileMenuClose]);
-
-  const handleCategoryChange = useCallback((categoryId) => {
-    console.log('🔄 Category changed to:', categoryId);
-    setSelectedCategory(categoryId);
-    
-    // Add a small delay to allow for smooth visual transition
-    setShowExercises(false);
-    setTimeout(() => {
-      setShowExercises(true);
-    }, 150);
-  }, []);
-
-  // Remove increment from click, only start exercise
+  // Handle exercise clicks
   const handleExerciseClick = useCallback((exercise) => {
-    console.log('🎯 Exercise clicked:', exercise.type, 'isActive:', exercise.isActive);
-    if (exercise.isActive) {
-      // Don't increment here - this will be handled when exercise is completed
-      onSelectExercise(exercise.type);
+    if (!exercise.isActive) return;
+    
+    console.log(`🎯 Launching exercise: ${exercise.type}`);
+    
+    // Navigate to exercise
+    if (window.navigateToExercise) {
+      window.navigateToExercise(exercise.type);
+    } else {
+      console.warn('Navigation function not available');
     }
-  }, [onSelectExercise]);
+  }, []);
 
-  // Memoised render functions
-  const renderMenuItem = useCallback((item, index, isMobile = false) => {
+  // Handle menu item clicks for sidebar
+  const handleMenuItemClick = useCallback((action) => {
+    console.log(`Menu action: ${action}`);
+    // Implement navigation logic here
+  }, []);
+
+  // Toggle mobile menu
+  const toggleMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(prev => !prev);
+  }, []);
+
+  // Render menu items (shared between desktop sidebar and mobile menu)
+  const renderMenuItem = useCallback((item, index) => {
     const baseClass = isMobile ? 'mobile-menu-item' : 'desktop-sidebar-item';
     const iconClass = isMobile ? 'mobile-menu-icon' : 'sidebar-icon';
     const textClass = isMobile ? 'mobile-menu-text' : 'sidebar-text';
@@ -343,7 +269,7 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
     return (
       <div
         key={exercise.type}
-        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''} ${exercise.isTargetMet ? 'target-met' : ''}`}
+        className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isTargetMet ? 'target-met' : ''}`}
         onClick={() => handleExerciseClick(exercise)}
         style={{ 
           animationDelay: `${index * 0.1}s`
@@ -365,8 +291,6 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
           <div className={`exercise-icon ${exercise.isActive ? 'active' : 'disabled'}`}>
             {exercise.icon}
           </div>
-          {exercise.isNew && <div className="new-badge">NEW</div>}
-          {exercise.isDET && <div className="det-badge">DET</div>}
           {exercise.isTargetMet && <div className="target-met-badge">✓</div>}
         </div>
         
@@ -425,103 +349,96 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
 
   return (
     <div className={`landing-duolingo ${isTransitioning === false ? 'show' : ''}`}>
+      
       {/* Desktop Sidebar */}
-      <aside className="desktop-sidebar">
-        <div className="sidebar-content">
-          <div className="sidebar-logo">
-            <img 
-              src="/purple_fox_transparent.png" 
-              alt="Mr. Fox English logo" 
-              className="sidebar-logo-img"
-            />
-            <span className="sidebar-title">Mr. Fox English</span>
+      {!isMobile && (
+        <aside className="desktop-sidebar">
+          <div className="sidebar-content">
+            <div className="sidebar-logo">
+              <img 
+                src="/logo192.png" 
+                alt="Mr. Fox English" 
+                className="sidebar-logo-img"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+              <div className="sidebar-title">Mr. Fox English</div>
+            </div>
+            <nav className="sidebar-nav">
+              {MENU_ITEMS.map((item, index) => renderMenuItem(item, index))}
+            </nav>
           </div>
-          
-          <nav className="sidebar-nav" role="navigation" aria-label="Main menu">
-            {MENU_ITEMS.map((item, index) => renderMenuItem(item, index, false))}
-          </nav>
-        </div>
-      </aside>
+        </aside>
+      )}
+
+      {/* Mobile Header */}
+      {isMobile && (
+        <header className="mobile-header">
+          <div className="mobile-header-content">
+            <button 
+              className="mobile-menu-toggle"
+              onClick={toggleMobileMenu}
+              aria-label="Toggle navigation menu"
+            >
+              <span className="hamburger-icon">☰</span>
+            </button>
+            <div className="mobile-logo">
+              <span className="mobile-logo-text">Mr. Fox English</span>
+            </div>
+            <div className="mobile-header-spacer"></div>
+          </div>
+        </header>
+      )}
 
       {/* Mobile Menu Overlay */}
-      {showMobileMenu && (
-        <div className="mobile-menu-overlay" onClick={handleMobileMenuClose}>
-          <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
+      {isMobile && isMobileMenuOpen && (
+        <div className="mobile-menu-overlay" onClick={toggleMobileMenu}>
+          <nav className="mobile-menu" onClick={(e) => e.stopPropagation()}>
             <div className="mobile-menu-header">
-              <img 
-                src="/purple_fox_transparent.png" 
-                alt="Mr. Fox English logo" 
-                className="mobile-menu-logo"
-              />
-              <span className="mobile-menu-title">Mr. Fox English</span>
+              <div className="mobile-menu-logo">
+                <img 
+                  src="/logo192.png" 
+                  alt="Mr. Fox English" 
+                  className="mobile-menu-logo-img"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+                <span className="mobile-menu-title">Mr. Fox English</span>
+              </div>
               <button 
                 className="mobile-menu-close"
-                onClick={handleMobileMenuClose}
-                aria-label="Close menu"
+                onClick={toggleMobileMenu}
+                aria-label="Close navigation menu"
               >
                 ✕
               </button>
             </div>
-            <nav className="mobile-menu-nav" role="navigation" aria-label="Mobile menu">
-              {MENU_ITEMS.map((item, index) => renderMenuItem(item, index, true))}
-            </nav>
-          </div>
+            <div className="mobile-menu-items">
+              {MENU_ITEMS.map((item, index) => renderMenuItem(item, index))}
+            </div>
+          </nav>
         </div>
       )}
 
-      {/* Mobile Header */}
-      <header className="main-header">
-        <div className="header-left">
-          <button 
-            className="mobile-menu-toggle"
-            onClick={handleMobileMenuToggle}
-            aria-label="Open menu"
-          >
-            ☰
-          </button>
-          <img 
-            src="/purple_fox_transparent.png" 
-            alt="Mr. Fox English logo" 
-            className="header-logo-img"
-          />
-          <span className="header-title">Mr. Fox English</span>
-        </div>
-        
-        <div className="header-right">
-          <button 
-            className="progress-icon-btn" 
-            onClick={onProgress}
-            aria-label="View progress"
-          >
-            📊
-          </button>
-        </div>
-      </header>
-
       {/* Main Content Area */}
       <main className="main-content-area">
-        {/* Practice Full Test Button */}
-        <section className="full-test-section">
-          <div className="full-test-content">
-            <h2>Take a full length practice test</h2>
-            <div className="test-illustration">📋</div>
+        {/* Header */}
+        <section className="landing-header">
+          <div className="welcome-section">
+            <h1 className="main-title">Welcome to Mr. Fox English</h1>
+            <p className="main-subtitle">Master English with interactive exercises designed for success</p>
           </div>
-          <button className="practice-test-btn" disabled>
-            PRACTICE FULL TEST
-            <span className="coming-soon-badge">Coming Soon</span>
-          </button>
         </section>
 
-        {/* Categories Tabs */}
-        <section className="categories-section">
-          <h3>Skill practice</h3>
+        {/* Category Tabs */}
+        <section className="category-section">
           {renderCategoryTabs}
-          
-          {/* Category indicator - show count of exercises */}
           {selectedCategory !== 'ALL' && (
-            <div className="category-indicator">
-              <span className="category-indicator-text">
-                Showing {exercisesWithTargets.length} {selectedCategory.toLowerCase()} exercise{exercisesWithTargets.length !== 1 ? 's' : ''}
+            <div className="category-info">
+              <span className="category-description">
+                Showing {exercisesWithTargets.length} exercise{exercisesWithTargets.length !== 1 ? 's' : ''}
               </span>
               <button 
                 className="show-all-btn"
