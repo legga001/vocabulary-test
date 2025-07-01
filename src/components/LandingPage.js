@@ -1,4 +1,4 @@
-// src/components/LandingPage.js - Fixed exercise filtering and display
+// src/components/LandingPage.js - Updated with Read and Complete exercise
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 
 // Constants for better performance - moved outside component
@@ -10,7 +10,7 @@ const CATEGORIES = Object.freeze([
   { id: 'SPEAKING', name: 'SPEAKING', icon: '🎤' }
 ]);
 
-// UPDATED: Exercises with daily targets instead of overall progress
+// UPDATED: Exercises with daily targets including new Read and Complete exercise
 const EXERCISES = Object.freeze([
   // READING EXERCISES
   {
@@ -41,6 +41,16 @@ const EXERCISES = Object.freeze([
     isActive: true,
     isNew: true
   },
+  {
+    type: 'read-and-complete',
+    category: 'READING',
+    icon: '📝',
+    title: 'Read and Complete',
+    subtitle: 'Complete missing words in paragraphs',
+    dailyTarget: 1, // Comprehensive exercise: 1 time per day
+    isActive: true,
+    isNew: true
+  },
   
   // LISTENING EXERCISES
   {
@@ -61,10 +71,11 @@ const EXERCISES = Object.freeze([
     category: 'SPEAKING',
     icon: '🎤',
     title: 'Speak and Record',
-    subtitle: 'Pronunciation practice',
-    dailyTarget: 2, // Moderate exercises: 2 times per day
+    subtitle: 'Practice pronunciation',
+    dailyTarget: 2, // Speaking exercises: 2 times per day
     isActive: true,
-    isNew: true
+    isNew: true,
+    isDET: true
   },
   
   // WRITING EXERCISES
@@ -73,110 +84,111 @@ const EXERCISES = Object.freeze([
     category: 'WRITING',
     icon: '✍️',
     title: 'Photo Description',
-    subtitle: 'Describe images',
-    dailyTarget: 2,
+    subtitle: 'Describe what you see',
+    dailyTarget: 1, // Writing exercises: 1 time per day (longer tasks)
     isActive: true,
-    isNew: true
+    isDET: true
+  },
+  
+  // INACTIVE EXERCISES (Coming Soon)
+  {
+    type: 'speaking',
+    category: 'SPEAKING',
+    icon: '🗣️',
+    title: 'Conversation Practice',
+    subtitle: 'Interactive dialogue',
+    dailyTarget: 2,
+    isActive: false
   },
   {
-    type: 'writing-advanced',
-    category: 'WRITING',
-    icon: '📝',
-    title: 'Advanced Writing',
-    subtitle: 'Essays and analysis',
-    dailyTarget: 1,
+    type: 'listening',
+    category: 'LISTENING',
+    icon: '🎵',
+    title: 'Audio Comprehension',
+    subtitle: 'Understand spoken English',
+    dailyTarget: 2,
     isActive: false
   }
 ]);
 
-// Menu items for sidebar
+// Menu items for sidebar navigation
 const MENU_ITEMS = Object.freeze([
-  { id: 'overview', icon: '🏠', text: 'Overview', isActive: true },
-  { id: 'practice', icon: '📚', text: 'Practice', isActive: true },
-  { id: 'progress', icon: '📊', text: 'Progress', isActive: true, action: 'progress' },
-  { id: 'settings', icon: '⚙️', text: 'Settings', isActive: false },
-  { id: 'help', icon: '❓', text: 'Help', isActive: false }
+  { id: 'exercises', text: 'Exercises', icon: '📚', isActive: true },
+  { id: 'progress', text: 'Progress', icon: '📊', isActive: true, action: 'progress' },
+  { id: 'settings', text: 'Settings', icon: '⚙️', isActive: false },
+  { id: 'help', text: 'Help & Support', icon: '❓', isActive: false }
 ]);
 
-// Daily targets management
-const DAILY_TARGETS_KEY = 'mrFoxEnglishDailyTargets';
+// Daily targets storage utilities
+const TARGETS_STORAGE_KEY = 'mr-fox-daily-targets';
 
 const getTodayString = () => {
-  const today = new Date();
-  return today.toISOString().split('T')[0]; // YYYY-MM-DD format
+  return new Date().toISOString().split('T')[0];
 };
 
 const getDailyTargetData = () => {
   try {
-    const saved = localStorage.getItem(DAILY_TARGETS_KEY);
-    if (!saved) return {};
+    const stored = localStorage.getItem(TARGETS_STORAGE_KEY);
+    if (!stored) return {};
     
-    const parsed = JSON.parse(saved);
+    const data = JSON.parse(stored);
     const today = getTodayString();
     
-    // Reset if it's a new day
-    if (parsed.date !== today) {
-      console.log('🔄 New day detected, resetting daily targets');
-      return {};
-    }
-    
-    return parsed.targets || {};
+    // Return today's data or empty object if it's a different day
+    return data.date === today ? data.targets : {};
   } catch (error) {
-    console.error('Error loading daily targets:', error);
+    console.error('Error reading daily targets:', error);
     return {};
   }
 };
 
-const saveDailyTargetData = (targets) => {
+const setDailyTargetData = (targets) => {
   try {
-    const dataToSave = {
+    const data = {
       date: getTodayString(),
-      targets: targets
+      targets
     };
-    localStorage.setItem(DAILY_TARGETS_KEY, JSON.stringify(dataToSave));
+    localStorage.setItem(TARGETS_STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
     console.error('Error saving daily targets:', error);
   }
 };
 
-// UPDATED: Export function to increment from external modules
+// Export function to increment daily target from other components
 export const incrementDailyTarget = (exerciseType) => {
-  const currentTargets = getDailyTargetData();
-  const newTargets = {
-    ...currentTargets,
-    [exerciseType]: (currentTargets[exerciseType] || 0) + 1
+  const current = getDailyTargetData();
+  const updated = {
+    ...current,
+    [exerciseType]: (current[exerciseType] || 0) + 1
   };
-  saveDailyTargetData(newTargets);
+  setDailyTargetData(updated);
   
-  // Trigger a storage event to update the landing page if it's visible
+  // Trigger storage event for other components to update
   window.dispatchEvent(new StorageEvent('storage', {
-    key: DAILY_TARGETS_KEY,
-    newValue: JSON.stringify({
-      date: getTodayString(),
-      targets: newTargets
-    })
+    key: TARGETS_STORAGE_KEY,
+    newValue: JSON.stringify({ date: getTodayString(), targets: updated })
   }));
   
-  return newTargets;
+  return updated;
 };
 
-function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitioning }) {
-  // State management
-  const [showExercises, setShowExercises] = useState(false);
+function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showExercises, setShowExercises] = useState(false);
   const [dailyTargets, setDailyTargets] = useState({});
 
-  // Load daily targets on component mount
+  // Load daily targets on mount
   useEffect(() => {
     const targets = getDailyTargetData();
     setDailyTargets(targets);
+    console.log('📊 Daily targets loaded:', targets);
   }, []);
 
-  // Listen for storage changes to update progress in real-time
+  // Listen for daily target updates from other components
   useEffect(() => {
     const handleStorageChange = (e) => {
-      if (e.key === DAILY_TARGETS_KEY) {
+      if (e.key === TARGETS_STORAGE_KEY) {
         const targets = getDailyTargetData();
         setDailyTargets(targets);
         console.log('📊 Daily targets updated from storage:', targets);
@@ -198,7 +210,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     return () => clearTimeout(timer);
   }, [isTransitioning]);
 
-  // FIXED: True category filtering - only show exercises from selected category
+  // True category filtering - only show exercises from selected category
   const filteredExercises = useMemo(() => {
     console.log('🔍 Filtering exercises for category:', selectedCategory);
     console.log('📚 Total exercises available:', EXERCISES.length);
@@ -277,7 +289,7 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
     }, 150);
   }, []);
 
-  // FIXED: Remove increment from click, only start exercise
+  // Remove increment from click, only start exercise
   const handleExerciseClick = useCallback((exercise) => {
     console.log('🎯 Exercise clicked:', exercise.type, 'isActive:', exercise.isActive);
     if (exercise.isActive) {
@@ -301,47 +313,36 @@ function LandingPage({ onExercises, onProgress, onSelectExercise, isTransitionin
           style={{ cursor: item.action ? 'pointer' : 'default' }}
           role={item.action ? 'button' : 'text'}
           tabIndex={item.action ? 0 : -1}
-          aria-label={item.text}
-          onKeyDown={(e) => {
-            if (item.action && (e.key === 'Enter' || e.key === ' ')) {
-              e.preventDefault();
-              handleMenuItemClick(item.action);
-            }
-          }}
         >
           <span className={iconClass}>{item.icon}</span>
           <span className={textClass}>{item.text}</span>
         </div>
-        {index < MENU_ITEMS.length - 1 && index === 2 && (
-          <div className={dividerClass}></div>
-        )}
+        {index < MENU_ITEMS.length - 1 && <div className={dividerClass}></div>}
       </React.Fragment>
     );
   }, [handleMenuItemClick]);
 
-  const renderCategoryTabs = useMemo(() => (
-    <div className="category-tabs" role="tablist" aria-label="Exercise categories">
-      {CATEGORIES.map((category) => (
-        <button
-          key={category.id}
-          className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
-          onClick={() => handleCategoryChange(category.id)}
-          role="tab"
-          aria-selected={selectedCategory === category.id}
-          aria-controls="exercises-list"
-          id={`tab-${category.id}`}
-        >
-          <span className="category-icon">{category.icon}</span>
-          <span className="category-name">{category.name}</span>
-        </button>
-      ))}
-    </div>
-  ), [selectedCategory, handleCategoryChange]);
+  const renderCategoryTabs = useMemo(() => {
+    return (
+      <div className="category-tabs">
+        {CATEGORIES.map((category) => (
+          <button
+            key={category.id}
+            className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
+            onClick={() => handleCategoryChange(category.id)}
+          >
+            <span className="category-icon">{category.icon}</span>
+            <span className="category-name">{category.name}</span>
+          </button>
+        ))}
+      </div>
+    );
+  }, [selectedCategory, handleCategoryChange]);
 
   const renderExerciseItem = useCallback((exercise, index) => {
     return (
       <div
-        key={`${exercise.type}-${selectedCategory}`} // Unique key to ensure proper re-rendering
+        key={exercise.type}
         className={`exercise-item ${exercise.isActive ? 'active' : 'disabled'} ${exercise.isNew ? 'new-exercise' : ''} ${exercise.isDET ? 'det-exercise' : ''} ${exercise.isTargetMet ? 'target-met' : ''}`}
         onClick={() => handleExerciseClick(exercise)}
         style={{ 
