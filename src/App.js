@@ -118,7 +118,7 @@ function App() {
   const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'splash':
-        return <SplashPage onComplete={goToLanding} />;
+        return <SplashPage onStartPracticing={goToLanding} />;
       
       case 'landing':
         return (
