@@ -145,8 +145,8 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
       correctAnswer: "releases massive amounts of carbon dioxide into the atmosphere"
     },
     {
-      question: "What benefits does the transition to renewable energy provide besides environmental protection?",
-      correctAnswer: "coordinated efforts between public and private sectors"
+      question: "What benefits does renewable energy provide according to the passage?",
+      correctAnswer: "creates new job opportunities and reduces dependence on fossil fuel imports"
     }
   ];
 
@@ -318,7 +318,7 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
   };
 
   const renderFullPassage = () => {
-    const fullText = paragraph1Complete + ' ' + paragraph2.replace('[MISSING SENTENCE]', 'The development of energy storage solutions, such as advanced battery systems, is crucial for managing renewable power.');
+    const fullText = paragraph1Complete + ' ' + paragraph2.replace('[MISSING SENTENCE]', 'The development of energy storage solutions, such as advanced battery systems, is crucial for managing renewable power. The shift towards renewable energy not only helps combat climate change but also creates new job opportunities and reduces dependence on fossil fuel imports.');
     
     return (
       <div 
@@ -617,4 +617,4 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
   );
 };
 
-export default InteractiveReadingExercise;
+export default InteractiveReadingExercise;s
