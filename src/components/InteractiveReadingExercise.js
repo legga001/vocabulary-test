@@ -52,70 +52,70 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
 
   const paragraph2 = "The transition to renewable energy sources has become increasingly urgent. Solar and wind power technologies have advanced significantly, making them more cost-effective than ever before. [MISSING SENTENCE] Electric vehicles are also gaining popularity as consumers become more environmentally conscious. However, this transition requires substantial investment in infrastructure and coordinated efforts between public and private sectors.";
 
-  // Individual dropdown options for each blank - each blank has different options
+  // Individual dropdown options for each blank - mixed order, correct answer not first
   const dropdownSets = [
     // Blank 1: adjectives for challenges
     [
       { text: 'Select a word', value: '' },
-      { text: 'pressing', value: 'pressing' },
       { text: 'minor', value: 'minor' },
+      { text: 'pressing', value: 'pressing' },
       { text: 'simple', value: 'simple' },
       { text: 'temporary', value: 'temporary' }
     ],
     // Blank 2: verbs for research
     [
       { text: 'Select a word', value: '' },
-      { text: 'studying', value: 'studying' },
       { text: 'ignoring', value: 'ignoring' },
       { text: 'avoiding', value: 'avoiding' },
+      { text: 'studying', value: 'studying' },
       { text: 'dismissing', value: 'dismissing' }
     ],
     // Blank 3: nouns for source/reason
     [
       { text: 'Select a word', value: '' },
-      { text: 'cause', value: 'cause' },
       { text: 'solution', value: 'solution' },
       { text: 'benefit', value: 'benefit' },
+      { text: 'cause', value: 'cause' },
       { text: 'mystery', value: 'mystery' }
     ],
     // Blank 4: verbs for emission
     [
       { text: 'Select a word', value: '' },
-      { text: 'releases', value: 'releases' },
       { text: 'absorbs', value: 'absorbs' },
       { text: 'prevents', value: 'prevents' },
+      { text: 'releases', value: 'releases' },
       { text: 'reduces', value: 'reduces' }
     ],
     // Blank 5: verbs for impact
     [
       { text: 'Select a word', value: '' },
-      { text: 'disrupts', value: 'disrupts' },
       { text: 'improves', value: 'improves' },
+      { text: 'disrupts', value: 'disrupts' },
       { text: 'maintains', value: 'maintains' },
       { text: 'stabilises', value: 'stabilises' }
     ],
     // Blank 6: verbs for temperature
     [
       { text: 'Select a word', value: '' },
-      { text: 'rise', value: 'rise' },
       { text: 'fall', value: 'fall' },
       { text: 'stabilise', value: 'stabilise' },
+      { text: 'rise', value: 'rise' },
       { text: 'fluctuate', value: 'fluctuate' }
     ],
     // Blank 7: nouns for impacts
     [
       { text: 'Select a word', value: '' },
-      { text: 'consequences', value: 'consequences' },
       { text: 'advantages', value: 'advantages' },
       { text: 'improvements', value: 'improvements' },
+      { text: 'consequences', value: 'consequences' },
       { text: 'discoveries', value: 'discoveries' }
     ],
     // Blank 8: adjectives for urgency
     [
       { text: 'Select a word', value: '' },
-      { text: 'essential', value: 'essential' },
       { text: 'optional', value: 'optional' },
       { text: 'impossible', value: 'impossible' },
+      { text: 'essential', value: 'essential' },
       { text: 'unnecessary', value: 'unnecessary' }
     ]
   ];
@@ -282,13 +282,21 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
   };
 
   const renderParagraph1WithBlanks = () => {
+    const words = paragraph1WithBlanks.split(' ');
+    let blankIndex = 0;
+    
     return (
       <div className="text-sm leading-relaxed">
-        {paragraph1WithBlanks.split(' ').map((word, index) => {
+        {words.map((word, index) => {
           if (word.includes('_____')) {
+            const currentBlankIndex = blankIndex;
+            const selectedWord = answers.completeTheSentences[currentBlankIndex];
+            blankIndex++;
             return (
               <span key={index} className="mx-1">
-                <span className="blank-placeholder">[___]</span>
+                <span className="word-blank-box">
+                  {selectedWord || ''}
+                </span>
               </span>
             );
           }
@@ -303,9 +311,7 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
     return (
       <div className="text-sm leading-relaxed">
         {parts[0]}
-        <div className="missing-sentence-box">
-          <span className="missing-sentence-text">Missing sentence will appear here</span>
-        </div>
+        <div className="sentence-blank-box"></div>
         {parts[1]}
       </div>
     );
@@ -352,6 +358,22 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
               <div className="result-content">
                 <div className="result-title">Complete the Sentences</div>
                 <div className="result-score">{scores.completeTheSentences}/8</div>
+                {scores.completeTheSentences < 8 && (
+                  <div className="incorrect-answers">
+                    {answers.completeTheSentences.map((answer, index) => {
+                      if (answer !== correctSentenceAnswers[index]) {
+                        return (
+                          <div key={index} className="wrong-answer-detail">
+                            <span className="question-num">#{index + 1}:</span>
+                            <span className="user-answer">Your answer: "{answer || 'No answer'}"</span>
+                            <span className="correct-answer">Correct: "{correctSentenceAnswers[index]}"</span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+                )}
               </div>
               <div className={`result-status ${scores.completeTheSentences >= 6 ? 'excellent' : scores.completeTheSentences >= 4 ? 'good' : 'needs-work'}`}>
                 {scores.completeTheSentences >= 6 ? '🌟 Excellent' : scores.completeTheSentences >= 4 ? '👍 Good' : '📚 Keep practising'}
@@ -363,6 +385,14 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
               <div className="result-content">
                 <div className="result-title">Complete the Passage</div>
                 <div className="result-score">{scores.completeThePassage ? 'Correct' : 'Incorrect'}</div>
+                {!scores.completeThePassage && (
+                  <div className="incorrect-answers">
+                    <div className="wrong-answer-detail">
+                      <span className="user-answer">Your choice: {passageOptions.find(opt => opt.value === answers.completeThePassage)?.text.substring(0, 50) || 'No answer'}...</span>
+                      <span className="correct-answer">Correct: "{passageOptions.find(opt => opt.value === correctPassageAnswer)?.text}"</span>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className={`result-status ${scores.completeThePassage ? 'excellent' : 'needs-work'}`}>
                 {scores.completeThePassage ? '✅ Perfect' : '❌ Try again'}
@@ -375,6 +405,15 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
                 <div className="result-content">
                   <div className="result-title">Highlight Answer {index + 1}</div>
                   <div className="result-score">{score ? 'Correct' : 'Incorrect'}</div>
+                  {!score && (
+                    <div className="incorrect-answers">
+                      <div className="wrong-answer-detail">
+                        <span className="question-text">Question: "{highlightQuestions[index].question}"</span>
+                        <span className="user-answer">Your highlight: "{answers.highlightAnswers[index] || 'No text selected'}"</span>
+                        <span className="correct-answer">Correct answer: "{highlightQuestions[index].correctAnswer}"</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className={`result-status ${score ? 'excellent' : 'needs-work'}`}>
                   {score ? '✅ Perfect' : '❌ Try again'}
@@ -387,6 +426,14 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
               <div className="result-content">
                 <div className="result-title">Identify the Idea</div>
                 <div className="result-score">{scores.identifyTheIdea ? 'Correct' : 'Incorrect'}</div>
+                {!scores.identifyTheIdea && (
+                  <div className="incorrect-answers">
+                    <div className="wrong-answer-detail">
+                      <span className="user-answer">Your choice: "{ideaOptions.find(opt => opt.value === answers.identifyTheIdea)?.text.substring(0, 50) || 'No answer'}..."</span>
+                      <span className="correct-answer">Correct: "{ideaOptions.find(opt => opt.value === correctIdeaAnswer)?.text}"</span>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className={`result-status ${scores.identifyTheIdea ? 'excellent' : 'needs-work'}`}>
                 {scores.identifyTheIdea ? '✅ Perfect' : '❌ Try again'}
