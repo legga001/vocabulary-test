@@ -51,8 +51,6 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
       const correctAnswer = correctAnswers[index].toLowerCase();
       const userAnswer = input.toLowerCase().trim();
       
-      // LetterInput only returns the letters the user typed (after the pre-filled ones)
-      // We need to reconstruct the full word to compare
       const getLettersToShow = (word) => {
         const length = word.length;
         if (length <= 3) return 1;
@@ -64,15 +62,13 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
       };
       
       const lettersToShow = getLettersToShow(correctAnswer);
-      const preFilledPart = correctAnswer.substring(0, lettersToShow);
       const expectedUserPart = correctAnswer.substring(lettersToShow);
       
-      // Check if user typed the correct remaining letters
       if (userAnswer === expectedUserPart) {
         correct++;
       }
       
-      console.log(`Word ${index + 1}: "${correctAnswer}" - Pre-filled: "${preFilledPart}" - Expected: "${expectedUserPart}" - User typed: "${userAnswer}" - Correct: ${userAnswer === expectedUserPart}`);
+      console.log(`Word ${index + 1}: "${correctAnswer}" - Expected: "${expectedUserPart}" - User typed: "${userAnswer}" - Correct: ${userAnswer === expectedUserPart}`);
     });
     
     return { correct, total: correctAnswers.length, percentage: Math.round((correct / correctAnswers.length) * 100) };
@@ -356,8 +352,6 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
       </div>
     );
   }
-
-  return null;
 }
 
 export default ReadAndCompleteExercise;
