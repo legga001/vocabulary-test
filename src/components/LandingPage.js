@@ -1,4 +1,4 @@
-// src/components/LandingPage.js - Updated with Interactive Reading exercise
+// src/components/LandingPage.js - Updated to include Interactive Reading exercise
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { getDailyTargetData, TARGETS_STORAGE_KEY } from '../utils/progressDataManager';
 
