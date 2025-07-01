@@ -1,4 +1,4 @@
-// src/App.js - Updated with Read and Complete exercise navigation
+// src/App.js - Updated with Interactive Reading exercise navigation
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
@@ -14,7 +14,8 @@ import ListenAndTypeExercise from './components/ListenAndTypeExercise';
 import SpeakingExercise from './components/SpeakingExercise';
 import WritingExercise from './components/WritingExercise';
 import ListeningExercise from './components/ListeningExercise';
-import ReadAndCompleteExercise from './components/ReadAndCompleteExercise'; // NEW: Read and Complete exercise
+import ReadAndCompleteExercise from './components/ReadAndCompleteExercise';
+import InteractiveReadingExercise from './components/InteractiveReadingExercise'; // NEW: Interactive Reading exercise
 
 function App() {
   // Core state management
@@ -88,13 +89,17 @@ function App() {
       case 'speak-and-record':
         setCurrentScreen('speak-and-record');
         break;
-      // FIXED: Writing exercise navigation with proper props
+      // Writing exercise navigation
       case 'writing':
         setCurrentScreen('writing');
         break;
-      // NEW: Read and Complete exercise navigation
+      // Read and Complete exercise navigation
       case 'read-and-complete':
         setCurrentScreen('read-and-complete');
+        break;
+      // NEW: Interactive Reading exercise navigation
+      case 'interactive-reading':
+        setCurrentScreen('interactive-reading');
         break;
       // Traditional navigation (for non-active exercises)
       case 'speaking':
@@ -109,7 +114,7 @@ function App() {
   };
 
   // Article selection handler - DIRECT to article quiz with type tracking
-  const handleArticleSelection = (articleType) => {
+  const handleArticleSelect = (articleType) => {
     setSelectedArticleType(articleType);
     setCurrentScreen('article-vocabulary-quiz');
   };
@@ -118,66 +123,60 @@ function App() {
   const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'splash':
-        return <SplashPage onStartPracticing={goToLanding} />;
-      
+        return <SplashPage onContinue={goToLanding} />;
+
       case 'landing':
         return (
-          <LandingPage 
+          <LandingPage
             onSelectExercise={handleSelectExercise}
             onProgress={goToProgress}
             isTransitioning={isTransitioning}
           />
         );
-      
+
       case 'progress':
         return <ProgressPage onBack={goBack} onLogoClick={handleLogoClick} />;
-      
-      // Standard vocabulary quiz
+
+      // Quiz screens
       case 'standard-vocabulary-quiz':
         return (
           <Quiz
             onFinish={handleQuizFinish}
-            quizType="standard"
             onBack={goBack}
             onLogoClick={handleLogoClick}
           />
         );
-      
-      // Article selection
+
       case 'article-selection':
         return (
           <ArticleSelection
-            onSelectArticle={handleArticleSelection}
+            onSelectArticle={handleArticleSelect}
             onBack={goBack}
             onLogoClick={handleLogoClick}
           />
         );
-      
-      // Article-based vocabulary quiz
+
       case 'article-vocabulary-quiz':
         return (
           <Quiz
             onFinish={handleQuizFinish}
-            quizType="article"
-            articleType={selectedArticleType}
-            onBack={() => setCurrentScreen('article-selection')}
+            onBack={goBack}
             onLogoClick={handleLogoClick}
+            articleType={selectedArticleType}
           />
         );
-      
-      // Quiz results
+
       case 'results':
         return (
           <Results
             userAnswers={quizResults}
             questions={testQuestions}
-            onRestart={handleResultsFinish}
-            quizType={selectedArticleType ? 'article' : 'standard'}
-            articleInfo={selectedArticleType}
+            onFinish={handleResultsFinish}
+            onLogoClick={handleLogoClick}
           />
         );
-      
-      // Real/Fake Words Exercise
+
+      // Exercise screens
       case 'real-fake-words':
         return (
           <RealFakeWordsExercise
@@ -185,8 +184,7 @@ function App() {
             onLogoClick={handleLogoClick}
           />
         );
-      
-      // Listen and Type Exercise
+
       case 'listen-and-type':
         return (
           <ListenAndTypeExercise
@@ -194,8 +192,7 @@ function App() {
             onLogoClick={handleLogoClick}
           />
         );
-      
-      // Speaking Exercise
+
       case 'speak-and-record':
         return (
           <SpeakingExercise
@@ -203,8 +200,7 @@ function App() {
             onLogoClick={handleLogoClick}
           />
         );
-      
-      // Writing Exercise
+
       case 'writing':
         return (
           <WritingExercise
@@ -212,8 +208,7 @@ function App() {
             onLogoClick={handleLogoClick}
           />
         );
-      
-      // NEW: Read and Complete Exercise
+
       case 'read-and-complete':
         return (
           <ReadAndCompleteExercise
@@ -221,8 +216,17 @@ function App() {
             onLogoClick={handleLogoClick}
           />
         );
-      
-      // Speaking Exercise (Traditional - may not be active)
+
+      // NEW: Interactive Reading exercise
+      case 'interactive-reading':
+        return (
+          <InteractiveReadingExercise
+            onBack={goBack}
+            onLogoClick={handleLogoClick}
+          />
+        );
+
+      // Placeholder screens
       case 'speaking':
         return (
           <SpeakingExercise
@@ -230,8 +234,7 @@ function App() {
             onLogoClick={handleLogoClick}
           />
         );
-      
-      // Listening Exercise (Traditional - may not be active)
+
       case 'listening':
         return (
           <ListeningExercise
@@ -239,10 +242,9 @@ function App() {
             onLogoClick={handleLogoClick}
           />
         );
-      
+
       default:
-        console.error('Unknown screen:', currentScreen);
-        return <LandingPage onSelectExercise={handleSelectExercise} onProgress={goToProgress} />;
+        return <LandingPage onSelectExercise={handleSelectExercise} />;
     }
   };
 
