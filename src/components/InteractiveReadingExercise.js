@@ -45,22 +45,79 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
     }
   };
 
-  // Article content
-  const paragraph1 = "Climate change represents one of the most _____ challenges facing humanity today. Scientists have been _____ the effects of rising global temperatures for decades, and their findings consistently show that human activities are the primary _____ of this phenomenon. The burning of fossil fuels _____ massive amounts of carbon dioxide into the atmosphere, creating a greenhouse effect that _____ the planet's natural temperature regulation. As temperatures continue to _____, we observe more frequent extreme weather events, including devastating hurricanes, prolonged droughts, and unprecedented heatwaves. The _____ of climate change extend beyond environmental concerns, affecting global food security, water resources, and economic stability. Immediate action is _____ to mitigate these effects and prevent catastrophic consequences for future generations.";
+  // Article content - Updated with shorter paragraph 2
+  const paragraph1WithBlanks = "Climate change represents one of the most _____ challenges facing humanity today. Scientists have been _____ the effects of rising global temperatures for decades, and their findings consistently show that human activities are the primary _____ of this phenomenon. The burning of fossil fuels _____ massive amounts of carbon dioxide into the atmosphere, creating a greenhouse effect that _____ the planet's natural temperature regulation. As temperatures continue to _____, we observe more frequent extreme weather events, including devastating hurricanes, prolonged droughts, and unprecedented heatwaves. The _____ of climate change extend beyond environmental concerns, affecting global food security, water resources, and economic stability. Immediate action is _____ to mitigate these effects and prevent catastrophic consequences for future generations.";
 
-  const paragraph2 = "The transition to renewable energy sources has become increasingly urgent as governments and organisations worldwide recognise the need for sustainable solutions. Solar and wind power technologies have advanced significantly, making them more cost-effective and efficient than ever before. [MISSING SENTENCE] Electric vehicles are also gaining popularity as consumers become more environmentally conscious and governments implement incentives for clean transportation. The shift towards renewable energy not only helps combat climate change but also creates new job opportunities and reduces dependence on fossil fuel imports. However, this transition requires substantial investment in infrastructure and technology, as well as coordinated efforts between public and private sectors to ensure a smooth and equitable transformation of the global energy system.";
+  const paragraph1Complete = "Climate change represents one of the most pressing challenges facing humanity today. Scientists have been studying the effects of rising global temperatures for decades, and their findings consistently show that human activities are the primary cause of this phenomenon. The burning of fossil fuels releases massive amounts of carbon dioxide into the atmosphere, creating a greenhouse effect that disrupts the planet's natural temperature regulation. As temperatures continue to rise, we observe more frequent extreme weather events, including devastating hurricanes, prolonged droughts, and unprecedented heatwaves. The consequences of climate change extend beyond environmental concerns, affecting global food security, water resources, and economic stability. Immediate action is essential to mitigate these effects and prevent catastrophic consequences for future generations.";
 
-  // Dropdown options for complete the sentences
-  const dropdownOptions = [
-    { text: 'Select a word', value: '' },
-    { text: 'pressing', value: 'pressing' },
-    { text: 'studying', value: 'studying' },
-    { text: 'cause', value: 'cause' },
-    { text: 'releases', value: 'releases' },
-    { text: 'disrupts', value: 'disrupts' },
-    { text: 'rise', value: 'rise' },
-    { text: 'consequences', value: 'consequences' },
-    { text: 'essential', value: 'essential' }
+  const paragraph2 = "The transition to renewable energy sources has become increasingly urgent. Solar and wind power technologies have advanced significantly, making them more cost-effective than ever before. [MISSING SENTENCE] Electric vehicles are also gaining popularity as consumers become more environmentally conscious. However, this transition requires substantial investment in infrastructure and coordinated efforts between public and private sectors.";
+
+  // Individual dropdown options for each blank - each blank has different options
+  const dropdownSets = [
+    // Blank 1: adjectives for challenges
+    [
+      { text: 'Select a word', value: '' },
+      { text: 'pressing', value: 'pressing' },
+      { text: 'minor', value: 'minor' },
+      { text: 'simple', value: 'simple' },
+      { text: 'temporary', value: 'temporary' }
+    ],
+    // Blank 2: verbs for research
+    [
+      { text: 'Select a word', value: '' },
+      { text: 'studying', value: 'studying' },
+      { text: 'ignoring', value: 'ignoring' },
+      { text: 'avoiding', value: 'avoiding' },
+      { text: 'dismissing', value: 'dismissing' }
+    ],
+    // Blank 3: nouns for source/reason
+    [
+      { text: 'Select a word', value: '' },
+      { text: 'cause', value: 'cause' },
+      { text: 'solution', value: 'solution' },
+      { text: 'benefit', value: 'benefit' },
+      { text: 'mystery', value: 'mystery' }
+    ],
+    // Blank 4: verbs for emission
+    [
+      { text: 'Select a word', value: '' },
+      { text: 'releases', value: 'releases' },
+      { text: 'absorbs', value: 'absorbs' },
+      { text: 'prevents', value: 'prevents' },
+      { text: 'reduces', value: 'reduces' }
+    ],
+    // Blank 5: verbs for impact
+    [
+      { text: 'Select a word', value: '' },
+      { text: 'disrupts', value: 'disrupts' },
+      { text: 'improves', value: 'improves' },
+      { text: 'maintains', value: 'maintains' },
+      { text: 'stabilises', value: 'stabilises' }
+    ],
+    // Blank 6: verbs for temperature
+    [
+      { text: 'Select a word', value: '' },
+      { text: 'rise', value: 'rise' },
+      { text: 'fall', value: 'fall' },
+      { text: 'stabilise', value: 'stabilise' },
+      { text: 'fluctuate', value: 'fluctuate' }
+    ],
+    // Blank 7: nouns for impacts
+    [
+      { text: 'Select a word', value: '' },
+      { text: 'consequences', value: 'consequences' },
+      { text: 'advantages', value: 'advantages' },
+      { text: 'improvements', value: 'improvements' },
+      { text: 'discoveries', value: 'discoveries' }
+    ],
+    // Blank 8: adjectives for urgency
+    [
+      { text: 'Select a word', value: '' },
+      { text: 'essential', value: 'essential' },
+      { text: 'optional', value: 'optional' },
+      { text: 'impossible', value: 'impossible' },
+      { text: 'unnecessary', value: 'unnecessary' }
+    ]
   ];
 
   // Correct answers for complete the sentences
@@ -69,10 +126,10 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
   // Dropdown options for complete the passage
   const passageOptions = [
     { text: 'Select the best sentence to fill in the blank', value: '' },
-    { text: 'Many countries are investing heavily in smart grid infrastructure to better integrate renewable energy sources into existing power networks.', value: 'smart_grid' },
-    { text: 'The development of energy storage solutions, such as advanced battery systems, is crucial for managing the intermittent nature of renewable power generation.', value: 'energy_storage' },
-    { text: 'Traditional energy companies are facing significant challenges as they adapt their business models to compete in the renewable energy market.', value: 'traditional_companies' },
-    { text: 'Public awareness campaigns about climate change have been successful in changing consumer behaviour towards more sustainable practices.', value: 'public_awareness' }
+    { text: 'Many countries are investing heavily in smart grid infrastructure to better integrate renewable energy sources.', value: 'smart_grid' },
+    { text: 'The development of energy storage solutions, such as advanced battery systems, is crucial for managing renewable power.', value: 'energy_storage' },
+    { text: 'Traditional energy companies are facing significant challenges adapting to renewable energy markets.', value: 'traditional_companies' },
+    { text: 'Public awareness campaigns have been successful in changing consumer behaviour towards sustainability.', value: 'public_awareness' }
   ];
 
   const correctPassageAnswer = 'energy_storage';
@@ -85,11 +142,11 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
     },
     {
       question: "What effect does burning fossil fuels have on the atmosphere?",
-      correctAnswer: "releases massive amounts of carbon dioxide into the atmosphere, creating a greenhouse effect"
+      correctAnswer: "releases massive amounts of carbon dioxide into the atmosphere"
     },
     {
       question: "What benefits does the transition to renewable energy provide besides environmental protection?",
-      correctAnswer: "creates new job opportunities and reduces dependence on fossil fuel imports"
+      correctAnswer: "coordinated efforts between public and private sectors"
     }
   ];
 
@@ -225,26 +282,13 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
   };
 
   const renderParagraph1WithBlanks = () => {
-    const words = paragraph1.split(' ');
-    let blankIndex = 0;
-    
     return (
       <div className="text-sm leading-relaxed">
-        {words.map((word, index) => {
+        {paragraph1WithBlanks.split(' ').map((word, index) => {
           if (word.includes('_____')) {
-            const currentBlankIndex = blankIndex;
-            blankIndex++;
             return (
               <span key={index} className="mx-1">
-                <select
-                  value={answers.completeTheSentences[currentBlankIndex]}
-                  onChange={(e) => handleSentenceAnswerChange(currentBlankIndex, e.target.value)}
-                  className="inline-block border border-gray-300 rounded px-2 py-1 text-sm bg-white min-w-[80px]"
-                >
-                  {dropdownOptions.map((option, optIndex) => (
-                    <option key={optIndex} value={option.value}>{option.text}</option>
-                  ))}
-                </select>
+                <span className="blank-placeholder">[___]</span>
               </span>
             );
           }
@@ -259,8 +303,8 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
     return (
       <div className="text-sm leading-relaxed">
         {parts[0]}
-        <div className="my-4 p-4 border-2 border-dashed border-gray-400 bg-gray-50 text-center text-gray-500">
-          [Select sentence to complete the passage]
+        <div className="missing-sentence-box">
+          <span className="missing-sentence-text">Missing sentence will appear here</span>
         </div>
         {parts[1]}
       </div>
@@ -268,10 +312,7 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
   };
 
   const renderFullPassage = () => {
-    const fullText = paragraph1.replace(/_____/g, (match, offset) => {
-      const blankIndex = (paragraph1.substring(0, offset).match(/_____/g) || []).length;
-      return correctSentenceAnswers[blankIndex] || '[blank]';
-    }) + ' ' + paragraph2.replace('[MISSING SENTENCE]', 'The development of energy storage solutions, such as advanced battery systems, is crucial for managing the intermittent nature of renewable power generation.');
+    const fullText = paragraph1Complete + ' ' + paragraph2.replace('[MISSING SENTENCE]', 'The development of energy storage solutions, such as advanced battery systems, is crucial for managing renewable power.');
     
     return (
       <div 
@@ -284,56 +325,95 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
   };
 
   if (currentStage === 6) {
-    // Results screen
+    // Enhanced results screen
     const totalCorrect = scores.completeTheSentences + 
                         (scores.completeThePassage ? 1 : 0) + 
                         scores.highlightAnswers.filter(Boolean).length + 
                         (scores.identifyTheIdea ? 1 : 0);
     
+    const percentage = Math.round((totalCorrect / 12) * 100);
+    
     return (
       <div className="exercise-page interactive-reading-exercise">
         <ClickableLogo onLogoClick={onLogoClick} />
-        <div className="quiz-container">
-          <h2 className="text-2xl font-bold text-center mb-6">Exercise Results</h2>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center p-4 bg-gray-100 rounded">
-              <span>Complete the Sentences</span>
-              <span className="font-bold">{scores.completeTheSentences}/8</span>
-            </div>
-            <div className="flex justify-between items-center p-4 bg-gray-100 rounded">
-              <span>Complete the Passage</span>
-              <span className={`font-bold ${scores.completeThePassage ? 'text-green-600' : 'text-red-600'}`}>
-                {scores.completeThePassage ? 'Correct' : 'Incorrect'}
-              </span>
-            </div>
-            {scores.highlightAnswers.map((score, index) => (
-              <div key={index} className="flex justify-between items-center p-4 bg-gray-100 rounded">
-                <span>Highlight the Answer {index + 1}</span>
-                <span className={`font-bold ${score ? 'text-green-600' : 'text-red-600'}`}>
-                  {score ? 'Correct' : 'Incorrect'}
-                </span>
-              </div>
-            ))}
-            <div className="flex justify-between items-center p-4 bg-gray-100 rounded">
-              <span>Identify the Idea</span>
-              <span className={`font-bold ${scores.identifyTheIdea ? 'text-green-600' : 'text-red-600'}`}>
-                {scores.identifyTheIdea ? 'Correct' : 'Incorrect'}
-              </span>
-            </div>
-            <div className="text-center pt-4 border-t">
-              <span className="text-xl font-bold">Total Score: {totalCorrect}/12</span>
+        <div className="quiz-container results-container">
+          <div className="results-header">
+            <div className="results-icon">📚</div>
+            <h1 className="results-title">Reading Exercise Complete!</h1>
+            <div className="overall-score-circle">
+              <div className="score-number">{percentage}%</div>
+              <div className="score-label">Overall Score</div>
             </div>
           </div>
-          <div className="mt-6 flex gap-4 justify-center">
+
+          <div className="results-breakdown">
+            <div className="result-item">
+              <div className="result-icon">📝</div>
+              <div className="result-content">
+                <div className="result-title">Complete the Sentences</div>
+                <div className="result-score">{scores.completeTheSentences}/8</div>
+              </div>
+              <div className={`result-status ${scores.completeTheSentences >= 6 ? 'excellent' : scores.completeTheSentences >= 4 ? 'good' : 'needs-work'}`}>
+                {scores.completeTheSentences >= 6 ? '🌟 Excellent' : scores.completeTheSentences >= 4 ? '👍 Good' : '📚 Keep practising'}
+              </div>
+            </div>
+
+            <div className="result-item">
+              <div className="result-icon">📖</div>
+              <div className="result-content">
+                <div className="result-title">Complete the Passage</div>
+                <div className="result-score">{scores.completeThePassage ? 'Correct' : 'Incorrect'}</div>
+              </div>
+              <div className={`result-status ${scores.completeThePassage ? 'excellent' : 'needs-work'}`}>
+                {scores.completeThePassage ? '✅ Perfect' : '❌ Try again'}
+              </div>
+            </div>
+
+            {scores.highlightAnswers.map((score, index) => (
+              <div key={index} className="result-item">
+                <div className="result-icon">🔍</div>
+                <div className="result-content">
+                  <div className="result-title">Highlight Answer {index + 1}</div>
+                  <div className="result-score">{score ? 'Correct' : 'Incorrect'}</div>
+                </div>
+                <div className={`result-status ${score ? 'excellent' : 'needs-work'}`}>
+                  {score ? '✅ Perfect' : '❌ Try again'}
+                </div>
+              </div>
+            ))}
+
+            <div className="result-item">
+              <div className="result-icon">💡</div>
+              <div className="result-content">
+                <div className="result-title">Identify the Idea</div>
+                <div className="result-score">{scores.identifyTheIdea ? 'Correct' : 'Incorrect'}</div>
+              </div>
+              <div className={`result-status ${scores.identifyTheIdea ? 'excellent' : 'needs-work'}`}>
+                {scores.identifyTheIdea ? '✅ Perfect' : '❌ Try again'}
+              </div>
+            </div>
+          </div>
+
+          <div className="performance-feedback">
+            <h3>📊 Performance Summary</h3>
+            <div className="feedback-text">
+              {percentage >= 85 && <p>🌟 Outstanding performance! You have excellent reading comprehension skills.</p>}
+              {percentage >= 70 && percentage < 85 && <p>👍 Good work! You have strong reading comprehension with room for improvement.</p>}
+              {percentage >= 50 && percentage < 70 && <p>📚 Fair performance. Focus on vocabulary and context clues to improve.</p>}
+              {percentage < 50 && <p>💪 Keep practising! Regular reading will help improve your comprehension skills.</p>}
+            </div>
+          </div>
+
+          <div className="results-actions">
             <button
               onClick={() => window.location.reload()}
-              className="btn btn-primary"
+              className="btn btn-primary results-btn"
             >
               🔄 Try Again
             </button>
             <button
               onClick={onBack}
-              className="btn btn-secondary"
+              className="btn btn-secondary results-btn"
             >
               ← Back to Exercises
             </button>
@@ -367,7 +447,7 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
               {currentStage === 0 && renderParagraph1WithBlanks()}
               {currentStage === 1 && (
                 <div className="space-y-4">
-                  {renderParagraph1WithBlanks()}
+                  <div className="text-sm leading-relaxed">{paragraph1Complete}</div>
                   {renderParagraph2WithBlank()}
                 </div>
               )}
@@ -391,7 +471,7 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
                         onChange={(e) => handleSentenceAnswerChange(i, e.target.value)}
                         className="dropdown-select"
                       >
-                        {dropdownOptions.map((option, optIndex) => (
+                        {dropdownSets[i].map((option, optIndex) => (
                           <option key={optIndex} value={option.value}>{option.text}</option>
                         ))}
                       </select>
