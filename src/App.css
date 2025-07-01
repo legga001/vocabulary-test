@@ -1,7 +1,7 @@
 /* ==============================================
-   MR. FOX ENGLISH - MAIN STYLESHEET - FIXED
+   MR. FOX ENGLISH - MAIN STYLESHEET - UPDATED
    Clean, organised, and modular CSS structure
-   Ensures all quiz styles are properly loaded
+   Includes all exercise styles including Read and Complete
    ============================================== */
 
 /* Import all component stylesheets in correct order */
@@ -10,12 +10,14 @@
 @import './styles/layout.css';
 @import './styles/splash.css';
 @import './styles/landing.css';
-@import './styles/quiz.css';                    /* CRITICAL: Quiz styles must be imported */
+@import './styles/quiz.css';
 @import './styles/results.css';
 @import './styles/exercises.css';
 @import './styles/real-fake-words.css';
 @import './styles/listen-and-type.css';
 @import './styles/speaking-exercise.css';
+@import './styles/writing-exercise.css';
+@import './styles/read-complete-exercise.css';        /* NEW: Read and Complete exercise styles */
 @import './styles/progress.css';
 @import './styles/responsive.css';
 
@@ -89,72 +91,218 @@
 }
 
 /* ==============================================
+   READ AND COMPLETE EXERCISE OVERRIDES
+   ============================================== */
+
+/* Ensure Read and Complete exercise displays properly in landing page */
+.exercise-item[data-type="read-and-complete"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* New badge styling for Read and Complete */
+.exercise-item[data-type="read-and-complete"] .new-badge {
+  background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+  animation: pulse-new 2s ease-in-out infinite;
+}
+
+@keyframes pulse-new {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
+  }
+}
+
+/* ==============================================
    GLOBAL UTILITY CLASSES
    ============================================== */
 
-/* Loading state styles */
-.loading-state {
+/* Utility classes for common patterns */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text-center {
   text-align: center;
-  padding: 40px 20px;
-  color: #666;
 }
 
-.loading-state p {
-  font-size: 1.2em;
-  margin: 0;
+.mt-20 {
+  margin-top: 20px;
 }
 
-/* Ensure proper focus indicators */
-input:focus,
-button:focus {
-  outline: 2px solid #4c51bf;
-  outline-offset: 2px;
+.mb-20 {
+  margin-bottom: 20px;
 }
 
-/* Hide focus outline on mouse click but keep for keyboard navigation */
-.no-focus-outline:focus {
-  outline: none;
+.p-20 {
+  padding: 20px;
+}
+
+/* Button hover effects */
+.btn:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+/* Card hover effects */
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+/* ==============================================
+   RESPONSIVE OVERRIDES
+   ============================================== */
+
+/* Mobile-specific overrides */
+@media (max-width: 768px) {
+  .quiz-container {
+    padding: 15px;
+    margin: 10px;
+  }
+  
+  .letter-input-box {
+    width: 35px !important;
+    height: 35px !important;
+    font-size: 0.9em;
+  }
+  
+  /* Read and Complete mobile adjustments */
+  .read-complete-exercise .paragraph-text {
+    font-size: 1em;
+    line-height: 1.6;
+  }
+  
+  .read-complete-exercise .word-input {
+    min-width: 40px;
+    font-size: 0.9em;
+  }
+}
+
+/* Large screen optimisations */
+@media (min-width: 1200px) {
+  .quiz-container {
+    max-width: 900px;
+    padding: 30px;
+  }
+  
+  /* Read and Complete desktop enhancements */
+  .read-complete-exercise .paragraph-text {
+    font-size: 1.3em;
+    line-height: 1.9;
+  }
 }
 
 /* ==============================================
    ACCESSIBILITY IMPROVEMENTS
    ============================================== */
 
-/* Screen reader only content */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+/* Focus indicators */
+.btn:focus,
+input:focus,
+button:focus {
+  outline: 3px solid #4c51bf;
+  outline-offset: 2px;
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-  .letter-input-box {
-    border-width: 3px !important;
+  .exercise-item {
+    border: 2px solid currentColor;
   }
   
-  .letter-input-box.pre-filled {
-    background: #000 !important;
-    color: #fff !important;
-  }
-  
-  .letter-input-box.editable {
-    background: #fff !important;
-    color: #000 !important;
+  .btn {
+    border: 2px solid currentColor;
   }
 }
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ==============================================
+   PRINT STYLES
+   ============================================== */
+
+@media print {
+  .desktop-sidebar,
+  .mobile-header,
+  .mobile-menu-overlay,
+  .btn,
+  .logo-container {
+    display: none !important;
+  }
+  
+  .main-content-area {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  .read-complete-exercise .paragraph-container {
+    border: 1px solid #000;
+    break-inside: avoid;
+  }
+}
+
+/* ==============================================
+   LOADING AND ANIMATION STATES
+   ============================================== */
+
+/* Loading state for exercises */
+.exercise-loading {
+  opacity: 0.5;
+  pointer-events: none;
+  position: relative;
+}
+
+.exercise-loading::after {
+  content: "Loading...";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #4c51bf;
+}
+
+/* Smooth transitions for all interactive elements */
+.exercise-item,
+.btn,
+.category-tab,
+.word-input {
+  transition: all 0.3s ease;
+}
+
+/* Enhanced hover states */
+.exercise-item:hover:not(.disabled) {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(76, 81, 191, 0.2);
+}
+
+/* Success state for completed exercises */
+.exercise-item.completed {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-color: #28a745;
+}
+
+.exercise-item.completed .exercise-icon {
+  background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
 }
