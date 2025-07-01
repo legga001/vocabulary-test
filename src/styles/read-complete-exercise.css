@@ -231,7 +231,7 @@
 }
 
 /* ==============================================
-   6. PARAGRAPH TEXT WITH LETTER INPUT COMPONENTS - COMPACT VERSION
+   6. PARAGRAPH TEXT WITH LETTER INPUT COMPONENTS - INLINE FLOW
    ============================================== */
 .paragraph-container {
   background: #f8f9fa;
@@ -243,14 +243,12 @@
 
 .paragraph-text {
   font-size: 1.1em;
-  line-height: 1.6;
+  line-height: 1.8;
   color: #343a40;
   text-align: justify;
   font-family: 'Georgia', serif;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0;
+  /* Remove flex to allow natural text flow */
+  display: block;
 }
 
 .text-segment {
@@ -259,25 +257,28 @@
 }
 
 .letter-input-wrapper {
-  display: inline-flex;
-  align-items: baseline;
-  margin: 0 2px;
+  display: inline-block;
   vertical-align: baseline;
+  margin: 0 1px;
+  /* Prevent line breaks within the wrapper */
+  white-space: nowrap;
 }
 
-/* Style the LetterInput component within Read and Complete - COMPACT */
+/* Style the LetterInput component within Read and Complete - INLINE */
 .letter-input-wrapper .letter-input-container {
   display: inline-flex !important;
   gap: 1px !important;
   align-items: baseline !important;
   margin: 0 !important;
   vertical-align: baseline !important;
+  /* Prevent breaking */
+  white-space: nowrap !important;
 }
 
 .letter-input-wrapper .letter-input-box {
-  width: 22px !important;
-  height: 22px !important;
-  font-size: 0.85em !important;
+  width: 20px !important;
+  height: 20px !important;
+  font-size: 0.8em !important;
   font-weight: 600 !important;
   border: 1px solid #4c51bf !important;
   border-radius: 3px !important;
@@ -290,6 +291,9 @@
   margin: 0 !important;
   padding: 0 !important;
   line-height: 1 !important;
+  /* Prevent input from causing line breaks */
+  vertical-align: baseline !important;
+  display: inline-block !important;
 }
 
 .letter-input-wrapper .letter-input-box.pre-filled {
@@ -309,26 +313,30 @@
   cursor: default !important;
 }
 
-/* Ensure proper spacing around letter inputs */
-.text-segment + .letter-input-wrapper {
-  margin-left: 1px;
-}
-
-.letter-input-wrapper + .text-segment {
-  margin-left: 1px;
-}
-
-/* Mobile adjustments */
+/* Mobile adjustments - even smaller on mobile */
 @media (max-width: 768px) {
   .paragraph-text {
     font-size: 1em;
+    line-height: 1.6;
+  }
+  
+  .letter-input-wrapper .letter-input-box {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 0.75em !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .paragraph-text {
+    font-size: 0.95em;
     line-height: 1.5;
   }
   
   .letter-input-wrapper .letter-input-box {
-    width: 20px !important;
-    height: 20px !important;
-    font-size: 0.8em !important;
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 0.7em !important;
   }
 }
 
