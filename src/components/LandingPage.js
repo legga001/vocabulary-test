@@ -1,6 +1,26 @@
 // src/components/LandingPage.js - Updated to include Interactive Reading exercise
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { getDailyTargetData, TARGETS_STORAGE_KEY } from '../utils/progressDataManager';
+
+// Since getDailyTargetData is not exported, we'll create a simple version
+const getDailyTargetData = () => {
+  try {
+    const saved = localStorage.getItem('mrFoxEnglishDailyTargets');
+    if (saved) {
+      const data = JSON.parse(saved);
+      const today = new Date().toDateString();
+      
+      if (data.date === today) {
+        return data.targets;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading daily targets:', error);
+  }
+  
+  return {};
+};
+
+const TARGETS_STORAGE_KEY = 'mrFoxEnglishDailyTargets';
 
 // Constants
 const CATEGORIES = [
