@@ -100,11 +100,58 @@ const getPhoneticSimilarity = (word1, word2) => {
   return similarity >= 40 ? similarity : 0;
 };
 
-// ENHANCED: Check for common speech recognition errors
+// ENHANCED: Proper contraction handling
+const CONTRACTIONS = {
+  // Positive contractions
+  'im': ['i am'], 'youre': ['you are'], 'hes': ['he is', 'he has'], 'shes': ['she is', 'she has'],
+  'its': ['it is', 'it has'], 'were': ['we are'], 'theyre': ['they are'], 'thats': ['that is'],
+  'whats': ['what is'], 'wheres': ['where is'], 'whos': ['who is'], 'hows': ['how is'],
+  'ill': ['i will'], 'youll': ['you will'], 'hell': ['he will'], 'shell': ['she will'],
+  'well': ['we will'], 'theyll': ['they will'], 'itll': ['it will'],
+  
+  // Negative contractions - VERY SPECIFIC
+  'dont': ['do not'], 'doesnt': ['does not'], 'didnt': ['did not'],
+  'wont': ['will not'], 'wouldnt': ['would not'], 'couldnt': ['could not'],
+  'shouldnt': ['should not'], 'cant': ['can not', 'cannot'], 'isnt': ['is not'],
+  'arent': ['are not'], 'wasnt': ['was not'], 'werent': ['were not'],
+  'hasnt': ['has not'], 'havent': ['have not'], 'hadnt': ['had not'],
+  
+  // Reverse mappings
+  'i am': ['im'], 'you are': ['youre'], 'he is': ['hes'], 'she is': ['shes'],
+  'it is': ['its'], 'we are': ['were'], 'they are': ['theyre'], 'that is': ['thats'],
+  'do not': ['dont'], 'does not': ['doesnt'], 'did not': ['didnt'],
+  'will not': ['wont'], 'would not': ['wouldnt'], 'could not': ['couldnt'],
+  'should not': ['shouldnt'], 'can not': ['cant'], 'cannot': ['cant'],
+  'is not': ['isnt'], 'are not': ['arent'], 'was not': ['wasnt'],
+  'were not': ['werent'], 'has not': ['hasnt'], 'have not': ['havent'],
+  'had not': ['hadnt']
+};
+
+// Function to check if contractions match their expansions
+const checkContractionMatch = (spoken, target) => {
+  const spokenLower = spoken.toLowerCase().replace(/[']/g, '');
+  const targetLower = target.toLowerCase().replace(/[']/g, '');
+  
+  // Check if spoken contraction matches target expansion or vice versa
+  if (CONTRACTIONS[spokenLower] && CONTRACTIONS[spokenLower].includes(targetLower)) {
+    return 100; // Perfect match for correct contraction/expansion
+  }
+  if (CONTRACTIONS[targetLower] && CONTRACTIONS[targetLower].includes(spokenLower)) {
+    return 100; // Perfect match for correct expansion/contraction
+  }
+  
+  return 0; // No match
+};
+// ENHANCED: Check for common speech recognition errors (updated)
 const checkCommonErrors = (spoken, target) => {
   const spokenLower = spoken.toLowerCase();
   const targetLower = target.toLowerCase();
   
+  // First check contractions specifically
+  const contractionMatch = checkContractionMatch(spoken, target);
+  if (contractionMatch > 0) return contractionMatch;
+  
+  // Common substitutions that speech recognition makes (NOT contractions)
   const commonSubs = {
     'a': ['ah', 'uh'], 'the': ['thee', 'thuh'], 'of': ['ov'], 'and': ['an'],
     'to': ['tuh'], 'in': ['een'], 'is': ['iz'], 'it': ['et'], 'that': ['dat'],
@@ -113,7 +160,7 @@ const checkCommonErrors = (spoken, target) => {
   };
   
   if (commonSubs[targetLower] && commonSubs[targetLower].includes(spokenLower)) {
-    return 85;
+    return 85; // Good score for common pronunciation variants
   }
   
   return 0;
@@ -160,7 +207,7 @@ function SpeakingExercise({ onBack, onLogoClick }) {
 
   const recognitionRef = useRef(null);
 
-  // ENHANCED: Much more sophisticated scoring algorithm
+  // ENHANCED: Much more sophisticated scoring algorithm - FIXED
   const calculateScore = (spoken, target) => {
     const normalize = text => text.toLowerCase().replace(/[.,!?;:'"]/g, '').replace(/\s+/g, ' ').trim();
     const spokenWords = normalize(spoken).split(' ').filter(w => w.length > 0);
@@ -168,88 +215,132 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     
     if (spokenWords.length === 0) return { percentage: 0, matched: 0, total: targetWords.length };
 
-    const targetMap = {};
-    targetWords.forEach(word => targetMap[word] = (targetMap[word] || 0) + 1);
-
-    const spokenMap = {};
-    spokenWords.forEach(word => spokenMap[word] = (spokenMap[word] || 0) + 1);
-
-    let totalScore = 0;
-    let maxPossibleScore = 0;
-
-    Object.entries(targetMap).forEach(([targetWord, targetCount]) => {
-      maxPossibleScore += targetCount * 100;
-      let bestWordScore = 0;
-
-      const exactCount = spokenMap[targetWord] || 0;
-      if (exactCount > 0) {
-        bestWordScore = Math.min(targetCount, exactCount) * 100;
+    let exactMatches = 0;
+    let totalWords = targetWords.length;
+    
+    // FIXED: More accurate word-by-word comparison
+    const targetUsed = new Array(targetWords.length).fill(false);
+    const spokenUsed = new Array(spokenWords.length).fill(false);
+    
+    // First pass: exact matches
+    for (let i = 0; i < targetWords.length; i++) {
+      for (let j = 0; j < spokenWords.length; j++) {
+        if (!targetUsed[i] && !spokenUsed[j] && targetWords[i] === spokenWords[j]) {
+          exactMatches++;
+          targetUsed[i] = true;
+          spokenUsed[j] = true;
+          break;
+        }
       }
-
-      if (bestWordScore < targetCount * 100 && HOMOPHONES[targetWord]) {
-        for (const homophone of HOMOPHONES[targetWord]) {
-          const homophoneCount = spokenMap[homophone] || 0;
-          if (homophoneCount > 0) {
-            const homophoneScore = Math.min(targetCount, homophoneCount) * 95;
-            bestWordScore = Math.max(bestWordScore, homophoneScore);
+    }
+    
+    // Second pass: homophones
+    let homophoneMatches = 0;
+    for (let i = 0; i < targetWords.length; i++) {
+      if (!targetUsed[i] && HOMOPHONES[targetWords[i]]) {
+        for (let j = 0; j < spokenWords.length; j++) {
+          if (!spokenUsed[j] && HOMOPHONES[targetWords[i]].includes(spokenWords[j])) {
+            homophoneMatches++;
+            targetUsed[i] = true;
+            spokenUsed[j] = true;
+            break;
           }
         }
       }
-
-      if (bestWordScore < targetCount * 85) {
-        Object.keys(spokenMap).forEach(spokenWord => {
-          const errorScore = checkCommonErrors(spokenWord, targetWord);
-          if (errorScore > 0) {
-            const adjustedScore = Math.min(targetCount, spokenMap[spokenWord]) * errorScore;
-            bestWordScore = Math.max(bestWordScore, adjustedScore);
-          }
-        });
-      }
-
-      if (bestWordScore < targetCount * 80) {
-        Object.keys(spokenMap).forEach(spokenWord => {
-          const phoneticScore = getPhoneticSimilarity(targetWord, spokenWord);
-          if (phoneticScore > 0) {
-            const adjustedScore = Math.min(targetCount, spokenMap[spokenWord]) * phoneticScore;
-            bestWordScore = Math.max(bestWordScore, adjustedScore);
-          }
-        });
-      }
-
-      if (bestWordScore < targetCount * 70) {
-        Object.keys(spokenMap).forEach(spokenWord => {
-          const editScore = getEditDistance(targetWord, spokenWord);
-          if (editScore > 0) {
-            const adjustedScore = Math.min(targetCount, spokenMap[spokenWord]) * (editScore * 0.8);
-            bestWordScore = Math.max(bestWordScore, adjustedScore);
-          }
-        });
-      }
-
-      totalScore += bestWordScore;
-    });
-
-    let percentage = maxPossibleScore > 0 ? Math.round((totalScore / maxPossibleScore) * 100) : 0;
-
-    if (confidenceScore > 0.8) {
-      percentage = Math.min(100, Math.round(percentage * 1.05));
-    } else if (confidenceScore < 0.5) {
-      percentage = Math.round(percentage * 0.95);
     }
-
+    
+    // Third pass: contractions and common speech errors
+    let contractionMatches = 0;
+    for (let i = 0; i < targetWords.length; i++) {
+      if (!targetUsed[i]) {
+        for (let j = 0; j < spokenWords.length; j++) {
+          if (!spokenUsed[j]) {
+            const contractionScore = checkContractionMatch(spokenWords[j], targetWords[i]);
+            if (contractionScore > 0) {
+              contractionMatches++;
+              targetUsed[i] = true;
+              spokenUsed[j] = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    // Fourth pass: other common speech errors (but NOT wrong contractions)
+    let commonErrorMatches = 0;
+    for (let i = 0; i < targetWords.length; i++) {
+      if (!targetUsed[i]) {
+        for (let j = 0; j < spokenWords.length; j++) {
+          if (!spokenUsed[j]) {
+            const errorScore = checkCommonErrors(spokenWords[j], targetWords[i]);
+            if (errorScore > 0 && errorScore < 100) { // Exclude contractions (which return 100)
+              commonErrorMatches++;
+              targetUsed[i] = true;
+              spokenUsed[j] = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    // Fifth pass: phonetic similarity (only for remaining words)
+    let phoneticMatches = 0;
+    for (let i = 0; i < targetWords.length; i++) {
+      if (!targetUsed[i]) {
+        let bestPhoneticScore = 0;
+        let bestJ = -1;
+        
+        for (let j = 0; j < spokenWords.length; j++) {
+          if (!spokenUsed[j]) {
+            const phoneticScore = getPhoneticSimilarity(targetWords[i], spokenWords[j]);
+            if (phoneticScore > bestPhoneticScore && phoneticScore >= 70) {
+              bestPhoneticScore = phoneticScore;
+              bestJ = j;
+            }
+          }
+        }
+        
+        if (bestJ >= 0) {
+          phoneticMatches++;
+          targetUsed[i] = true;
+          spokenUsed[bestJ] = true;
+        }
+      }
+    }
+    
+    // Calculate final score
+    const totalMatched = exactMatches + homophoneMatches + contractionMatches + commonErrorMatches + phoneticMatches;
+    let percentage = Math.round((totalMatched / totalWords) * 100);
+    
+    // FIXED: Apply confidence bonus more conservatively
+    if (confidenceScore > 0.85) {
+      percentage = Math.min(100, Math.round(percentage * 1.02)); // Only 2% bonus for very high confidence
+    } else if (confidenceScore < 0.4) {
+      percentage = Math.round(percentage * 0.95); // 5% penalty for very low confidence
+    }
+    
+    // Penalty for significantly wrong length
     const lengthRatio = spokenWords.length / targetWords.length;
-    if (lengthRatio > 2.5) {
-      percentage = Math.max(0, percentage - 15);
+    if (lengthRatio > 3.0) {
+      percentage = Math.max(0, percentage - 20); // Harsh penalty for very long responses
     } else if (lengthRatio > 2.0) {
-      percentage = Math.max(0, percentage - 10);
+      percentage = Math.max(0, percentage - 10); // Moderate penalty for long responses
     }
-
-    const matchedDisplay = Math.round((percentage / 100) * targetWords.length);
-
+    
+    // FIXED: Return actual matched count, not calculated display
     return { 
       percentage: Math.min(100, Math.max(0, percentage)), 
-      matched: matchedDisplay, 
-      total: targetWords.length 
+      matched: totalMatched, 
+      total: totalWords,
+      breakdown: {
+        exact: exactMatches,
+        homophone: homophoneMatches,
+        contraction: contractionMatches,
+        common: commonErrorMatches,
+        phonetic: phoneticMatches
+      }
     };
   };
 
@@ -303,16 +394,23 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     
-    recognition.continuous = false;
+    // ENHANCED: More patient settings for language learners
+    recognition.continuous = true;  // Keep listening continuously
     recognition.interimResults = true;
     recognition.lang = 'en-GB';
     recognition.maxAlternatives = 5;
+    
+    // ENHANCED: Add longer timeout properties for patient listening
+    if (recognition.speechTimeouts) {
+      recognition.speechTimeouts.speaking = 10000;  // 10 seconds of speaking allowed
+      recognition.speechTimeouts.listening = 15000; // 15 seconds of silence before giving up
+    }
 
     recognition.onstart = () => {
-      console.log('🎤 Recording started');
+      console.log('🎤 Recording started - taking your time...');
       setIsRecording(true);
       setTranscript('');
-      setFeedback('');
+      setFeedback('Speak when ready - take your time! The recording will continue until you stop it.');
       setSpeechAlternatives([]);
       setConfidenceScore(0);
     };
@@ -335,37 +433,76 @@ function SpeakingExercise({ onBack, onLogoClick }) {
             });
             
             if (j === 0) {
-              finalText = alternative.transcript;
-              bestConfidence = alternative.confidence || 0.8;
+              finalText += alternative.transcript + ' ';
             }
           }
+          bestConfidence = result[0].confidence || 0.8;
         } else {
           interimText = result[0].transcript;
         }
       }
 
-      setTranscript(finalText || interimText);
+      // ENHANCED: Accumulate all final results, don't just take the last one
+      const currentTranscript = transcript || '';
+      const newTranscript = finalText ? (currentTranscript + finalText).trim() : (currentTranscript + ' ' + interimText).trim();
+      
+      setTranscript(newTranscript);
       setConfidenceScore(bestConfidence);
       setSpeechAlternatives(alternatives);
+      
+      // ENHANCED: Give encouraging feedback during recording
+      if (finalText) {
+        setFeedback('Great! Keep going or click "Stop Recording" when finished.');
+      } else if (interimText) {
+        setFeedback('Listening... take your time!');
+      }
     };
 
     recognition.onerror = (event) => {
       console.error('❌ Speech recognition error:', event.error);
-      setIsRecording(false);
+      
+      // ENHANCED: Don't stop recording for minor errors, only for serious ones
+      if (event.error === 'no-speech') {
+        // Don't stop recording, just give helpful feedback
+        setFeedback('Take your time - the microphone is still listening. Speak when ready!');
+        return; // Don't set isRecording to false
+      }
+      
+      // Only stop for serious errors
+      if (['not-allowed', 'service-not-allowed', 'bad-grammar'].includes(event.error)) {
+        setIsRecording(false);
+      }
       
       const errorMessages = {
-        'no-speech': 'No speech detected. Please speak louder.',
-        'audio-capture': 'Microphone error. Please check your microphone.',
+        'audio-capture': 'Microphone error. Please check your microphone and try again.',
         'not-allowed': 'Microphone access denied. Please allow access and refresh.',
-        'network': 'Network error. Please check your connection.'
+        'network': 'Network error. Please check your connection.',
+        'service-not-allowed': 'Speech service not available. Please try refreshing the page.',
+        'bad-grammar': 'Speech not recognised. Click "Stop Recording" and try again.'
       };
       
-      setFeedback(errorMessages[event.error] || `Recording error: ${event.error}`);
+      const userMessage = errorMessages[event.error] || 'Recording issue - click "Stop Recording" and try again.';
+      setFeedback(userMessage);
     };
 
     recognition.onend = () => {
-      console.log('🎤 Recording ended');
-      setIsRecording(false);
+      console.log('🎤 Recording ended by user or system');
+      // ENHANCED: Only set recording to false if the user intended to stop
+      // The system should not auto-stop due to pauses
+      if (isRecording) {
+        console.log('🔄 Recognition ended unexpectedly, restarting...');
+        // Automatically restart recognition if it stops unexpectedly (due to pause)
+        try {
+          setTimeout(() => {
+            if (isRecording && recognitionRef.current) {
+              recognitionRef.current.start();
+            }
+          }, 100);
+        } catch (error) {
+          console.log('Could not restart recognition:', error);
+          setIsRecording(false);
+        }
+      }
     };
 
     return recognition;
@@ -386,9 +523,14 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   };
 
   const stopRecording = () => {
+    console.log('🛑 User manually stopped recording');
+    setIsRecording(false); // Set this first to prevent auto-restart
+    
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
+    
+    setFeedback('Recording stopped. Review your speech and click "Submit Recording" when ready.');
   };
 
   const submitRecording = () => {
@@ -460,7 +602,9 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   const finishExercise = () => {
     console.log('🏁 Completing speaking exercise');
     
-    const testDuration = exerciseStartTime ? Math.round((Date.now() - exerciseStartTime) / 1000) : 0;
+    // FIXED: Proper time calculation in minutes
+    const testDurationSeconds = exerciseStartTime ? Math.round((Date.now() - exerciseStartTime) / 1000) : 0;
+    const testDurationMinutes = Math.round(testDurationSeconds / 60);
     const averageScore = results.length > 0 ? results.reduce((sum, r) => sum + r.score, 0) / results.length : 0;
 
     const userAnswers = results.map(result => ({
@@ -476,12 +620,13 @@ function SpeakingExercise({ onBack, onLogoClick }) {
         score: Math.round(averageScore / 10),
         totalQuestions: 10,
         completedAt: new Date(),
-        timeSpent: testDuration,
+        timeSpent: testDurationSeconds, // Store in seconds for data consistency
         userAnswers: userAnswers
       });
 
       console.log('✅ Speaking exercise completed and progress recorded');
       console.log(`📊 Average score: ${Math.round(averageScore)}%`);
+      console.log(`⏱️ Time taken: ${testDurationMinutes} minutes`);
     } catch (error) {
       console.error('❌ Error recording progress:', error);
     }
@@ -512,12 +657,29 @@ function SpeakingExercise({ onBack, onLogoClick }) {
   };
 
   const restartRecording = () => {
-    if (recognitionRef.current && isRecording) {
+    console.log('🔄 User restarting recording');
+    
+    // Stop current recording first
+    setIsRecording(false);
+    if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
+    
+    // Clear transcript and restart
     setTranscript('');
-    setFeedback('Recording restarted - try again!');
-    setTimeout(() => setFeedback(''), 2000);
+    setFeedback('Recording restarted - speak when ready!');
+    
+    // Restart after a brief delay
+    setTimeout(() => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+        } catch (error) {
+          console.error('Error restarting recording:', error);
+          setFeedback('Error restarting. Please try clicking "Start Recording" again.');
+        }
+      }
+    }, 500);
   };
 
   useEffect(() => {
@@ -536,7 +698,8 @@ function SpeakingExercise({ onBack, onLogoClick }) {
     averageScore: Math.round(results.reduce((sum, r) => sum + r.score, 0) / results.length),
     completed: results.filter(r => r.spoken).length,
     total: sentences.length,
-    duration: exerciseStartTime ? Math.round((Date.now() - exerciseStartTime) / 60) : 0
+    // FIXED: Proper duration calculation in minutes
+    duration: exerciseStartTime ? Math.max(1, Math.round((Date.now() - exerciseStartTime) / (1000 * 60))) : 0
   } : null;
 
   if (step === 'error') {
@@ -603,11 +766,12 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               <div className="tips-section">
                 <h4>💡 Speaking Tips:</h4>
                 <ul>
-                  <li>Speak clearly and at a normal pace</li>
+                  <li>Speak clearly and at a natural pace - don't rush!</li>
+                  <li>Take pauses and think between words - the recording won't stop</li>
                   <li>Find a quiet environment for best results</li>
                   <li>Pronounce each word distinctly</li>
                   <li>Both British and American pronunciations are accepted</li>
-                  <li>Review your transcript before submitting</li>
+                  <li>You control when to stop recording - take your time!</li>
                 </ul>
               </div>
               
@@ -661,6 +825,10 @@ function SpeakingExercise({ onBack, onLogoClick }) {
                       <p><strong>Target:</strong> "{result.target}"</p>
                       <p><strong>You said:</strong> "{result.spoken || '(Skipped)'}"</p>
                       <p><strong>Word accuracy:</strong> {result.matched}/{result.total} words correct</p>
+                      {/* Show breakdown of how words were matched for transparency */}
+                      {result.breakdown && (
+                        <p><strong>Match details:</strong> {result.breakdown.exact} exact, {result.breakdown.homophone} similar sounds, {result.breakdown.contraction} contractions, {result.breakdown.common} common variants, {result.breakdown.phonetic} close pronunciations</p>
+                      )}
                       <div className="result-actions">
                         {sentences[index]?.audioFile && (
                           <button 
@@ -719,7 +887,9 @@ function SpeakingExercise({ onBack, onLogoClick }) {
               {isRecording && (
                 <div className="recording-indicator">
                   <div className="recording-pulse"></div>
-                  <div className="recording-text">Recording... Click "Stop Recording" when finished!</div>
+                  <div className="recording-text">
+                    🎤 Recording... Take your time! Click "Stop Recording" when you're finished.
+                  </div>
                 </div>
               )}
 
