@@ -1,4 +1,6 @@
-/* src/styles/interactive-reading.css */
+/* ==============================================
+   RESULTS BREAKDOWN
+   ============================================== *//* src/styles/interactive-reading.css */
 
 /* ==============================================
    INTERACTIVE READING EXERCISE STYLES
@@ -58,6 +60,34 @@
 /* ==============================================
    BLANK PLACEHOLDERS AND MISSING SENTENCE BOX
    ============================================== */
+
+.word-blank-box {
+  display: inline-block;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 12px;
+  min-width: 80px;
+  min-height: 24px;
+  text-align: center;
+  font-weight: 600;
+  color: #1f2937;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.word-blank-box:empty {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.sentence-blank-box {
+  background: #6b7280;
+  border: 2px solid #4b5563;
+  border-radius: 8px;
+  height: 40px;
+  margin: 16px 0;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
 .blank-placeholder {
   background: #e2e8f0;
@@ -410,8 +440,60 @@
 }
 
 /* ==============================================
-   RESULTS BREAKDOWN
+   INCORRECT ANSWER DETAILS
    ============================================== */
+
+.incorrect-answers {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fef2f2;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+
+.wrong-answer-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.wrong-answer-detail:last-child {
+  margin-bottom: 0;
+}
+
+.question-num {
+  font-weight: 700;
+  color: #dc2626;
+  font-size: 0.9em;
+}
+
+.question-text {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9em;
+  font-style: italic;
+}
+
+.user-answer {
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 0.85em;
+  background: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #fca5a5;
+}
+
+.correct-answer {
+  color: #059669;
+  font-weight: 600;
+  font-size: 0.85em;
+  background: #f0fdf4;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #86efac;
+}
 
 .results-breakdown {
   margin-bottom: 40px;
