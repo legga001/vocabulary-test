@@ -174,31 +174,37 @@ const MENU_ITEMS = Object.freeze([
   { id: 'settings', icon: '⚙️', text: 'Settings', isActive: false, action: 'settings' }
 ]);
 
-function LandingPage() {
+function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
   // State management
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [showExercises, setShowExercises] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [dailyTargets, setDailyTargets] = useState({});
 
-  // Helper function to get today's date string
-  const getTodayStringHelper = useCallback(() => {
-    return new Date().toISOString().split('T')[0];
+  // Load daily targets on mount and set up listener
+  useEffect(() => {
+    const loadDailyTargets = () => {
+      setDailyTargets(getDailyTargetData());
+    };
+    
+    loadDailyTargets();
+    
+    // Listen for storage changes to update targets in real-time
+    const handleStorageChange = (e) => {
+      if (e.key === TARGETS_STORAGE_KEY) {
+        loadDailyTargets();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Get completion data from localStorage
+  // Get completion data from localStorage (using daily targets)
   const getCompletionData = useCallback(() => {
-    const today = getTodayStringHelper();
-    const stored = localStorage.getItem(`daily-completions-${today}`);
-    return stored ? JSON.parse(stored) : {};
-  }, [getTodayStringHelper]);
-
-  // Save completion data to localStorage
-  const saveCompletionData = useCallback((data) => {
-    const today = getTodayStringHelper();
-    localStorage.setItem(`daily-completions-${today}`, JSON.stringify(data));
-  }, [getTodayStringHelper]);
+    return dailyTargets;
+  }, [dailyTargets]);
 
   // Calculate exercises with targets and progress
   const exercisesWithTargets = useMemo(() => {
@@ -258,19 +264,21 @@ function LandingPage() {
     
     console.log(`🎯 Launching exercise: ${exercise.type}`);
     
-    // Navigate to exercise
-    if (window.navigateToExercise) {
-      window.navigateToExercise(exercise.type);
+    // Use the onSelectExercise prop passed from App.js
+    if (onSelectExercise) {
+      onSelectExercise(exercise.type);
     } else {
-      console.warn('Navigation function not available');
+      console.warn('onSelectExercise function not provided');
     }
-  }, []);
+  }, [onSelectExercise]);
 
   // Handle menu item clicks for sidebar
   const handleMenuItemClick = useCallback((action) => {
     console.log(`Menu action: ${action}`);
-    // Implement navigation logic here
-  }, []);
+    if (action === 'progress' && onProgress) {
+      onProgress();
+    }
+  }, [onProgress]);
 
   // Toggle mobile menu
   const toggleMobileMenu = useCallback(() => {
@@ -517,7 +525,7 @@ function LandingPage() {
               border: '1px solid #ffeaa7'
             }}>
               <strong>🎯 Exercise Display Debug:</strong><br />
-              Today: {getTodayStringHelper()}<br />
+              Today: {getTodayString()}<br />
               Category: "{selectedCategory}" | 
               Total exercises shown: {exercisesWithTargets.length} | 
               Active exercises: {exercisesWithTargets.filter(e => e.isActive).length}
