@@ -187,16 +187,18 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
     const isCorrect = userAnswer === expectedUserPart;
     const shownLetters = correctAnswer.substring(0, lettersToShow);
     
+    // Build the complete word that the user created
+    const userCompleteWord = userAnswer ? shownLetters + userAnswer : shownLetters + '(blank)';
+    
     return {
       isCorrect,
-      userAnswer: userAnswer || '(blank)',
-      expectedAnswer: expectedUserPart,
-      fullWord: correctAnswer,
+      userCompleteWord,
+      correctAnswer,
       shownLetters,
       feedback: isCorrect 
         ? '✅ Correct!' 
         : userAnswer 
-          ? `❌ Incorrect. You typed "${userAnswer}" but needed "${expectedUserPart}"` 
+          ? `❌ Incorrect` 
           : '❌ No answer provided'
     };
   }, []);
@@ -377,7 +379,7 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
                   {score.correct}/{score.total} ({score.percentage}%)
                 </div>
                 
-                {/* ENHANCED: More detailed answer review with explanations */}
+                {/* ENHANCED: More detailed answer review with complete word comparison */}
                 <div className="answer-review">
                   <h4>📝 Word-by-word Review:</h4>
                   <div className="answers-grid">
@@ -395,14 +397,13 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
                             <span className="word-context">{feedback.shownLetters}___</span>
                           </div>
                           <div className="answer-details">
-                            <div className="user-input">
-                              <strong>You typed:</strong> {feedback.userAnswer}
-                            </div>
-                            <div className="correct-answer">
-                              <strong>Correct answer:</strong> {feedback.expectedAnswer}
-                            </div>
-                            <div className="full-word">
-                              <strong>Complete word:</strong> {feedback.fullWord}
+                            <div className="comparison">
+                              <div className="user-word">
+                                <strong>Your word:</strong> <span className={feedback.isCorrect ? 'correct-word' : 'incorrect-word'}>{feedback.userCompleteWord}</span>
+                              </div>
+                              <div className="correct-word">
+                                <strong>Correct word:</strong> <span className="target-word">{feedback.correctAnswer}</span>
+                              </div>
                             </div>
                             <div className={`feedback-message ${feedback.isCorrect ? 'success' : 'error'}`}>
                               {feedback.feedback}
