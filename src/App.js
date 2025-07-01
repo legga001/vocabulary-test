@@ -1,4 +1,4 @@
-// src/App.js - Updated with Interactive Reading exercise navigation
+// src/App.js - Updated with Interactive Reading exercise navigation and fixed splash page prop
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
@@ -123,7 +123,7 @@ function App() {
   const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'splash':
-        return <SplashPage onContinue={goToLanding} />;
+        return <SplashPage onStartPracticing={goToLanding} isTransitioning={isTransitioning} />;
 
       case 'landing':
         return (
