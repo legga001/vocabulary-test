@@ -231,7 +231,7 @@
 }
 
 /* ==============================================
-   6. PARAGRAPH TEXT WITH LETTER INPUT COMPONENTS - INLINE FLOW
+   6. PARAGRAPH TEXT WITH LETTER INPUT COMPONENTS - ULTRA COMPACT
    ============================================== */
 .paragraph-container {
   background: #f8f9fa;
@@ -247,8 +247,9 @@
   color: #343a40;
   text-align: justify;
   font-family: 'Georgia', serif;
-  /* Remove flex to allow natural text flow */
+  /* Block display for natural text flow */
   display: block;
+  word-spacing: normal;
 }
 
 .text-segment {
@@ -259,41 +260,42 @@
 .letter-input-wrapper {
   display: inline-block;
   vertical-align: baseline;
-  margin: 0 1px;
+  margin: 0;
   /* Prevent line breaks within the wrapper */
   white-space: nowrap;
 }
 
-/* Style the LetterInput component within Read and Complete - INLINE */
+/* Style the LetterInput component - ULTRA COMPACT for long words */
 .letter-input-wrapper .letter-input-container {
   display: inline-flex !important;
-  gap: 1px !important;
+  gap: 0.5px !important;
   align-items: baseline !important;
   margin: 0 !important;
   vertical-align: baseline !important;
-  /* Prevent breaking */
   white-space: nowrap !important;
 }
 
 .letter-input-wrapper .letter-input-box {
-  width: 20px !important;
-  height: 20px !important;
-  font-size: 0.8em !important;
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 0.7em !important;
   font-weight: 600 !important;
   border: 1px solid #4c51bf !important;
-  border-radius: 3px !important;
+  border-radius: 2px !important;
   text-align: center !important;
   background: white !important;
   color: #343a40 !important;
   font-family: 'Georgia', serif !important;
   outline: none !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.2s ease !important;
   margin: 0 !important;
   padding: 0 !important;
   line-height: 1 !important;
-  /* Prevent input from causing line breaks */
   vertical-align: baseline !important;
   display: inline-block !important;
+  /* Force minimal width for very long words */
+  min-width: 16px !important;
+  max-width: 16px !important;
 }
 
 .letter-input-wrapper .letter-input-box.pre-filled {
@@ -305,15 +307,25 @@
 
 .letter-input-wrapper .letter-input-box.editable:focus {
   border-color: #667eea !important;
-  box-shadow: 0 0 0 2px rgba(76, 81, 191, 0.2) !important;
+  box-shadow: 0 0 0 1px rgba(76, 81, 191, 0.3) !important;
   background: #fffbf0 !important;
+  z-index: 1 !important;
+  position: relative !important;
 }
 
 .letter-input-wrapper .letter-input-box:disabled {
   cursor: default !important;
 }
 
-/* Mobile adjustments - even smaller on mobile */
+/* Special handling for very long words (B2/C1) */
+.letter-input-wrapper {
+  /* Allow breaking between words but not within */
+  word-break: keep-all;
+  /* Better spacing for long words */
+  margin-right: 1px;
+}
+
+/* Mobile adjustments - even smaller */
 @media (max-width: 768px) {
   .paragraph-text {
     font-size: 1em;
@@ -321,9 +333,11 @@
   }
   
   .letter-input-wrapper .letter-input-box {
-    width: 18px !important;
-    height: 18px !important;
-    font-size: 0.75em !important;
+    width: 14px !important;
+    height: 14px !important;
+    font-size: 0.65em !important;
+    min-width: 14px !important;
+    max-width: 14px !important;
   }
 }
 
@@ -334,9 +348,27 @@
   }
   
   .letter-input-wrapper .letter-input-box {
-    width: 16px !important;
-    height: 16px !important;
-    font-size: 0.7em !important;
+    width: 12px !important;
+    height: 12px !important;
+    font-size: 0.6em !important;
+    min-width: 12px !important;
+    max-width: 12px !important;
+    gap: 0px !important;
+  }
+  
+  .letter-input-wrapper .letter-input-container {
+    gap: 0px !important;
+  }
+}
+
+/* For very wide screens, allow slightly larger boxes */
+@media (min-width: 1200px) {
+  .letter-input-wrapper .letter-input-box {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 0.75em !important;
+    min-width: 18px !important;
+    max-width: 18px !important;
   }
 }
 
