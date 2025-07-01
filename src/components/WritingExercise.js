@@ -1,10 +1,10 @@
-// src/components/WritingExercise.js - Complete writing exercise with actual image display
+// src/components/WritingExercise.js - Complete writing exercise with proper JSX structure
 import React, { useState, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
 import { recordTestResult } from '../utils/progressDataManager';
 import '../styles/writing-exercise.css';
 
-// Photo prompts for writing exercises - with uploaded images
+// Photo prompts for writing exercises
 const PHOTO_PROMPTS = [
   {
     id: 'busy_city_street',
@@ -218,6 +218,71 @@ function WritingExercise({ onBack, onLogoClick }) {
             <p className="writing-subtitle">Choose a photo and describe what you see</p>
           </div>
 
+          <div className="photo-grid">
+            {PHOTO_PROMPTS.map((prompt) => (
+              <div
+                key={prompt.id}
+                className="photo-card"
+                onClick={() => selectPrompt(prompt)}
+              >
+                <div className="photo-container">
+                  <img
+                    src={prompt.image}
+                    alt={prompt.title}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  <div className="photo-placeholder" style={{ display: 'none' }}>
+                    <span className="photo-icon">🖼️</span>
+                    <span>Image not available</span>
+                  </div>
+                </div>
+                <div className="photo-info">
+                  <h3 className="photo-title">{prompt.title}</h3>
+                  <p className="photo-description">{prompt.description}</p>
+                  <div className="photo-meta">
+                    <span className="level-badge">{prompt.level}</span>
+                    <span className="word-count">{prompt.minWords}-{prompt.maxWords} words</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="back-button-container">
+            <button className="btn btn-secondary" onClick={onBack}>
+              ← Back to Exercises
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Writing screen
+  if (gameState === 'writing') {
+    const wordCountStatus = getWordCountStatus();
+
+    return (
+      <div className="exercise-page writing-exercise">
+        <ClickableLogo onLogoClick={onLogoClick} />
+        <div className="quiz-container">
+          <div className="writing-header">
+            <h2>✍️ {selectedPrompt.title}</h2>
+            <div className="writing-stats">
+              <div className="timer">
+                <span className="timer-icon">⏱️</span>
+                <span>{formatTime(timeSpent)}</span>
+              </div>
+              <div className={`word-counter ${wordCountStatus.status}`}>
+                <span className="word-icon">📝</span>
+                <span>{wordCountStatus.message}</span>
+              </div>
+            </div>
+          </div>
+
           <div className="writing-content">
             <div className="photo-section">
               <div className="selected-photo">
@@ -363,67 +428,3 @@ function WritingExercise({ onBack, onLogoClick }) {
 }
 
 export default WritingExercise;
-
-          <div className="photo-grid">
-            {PHOTO_PROMPTS.map((prompt) => (
-              <div
-                key={prompt.id}
-                className="photo-card"
-                onClick={() => selectPrompt(prompt)}
-              >
-                <div className="photo-container">
-                  <img
-                    src={prompt.image}
-                    alt={prompt.title}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                  <div className="photo-placeholder" style={{ display: 'none' }}>
-                    <span className="photo-icon">🖼️</span>
-                    <span>Image not available</span>
-                  </div>
-                </div>
-                <div className="photo-info">
-                  <h3 className="photo-title">{prompt.title}</h3>
-                  <p className="photo-description">{prompt.description}</p>
-                  <div className="photo-meta">
-                    <span className="level-badge">{prompt.level}</span>
-                    <span className="word-count">{prompt.minWords}-{prompt.maxWords} words</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="back-button-container">
-            <button className="btn btn-secondary" onClick={onBack}>
-              ← Back to Exercises
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Writing screen
-  if (gameState === 'writing') {
-    const wordCountStatus = getWordCountStatus();
-
-    return (
-      <div className="exercise-page writing-exercise">
-        <ClickableLogo onLogoClick={onLogoClick} />
-        <div className="quiz-container">
-          <div className="writing-header">
-            <h2>✍️ {selectedPrompt.title}</h2>
-            <div className="writing-stats">
-              <div className="timer">
-                <span className="timer-icon">⏱️</span>
-                <span>{formatTime(timeSpent)}</span>
-              </div>
-              <div className={`word-counter ${wordCountStatus.status}`}>
-                <span className="word-icon">📝</span>
-                <span>{wordCountStatus.message}</span>
-              </div>
-            </div>
