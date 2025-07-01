@@ -1,7 +1,7 @@
 /* ==============================================
    MR. FOX ENGLISH - MAIN STYLESHEET - UPDATED
    Clean, organised, and modular CSS structure
-   Includes all exercise styles including Read and Complete
+   Includes all exercise styles including Interactive Reading
    ============================================== */
 
 /* Import all component stylesheets in correct order */
@@ -17,7 +17,8 @@
 @import './styles/listen-and-type.css';
 @import './styles/speaking-exercise.css';
 @import './styles/writing-exercise.css';
-@import './styles/read-complete-exercise.css';        /* NEW: Read and Complete exercise styles */
+@import './styles/read-complete-exercise.css';
+@import './styles/interactive-reading.css';        /* NEW: Interactive Reading exercise styles */
 @import './styles/progress.css';
 @import './styles/responsive.css';
 
@@ -102,6 +103,24 @@
 }
 
 /* ==============================================
+   INTERACTIVE READING EXERCISE OVERRIDES
+   ============================================== */
+
+/* Ensure Interactive Reading exercise displays properly in landing page */
+.exercise-item[data-type="interactive-reading"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Interactive Reading exercise specific quiz container override */
+.interactive-reading-exercise .quiz-container {
+  max-width: 1200px;
+  width: 100%;
+  padding: 25px;
+}
+
+/* ==============================================
    GLOBAL UTILITY CLASSES
    ============================================== */
 
@@ -160,22 +179,35 @@
     color: #fff;
   }
   
+  .btn {
+    border: 2px solid #000;
+  }
+  
   .category-tab.active {
     background: #000;
     color: #fff;
-    border-color: #000;
   }
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* ==============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================== */
+
+/* Reduce layout shifts */
+.exercise-item {
+  contain: layout;
+}
+
+.quiz-container {
+  contain: layout;
+}
+
+/* GPU acceleration for animations */
+.exercise-item,
+.btn,
+.category-tab {
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 /* ==============================================
@@ -185,9 +217,7 @@
 @media print {
   .desktop-sidebar,
   .mobile-header,
-  .mobile-menu-overlay,
-  .btn,
-  .logo-container {
+  .mobile-menu-overlay {
     display: none !important;
   }
   
@@ -196,56 +226,7 @@
     width: 100% !important;
   }
   
-  .read-complete-exercise .paragraph-container {
-    border: 1px solid #000;
+  .exercise-item {
     break-inside: avoid;
   }
-}
-
-/* ==============================================
-   LOADING AND ANIMATION STATES
-   ============================================== */
-
-/* Loading state for exercises */
-.exercise-loading {
-  opacity: 0.5;
-  pointer-events: none;
-  position: relative;
-}
-
-.exercise-loading::after {
-  content: "Loading...";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.9);
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  color: #4c51bf;
-}
-
-/* Smooth transitions for all interactive elements */
-.exercise-item,
-.btn,
-.category-tab,
-.word-input {
-  transition: all 0.3s ease;
-}
-
-/* Enhanced hover states */
-.exercise-item:hover:not(.disabled) {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(76, 81, 191, 0.2);
-}
-
-/* Success state for completed exercises */
-.exercise-item.completed {
-  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-  border-color: #28a745;
-}
-
-.exercise-item.completed .exercise-icon {
-  background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
 }
