@@ -1,56 +1,66 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+// src/components/ReadAndCompleteExercise.js - Fixed with Submit button and enhanced feedback
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import ClickableLogo from './ClickableLogo';
 import LetterInput from './LetterInput';
 import { getRandomParagraphs } from '../data/readCompleteData';
-import '../styles/read-complete-exercise.css';
+import { recordTestResult, incrementDailyTarget } from '../utils/progressDataManager';
 
-const TIMER_DURATION = 180;
+const TIMER_DURATION = 180; // 3 minutes per paragraph
 
 function ReadAndCompleteExercise({ onBack, onLogoClick }) {
+  const [exerciseParagraphs, setExerciseParagraphs] = useState([]);
   const [currentParagraph, setCurrentParagraph] = useState(0);
-  const [gameState, setGameState] = useState('instructions');
+  const [gameState, setGameState] = useState('instructions'); // 'instructions', 'playing', 'results'
   const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
+  const [currentUserInputs, setCurrentUserInputs] = useState([]);
   const [userAnswers, setUserAnswers] = useState({});
   const [scores, setScores] = useState([]);
   const [isTimerActive, setIsTimerActive] = useState(false);
-  const [currentUserInputs, setCurrentUserInputs] = useState([]);
-  const [exerciseParagraphs, setExerciseParagraphs] = useState([]);
-  
   const timerRef = useRef(null);
 
+  // Initialize exercise paragraphs on mount
   useEffect(() => {
     const randomParagraphs = getRandomParagraphs();
     setExerciseParagraphs(randomParagraphs);
-    console.log('🎲 Random paragraphs selected:', randomParagraphs.map(p => `${p.title} (${p.id})`));
+    console.log('🎯 Random paragraphs selected:', randomParagraphs.map(p => `${p.title} (${p.id})`));
   }, []);
 
+  // Process gapped text to create input elements
   const processGappedText = useCallback((gappedText, answers) => {
-    const parts = gappedText.split(/\b\w*_+\w*\b/);
-    const gaps = gappedText.match(/\b\w*_+\w*\b/g) || [];
-    
-    const elements = [];
-    for (let i = 0; i < parts.length; i++) {
-      if (parts[i]) {
-        elements.push({ type: 'text', content: parts[i] });
-      }
-      if (i < gaps.length) {
-        const answer = answers[i];
-        elements.push({
+    const parts = gappedText.split(/(\w*_+\w*)/);
+    const processedElements = [];
+    let answerIndex = 0;
+
+    parts.forEach((part, index) => {
+      if (part.includes('_')) {
+        // This is a gap that needs an input
+        const answer = answers[answerIndex];
+        processedElements.push({
           type: 'input',
-          index: i,
-          answer
+          answer: answer,
+          index: answerIndex
+        });
+        answerIndex++;
+      } else if (part.trim()) {
+        // This is regular text
+        processedElements.push({
+          type: 'text',
+          content: part
         });
       }
-    }
-    return elements;
+    });
+
+    return processedElements;
   }, []);
 
+  // Calculate score for a paragraph
   const calculateScore = useCallback((userInputs, correctAnswers) => {
     let correct = 0;
-    userInputs.forEach((input, index) => {
-      const correctAnswer = correctAnswers[index].toLowerCase();
-      const userAnswer = input.toLowerCase().trim();
+    
+    userInputs.forEach((userAnswer, index) => {
+      const correctAnswer = correctAnswers[index];
       
+      // Function to determine how many letters to show based on word length
       const getLettersToShow = (word) => {
         const length = word.length;
         if (length <= 3) return 1;
@@ -74,7 +84,8 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
     return { correct, total: correctAnswers.length, percentage: Math.round((correct / correctAnswers.length) * 100) };
   }, []);
 
-  const handleTimeUp = useCallback(() => {
+  // FIXED: Changed from handleTimeUp to handleSubmit for better clarity
+  const handleSubmit = useCallback(() => {
     setIsTimerActive(false);
     const paragraph = exerciseParagraphs[currentParagraph];
     const score = calculateScore(currentUserInputs, paragraph.answers);
@@ -90,16 +101,31 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
       setGameState('instructions');
     } else {
       setGameState('results');
+      
+      // Record test result for progress tracking
+      const totalCorrect = newScores.reduce((sum, score) => sum + score.correct, 0);
+      const totalQuestions = newScores.reduce((sum, score) => sum + score.total, 0);
+      const overallPercentage = Math.round((totalCorrect / totalQuestions) * 100);
+      
+      recordTestResult({
+        quizType: 'read-complete',
+        score: overallPercentage,
+        totalQuestions: totalQuestions,
+        completedAt: new Date()
+      });
+      
+      incrementDailyTarget('read-and-complete');
     }
   }, [currentParagraph, currentUserInputs, scores, exerciseParagraphs, calculateScore]);
 
+  // Timer effect - updated to use handleSubmit
   useEffect(() => {
     if (isTimerActive && timeRemaining > 0) {
       timerRef.current = setTimeout(() => {
         setTimeRemaining(prev => prev - 1);
       }, 1000);
     } else if (timeRemaining === 0 && isTimerActive) {
-      handleTimeUp();
+      handleSubmit(); // Changed from handleTimeUp to handleSubmit
     }
     
     return () => {
@@ -107,7 +133,7 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
         clearTimeout(timerRef.current);
       }
     };
-  }, [isTimerActive, timeRemaining, handleTimeUp]);
+  }, [isTimerActive, timeRemaining, handleSubmit]);
 
   const startParagraph = useCallback(() => {
     if (exerciseParagraphs.length === 0) return;
@@ -144,6 +170,37 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }, []);
 
+  // Enhanced function to get detailed feedback for each answer
+  const getDetailedFeedback = useCallback((userAnswer, correctAnswer, answerIndex) => {
+    const getLettersToShow = (word) => {
+      const length = word.length;
+      if (length <= 3) return 1;
+      if (length <= 5) return 2;
+      if (length <= 7) return 3;
+      if (length <= 9) return 4;
+      if (length <= 11) return 5;
+      return 6;
+    };
+    
+    const lettersToShow = getLettersToShow(correctAnswer);
+    const expectedUserPart = correctAnswer.substring(lettersToShow);
+    const isCorrect = userAnswer === expectedUserPart;
+    const shownLetters = correctAnswer.substring(0, lettersToShow);
+    
+    return {
+      isCorrect,
+      userAnswer: userAnswer || '(blank)',
+      expectedAnswer: expectedUserPart,
+      fullWord: correctAnswer,
+      shownLetters,
+      feedback: isCorrect 
+        ? '✅ Correct!' 
+        : userAnswer 
+          ? `❌ Incorrect. You typed "${userAnswer}" but needed "${expectedUserPart}"` 
+          : '❌ No answer provided'
+    };
+  }, []);
+
   if (exerciseParagraphs.length === 0) {
     return (
       <div className="exercise-page read-complete-exercise">
@@ -159,7 +216,7 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
   }
 
   const currentParagraphData = exerciseParagraphs[currentParagraph];
-  const levelLabels = ['A2', 'B2', 'C1'];
+  const levelLabels = ['A1-A2', 'B1-B2', 'C1'];
 
   if (gameState === 'instructions') {
     return (
@@ -182,7 +239,7 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
                 </div>
                 <div className="instruction-item">
                   <span className="instruction-icon">📊</span>
-                  <span>3 paragraphs: A2, B2, and C1 levels</span>
+                  <span>3 paragraphs: A1-A2, B1-B2, and C1 levels</span>
                 </div>
                 <div className="instruction-item">
                   <span className="instruction-icon">💡</span>
@@ -212,7 +269,7 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
           
           <div className="paragraph-info">
             <h3>Next: Paragraph {currentParagraph + 1}</h3>
-            <div className={`level-badge level-${levelLabels[currentParagraph].toLowerCase()}`}>
+            <div className={`level-badge level-${levelLabels[currentParagraph].toLowerCase().replace('-', '')}`}>
               {levelLabels[currentParagraph]} Level
             </div>
             <h4>{currentParagraphData.title}</h4>
@@ -278,8 +335,9 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
             <div className="completion-status">
               Words completed: {currentUserInputs.filter(input => input.trim() !== '').length}/{currentParagraphData.answers.length}
             </div>
-            <button className="btn btn-warning" onClick={handleTimeUp}>
-              ✅ Finish Early
+            {/* FIXED: Changed button text from "Finish Early" to "Submit" */}
+            <button className="btn btn-success" onClick={handleSubmit}>
+              ✅ Submit
             </button>
           </div>
         </div>
@@ -306,12 +364,12 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
           </div>
 
           <div className="detailed-results">
-            <h3>📋 Paragraph Results:</h3>
+            <h3>📋 Detailed Results by Paragraph:</h3>
             {scores.map((score, index) => (
               <div key={index} className="paragraph-result">
                 <div className="paragraph-result-header">
                   <span className="paragraph-title">{exerciseParagraphs[index].title}</span>
-                  <span className={`level-badge level-${levelLabels[index].toLowerCase()}`}>
+                  <span className={`level-badge level-${levelLabels[index].toLowerCase().replace('-', '')}`}>
                     {levelLabels[index]}
                   </span>
                 </div>
@@ -319,18 +377,37 @@ function ReadAndCompleteExercise({ onBack, onLogoClick }) {
                   {score.correct}/{score.total} ({score.percentage}%)
                 </div>
                 
+                {/* ENHANCED: More detailed answer review with explanations */}
                 <div className="answer-review">
-                  <h4>Your answers:</h4>
+                  <h4>📝 Word-by-word Review:</h4>
                   <div className="answers-grid">
                     {userAnswers[index]?.map((userAnswer, answerIndex) => {
-                      const correct = userAnswer.toLowerCase().trim() === exerciseParagraphs[index].answers[answerIndex].toLowerCase();
+                      const feedback = getDetailedFeedback(
+                        userAnswer, 
+                        exerciseParagraphs[index].answers[answerIndex], 
+                        answerIndex
+                      );
+                      
                       return (
-                        <div key={answerIndex} className={`answer-item ${correct ? 'correct' : 'incorrect'}`}>
-                          <span className="answer-number">{answerIndex + 1}.</span>
-                          <span className="user-answer">{userAnswer || '(blank)'}</span>
-                          {!correct && (
-                            <span className="correct-answer">→ {exerciseParagraphs[index].answers[answerIndex]}</span>
-                          )}
+                        <div key={answerIndex} className={`answer-item ${feedback.isCorrect ? 'correct' : 'incorrect'}`}>
+                          <div className="answer-header">
+                            <span className="answer-number">Word {answerIndex + 1}:</span>
+                            <span className="word-context">{feedback.shownLetters}___</span>
+                          </div>
+                          <div className="answer-details">
+                            <div className="user-input">
+                              <strong>You typed:</strong> {feedback.userAnswer}
+                            </div>
+                            <div className="correct-answer">
+                              <strong>Correct answer:</strong> {feedback.expectedAnswer}
+                            </div>
+                            <div className="full-word">
+                              <strong>Complete word:</strong> {feedback.fullWord}
+                            </div>
+                            <div className={`feedback-message ${feedback.isCorrect ? 'success' : 'error'}`}>
+                              {feedback.feedback}
+                            </div>
+                          </div>
                         </div>
                       );
                     })}
