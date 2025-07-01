@@ -1,0 +1,339 @@
+/* src/styles/interactive-reading.css */
+
+/* ==============================================
+   INTERACTIVE READING EXERCISE STYLES
+   ============================================== */
+
+.interactive-reading-exercise {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.reading-exercise-layout {
+  display: flex;
+  gap: 30px;
+  margin-top: 20px;
+}
+
+/* ==============================================
+   PASSAGE CONTAINER (LEFT SIDE)
+   ============================================== */
+
+.passage-container {
+  flex: 1;
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  min-height: 500px;
+}
+
+.passage-content {
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 10px;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+.passage-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.passage-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.passage-content::-webkit-scrollbar-thumb {
+  background: #4c51bf;
+  border-radius: 3px;
+}
+
+.passage-content::-webkit-scrollbar-thumb:hover {
+  background: #3c4099;
+}
+
+/* ==============================================
+   QUESTIONS CONTAINER (RIGHT SIDE)
+   ============================================== */
+
+.questions-container {
+  width: 400px;
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+}
+
+/* ==============================================
+   QUESTION ELEMENTS
+   ============================================== */
+
+.question-number {
+  width: 30px;
+  height: 30px;
+  background: #e2e8f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+  flex-shrink: 0;
+}
+
+.dropdown-select {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dropdown-select:focus {
+  outline: none;
+  border-color: #4c51bf;
+  box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.1);
+}
+
+.dropdown-select:hover {
+  border-color: #9ca3af;
+}
+
+/* ==============================================
+   OPTION LABELS AND RADIO BUTTONS
+   ============================================== */
+
+.option-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.option-label:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.option-label:has(input:checked) {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.option-radio {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: #4c51bf;
+  flex-shrink: 0;
+}
+
+.option-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #374151;
+}
+
+/* ==============================================
+   HIGHLIGHT FUNCTIONALITY
+   ============================================== */
+
+.highlight-question {
+  background: #f3f4f6;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border-left: 4px solid #4c51bf;
+}
+
+.highlighted-answer {
+  background: #fef3c7;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #f59e0b;
+  margin-top: 15px;
+}
+
+.highlighted-answer p:first-child {
+  color: #92400e;
+  font-weight: 600;
+}
+
+.highlighted-answer p:last-child {
+  color: #451a03;
+  background: white;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 8px;
+  border: 1px solid #fbbf24;
+}
+
+/* User selection highlighting */
+::selection {
+  background: #3b82f6;
+  color: white;
+}
+
+::-moz-selection {
+  background: #3b82f6;
+  color: white;
+}
+
+/* ==============================================
+   NEXT BUTTON
+   ============================================== */
+
+.next-button-container {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.next-button-container .btn {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ==============================================
+   FEEDBACK MODAL
+   ============================================== */
+
+.feedback-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.feedback-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feedback-modal h3 {
+  color: #1f2937;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.feedback-modal p {
+  color: #6b7280;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ==============================================
+   TIMER STYLING
+   ============================================== */
+
+.timer-icon {
+  font-size: 1.2em;
+}
+
+/* ==============================================
+   RESULTS SCREEN
+   ============================================== */
+
+.interactive-reading-exercise .quiz-container h2 {
+  color: #1f2937;
+}
+
+.interactive-reading-exercise .space-y-4 > div {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.interactive-reading-exercise .space-y-4 > div:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.text-green-600 {
+  color: #059669 !important;
+}
+
+.text-red-600 {
+  color: #dc2626 !important;
+}
+
+/* ==============================================
+   RESPONSIVE DESIGN
+   ============================================== */
+
+@media (max-width: 1024px) {
+  .reading-exercise-layout {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .questions-container {
+    width: 100%;
+  }
+  
+  .passage-content {
+    max-height: 300px;
+  }
+  
+  .questions-container {
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .interactive-reading-exercise {
+    padding: 15px;
+  }
+  
+  .passage-container,
+  .questions-container {
+    padding: 20px;
+  }
+  
+  .quiz-container .flex {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
