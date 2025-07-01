@@ -1,5 +1,6 @@
-// src/components/LandingPage.js - Fresh implementation with working display
+// src/components/LandingPage.js - Updated with Interactive Reading exercise
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { getDailyTargetData, TARGETS_STORAGE_KEY } from '../utils/progressDataManager';
 
 // Constants
 const CATEGORIES = [
@@ -45,6 +46,16 @@ const EXERCISES = [
     icon: '📝',
     title: 'Read and Complete',
     subtitle: 'Complete missing words in paragraphs',
+    dailyTarget: 1,
+    isActive: true
+  },
+  // NEW: Interactive Reading Exercise
+  {
+    type: 'interactive-reading',
+    category: 'READING',
+    icon: '📚',
+    title: 'Interactive Reading',
+    subtitle: 'Comprehensive reading comprehension',
     dailyTarget: 1,
     isActive: true
   },
@@ -102,78 +113,78 @@ const EXERCISES = [
     isActive: false
   },
   {
+    type: 'pronunciation',
+    category: 'SPEAKING',
+    icon: '🗣️',
+    title: 'Pronunciation Check',
+    subtitle: 'Perfect your pronunciation',
+    dailyTarget: 2,
+    isActive: false
+  },
+  {
+    type: 'grammar-focus',
+    category: 'WRITING',
+    icon: '📋',
+    title: 'Grammar Focus',
+    subtitle: 'Targeted grammar practice',
+    dailyTarget: 2,
+    isActive: false
+  },
+  {
     type: 'essay-writing',
     category: 'WRITING',
     icon: '📄',
     title: 'Essay Writing',
-    subtitle: 'Structured writing tasks',
+    subtitle: 'Structured writing practice',
     dailyTarget: 1,
+    isActive: false
+  },
+  {
+    type: 'listening-comprehension',
+    category: 'LISTENING',
+    icon: '🎵',
+    title: 'Listening Comprehension',
+    subtitle: 'Audio understanding',
+    dailyTarget: 2,
     isActive: false
   }
 ];
 
 const MENU_ITEMS = [
-  { id: 'exercises', icon: '📚', text: 'Exercises', isActive: true, action: null },
-  { id: 'progress', icon: '📊', text: 'Progress', isActive: false, action: 'progress' },
-  { id: 'achievements', icon: '🏆', text: 'Achievements', isActive: false, action: 'achievements' },
-  { id: 'settings', icon: '⚙️', text: 'Settings', isActive: false, action: 'settings' }
+  {
+    id: 'exercises',
+    icon: '📚',
+    text: 'Exercises',
+    isActive: true,
+    action: null
+  },
+  {
+    id: 'progress',
+    icon: '📊',
+    text: 'Progress',
+    isActive: true,
+    action: 'progress'
+  },
+  {
+    id: 'achievements',
+    icon: '🏆',
+    text: 'Achievements',
+    isActive: false,
+    action: null
+  },
+  {
+    id: 'settings',
+    icon: '⚙️',
+    text: 'Settings',
+    isActive: false,
+    action: null
+  }
 ];
 
-// Daily targets utility functions
-const TARGETS_STORAGE_KEY = 'mr-fox-daily-targets';
-
-const getTodayString = () => {
-  return new Date().toISOString().split('T')[0];
-};
-
-const getDailyTargetData = () => {
-  try {
-    const stored = localStorage.getItem(TARGETS_STORAGE_KEY);
-    if (!stored) return {};
-    
-    const data = JSON.parse(stored);
-    const today = getTodayString();
-    
-    return data.date === today ? data.targets : {};
-  } catch (error) {
-    console.error('Error reading daily targets:', error);
-    return {};
-  }
-};
-
-const setDailyTargetData = (targets) => {
-  try {
-    const data = {
-      date: getTodayString(),
-      targets
-    };
-    localStorage.setItem(TARGETS_STORAGE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.error('Error saving daily targets:', error);
-  }
-};
-
-// Export function for other components
-export const incrementDailyTarget = (exerciseType) => {
-  const current = getDailyTargetData();
-  const updated = {
-    ...current,
-    [exerciseType]: (current[exerciseType] || 0) + 1
-  };
-  setDailyTargetData(updated);
-  
-  window.dispatchEvent(new StorageEvent('storage', {
-    key: TARGETS_STORAGE_KEY,
-    newValue: JSON.stringify({ date: getTodayString(), targets: updated })
-  }));
-  
-  return updated;
-};
-
 function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
-  // State
+  // State management
   const [selectedCategory, setSelectedCategory] = useState('ALL');
-  const [showExercises, setShowExercises] = useState(true);
+  const [showExercises, setShowExercises] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
   const [dailyTargets, setDailyTargets] = useState({});
@@ -202,6 +213,16 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Show exercises after transition
+  useEffect(() => {
+    if (!isTransitioning) {
+      const timer = setTimeout(() => {
+        setShowExercises(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isTransitioning]);
 
   const isMobile = windowWidth < 1025;
 
