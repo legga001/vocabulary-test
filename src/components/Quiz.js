@@ -338,18 +338,15 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
       setShowHints(newShowHints);
     }
 
-    // Show feedback
+    // Show feedback - PERSISTENT until navigation
     const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
     const message = isCorrect ? randomMessage : `✗ The correct answer is "${correctAnswer}"`;
     
     setFeedbackMessage(message);
     setFeedbackType(isCorrect ? 'correct' : 'incorrect');
     setShowFeedback(true);
-
-    // Auto-hide feedback after delay
-    setTimeout(() => {
-      setShowFeedback(false);
-    }, 2000);
+    
+    // NO auto-hide timeout - feedback stays until next question
   }, [currentQuestion, userAnswers, checkedQuestions, question, checkAnswer, showHints]);
 
   // **NEW**: Skip question function
@@ -364,19 +361,21 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     setCheckedQuestions(newCheckedQuestions);
     setSkippedQuestions(newSkippedQuestions);
 
-    // Show skip feedback
+    // Show skip feedback - PERSISTENT until navigation
     setFeedbackMessage(`⏭️ Skipped! The answer was "${question.answer}"`);
     setFeedbackType('skipped');
     setShowFeedback(true);
-
-    // Auto-hide feedback after delay
-    setTimeout(() => {
-      setShowFeedback(false);
-    }, 2000);
+    
+    // NO auto-hide timeout - feedback stays until next question
   }, [currentQuestion, checkedQuestions, skippedQuestions, question]);
 
   // Navigation functions
   const goToNextQuestion = useCallback(() => {
+    // Clear feedback when moving to next question
+    setShowFeedback(false);
+    setFeedbackMessage('');
+    setFeedbackType('');
+    
     if (currentQuestion < 9) {
       setCurrentQuestion(prev => prev + 1);
     } else {
@@ -403,6 +402,11 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
   }, [currentQuestion, userAnswers, questions, onFinish, quizType, skippedQuestions]);
 
   const goToPreviousQuestion = useCallback(() => {
+    // Clear feedback when moving to previous question
+    setShowFeedback(false);
+    setFeedbackMessage('');
+    setFeedbackType('');
+    
     if (currentQuestion > 0) {
       setCurrentQuestion(prev => prev - 1);
     }
