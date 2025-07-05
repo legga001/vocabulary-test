@@ -1,4 +1,4 @@
-// src/components/Quiz.js - FIXED VERSION with correct feedback handling
+// src/components/Quiz.js - COMPLETELY FIXED VERSION
 import React, { useState, useEffect, useCallback } from 'react';
 import ClickableLogo from './ClickableLogo';
 import LetterInput from './LetterInput';
@@ -62,8 +62,9 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
   const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
-  const [feedback, setFeedback] = useState({ show: false, type: '', message: '', persistent: false });
   const [questions, setQuestions] = useState([]);
+  const [skippedQuestions, setSkippedQuestions] = useState(new Array(10).fill(false));
+  const [showHints, setShowHints] = useState(new Array(10).fill(false)); // NEW: Track hint visibility
   
   // Separate state for feedback that won't be affected by other re-renders
   const [showFeedback, setShowFeedback] = useState(false);
@@ -219,16 +220,34 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     loadQuestions();
   }, [quizType, articleType]);
 
-  // Helper functions for article questions
+  // **FIXED**: Helper function to process sentences WITHOUT showing underscores
   const processSentence = (sentence, answer) => {
     if (!sentence || !answer) return { beforeGap: '', afterGap: '' };
     
-    const gapPlaceholder = '_____';
-    const parts = sentence.split(gapPlaceholder);
+    // Remove underscores and just split on common gap patterns
+    let cleanSentence = sentence;
     
+    // Handle various gap patterns: _____, _____s, dev_____, etc.
+    const gapPatterns = [
+      /_____/g,           // Simple underscores
+      /\b\w*_+\w*\b/g,    // Word with underscores
+      /\b[A-Za-z]*_+[A-Za-z]*\b/g // Letter-underscore combinations
+    ];
+    
+    for (const pattern of gapPatterns) {
+      if (pattern.test(cleanSentence)) {
+        const parts = cleanSentence.split(pattern);
+        return {
+          beforeGap: (parts[0] || '').trim(),
+          afterGap: (parts[1] || '').trim()
+        };
+      }
+    }
+    
+    // Fallback: if no gap pattern found, put gap at end
     return {
-      beforeGap: parts[0] || '',
-      afterGap: parts[1] || ''
+      beforeGap: cleanSentence.trim(),
+      afterGap: ''
     };
   };
 
@@ -292,7 +311,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     setUserAnswers(newAnswers);
   }, [userAnswers, currentQuestion]);
 
-  // **FIXED**: Check current answer with proper reconstruction
+  // **FIXED**: Check current answer with proper reconstruction AND hint logic
   const checkCurrentAnswer = useCallback(() => {
     if (checkedQuestions[currentQuestion]) return;
 
@@ -312,6 +331,13 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     newCheckedQuestions[currentQuestion] = true;
     setCheckedQuestions(newCheckedQuestions);
 
+    // **NEW**: Show hint only if answer is incorrect
+    if (!isCorrect) {
+      const newShowHints = [...showHints];
+      newShowHints[currentQuestion] = true;
+      setShowHints(newShowHints);
+    }
+
     // Show feedback
     const randomMessage = correctMessages[Math.floor(Math.random() * correctMessages.length)];
     const message = isCorrect ? randomMessage : `✗ The correct answer is "${correctAnswer}"`;
@@ -324,7 +350,30 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     setTimeout(() => {
       setShowFeedback(false);
     }, 2000);
-  }, [currentQuestion, userAnswers, checkedQuestions, question, checkAnswer]);
+  }, [currentQuestion, userAnswers, checkedQuestions, question, checkAnswer, showHints]);
+
+  // **NEW**: Skip question function
+  const skipQuestion = useCallback(() => {
+    if (checkedQuestions[currentQuestion]) return;
+
+    // Mark as skipped and checked
+    const newCheckedQuestions = [...checkedQuestions];
+    const newSkippedQuestions = [...skippedQuestions];
+    newCheckedQuestions[currentQuestion] = true;
+    newSkippedQuestions[currentQuestion] = true;
+    setCheckedQuestions(newCheckedQuestions);
+    setSkippedQuestions(newSkippedQuestions);
+
+    // Show skip feedback
+    setFeedbackMessage(`⏭️ Skipped! The answer was "${question.answer}"`);
+    setFeedbackType('skipped');
+    setShowFeedback(true);
+
+    // Auto-hide feedback after delay
+    setTimeout(() => {
+      setShowFeedback(false);
+    }, 2000);
+  }, [currentQuestion, checkedQuestions, skippedQuestions, question]);
 
   // Navigation functions
   const goToNextQuestion = useCallback(() => {
@@ -334,6 +383,10 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
       // Quiz complete - pass complete answers to Results
       const completeAnswers = userAnswers.map((userAnswer, index) => {
         const correctAnswer = questions[index].answer;
+        
+        if (skippedQuestions[index]) {
+          return ''; // Empty for skipped questions
+        }
         
         if (quizType === 'article') {
           const lettersShown = getLettersToShow(correctAnswer);
@@ -347,7 +400,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
       console.log('🏁 Quiz finished with complete answers:', completeAnswers);
       onFinish(completeAnswers, questions);
     }
-  }, [currentQuestion, userAnswers, questions, onFinish, quizType]);
+  }, [currentQuestion, userAnswers, questions, onFinish, quizType, skippedQuestions]);
 
   const goToPreviousQuestion = useCallback(() => {
     if (currentQuestion > 0) {
@@ -442,7 +495,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
             </div>
           )}
           
-          {/* Question Text */}
+          {/* Question Text - NO MORE UNDERSCORES! */}
           <div className="question-text">
             <span>{processedData.beforeGap}</span>
             <LetterInput
@@ -457,11 +510,13 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
           </div>
         </div>
 
-        {/* Hint Section */}
-        <div className="hint-section">
-          <div className="hint-icon">💡</div>
-          <div className="hint-text">{question.hint}</div>
-        </div>
+        {/* **NEW**: Conditional Hint Section - Only show after wrong answer */}
+        {showHints[currentQuestion] && (
+          <div className="hint-section">
+            <div className="hint-icon">💡</div>
+            <div className="hint-text">{question.hint}</div>
+          </div>
+        )}
 
         {/* Feedback */}
         {showFeedback && (
@@ -470,7 +525,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
           </div>
         )}
 
-        {/* Action Buttons */}
+        {/* **UPDATED**: Action Buttons with Skip Option */}
         <div className="action-buttons">
           <button
             onClick={goToPreviousQuestion}
@@ -481,13 +536,22 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
           </button>
 
           {!checkedQuestions[currentQuestion] ? (
-            <button
-              onClick={checkCurrentAnswer}
-              disabled={!userAnswers[currentQuestion]}
-              className="btn btn-primary"
-            >
-              ✓ Check Answer
-            </button>
+            <div className="quiz-action-group">
+              <button
+                onClick={skipQuestion}
+                className="btn btn-skip"
+                title="Skip this question"
+              >
+                ⏭️ Skip
+              </button>
+              <button
+                onClick={checkCurrentAnswer}
+                disabled={!userAnswers[currentQuestion]}
+                className="btn btn-primary"
+              >
+                ✓ Check Answer
+              </button>
+            </div>
           ) : (
             <button
               onClick={goToNextQuestion}
@@ -501,6 +565,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
         {/* Navigation Help */}
         <div className="navigation-help">
           <p>💡 Press Enter to check your answer or move to the next question</p>
+          <p>🔍 Hints will appear if you get an answer wrong</p>
         </div>
 
         {/* Back Button */}
