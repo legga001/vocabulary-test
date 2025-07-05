@@ -1,4 +1,4 @@
-// src/components/Results.js - COMPLETELY FIXED VERSION
+// src/components/Results.js - FINAL FIXED VERSION
 import React, { useEffect } from 'react';
 import AnswerReview from './AnswerReview';
 import { recordTestResult } from '../utils/progressDataManager';
@@ -16,7 +16,15 @@ const getLettersToShow = (word) => {
 };
 
 function Results({ userAnswers, questions, testQuestions, quizType, articleType, onRestart }) {
-  console.log('📊 Results component rendering with:', { userAnswers, questions, quizType, articleType });
+  console.log('📊 Results component rendering with:', { 
+    userAnswers, 
+    questions, 
+    testQuestions, 
+    quizType, 
+    articleType,
+    'testQuestions length': testQuestions?.length,
+    'questions length': questions?.length
+  });
 
   // Enhanced function to check if answer is already complete or needs reconstruction
   const isAnswerComplete = (userAnswer, correctAnswer) => {
@@ -62,8 +70,63 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
     return completeUserAnswer;
   };
 
-  // Get questions and article info
+  // FIXED: Get questions and article info - ALWAYS PRIORITIZE testQuestions
   const getQuestionsAndArticleInfo = () => {
+    console.log('🔍 Getting questions and article info...');
+    
+    // PRIORITY 1: Use testQuestions if available (these are the actual questions from the quiz)
+    if (testQuestions && testQuestions.length > 0) {
+      console.log('✅ Using testQuestions from Quiz component:', testQuestions);
+      
+      // Still need to get article info for display
+      let articleInfo = null;
+      if (quizType === 'article') {
+        try {
+          switch (articleType) {
+            case 'zooplankton-quiz':
+              const zooplanktonModule = require('../zooplanktonVocabularyData');
+              articleInfo = zooplanktonModule.getZooplanktonArticleInfo();
+              break;
+            case 'killer-whale-quiz':
+              const killerWhaleModule = require('../killerWhaleVocabularyData');
+              articleInfo = killerWhaleModule.getKillerWhaleArticleInfo();
+              break;
+            case 'octopus-quiz':
+              const octopusModule = require('../readingVocabularyData');
+              articleInfo = octopusModule.getReadingArticleInfo();
+              break;
+            case 'smuggling-quiz':
+              const smugglingModule = require('../smugglingVocabularyData');
+              articleInfo = smugglingModule.getArticleInfo();
+              break;
+            case 'air-india-quiz':
+              const airIndiaModule = require('../airIndiaVocabularyData');
+              articleInfo = airIndiaModule.getAirIndiaArticleInfo();
+              break;
+            case 'water-treatment-quiz':
+              const waterTreatmentModule = require('../waterTreatmentVocabularyData');
+              articleInfo = waterTreatmentModule.getWaterTreatmentArticleInfo();
+              break;
+            default:
+              const defaultModule = require('../articleQuestions');
+              articleInfo = defaultModule.getArticleInfo();
+          }
+        } catch (error) {
+          console.error('Error loading article info:', error);
+        }
+      }
+      
+      return { questions: testQuestions, articleInfo };
+    }
+
+    // PRIORITY 2: Use questions prop if available
+    if (questions && questions.length > 0) {
+      console.log('⚠️ Using questions prop (fallback):', questions);
+      return { questions: questions, articleInfo: null };
+    }
+
+    // PRIORITY 3: Fallback to loading questions from data files
+    console.log('⚠️ Loading questions from data files (last resort)');
     let questionsList = [];
     let articleInfo = null;
 
@@ -80,6 +143,11 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
             questionsList = killerWhaleModule.getKillerWhaleVocabularyQuestions();
             articleInfo = killerWhaleModule.getKillerWhaleArticleInfo();
             break;
+          case 'octopus-quiz':
+            const octopusModule = require('../readingVocabularyData');
+            questionsList = octopusModule.getReadingVocabularyQuestions();
+            articleInfo = octopusModule.getReadingArticleInfo();
+            break;
           case 'smuggling-quiz':
             const smugglingModule = require('../smugglingVocabularyData');
             questionsList = smugglingModule.getSmugglingVocabularyQuestions();
@@ -94,11 +162,6 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
             const waterTreatmentModule = require('../waterTreatmentVocabularyData');
             questionsList = waterTreatmentModule.getWaterTreatmentVocabularyQuestions();
             articleInfo = waterTreatmentModule.getWaterTreatmentArticleInfo();
-            break;
-          case 'octopus-quiz':
-            const octopusModule = require('../readingVocabularyData');
-            questionsList = octopusModule.getReadingVocabularyQuestions();
-            articleInfo = octopusModule.getReadingArticleInfo();
             break;
           default:
             const defaultModule = require('../articleQuestions');
@@ -118,9 +181,10 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
     return { questions: questionsList, articleInfo };
   };
 
-  // Use testQuestions if provided, otherwise get from data files
-  const finalQuestions = testQuestions || getQuestionsAndArticleInfo().questions;
-  const articleInfo = getQuestionsAndArticleInfo().articleInfo;
+  // Get the final questions and article info
+  const { questions: finalQuestions, articleInfo } = getQuestionsAndArticleInfo();
+
+  console.log('📝 Final questions for scoring:', finalQuestions?.map(q => q.answer));
 
   // Calculate score
   const score = finalQuestions.reduce((total, question, index) => {
