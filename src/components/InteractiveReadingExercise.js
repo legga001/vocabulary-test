@@ -1,4 +1,4 @@
-// src/components/InteractiveReadingExercise.js
+// src/components/InteractiveReadingExercise.js - FIXED VERSION
 import React, { useState, useEffect } from 'react';
 import ClickableLogo from './ClickableLogo';
 
@@ -45,114 +45,95 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
     }
   };
 
-  // Article content - Updated with shorter paragraph 2
+  // Article content
   const paragraph1WithBlanks = "Climate change represents one of the most _____ challenges facing humanity today. Scientists have been _____ the effects of rising global temperatures for decades, and their findings consistently show that human activities are the primary _____ of this phenomenon. The burning of fossil fuels _____ massive amounts of carbon dioxide into the atmosphere, creating a greenhouse effect that _____ the planet's natural temperature regulation. As temperatures continue to _____, we observe more frequent extreme weather events, including devastating hurricanes, prolonged droughts, and unprecedented heatwaves. The _____ of climate change extend beyond environmental concerns, affecting global food security, water resources, and economic stability. Immediate action is _____ to mitigate these effects and prevent catastrophic consequences for future generations.";
 
   const paragraph1Complete = "Climate change represents one of the most pressing challenges facing humanity today. Scientists have been studying the effects of rising global temperatures for decades, and their findings consistently show that human activities are the primary cause of this phenomenon. The burning of fossil fuels releases massive amounts of carbon dioxide into the atmosphere, creating a greenhouse effect that disrupts the planet's natural temperature regulation. As temperatures continue to rise, we observe more frequent extreme weather events, including devastating hurricanes, prolonged droughts, and unprecedented heatwaves. The consequences of climate change extend beyond environmental concerns, affecting global food security, water resources, and economic stability. Immediate action is essential to mitigate these effects and prevent catastrophic consequences for future generations.";
 
   const paragraph2 = "The transition to renewable energy sources has become increasingly urgent. Solar and wind power technologies have advanced significantly, making them more cost-effective than ever before. [MISSING SENTENCE] Electric vehicles are also gaining popularity as consumers become more environmentally conscious. However, this transition requires substantial investment in infrastructure and coordinated efforts between public and private sectors.";
 
-  // Individual dropdown options for each blank - mixed order, correct answer not first
+  // Answer data
+  const correctSentenceAnswers = ['pressing', 'studying', 'cause', 'releases', 'disrupts', 'rise', 'consequences', 'essential'];
+  
   const dropdownSets = [
-    // Blank 1: adjectives for challenges
     [
-      { text: 'Select a word', value: '' },
-      { text: 'minor', value: 'minor' },
+      { text: 'Select...', value: '' },
+      { text: 'urgent', value: 'urgent' },
       { text: 'pressing', value: 'pressing' },
-      { text: 'simple', value: 'simple' },
-      { text: 'temporary', value: 'temporary' }
+      { text: 'simple', value: 'simple' }
     ],
-    // Blank 2: verbs for research
     [
-      { text: 'Select a word', value: '' },
+      { text: 'Select...', value: '' },
       { text: 'ignoring', value: 'ignoring' },
-      { text: 'avoiding', value: 'avoiding' },
       { text: 'studying', value: 'studying' },
-      { text: 'dismissing', value: 'dismissing' }
+      { text: 'avoiding', value: 'avoiding' }
     ],
-    // Blank 3: nouns for source/reason
     [
-      { text: 'Select a word', value: '' },
+      { text: 'Select...', value: '' },
       { text: 'solution', value: 'solution' },
       { text: 'benefit', value: 'benefit' },
-      { text: 'cause', value: 'cause' },
-      { text: 'mystery', value: 'mystery' }
+      { text: 'cause', value: 'cause' }
     ],
-    // Blank 4: verbs for emission
     [
-      { text: 'Select a word', value: '' },
+      { text: 'Select...', value: '' },
       { text: 'absorbs', value: 'absorbs' },
-      { text: 'prevents', value: 'prevents' },
       { text: 'releases', value: 'releases' },
       { text: 'reduces', value: 'reduces' }
     ],
-    // Blank 5: verbs for impact
     [
-      { text: 'Select a word', value: '' },
+      { text: 'Select...', value: '' },
       { text: 'improves', value: 'improves' },
       { text: 'disrupts', value: 'disrupts' },
-      { text: 'maintains', value: 'maintains' },
-      { text: 'stabilises', value: 'stabilises' }
+      { text: 'maintains', value: 'maintains' }
     ],
-    // Blank 6: verbs for temperature
     [
-      { text: 'Select a word', value: '' },
+      { text: 'Select...', value: '' },
       { text: 'fall', value: 'fall' },
       { text: 'stabilise', value: 'stabilise' },
-      { text: 'rise', value: 'rise' },
-      { text: 'fluctuate', value: 'fluctuate' }
+      { text: 'rise', value: 'rise' }
     ],
-    // Blank 7: nouns for impacts
     [
-      { text: 'Select a word', value: '' },
-      { text: 'advantages', value: 'advantages' },
-      { text: 'improvements', value: 'improvements' },
+      { text: 'Select...', value: '' },
+      { text: 'benefits', value: 'benefits' },
       { text: 'consequences', value: 'consequences' },
-      { text: 'discoveries', value: 'discoveries' }
+      { text: 'advantages', value: 'advantages' }
     ],
-    // Blank 8: adjectives for urgency
     [
-      { text: 'Select a word', value: '' },
+      { text: 'Select...', value: '' },
       { text: 'optional', value: 'optional' },
-      { text: 'impossible', value: 'impossible' },
       { text: 'essential', value: 'essential' },
-      { text: 'unnecessary', value: 'unnecessary' }
+      { text: 'impossible', value: 'impossible' }
     ]
   ];
 
-  // Correct answers for complete the sentences
-  const correctSentenceAnswers = ['pressing', 'studying', 'cause', 'releases', 'disrupts', 'rise', 'consequences', 'essential'];
-
-  // Dropdown options for complete the passage
   const passageOptions = [
-    { text: 'Select the best sentence to fill in the blank', value: '' },
-    { text: 'Many countries are investing heavily in smart grid infrastructure to better integrate renewable energy sources.', value: 'smart_grid' },
-    { text: 'The development of energy storage solutions, such as advanced battery systems, is crucial for managing renewable power.', value: 'energy_storage' },
-    { text: 'Traditional energy companies are facing significant challenges adapting to renewable energy markets.', value: 'traditional_companies' },
-    { text: 'Public awareness campaigns have been successful in changing consumer behaviour towards sustainability.', value: 'public_awareness' }
+    { text: 'Select best sentence...', value: '' },
+    { text: 'These technologies require significant government subsidies to remain competitive in the market.', value: 'subsidies' },
+    { text: 'The development of energy storage solutions, such as advanced battery systems, is crucial for managing renewable power.', value: 'storage' },
+    { text: 'Many consumers remain skeptical about the reliability of renewable energy sources during peak demand periods.', value: 'skeptical' },
+    { text: 'Traditional energy companies continue to resist the transition to renewable sources due to profit concerns.', value: 'resistance' }
   ];
 
-  const correctPassageAnswer = 'energy_storage';
+  const correctPassageAnswer = 'storage';
 
-  // Highlight questions and correct answers
   const highlightQuestions = [
     {
-      question: "What is the primary cause of climate change according to the passage?",
-      correctAnswer: "human activities are the primary cause of this phenomenon"
+      question: "What are two specific types of extreme weather events mentioned in the passage?",
+      correctAnswer: "devastating hurricanes, prolonged droughts"
     },
     {
-      question: "What effect does burning fossil fuels have on the atmosphere?",
-      correctAnswer: "releases massive amounts of carbon dioxide into the atmosphere"
+      question: "What three areas beyond environment are affected by climate change according to the text?",
+      correctAnswer: "global food security, water resources, and economic stability"
     },
     {
-      question: "What benefits does renewable energy provide according to the passage?",
-      correctAnswer: "creates new job opportunities and reduces dependence on fossil fuel imports"
+      question: "What two renewable energy technologies are specifically mentioned as having advanced significantly?",
+      correctAnswer: "Solar and wind power technologies"
     }
   ];
 
-  // Identify the idea options
   const ideaOptions = [
-    { text: 'Climate change is primarily caused by natural weather patterns and volcanic activity affecting global temperatures.', value: 'natural_causes' },
+    { text: 'Select the main idea...', value: '' },
+    { text: 'Climate change is primarily caused by natural factors and will resolve itself over time without human intervention.', value: 'natural_causes' },
     { text: 'Human activities, particularly fossil fuel consumption, are driving climate change, but renewable energy transitions offer hope for mitigation.', value: 'human_renewable' },
     { text: 'Renewable energy technologies are becoming more popular among consumers who want to reduce their electricity bills.', value: 'cost_savings' },
     { text: 'The economic benefits of renewable energy outweigh environmental concerns when considering long-term investment strategies.', value: 'economic_focus' }
@@ -239,6 +220,8 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
         isCorrect = answers.identifyTheIdea === correctIdeaAnswer;
         setScores(prev => ({ ...prev, identifyTheIdea: isCorrect }));
         feedbackText = `Identify the Idea: ${isCorrect ? 'Correct' : 'Incorrect'}`;
+        break;
+      default:
         break;
     }
     
@@ -330,8 +313,8 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
     );
   };
 
+  // Results screen
   if (currentStage === 6) {
-    // Enhanced results screen
     const totalCorrect = scores.completeTheSentences + 
                         (scores.completeThePassage ? 1 : 0) + 
                         scores.highlightAnswers.filter(Boolean).length + 
@@ -549,16 +532,17 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
               </>
             )}
 
-            {currentStage >= 2 && currentStage <= 4 && (
+            {(currentStage >= 2 && currentStage <= 4) && (
               <>
-                <h3 className="text-sm font-medium mb-4">Click and drag to highlight the answer to the question below.</h3>
-                <div className="highlight-question">
-                  <p className="text-sm font-medium">{highlightQuestions[currentStage - 2].question}</p>
-                </div>
-                {highlightedText && (
-                  <div className="highlighted-answer">
-                    <p className="text-xs text-gray-600 mb-1">Highlighted text:</p>
-                    <p className="text-sm">{highlightedText}</p>
+                <h3 className="text-sm font-medium mb-4">
+                  {highlightQuestions[currentStage - 2].question}
+                </h3>
+                <p className="text-xs text-gray-500 mb-4">
+                  Click and drag to highlight text in the passage that answers this question.
+                </p>
+                {answers.highlightAnswers[currentStage - 2] && (
+                  <div className="selected-text-preview">
+                    <strong>Selected:</strong> "{answers.highlightAnswers[currentStage - 2]}"
                   </div>
                 )}
               </>
@@ -566,7 +550,7 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
 
             {currentStage === 5 && (
               <>
-                <h3 className="text-sm font-medium mb-4">Select the idea that is expressed in the passage.</h3>
+                <h3 className="text-sm font-medium mb-4">What is the main idea of the passage?</h3>
                 <div className="space-y-3">
                   {ideaOptions.map((option, index) => (
                     <label key={index} className="option-label">
@@ -617,4 +601,4 @@ const InteractiveReadingExercise = ({ onBack, onLogoClick }) => {
   );
 };
 
-export default InteractiveReadingExercise;s
+export default InteractiveReadingExercise;
