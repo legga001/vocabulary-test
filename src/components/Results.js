@@ -1,4 +1,4 @@
-// src/components/Results.js - COMPLETE FIXED VERSION
+// src/components/Results.js - COMPLETELY FIXED VERSION
 import React, { useEffect } from 'react';
 import AnswerReview from './AnswerReview';
 import { recordTestResult } from '../utils/progressDataManager';
@@ -64,7 +64,7 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
 
   // Get questions and article info
   const getQuestionsAndArticleInfo = () => {
-    let questions = [];
+    let questionsList = [];
     let articleInfo = null;
 
     if (quizType === 'article') {
@@ -72,50 +72,50 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
         switch (articleType) {
           case 'zooplankton-quiz':
             const zooplanktonModule = require('../zooplanktonVocabularyData');
-            questions = zooplanktonModule.getZooplanktonVocabularyQuestions();
+            questionsList = zooplanktonModule.getZooplanktonVocabularyQuestions();
             articleInfo = zooplanktonModule.getZooplanktonArticleInfo();
             break;
           case 'killer-whale-quiz':
             const killerWhaleModule = require('../killerWhaleVocabularyData');
-            questions = killerWhaleModule.getKillerWhaleVocabularyQuestions();
+            questionsList = killerWhaleModule.getKillerWhaleVocabularyQuestions();
             articleInfo = killerWhaleModule.getKillerWhaleArticleInfo();
             break;
           case 'smuggling-quiz':
             const smugglingModule = require('../smugglingVocabularyData');
-            questions = smugglingModule.getSmugglingVocabularyQuestions();
+            questionsList = smugglingModule.getSmugglingVocabularyQuestions();
             articleInfo = smugglingModule.getArticleInfo();
             break;
           case 'air-india-quiz':
             const airIndiaModule = require('../airIndiaVocabularyData');
-            questions = airIndiaModule.getAirIndiaVocabularyQuestions();
+            questionsList = airIndiaModule.getAirIndiaVocabularyQuestions();
             articleInfo = airIndiaModule.getAirIndiaArticleInfo();
             break;
           case 'water-treatment-quiz':
             const waterTreatmentModule = require('../waterTreatmentVocabularyData');
-            questions = waterTreatmentModule.getWaterTreatmentVocabularyQuestions();
+            questionsList = waterTreatmentModule.getWaterTreatmentVocabularyQuestions();
             articleInfo = waterTreatmentModule.getWaterTreatmentArticleInfo();
             break;
           case 'octopus-quiz':
             const octopusModule = require('../readingVocabularyData');
-            questions = octopusModule.getReadingVocabularyQuestions();
+            questionsList = octopusModule.getReadingVocabularyQuestions();
             articleInfo = octopusModule.getReadingArticleInfo();
             break;
           default:
             const defaultModule = require('../articleQuestions');
-            questions = defaultModule.getArticleQuestions();
+            questionsList = defaultModule.getArticleQuestions();
             articleInfo = defaultModule.getArticleInfo();
         }
       } catch (error) {
         console.error('Error loading article questions:', error);
         const fallbackModule = require('../articleQuestions');
-        questions = fallbackModule.getArticleQuestions();
+        questionsList = fallbackModule.getArticleQuestions();
         articleInfo = fallbackModule.getArticleInfo();
       }
     } else {
-      questions = getNewQuestions();
+      questionsList = getNewQuestions();
     }
     
-    return { questions, articleInfo };
+    return { questions: questionsList, articleInfo };
   };
 
   // Use testQuestions if provided, otherwise get from data files
