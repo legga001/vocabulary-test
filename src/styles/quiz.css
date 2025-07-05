@@ -282,19 +282,25 @@
 }
 
 /* ==============================================
-   ACTION BUTTONS
+   ACTION BUTTONS - UPDATED WITH SKIP BUTTON
    ============================================== */
 
 .action-buttons {
   display: flex !important;
   justify-content: space-between !important;
+  align-items: center !important;
   gap: 15px !important;
   margin: 30px 0 !important;
   flex-wrap: wrap !important;
 }
 
+.quiz-action-group {
+  display: flex !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
 .action-buttons .btn {
-  flex: 1 !important;
   min-width: 120px !important;
   padding: 12px 20px !important;
   font-size: 1em !important;
@@ -330,4 +336,24 @@
 .action-buttons .btn-secondary:hover:not(:disabled) {
   background: #cbd5e0 !important;
   transform: translateY(-2px) !important;
+}
+
+.action-buttons .btn-skip {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+  color: white !important;
+  min-width: 100px !important;
+  font-size: 0.9em !important;
+}
+
+.action-buttons .btn-skip:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Special feedback style for skipped questions */
+.feedback-section.skipped {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fbbf24 !important;
 }
