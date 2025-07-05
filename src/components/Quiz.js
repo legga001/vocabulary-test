@@ -224,30 +224,66 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
   const processSentence = (sentence, answer) => {
     if (!sentence || !answer) return { beforeGap: '', afterGap: '' };
     
-    // Remove underscores and just split on common gap patterns
+    console.log('🔧 PROCESSING SENTENCE:', { sentence, answer });
+    
+    // Handle various gap patterns and remove ALL underscore remnants
     let cleanSentence = sentence;
     
-    // Handle various gap patterns: _____, _____s, dev_____, etc.
+    // List of all possible gap patterns we need to handle
     const gapPatterns = [
-      /_____/g,           // Simple underscores
-      /\b\w*_+\w*\b/g,    // Word with underscores
-      /\b[A-Za-z]*_+[A-Za-z]*\b/g // Letter-underscore combinations
+      /_____/g,                    // Simple underscores: _____
+      /\b\w*_+\w*\b/g,            // Word with underscores: dev_____ or _____tion
+      /\b[A-Za-z]*_+[A-Za-z]*\b/g, // Letter-underscore combinations
+      /__+/g,                      // Any sequence of underscores
+      /_+/g                        // Any single or multiple underscores
     ];
     
+    let beforeGap = '';
+    let afterGap = '';
+    let gapFound = false;
+    
+    // Try each pattern until we find a match
     for (const pattern of gapPatterns) {
-      if (pattern.test(cleanSentence)) {
-        const parts = cleanSentence.split(pattern);
-        return {
-          beforeGap: (parts[0] || '').trim(),
-          afterGap: (parts[1] || '').trim()
-        };
+      const matches = cleanSentence.match(pattern);
+      if (matches && matches.length > 0) {
+        console.log('🎯 Found gap pattern:', matches[0], 'with pattern:', pattern);
+        
+        // Split on the first match
+        const gapWord = matches[0];
+        const gapIndex = cleanSentence.indexOf(gapWord);
+        
+        beforeGap = cleanSentence.substring(0, gapIndex).trim();
+        afterGap = cleanSentence.substring(gapIndex + gapWord.length).trim();
+        
+        // Clean up any remaining underscores from the parts
+        beforeGap = beforeGap.replace(/_+/g, '').trim();
+        afterGap = afterGap.replace(/_+/g, '').trim();
+        
+        gapFound = true;
+        break;
       }
     }
     
-    // Fallback: if no gap pattern found, put gap at end
+    // If no pattern found, try a simple approach
+    if (!gapFound) {
+      const parts = cleanSentence.split(/\s+/);
+      const gapIndex = parts.findIndex(part => part.includes('_'));
+      
+      if (gapIndex !== -1) {
+        beforeGap = parts.slice(0, gapIndex).join(' ').trim();
+        afterGap = parts.slice(gapIndex + 1).join(' ').trim();
+      } else {
+        // Fallback: put gap at the end
+        beforeGap = cleanSentence.trim();
+        afterGap = '';
+      }
+    }
+    
+    console.log('✅ PROCESSED RESULT:', { beforeGap, afterGap });
+    
     return {
-      beforeGap: cleanSentence.trim(),
-      afterGap: ''
+      beforeGap: beforeGap,
+      afterGap: afterGap
     };
   };
 
