@@ -1,5 +1,7 @@
+// src/components/ArticleSelection.js
 import React from 'react';
 import ClickableLogo from './ClickableLogo';
+import { getZooplanktonArticleInfo } from '../zooplanktonVocabularyData';
 import { getKillerWhaleArticleInfo } from '../killerWhaleVocabularyData';
 import { getReadingArticleInfo } from '../readingVocabularyData';
 import { getArticleInfo } from '../articleQuestions';
@@ -8,6 +10,12 @@ import { getWaterTreatmentArticleInfo } from '../waterTreatmentVocabularyData';
 
 function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
   const articles = [
+    {
+      ...getZooplanktonArticleInfo(),
+      type: 'zooplankton-quiz',
+      icon: '🌊',
+      badge: '✨ NEWEST'
+    },
     {
       ...getKillerWhaleArticleInfo(),
       type: 'killer-whale-quiz',
@@ -44,7 +52,7 @@ function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
         <h1>📰 Article-Based Vocabulary</h1>
         
         <div className="welcome-text">
-          <p>Choose an article to practice vocabulary from current BBC news:</p>
+          <p>Choose an article to practise vocabulary from current BBC news:</p>
         </div>
 
         <div className="article-selection-grid">
@@ -54,10 +62,11 @@ function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
               className="article-selection-card"
               onClick={() => onSelectArticle(article.type)}
             >
-              {article.badge && <div className="new-badge">{article.badge}</div>}
+              {article.badge && <div className="newest-badge">{article.badge}</div>}
               
               <div className="article-header">
                 <div className="card-icon">{article.icon}</div>
+                {article.category && <div className="article-category">{article.category}</div>}
                 <h3 className="article-title">{article.title}</h3>
                 <div className="article-meta">
                   <span className="article-date">{article.date}</span>
@@ -78,7 +87,7 @@ function ArticleSelection({ onBack, onLogoClick, onSelectArticle }) {
           ))}
         </div>
 
-        <div className="reading-info">
+        <div className="article-selection-info">
           <h3>💡 About Article-Based Vocabulary</h3>
           <p>Learn vocabulary in context from real BBC news articles. Each exercise includes:</p>
           <ul>
