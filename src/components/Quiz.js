@@ -1,37 +1,38 @@
-// src/components/Quiz.js - COMPLETE FIXED VERSION WITH ALL ARTICLE TYPES
+// src/components/Quiz.js - FIXED VERSION with correct feedback handling
 import React, { useState, useEffect, useCallback } from 'react';
 import ClickableLogo from './ClickableLogo';
 import LetterInput from './LetterInput';
-import { correctMessages } from '../questionsData';
-import { processSentence } from '../utils/quizHelpers';
 
-// British/American spelling variations
+// Correct feedback messages
+const correctMessages = [
+  '✓ Perfect!',
+  '✓ Excellent!',
+  '✓ Well done!',
+  '✓ Brilliant!',
+  '✓ Spot on!',
+  '✓ Great work!',
+  '✓ Outstanding!'
+];
+
+// Alternative spellings dictionary
 const SPELLING_VARIATIONS = {
-  'analyze': ['analyse'], 'realize': ['realise'], 'organize': ['organise'],
-  'recognize': ['recognise'], 'criticize': ['criticise'], 'apologize': ['apologise'],
-  'optimize': ['optimise'], 'minimize': ['minimise'], 'maximize': ['maximise'],
-  'centralize': ['centralise'], 'normalize': ['normalise'], 'categorize': ['categorise'],
-  'memorize': ['memorise'], 'authorize': ['authorise'], 'modernize': ['modernise'],
-  'utilize': ['utilise'], 'fertilize': ['fertilise'], 'sterilize': ['sterilise'],
-  'stabilize': ['stabilise'], 'summarize': ['summarise'],
-  // Reverse mappings
-  'analyse': ['analyze'], 'realise': ['realize'], 'organise': ['organize'],
-  'recognise': ['recognize'], 'criticise': ['criticize'], 'apologise': ['apologize'],
-  'optimise': ['optimize'], 'minimise': ['minimize'], 'maximise': ['maximize'],
-  'centralise': ['centralize'], 'normalise': ['normalize'], 'categorise': ['categorize'],
-  'memorise': ['memorize'], 'authorise': ['authorize'], 'modernise': ['modernize'],
-  'utilise': ['utilize'], 'fertilise': ['fertilize'], 'sterilise': ['sterilize'],
-  'stabilise': ['stabilize'], 'summarise': ['summarize'],
-  // Colour/color variations
-  'color': ['colour'], 'colours': ['colors'], 'colored': ['coloured'], 'coloring': ['colouring'],
-  'colour': ['color'], 'colors': ['colours'], 'coloured': ['colored'], 'colouring': ['coloring'],
-  // Honour/honor variations
-  'honor': ['honour'], 'honors': ['honours'], 'honored': ['honoured'], 'honoring': ['honouring'],
-  'honour': ['honor'], 'honours': ['honors'], 'honoured': ['honored'], 'honouring': ['honoring'],
-  // Centre/center variations
-  'center': ['centre'], 'centers': ['centres'], 'centered': ['centred'], 'centering': ['centring'],
-  'centre': ['center'], 'centres': ['centers'], 'centred': ['centered'], 'centring': ['centering'],
-  // Theatre/theater variations
+  // Color/colour variations
+  'color': ['colour'], 'colors': ['colours'], 'colour': ['color'], 'colours': ['colors'],
+  'colored': ['coloured'], 'coloring': ['colouring'], 'coloured': ['colored'], 'colouring': ['coloring'],
+  // Realize/realise variations
+  'realize': ['realise'], 'realizes': ['realises'], 'realized': ['realised'], 'realizing': ['realising'],
+  'realise': ['realize'], 'realises': ['realizes'], 'realised': ['realized'], 'realising': ['realizing'],
+  // Organization/organisation variations
+  'organization': ['organisation'], 'organizations': ['organisations'],
+  'organisation': ['organization'], 'organisations': ['organizations'],
+  'organize': ['organise'], 'organized': ['organised'], 'organizes': ['organises'], 'organizing': ['organising'],
+  'organise': ['organize'], 'organised': ['organized'], 'organises': ['organizes'], 'organising': ['organizing'],
+  // Flavor/flavour variations
+  'flavor': ['flavour'], 'flavors': ['flavours'], 'flavour': ['flavor'], 'flavours': ['flavors'],
+  // Center/centre variations
+  'center': ['centre'], 'centers': ['centres'], 'centre': ['center'], 'centres': ['centers'],
+  'centered': ['centred'], 'centering': ['centring'], 'centred': ['centered'], 'centring': ['centering'],
+  // Theater/theatre variations
   'theater': ['theatre'], 'theaters': ['theatres'], 'theatre': ['theater'], 'theatres': ['theaters'],
   // Metre/meter variations
   'meter': ['metre'], 'meters': ['metres'], 'metre': ['meter'], 'metres': ['meters']
@@ -85,102 +86,161 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
               console.log('🌊 Loading zooplankton questions...');
               const zooplanktonModule = await import('../zooplanktonVocabularyData');
               questionData = zooplanktonModule.getZooplanktonVocabularyQuestions();
-              console.log('✅ Zooplankton questions loaded:', questionData);
+              console.log('✅ Loaded zooplankton questions:', questionData.length);
               break;
-            case 'killer-whale-quiz':
-              console.log('🐋 Loading killer whale questions...');
-              const killerWhaleModule = await import('../killerWhaleVocabularyData');
-              questionData = killerWhaleModule.getKillerWhaleVocabularyQuestions();
-              console.log('✅ Killer whale questions loaded:', questionData);
+              
+            case 'nft-quiz':
+              console.log('🖼️ Loading NFT questions...');
+              const nftModule = await import('../nftVocabularyData');
+              questionData = nftModule.getNftVocabularyQuestions();
+              console.log('✅ Loaded NFT questions:', questionData.length);
               break;
-            case 'octopus-quiz':
-              console.log('🐙 Loading octopus questions...');
-              const octopusModule = await import('../readingVocabularyData');
-              questionData = octopusModule.getReadingVocabularyQuestions();
-              console.log('✅ Octopus questions loaded:', questionData);
+              
+            case 'nuclear-quiz':
+              console.log('⚛️ Loading nuclear questions...');
+              const nuclearModule = await import('../nuclearVocabularyData');
+              questionData = nuclearModule.getNuclearVocabularyQuestions();
+              console.log('✅ Loaded nuclear questions:', questionData.length);
               break;
-            case 'smuggling-quiz':
-              console.log('🚢 Loading smuggling questions...');
-              const smugglingModule = await import('../smugglingVocabularyData');
-              questionData = smugglingModule.getSmugglingVocabularyQuestions();
-              console.log('✅ Smuggling questions loaded:', questionData);
+              
+            case 'memory-quiz':
+              console.log('🧠 Loading memory questions...');
+              const memoryModule = await import('../memoryVocabularyData');
+              questionData = memoryModule.getMemoryVocabularyQuestions();
+              console.log('✅ Loaded memory questions:', questionData.length);
               break;
-            case 'air-india-quiz':
-              console.log('✈️ Loading Air India questions...');
-              const airIndiaModule = await import('../airIndiaVocabularyData');
-              questionData = airIndiaModule.getAirIndiaVocabularyQuestions();
-              console.log('✅ Air India questions loaded:', questionData);
+
+            case 'sleep-quiz':
+              console.log('😴 Loading sleep questions...');
+              const sleepModule = await import('../sleepVocabularyData');
+              questionData = sleepModule.getSleepVocabularyQuestions();
+              console.log('✅ Loaded sleep questions:', questionData.length);
               break;
-            case 'water-treatment-quiz':
-              console.log('💧 Loading water treatment questions...');
-              const waterTreatmentModule = await import('../waterTreatmentVocabularyData');
-              questionData = waterTreatmentModule.getWaterTreatmentVocabularyQuestions();
-              console.log('✅ Water treatment questions loaded:', questionData);
+
+            case 'ai-quiz':
+              console.log('🤖 Loading AI questions...');
+              const aiModule = await import('../aiVocabularyData');
+              questionData = aiModule.getAiVocabularyQuestions();
+              console.log('✅ Loaded AI questions:', questionData.length);
               break;
+
+            case 'evolution-quiz':
+              console.log('🧬 Loading evolution questions...');
+              const evolutionModule = await import('../evolutionVocabularyData');
+              questionData = evolutionModule.getEvolutionVocabularyQuestions();
+              console.log('✅ Loaded evolution questions:', questionData.length);
+              break;
+
+            case 'volcano-quiz':
+              console.log('🌋 Loading volcano questions...');
+              const volcanoModule = await import('../volcanoVocabularyData');
+              questionData = volcanoModule.getVolcanoVocabularyQuestions();
+              console.log('✅ Loaded volcano questions:', questionData.length);
+              break;
+
+            case 'ocean-quiz':
+              console.log('🌊 Loading ocean questions...');
+              const oceanModule = await import('../oceanVocabularyData');
+              questionData = oceanModule.getOceanVocabularyQuestions();
+              console.log('✅ Loaded ocean questions:', questionData.length);
+              break;
+
+            case 'space-quiz':
+              console.log('🚀 Loading space questions...');
+              const spaceModule = await import('../spaceVocabularyData');
+              questionData = spaceModule.getSpaceVocabularyQuestions();
+              console.log('✅ Loaded space questions:', questionData.length);
+              break;
+
+            case 'climate-quiz':
+              console.log('🌍 Loading climate questions...');
+              const climateModule = await import('../climateVocabularyData');
+              questionData = climateModule.getClimateVocabularyQuestions();
+              console.log('✅ Loaded climate questions:', questionData.length);
+              break;
+
+            case 'renewable-quiz':
+              console.log('⚡ Loading renewable energy questions...');
+              const renewableModule = await import('../renewableVocabularyData');
+              questionData = renewableModule.getRenewableVocabularyQuestions();
+              console.log('✅ Loaded renewable energy questions:', questionData.length);
+              break;
+
+            case 'antarctica-quiz':
+              console.log('🐧 Loading Antarctica questions...');
+              const antarcticaModule = await import('../antarcticaVocabularyData');
+              questionData = antarcticaModule.getAntarcticaVocabularyQuestions();
+              console.log('✅ Loaded Antarctica questions:', questionData.length);
+              break;
+
+            case 'plastic-quiz':
+              console.log('♻️ Loading plastic pollution questions...');
+              const plasticModule = await import('../plasticVocabularyData');
+              questionData = plasticModule.getPlasticVocabularyQuestions();
+              console.log('✅ Loaded plastic pollution questions:', questionData.length);
+              break;
+
+            case 'deforestation-quiz':
+              console.log('🌳 Loading deforestation questions...');
+              const deforestationModule = await import('../deforestationVocabularyData');
+              questionData = deforestationModule.getDeforestationVocabularyQuestions();
+              console.log('✅ Loaded deforestation questions:', questionData.length);
+              break;
+
+            case 'default':
             default:
-              console.log('📰 Loading default article questions...');
+              console.log('📖 Loading default article questions...');
               const defaultModule = await import('../articleQuestions');
               questionData = defaultModule.getArticleQuestions();
-              console.log('✅ Default article questions loaded:', questionData);
+              console.log('✅ Loaded default article questions:', questionData.length);
+              break;
           }
         } else {
-          console.log('📚 Loading standard vocabulary questions');
-          const standardModule = await import('../questionsData');
-          questionData = standardModule.getNewQuestions();
-          console.log('✅ Standard questions loaded:', questionData);
+          console.log('📝 Loading standard questions...');
+          const { getNewQuestions } = await import('../questionsData');
+          questionData = getNewQuestions();
+          console.log('✅ Loaded standard questions:', questionData.length);
         }
-        
+
+        console.log('📋 Final questions loaded:', questionData);
         setQuestions(questionData);
       } catch (error) {
         console.error('❌ Error loading questions:', error);
         // Fallback to default questions
-        import('../questionsData').then(module => {
-          setQuestions(module.getNewQuestions());
-        });
+        try {
+          const { getNewQuestions } = await import('../questionsData');
+          setQuestions(getNewQuestions());
+        } catch (fallbackError) {
+          console.error('❌ Error loading fallback questions:', fallbackError);
+        }
       }
     };
 
     loadQuestions();
   }, [quizType, articleType]);
 
-  // Get article info - FIXED WITH ALL ARTICLE TYPES
+  // Helper functions for article questions
+  const processSentence = (sentence, answer) => {
+    if (!sentence || !answer) return { beforeGap: '', afterGap: '' };
+    
+    const gapPlaceholder = '_____';
+    const parts = sentence.split(gapPlaceholder);
+    
+    return {
+      beforeGap: parts[0] || '',
+      afterGap: parts[1] || ''
+    };
+  };
+
   const getArticleInfo = () => {
-    try {
-      if (quizType === 'article') {
-        switch (articleType) {
-          case 'zooplankton-quiz':
-            const zooplanktonModule = require('../zooplanktonVocabularyData');
-            return zooplanktonModule.getZooplanktonArticleInfo();
-          case 'killer-whale-quiz':
-            const killerWhaleModule = require('../killerWhaleVocabularyData');
-            return killerWhaleModule.getKillerWhaleArticleInfo();
-          case 'octopus-quiz':
-            const octopusModule = require('../readingVocabularyData');
-            return octopusModule.getReadingArticleInfo();
-          case 'smuggling-quiz':
-            const smugglingModule = require('../smugglingVocabularyData');
-            return smugglingModule.getArticleInfo();
-          case 'air-india-quiz':
-            const airIndiaModule = require('../airIndiaVocabularyData');
-            return airIndiaModule.getAirIndiaArticleInfo();
-          case 'water-treatment-quiz':
-            const waterTreatmentModule = require('../waterTreatmentVocabularyData');
-            return waterTreatmentModule.getWaterTreatmentArticleInfo();
-          default:
-            const defaultModule = require('../articleQuestions');
-            return defaultModule.getArticleInfo();
-        }
-      }
-    } catch (error) {
-      console.error('Error getting article info:', error);
-    }
+    // This would return article information if needed
     return null;
   };
 
-  // Current question and progress
+  // Get current question
   const question = questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / 10) * 100;
-  const processedData = question ? processSentence(question.sentence, question.answer) : { beforeGap: '', afterGap: '' };
+  const processedData = quizType === 'article' && question ? 
+    processSentence(question.sentence, question.answer) : { beforeGap: '', afterGap: '' };
   const articleInfo = getArticleInfo();
 
   console.log('📰 Article info:', articleInfo);
@@ -192,12 +252,29 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     }
   };
 
-  // Enhanced answer checking function
+  // **FIXED**: Enhanced answer checking function that properly reconstructs complete answers
   const checkAnswer = useCallback((userInput, correctAnswer) => {
     if (!userInput || !correctAnswer) return false;
 
+    // For article quizzes, reconstruct the complete word from user input
+    let completeUserAnswer = userInput;
+    
+    if (quizType === 'article') {
+      const lettersShown = getLettersToShow(correctAnswer);
+      const preFilledPart = correctAnswer.substring(0, lettersShown);
+      completeUserAnswer = preFilledPart + userInput; // Reconstruct complete word
+      
+      console.log('🔧 RECONSTRUCTING ANSWER FOR FEEDBACK:', {
+        userInput,
+        correctAnswer,
+        lettersShown,
+        preFilledPart,
+        completeUserAnswer
+      });
+    }
+
     const normalizeText = (text) => text.toLowerCase().trim().replace(/[^a-z]/g, '');
-    const normalizedUser = normalizeText(userInput);
+    const normalizedUser = normalizeText(completeUserAnswer);
     const normalizedCorrect = normalizeText(correctAnswer);
 
     // Check exact match
@@ -206,7 +283,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     // Check alternative spellings
     const alternatives = getAlternativeSpellings(correctAnswer);
     return alternatives.some(alt => normalizeText(alt) === normalizedUser);
-  }, []);
+  }, [quizType]);
 
   // Update answer function
   const updateAnswer = useCallback((value) => {
@@ -215,13 +292,20 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     setUserAnswers(newAnswers);
   }, [userAnswers, currentQuestion]);
 
-  // Check current answer
+  // **FIXED**: Check current answer with proper reconstruction
   const checkCurrentAnswer = useCallback(() => {
     if (checkedQuestions[currentQuestion]) return;
 
     const userAnswer = userAnswers[currentQuestion];
     const correctAnswer = question.answer;
     const isCorrect = checkAnswer(userAnswer, correctAnswer);
+
+    console.log('✅ CHECKING ANSWER:', {
+      userInput: userAnswer,
+      correctAnswer,
+      isCorrect,
+      quizType
+    });
 
     // Mark question as checked
     const newCheckedQuestions = [...checkedQuestions];
@@ -250,15 +334,20 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
       // Quiz complete - pass complete answers to Results
       const completeAnswers = userAnswers.map((userAnswer, index) => {
         const correctAnswer = questions[index].answer;
-        const lettersShown = getLettersToShow(correctAnswer);
-        const preFilledPart = correctAnswer.substring(0, lettersShown);
-        return preFilledPart + userAnswer; // Complete word
+        
+        if (quizType === 'article') {
+          const lettersShown = getLettersToShow(correctAnswer);
+          const preFilledPart = correctAnswer.substring(0, lettersShown);
+          return preFilledPart + userAnswer; // Complete word
+        } else {
+          return userAnswer; // Standard quiz - user types complete word
+        }
       });
       
       console.log('🏁 Quiz finished with complete answers:', completeAnswers);
       onFinish(completeAnswers, questions);
     }
-  }, [currentQuestion, userAnswers, questions, onFinish]);
+  }, [currentQuestion, userAnswers, questions, onFinish, quizType]);
 
   const goToPreviousQuestion = useCallback(() => {
     if (currentQuestion > 0) {
@@ -284,12 +373,29 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
         <div className="quiz-container">
           <div className="quiz-header">
             <div className="quiz-type-badge">
-              {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
+              {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Vocabulary
             </div>
+            <div className="loading-message">Loading questions...</div>
           </div>
-          <div className="loading-state">
-            <p>🎲 Generating your vocabulary test...</p>
-            {quizType === 'article' && <p>Loading {articleType} questions...</p>}
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no questions available
+  if (!question) {
+    return (
+      <div className="exercise-page">
+        <ClickableLogo onLogoClick={onLogoClick} />
+        <div className="quiz-container">
+          <div className="quiz-header">
+            <div className="quiz-type-badge error">❌ Error</div>
+            <div className="error-message">No questions available. Please try again.</div>
+          </div>
+          <div className="back-button-container">
+            <button onClick={onBack} className="btn btn-secondary back-btn">
+              ← Back to Selection
+            </button>
           </div>
         </div>
       </div>
@@ -300,45 +406,43 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     <div className="exercise-page">
       <ClickableLogo onLogoClick={onLogoClick} />
       <div className="quiz-container">
-        {/* Article Link Header */}
+        {/* Header */}
+        <div className="quiz-header">
+          <div className="quiz-type-badge">
+            {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Vocabulary
+          </div>
+          <div className="question-counter">
+            Question {currentQuestion + 1} of 10
+          </div>
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{ width: `${((currentQuestion + 1) / 10) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Article Link */}
         {quizType === 'article' && articleInfo && (
-          <div className="article-link-header">
-            <button 
-              className="btn-article-link"
-              onClick={openArticle}
-              title="Read the original article"
-            >
-              📖 Read Original Article
+          <div className="article-link-container">
+            <button onClick={openArticle} className="article-link-btn">
+              📖 Read the full article
             </button>
-            <div className="article-title-small">
-              {articleInfo.title}
-            </div>
           </div>
         )}
 
-        {/* Quiz Header */}
-        <div className="quiz-header">
-          <div className="quiz-type-badge">
-            {quizType === 'article' ? '📰 Article-Based' : '📚 Standard'} Test
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="progress-container">
-          <div className="progress-bar">
-            <div className="progress-fill" style={{width: `${progress}%`}}></div>
-          </div>
-          <div className="progress-text">Question {currentQuestion + 1} of 10</div>
-        </div>
-
-        {/* Question Header */}
-        <div className="question-header">
-          <div className="question-number">Question {currentQuestion + 1}</div>
-          <div className="level-badge">{question.level}</div>
-        </div>
-
         {/* Question Section */}
         <div className="question-section">
+          <div className="question-title">Fill in the gap:</div>
+          
+          {/* Context for article questions */}
+          {quizType === 'article' && question.context && (
+            <div className="question-context">
+              <small>{question.context}</small>
+            </div>
+          )}
+          
+          {/* Question Text */}
           <div className="question-text">
             <span>{processedData.beforeGap}</span>
             <LetterInput
@@ -346,7 +450,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
               value={userAnswers[currentQuestion]}
               onChange={updateAnswer}
               disabled={checkedQuestions[currentQuestion]}
-              className={showFeedback ? feedbackType : ''}
+              className={checkedQuestions[currentQuestion] ? feedbackType : ''}
               onEnterPress={!checkedQuestions[currentQuestion] && userAnswers[currentQuestion] ? handleEnterPress : undefined}
             />
             <span>{processedData.afterGap}</span>
