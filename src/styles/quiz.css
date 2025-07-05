@@ -1,153 +1,73 @@
 /* ==============================================
-   QUIZ.CSS - Complete Fixed Version with Purple Question Numbers
-   ============================================== */
-
-.quiz-header {
-  text-align: center;
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.quiz-type-badge {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.9em;
-  font-weight: 600;
-  display: inline-block;
-}
-
-.progress-container {
-  margin-bottom: 30px;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background: #e2e8f0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #48bb78, #38a169);
-  border-radius: 4px;
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  text-align: center;
-  margin-top: 10px;
-  color: #666;
-  font-size: 0.9em;
-}
-
-.question-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-/* FIXED: Question number with purple circular background */
-.question-number {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, #4c51bf 0%, #667eea 100%);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  flex-shrink: 0;
-  box-shadow: 0 4px 8px rgba(76, 81, 191, 0.3);
-  transition: all 0.3s ease;
-}
-
-.question-number:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgba(76, 81, 191, 0.4);
-}
-
-.level-badge {
-  background: #4c51bf;
-  color: white;
-  padding: 5px 12px;
-  border-radius: 15px;
-  font-size: 0.8em;
-  font-weight: bold;
-}
-
-/* ==============================================
-   QUESTION SECTION WITH PROPER MOBILE LAYOUT
-   ============================================== */
-
-.question-section {
-  margin: 30px 0;
-  text-align: center;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-.question-text {
-  font-family: 'Nunito', sans-serif;
-  font-weight: 600;
-  font-size: 1.3em;
-  line-height: 1.8;
-  color: #2d3748;
-  margin-bottom: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  max-width: 100%;
-}
-
-/* ==============================================
-   LETTER INPUT COMPONENT STYLES - MOBILE RESPONSIVE
+   FIXED LETTER INPUT COMPONENT STYLES - NO HYPHENS, PROPER SPACING
    ============================================== */
 
 .letter-input-container {
   display: inline-flex !important;
-  gap: 3px;
-  align-items: center;
-  justify-content: center;
-  margin: 0 4px;
-  vertical-align: baseline;
-  flex-wrap: nowrap;
-  max-width: 100%;
+  gap: 2px !important; /* Small gap between letter boxes */
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 10px !important; /* More space either side of the input boxes */
+  vertical-align: baseline !important;
+  flex-wrap: nowrap !important;
+  max-width: 100% !important;
+  /* Remove any potential pseudo-elements that might add hyphens */
+  /* Remove any list-style or content that might create dashes */
+  list-style: none !important;
+}
+
+/* Remove any before/after pseudo-elements that might be adding hyphens */
+.letter-input-container::before,
+.letter-input-container::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Ensure no text decoration or content adds unwanted characters */
+.letter-input-container {
+  text-decoration: none !important;
+  content: none !important;
+}
+
+/* Also check for any potential CSS content in the parent elements */
+.question-text .letter-input-container::before,
+.question-text .letter-input-container::after,
+.question-section .letter-input-container::before,
+.question-section .letter-input-container::after {
+  content: none !important;
+  display: none !important;
 }
 
 .letter-input-box {
   width: 35px !important;
   height: 35px !important;
-  border: 2px solid #e2e8f0;
-  border-radius: 6px;
-  text-align: center;
-  font-family: 'Nunito', sans-serif;
-  font-size: 1.1em;
-  font-weight: 600;
-  background: white;
-  transition: all 0.3s ease;
-  outline: none;
-  text-transform: lowercase;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  text-align: center !important;
+  font-family: 'Nunito', sans-serif !important;
+  font-size: 1.1em !important;
+  font-weight: 600 !important;
+  background: white !important;
+  transition: all 0.3s ease !important;
+  outline: none !important;
+  text-transform: lowercase !important;
   display: inline-block !important;
-  margin: 0;
-  padding: 0;
-  vertical-align: middle;
-  line-height: 31px;
-  box-sizing: border-box;
-  min-width: 0;
-  flex-shrink: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+  line-height: 31px !important;
+  box-sizing: border-box !important;
+  min-width: 0 !important;
+  flex-shrink: 0 !important;
+  /* Ensure no pseudo-elements add hyphens */
+  position: relative !important;
+}
+
+/* Remove any before/after pseudo-elements from letter boxes */
+.letter-input-box::before,
+.letter-input-box::after {
+  content: none !important;
+  display: none !important;
 }
 
 /* Pre-filled letters (given letters) */
@@ -155,15 +75,15 @@
   background: #f0f2ff !important;
   border-color: #4c51bf !important;
   color: #4c51bf !important;
-  font-weight: 700;
-  cursor: not-allowed;
+  font-weight: 700 !important;
+  cursor: not-allowed !important;
 }
 
 /* Editable letters (user input) */
 .letter-input-box.editable {
   background: #ffffff !important;
   border-color: #cbd5e0 !important;
-  cursor: text;
+  cursor: text !important;
 }
 
 .letter-input-box.editable:focus {
@@ -180,7 +100,7 @@
 .letter-input-box:disabled {
   background: #f7fafc !important;
   color: #a0aec0 !important;
-  cursor: not-allowed;
+  cursor: not-allowed !important;
 }
 
 /* Feedback states for the entire container */
@@ -209,159 +129,118 @@
 }
 
 /* ==============================================
-   HINT SECTION
+   QUESTION TEXT STYLING - PROPER SPACING
    ============================================== */
 
-.hint-section {
-  background: #f8f9fa;
-  border-left: 4px solid #4c51bf;
-  padding: 15px 20px;
-  margin: 20px 0;
-  border-radius: 0 8px 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.question-text {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: baseline !important;
+  font-size: 1.2em !important;
+  line-height: 1.6 !important;
+  color: #2d3748 !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.3px !important;
+  word-spacing: 2px !important;
+  margin: 20px 0 !important;
+  padding: 0 !important;
+  min-height: 45px !important;
+  text-align: left !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 100% !important;
 }
 
-.hint-icon {
-  font-size: 1.2em;
-  color: #4c51bf;
-  flex-shrink: 0;
+/* Ensure the spans around the letter input have proper spacing */
+.question-text > span {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: inline !important;
+  /* Add a tiny bit of space after text that comes before inputs */
 }
 
-.hint-text {
-  color: #666;
-  font-size: 0.95em;
-  line-height: 1.4;
-  font-style: italic;
+.question-text > span:first-child {
+  margin-right: 2px !important; /* Space after text before input */
+}
+
+.question-text > span:last-child {
+  margin-left: 2px !important; /* Space before text after input */
 }
 
 /* ==============================================
-   QUESTION CONTEXT AND HINTS
+   MOBILE RESPONSIVE ADJUSTMENTS
    ============================================== */
 
-.question-context {
-  background: #f7fafc;
-  border-left: 4px solid #4c51bf;
-  padding: 10px 15px;
-  margin: 15px 0;
-  border-radius: 0 8px 8px 0;
-  word-wrap: break-word;
+@media (max-width: 768px) {
+  .letter-input-container {
+    margin: 0 6px !important;
+  }
+  
+  .letter-input-box {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 1em !important;
+    line-height: 26px !important;
+  }
+  
+  .question-text {
+    font-size: 1.1em !important;
+    line-height: 1.5 !important;
+  }
 }
 
-.question-context small {
-  color: #4a5568;
-  font-style: italic;
-}
-
-.word-hint {
-  margin: 15px 0;
-  color: #666;
-  font-size: 0.9em;
-  font-style: italic;
+@media (max-width: 480px) {
+  .letter-input-container {
+    margin: 0 4px !important;
+    gap: 1px !important;
+  }
+  
+  .letter-input-box {
+    width: 25px !important;
+    height: 25px !important;
+    font-size: 0.9em !important;
+    line-height: 21px !important;
+  }
+  
+  .question-text {
+    font-size: 1em !important;
+    line-height: 1.4 !important;
+  }
 }
 
 /* ==============================================
-   FEEDBACK SECTION - MAXIMUM SPECIFICITY TO OVERRIDE CONFLICTS
+   FEEDBACK SECTION STYLES
    ============================================== */
 
 .feedback-section {
-  margin: 20px 0;
-  padding: 15px 20px;
-  border-radius: 10px;
-  font-weight: 600;
-  text-align: center;
-  border: 2px solid;
-  transition: all 0.3s ease;
-  animation: feedbackSlide 0.4s ease-out;
+  margin: 20px 0 !important;
+  padding: 15px 20px !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  border: 2px solid !important;
+  transition: all 0.3s ease !important;
+  animation: feedbackSlide 0.4s ease-out !important;
 }
 
 .feedback-section.correct {
-  background: #d4edda;
-  color: #155724;
-  border-color: #48bb78;
+  background: #d4edda !important;
+  color: #155724 !important;
+  border-color: #48bb78 !important;
 }
 
 .feedback-section.incorrect {
-  background: #f8d7da;
-  color: #721c24;
-  border-color: #f56565;
+  background: #f8d7da !important;
+  color: #721c24 !important;
+  border-color: #f56565 !important;
 }
 
 .feedback-message {
-  font-size: 1em;
-  margin: 0;
+  font-size: 1em !important;
+  margin: 0 !important;
 }
 
-.quiz-container .feedback {
-  margin: 20px 0 !important;
-  padding: 20px !important;
-  border-radius: 12px !important;
-  font-weight: 600 !important;
-  text-align: center !important;
-  border: 2px solid !important;
-  font-size: 1.1em !important;
-  word-wrap: break-word !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-  animation: feedbackSlide 0.4s ease-out !important;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: relative !important;
-  z-index: 1000 !important;
-  clear: both !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-.quiz-container .feedback.correct {
-  background: #d4edda !important;
-  color: #155724 !important;
-  border-color: #48bb78 !important;
-}
-
-.quiz-container .feedback.incorrect {
-  background: #f8d7da !important;
-  color: #721c24 !important;
-  border-color: #f56565 !important;
-}
-
-/* Ensure no other styles can override feedback */
-.quiz-container .feedback,
-.quiz-container .feedback.correct,
-.quiz-container .feedback.incorrect {
-  all: unset !important;
-  /* Then re-apply our styles */
-  display: block !important;
-  margin: 20px 0 !important;
-  padding: 20px !important;
-  border-radius: 12px !important;
-  font-weight: 600 !important;
-  text-align: center !important;
-  border: 2px solid !important;
-  font-size: 1.1em !important;
-  word-wrap: break-word !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: relative !important;
-  z-index: 1000 !important;
-  font-family: 'Nunito', sans-serif !important;
-}
-
-.quiz-container .feedback.correct {
-  background: #d4edda !important;
-  color: #155724 !important;
-  border-color: #48bb78 !important;
-}
-
-.quiz-container .feedback.incorrect {
-  background: #f8d7da !important;
-  color: #721c24 !important;
-  border-color: #f56565 !important;
-}
-
-/* Feedback animation with high specificity */
+/* Feedback animation */
 @keyframes feedbackSlide {
   from {
     opacity: 0;
@@ -374,282 +253,81 @@
 }
 
 /* ==============================================
+   QUIZ CONTAINER GENERAL STYLES
+   ============================================== */
+
+.quiz-container {
+  max-width: 800px !important;
+  margin: 0 auto !important;
+  padding: 20px !important;
+  background: white !important;
+  border-radius: 15px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.question-section {
+  background: #f8f9fa !important;
+  border-radius: 12px !important;
+  padding: 25px !important;
+  margin: 20px 0 !important;
+  border: 1px solid #e9ecef !important;
+}
+
+.question-title {
+  color: #4a5568 !important;
+  font-size: 1.3em !important;
+  font-weight: 600 !important;
+  margin-bottom: 20px !important;
+  text-align: center !important;
+}
+
+/* ==============================================
    ACTION BUTTONS
    ============================================== */
 
 .action-buttons {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin: 30px 0;
-  flex-wrap: wrap;
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 15px !important;
+  margin: 30px 0 !important;
+  flex-wrap: wrap !important;
 }
 
 .action-buttons .btn {
-  flex: 1;
-  min-width: 120px;
-  padding: 12px 20px;
-  font-size: 1em;
-  font-weight: 600;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: center;
+  flex: 1 !important;
+  min-width: 120px !important;
+  padding: 12px 20px !important;
+  font-size: 1em !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  text-align: center !important;
 }
 
 .action-buttons .btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
 }
 
 .action-buttons .btn-primary {
-  background: linear-gradient(135deg, #48bb78, #38a169);
-  color: white;
+  background: linear-gradient(135deg, #48bb78, #38a169) !important;
+  color: white !important;
 }
 
 .action-buttons .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #38a169, #2f855a);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+  background: linear-gradient(135deg, #38a169, #2f855a) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3) !important;
 }
 
 .action-buttons .btn-secondary {
-  background: #e2e8f0;
-  color: #4a5568;
+  background: #e2e8f0 !important;
+  color: #4a5568 !important;
 }
 
 .action-buttons .btn-secondary:hover:not(:disabled) {
-  background: #cbd5e0;
-  transform: translateY(-1px);
-}
-
-/* ==============================================
-   NAVIGATION AND BUTTONS
-   ============================================== */
-
-.navigation {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 30px;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.nav-btn {
-  background: #4c51bf;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 1em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.nav-btn:hover:not(:disabled) {
-  background: #434190;
-  transform: translateY(-1px);
-}
-
-.nav-btn:disabled {
-  background: #a0aec0;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ==============================================
-   NAVIGATION HELP
-   ============================================== */
-
-.navigation-help {
-  text-align: center;
-  margin: 20px 0;
-  padding: 12px;
-  background: #f0f2ff;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-}
-
-.navigation-help p {
-  margin: 0;
-  color: #666;
-  font-size: 0.9em;
-  font-style: italic;
-}
-
-/* ==============================================
-   BACK BUTTON
-   ============================================== */
-
-.back-button-container {
-  text-align: center;
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid #e2e8f0;
-}
-
-.back-btn {
-  background: #6c757d;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-size: 0.9em;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.back-btn:hover {
-  background: #5a6268;
-}
-
-/* ==============================================
-   ARTICLE LINK HEADER
-   ============================================== */
-
-.article-link-header {
-  background: linear-gradient(135deg, #e6f4ff, #cce7ff);
-  border: 2px solid #4c51bf;
-  border-radius: 12px;
-  padding: 15px 20px;
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.btn-article-link {
-  background: linear-gradient(135deg, #4c51bf, #667eea);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 0.9em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-article-link:hover {
-  background: linear-gradient(135deg, #434190, #5a67d8);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(76, 81, 191, 0.3);
-}
-
-.article-title-small {
-  color: #4c51bf;
-  font-size: 0.9em;
-  font-weight: 600;
-  max-width: 400px;
-  text-align: right;
-}
-
-/* ==============================================
-   LOADING STATE
-   ============================================== */
-
-.loading-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #666;
-}
-
-.loading-state p {
-  font-size: 1.1em;
-  margin: 10px 0;
-}
-
-/* ==============================================
-   MOBILE RESPONSIVENESS
-   ============================================== */
-
-@media (max-width: 768px) {
-  .quiz-header {
-    flex-direction: column;
-    gap: 15px;
-    text-align: center;
-  }
-  
-  .question-header {
-    flex-direction: column;
-    gap: 10px;
-    text-align: center;
-  }
-  
-  .question-text {
-    font-size: 1.2em;
-    line-height: 1.6;
-  }
-  
-  .letter-input-box {
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 1em;
-    line-height: 28px;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-  }
-  
-  .action-buttons .btn {
-    flex: none;
-    width: 100%;
-  }
-  
-  .article-link-header {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .article-title-small {
-    text-align: center;
-    max-width: none;
-  }
-  
-  .hint-section {
-    padding: 12px 15px;
-    margin: 15px 0;
-  }
-  
-  .hint-text {
-    font-size: 0.9em;
-  }
-}
-
-@media (max-width: 480px) {
-  .question-text {
-    font-size: 1.1em;
-  }
-  
-  .letter-input-box {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 0.9em;
-    line-height: 24px;
-  }
-  
-  .letter-input-container {
-    gap: 2px;
-    margin: 0 2px;
-  }
-  
-  .question-number {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
-  }
-  
-  .level-badge {
-    padding: 4px 8px;
-    font-size: 0.7em;
-  }
+  background: #cbd5e0 !important;
+  transform: translateY(-2px) !important;
 }
