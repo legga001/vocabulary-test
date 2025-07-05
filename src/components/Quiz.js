@@ -1,4 +1,4 @@
-// src/components/Quiz.js - COMPLETE FIXED VERSION
+// src/components/Quiz.js - COMPLETE FIXED VERSION WITH ALL ARTICLE TYPES
 import React, { useState, useEffect, useCallback } from 'react';
 import ClickableLogo from './ClickableLogo';
 import LetterInput from './LetterInput';
@@ -54,7 +54,7 @@ const getLettersToShow = (word) => {
   return 6;
 };
 
-function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
+function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClick }) {
   console.log('🏗️ Quiz component rendering with:', { quizType, articleType });
   
   // State management
@@ -71,7 +71,7 @@ function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
 
   const QUIZ_STATE_KEY = `quiz_state_${quizType}_${articleType || 'standard'}`;
 
-  // Load questions based on quiz type
+  // Load questions based on quiz type - FIXED WITH ALL ARTICLE TYPES
   useEffect(() => {
     const loadQuestions = async () => {
       try {
@@ -82,40 +82,54 @@ function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
           
           switch (articleType) {
             case 'zooplankton-quiz':
+              console.log('🌊 Loading zooplankton questions...');
               const zooplanktonModule = await import('../zooplanktonVocabularyData');
               questionData = zooplanktonModule.getZooplanktonVocabularyQuestions();
+              console.log('✅ Zooplankton questions loaded:', questionData);
               break;
             case 'killer-whale-quiz':
+              console.log('🐋 Loading killer whale questions...');
               const killerWhaleModule = await import('../killerWhaleVocabularyData');
               questionData = killerWhaleModule.getKillerWhaleVocabularyQuestions();
-              break;
-            case 'smuggling-quiz':
-              const smugglingModule = await import('../smugglingVocabularyData');
-              questionData = smugglingModule.getSmugglingVocabularyQuestions();
-              break;
-            case 'air-india-quiz':
-              const airIndiaModule = await import('../airIndiaVocabularyData');
-              questionData = airIndiaModule.getAirIndiaVocabularyQuestions();
-              break;
-            case 'water-treatment-quiz':
-              const waterTreatmentModule = await import('../waterTreatmentVocabularyData');
-              questionData = waterTreatmentModule.getWaterTreatmentVocabularyQuestions();
+              console.log('✅ Killer whale questions loaded:', questionData);
               break;
             case 'octopus-quiz':
+              console.log('🐙 Loading octopus questions...');
               const octopusModule = await import('../readingVocabularyData');
               questionData = octopusModule.getReadingVocabularyQuestions();
+              console.log('✅ Octopus questions loaded:', questionData);
+              break;
+            case 'smuggling-quiz':
+              console.log('🚢 Loading smuggling questions...');
+              const smugglingModule = await import('../smugglingVocabularyData');
+              questionData = smugglingModule.getSmugglingVocabularyQuestions();
+              console.log('✅ Smuggling questions loaded:', questionData);
+              break;
+            case 'air-india-quiz':
+              console.log('✈️ Loading Air India questions...');
+              const airIndiaModule = await import('../airIndiaVocabularyData');
+              questionData = airIndiaModule.getAirIndiaVocabularyQuestions();
+              console.log('✅ Air India questions loaded:', questionData);
+              break;
+            case 'water-treatment-quiz':
+              console.log('💧 Loading water treatment questions...');
+              const waterTreatmentModule = await import('../waterTreatmentVocabularyData');
+              questionData = waterTreatmentModule.getWaterTreatmentVocabularyQuestions();
+              console.log('✅ Water treatment questions loaded:', questionData);
               break;
             default:
+              console.log('📰 Loading default article questions...');
               const defaultModule = await import('../articleQuestions');
               questionData = defaultModule.getArticleQuestions();
+              console.log('✅ Default article questions loaded:', questionData);
           }
         } else {
           console.log('📚 Loading standard vocabulary questions');
           const standardModule = await import('../questionsData');
           questionData = standardModule.getNewQuestions();
+          console.log('✅ Standard questions loaded:', questionData);
         }
         
-        console.log('✅ Questions loaded:', questionData);
         setQuestions(questionData);
       } catch (error) {
         console.error('❌ Error loading questions:', error);
@@ -129,7 +143,7 @@ function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
     loadQuestions();
   }, [quizType, articleType]);
 
-  // Get article info
+  // Get article info - FIXED WITH ALL ARTICLE TYPES
   const getArticleInfo = () => {
     try {
       if (quizType === 'article') {
@@ -140,6 +154,9 @@ function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
           case 'killer-whale-quiz':
             const killerWhaleModule = require('../killerWhaleVocabularyData');
             return killerWhaleModule.getKillerWhaleArticleInfo();
+          case 'octopus-quiz':
+            const octopusModule = require('../readingVocabularyData');
+            return octopusModule.getReadingArticleInfo();
           case 'smuggling-quiz':
             const smugglingModule = require('../smugglingVocabularyData');
             return smugglingModule.getArticleInfo();
@@ -149,9 +166,6 @@ function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
           case 'water-treatment-quiz':
             const waterTreatmentModule = require('../waterTreatmentVocabularyData');
             return waterTreatmentModule.getWaterTreatmentArticleInfo();
-          case 'octopus-quiz':
-            const octopusModule = require('../readingVocabularyData');
-            return octopusModule.getReadingArticleInfo();
           default:
             const defaultModule = require('../articleQuestions');
             return defaultModule.getArticleInfo();
@@ -168,6 +182,8 @@ function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
   const progress = ((currentQuestion + 1) / 10) * 100;
   const processedData = question ? processSentence(question.sentence, question.answer) : { beforeGap: '', afterGap: '' };
   const articleInfo = getArticleInfo();
+
+  console.log('📰 Article info:', articleInfo);
 
   // Open article link
   const openArticle = () => {
@@ -273,6 +289,7 @@ function Quiz({ onFinish, quizType, articleType, onBack, onLogoClick }) {
           </div>
           <div className="loading-state">
             <p>🎲 Generating your vocabulary test...</p>
+            {quizType === 'article' && <p>Loading {articleType} questions...</p>}
           </div>
         </div>
       </div>
