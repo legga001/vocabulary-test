@@ -290,7 +290,7 @@
    MOBILE PHONE ADJUSTMENTS (480px and below)
    ============================================== */
 @media (max-width: 480px) {
-  .App:not(.splash-mode) {
+  .App:not(.splash-mode):not(.landing-mode) {
     padding: 12px;
     margin: 12px;
     max-width: calc(100vw - 24px);
