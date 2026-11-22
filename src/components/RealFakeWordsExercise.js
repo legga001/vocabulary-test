@@ -77,6 +77,7 @@ function RealFakeWordsExercise({ onBack, onLogoClick }) {
     const answerRecord = {
       word: currentWord.word,
       isReal: currentWord.isReal,
+      definition: currentWord.definition,
       userAnswer: userChoice,
       correct: isCorrect,
       timeTaken: GAME_CONFIG.TIMER_DURATION - timeLeft
@@ -112,6 +113,7 @@ function RealFakeWordsExercise({ onBack, onLogoClick }) {
     const answerRecord = {
       word: currentWord.word,
       isReal: currentWord.isReal,
+      definition: currentWord.definition,
       userAnswer: ANSWER_TYPES.TIMEOUT,
       correct: false,
       timeTaken: GAME_CONFIG.TIMER_DURATION
@@ -457,6 +459,9 @@ function RealFakeWordsExercise({ onBack, onLogoClick }) {
                         <span className="timeout-indicator">⏰ Timed out</span>
                       )}
                     </div>
+                    {answer.isReal && answer.definition && (
+                      <p className="word-result-definition"><strong>Meaning:</strong> {answer.definition}</p>
+                    )}
                   </div>
                 ))}
               </div>

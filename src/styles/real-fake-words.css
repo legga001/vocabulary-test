@@ -322,7 +322,7 @@
 
 .word-results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
   gap: 15px;
   margin: 20px 0;
   max-height: 400px;
@@ -392,4 +392,17 @@
   padding: 40px;
   font-size: 1.2em;
   color: #666;
+}
+
+.word-result-definition {
+  margin: .55rem 0 0;
+  color: #2d3748;
+  font-size: .92rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.word-result-header .word-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
