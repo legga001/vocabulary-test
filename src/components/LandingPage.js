@@ -20,6 +20,8 @@ const getDailyTargetData = () => {
   return {};
 };
 
+const GRAMMAR_URL = `${process.env.PUBLIC_URL}/grammar/index.html`;
+
 const TARGETS_STORAGE_KEY = 'mrFoxEnglishDailyTargets';
 
 // Constants
@@ -142,15 +144,6 @@ const EXERCISES = [
     isActive: false
   },
   {
-    type: 'grammar-focus',
-    category: 'WRITING',
-    icon: '📋',
-    title: 'Grammar Focus',
-    subtitle: 'Targeted grammar practice',
-    dailyTarget: 2,
-    isActive: false
-  },
-  {
     type: 'essay-writing',
     category: 'WRITING',
     icon: '📄',
@@ -177,6 +170,13 @@ const MENU_ITEMS = [
     text: 'Exercises',
     isActive: true,
     action: null
+  },
+  {
+    id: 'grammar',
+    icon: '🦊',
+    text: 'Grammar courses',
+    isActive: true,
+    href: GRAMMAR_URL
   },
   {
     id: 'progress',
@@ -299,7 +299,13 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
     
     return (
       <React.Fragment key={item.id}>
-        <div 
+        {item.href ? (
+          <a className={`${baseClass} active`} href={item.href} style={{ textDecoration: 'none' }}>
+            <span className={iconClass} aria-hidden="true">{item.icon}</span>
+            <span className={textClass}>{item.text}</span>
+          </a>
+        ) : (
+        <div
           className={`${baseClass} ${item.isActive ? 'active' : ''}`}
           onClick={() => item.action && handleMenuItemClick(item.action)}
           style={{ cursor: item.action ? 'pointer' : 'default' }}
@@ -307,6 +313,7 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
           <span className={iconClass}>{item.icon}</span>
           <span className={textClass}>{item.text}</span>
         </div>
+        )}
         {index < MENU_ITEMS.length - 1 && <div className={dividerClass}></div>}
       </React.Fragment>
     );
@@ -441,6 +448,9 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
           <div className="welcome-section">
             <h1 className="main-title">Welcome to Mr. Fox English</h1>
             <p className="main-subtitle">Master English with interactive exercises designed for success</p>
+            <a className="btn btn-primary" href={GRAMMAR_URL} style={{ display: 'inline-block', marginTop: '1rem', textDecoration: 'none' }}>
+              Explore grammar courses
+            </a>
           </div>
         </section>
 
