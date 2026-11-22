@@ -293,4 +293,5 @@ body { background:var(--site-background) fixed; }
 .reading-passage,.reading-review-text { background:var(--site-panel); border-color:var(--site-outline); }
 @media (max-width:1024px) {
   .App.menu-mode { box-shadow:none; padding:0; }
+  .App.landing-mode { transition:none; }
 }
