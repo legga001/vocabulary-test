@@ -184,7 +184,7 @@
 /* NEW: Article category styling */
 .article-category {
   display: inline-block;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4b37a1, #5b46b3);
   color: white;
   padding: 4px 12px;
   border-radius: 15px;
@@ -204,7 +204,7 @@
 /* Current Events category gets blue gradient for 2nd and 4th items */
 .article-selection-card:nth-child(2) .article-category,
 .article-selection-card:nth-child(4) .article-category {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4b37a1, #5b46b3);
 }
 
 /* Environment & Science category gets teal gradient for 3rd item */

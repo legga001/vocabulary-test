@@ -30,7 +30,7 @@
 }
 
 .level-estimate {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #4b37a1, #5b46b3);
   color: white;
   padding: 20px;
   border-radius: 15px;
@@ -46,7 +46,7 @@
 }
 
 .level-estimate p {
-  color: rgba(255, 255, 255, 0.9);
+  color: #fff;
   font-size: 1.1em;
   margin: 0;
 }

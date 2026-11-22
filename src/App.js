@@ -218,7 +218,7 @@ function App() {
         );
 
       case 'reading-comprehension':
-        return <ReadingComprehensionTest onBack={goBack} onLogoClick={handleLogoClick} onProgress={() => goToProgress('tests')} />;
+        return <ReadingComprehensionTest onBack={goBack} onLogoClick={handleLogoClick} onProgress={() => goToProgress(returnScreen)} backLabel={returnScreen === 'landing' ? 'Exercises' : 'tests'} />;
 
       case 'progress':
         return <ProgressPage onBack={goBack} onLogoClick={handleLogoClick} />;

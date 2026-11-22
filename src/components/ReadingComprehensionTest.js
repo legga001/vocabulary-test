@@ -14,7 +14,7 @@ function shuffledOptions(options) {
   return shuffled;
 }
 
-function ReadingComprehensionTest({ onBack, onLogoClick, onProgress }) {
+function ReadingComprehensionTest({ onBack, onLogoClick, onProgress, backLabel }) {
   const [level, setLevel] = useState('A1');
   const [length, setLength] = useState(lengths[0]);
   const [test, setTest] = useState(null);
@@ -79,7 +79,7 @@ function ReadingComprehensionTest({ onBack, onLogoClick, onProgress }) {
     <main className="exercise-page scrollable-page reading-page">
       <ClickableLogo onLogoClick={onLogoClick} />
       <div className="quiz-container reading-container">
-        <h1 ref={heading} tabIndex={-1}>{score === null ? 'Reading comprehension' : 'Reading test results'}</h1>
+        <h1 ref={heading} tabIndex={-1}>{score === null ? 'A1–C1 Reading Comprehension' : 'Reading test results'}</h1>
 
         {!test && (
           <>
@@ -113,7 +113,7 @@ function ReadingComprehensionTest({ onBack, onLogoClick, onProgress }) {
                 </li>
               ))}
             </ul>
-            <button type="button" className="btn btn-secondary" onClick={onBack}>← Back to tests</button>
+            <button type="button" className="btn btn-secondary" onClick={onBack}>← Back to {backLabel}</button>
           </>
         )}
 
@@ -177,7 +177,7 @@ function ReadingComprehensionTest({ onBack, onLogoClick, onProgress }) {
             <div className="reading-actions">
               <button type="button" className="btn btn-primary" onClick={chooseAnother}>Try another reading test</button>
               <button type="button" className="btn btn-secondary" onClick={onProgress}>View Progress</button>
-              <button type="button" className="btn btn-secondary" onClick={onBack}>← Back to tests</button>
+              <button type="button" className="btn btn-secondary" onClick={onBack}>← Back to {backLabel}</button>
             </div>
           </>
         )}

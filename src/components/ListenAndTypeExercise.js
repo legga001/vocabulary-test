@@ -171,7 +171,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
 
 
           <div style={{
-            background: 'linear-gradient(135deg, #4c51bf, #667eea)',
+            background: 'linear-gradient(135deg, #4b37a1, #5b46b3)',
             color: 'white',
             padding: '30px',
             borderRadius: '15px',
@@ -240,7 +240,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               onClick={() => window.location.reload()}
               style={{
                 padding: '15px 30px',
-                background: 'linear-gradient(135deg, #4c51bf, #667eea)',
+                background: 'linear-gradient(135deg, #4b37a1, #5b46b3)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '25px',
@@ -367,7 +367,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
           </div>
 
           <div style={{
-            background: 'linear-gradient(135deg, #4c51bf, #667eea)',
+            background: 'linear-gradient(135deg, #4b37a1, #5b46b3)',
             color: 'white',
             padding: '20px',
             borderRadius: '15px',
@@ -376,7 +376,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
             <h4 style={{ margin: '0 0 10px 0' }}>
               📊 Ready to Test Your Listening Skills?
             </h4>
-            <p style={{ margin: 0, opacity: 0.9 }}>
+            <p style={{ margin: 0, color: '#fff' }}>
               You'll hear {testSentences.length} sentences to type out accurately
             </p>
           </div>
@@ -391,7 +391,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
               onClick={startExercise}
               style={{
                 padding: '15px 30px',
-                background: 'linear-gradient(135deg, #4c51bf, #667eea)',
+                background: 'linear-gradient(135deg, #4b37a1, #5b46b3)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '25px',
@@ -650,7 +650,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
                 fontSize: '1em',
                 minWidth: '160px',
                 background: userInput.trim() 
-                  ? 'linear-gradient(135deg, #4c51bf, #667eea)' 
+                  ? 'linear-gradient(135deg, #4b37a1, #5b46b3)' 
                   : '#a0aec0',
                 color: 'white'
               }}

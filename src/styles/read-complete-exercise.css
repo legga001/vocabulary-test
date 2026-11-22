@@ -90,7 +90,7 @@
    3. PARAGRAPH INFO & TRANSITION
    ============================================== */
 .paragraph-info {
-  background: linear-gradient(135deg, #4c51bf 0%, #667eea 100%);
+  background: linear-gradient(135deg, #4b37a1, #5b46b3);
   color: white;
   border-radius: 15px;
   padding: 25px;
@@ -560,7 +560,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4c51bf 0%, #667eea 100%);
+  background: linear-gradient(135deg, #4b37a1, #5b46b3);
   color: white;
   box-shadow: 0 4px 15px rgba(76, 81, 191, 0.3);
 }
