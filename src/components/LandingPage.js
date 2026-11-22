@@ -441,6 +441,11 @@ function LandingPage({ onSelectExercise, onProgress, onLogoClick, onStudyMenu, i
               </button>
             ))}
           </div>
+          {(selectedCategory === 'ALL' || selectedCategory === 'READING') && (
+            <button type="button" className="reading-test-badge" onClick={() => onSelectExercise('reading-comprehension')}>
+              A1–C1 Reading Comprehension
+            </button>
+          )}
           {selectedCategory !== 'ALL' && (
             <div className="category-info">
               <span className="category-description">

@@ -11,7 +11,7 @@ function StudyMenu({ tests, onHome, onBack, onExercises, onTests, onProgress, on
   }, [tests]);
 
   const choices = tests ? [
-    { icon: '📝', label: 'Reading comprehension', description: 'Choose an A1–C1 text and answer eight questions.', action: () => onSelectTest('reading-comprehension') },
+    { icon: '📝', label: 'A1–C1 Reading Comprehension', description: 'Choose an A1–C1 text and answer eight questions.', action: () => onSelectTest('reading-comprehension') },
     { icon: '📖', label: 'Standard Vocabulary', description: 'Take a ten-word test that adapts as you answer.', action: () => onSelectTest('standard-vocabulary') },
     { icon: '📰', label: 'Article-Based Vocabulary', description: 'Pick a story and test the words you learnt from it.', action: () => onSelectTest('article-vocabulary') }
   ] : [

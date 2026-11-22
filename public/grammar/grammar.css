@@ -65,3 +65,10 @@ img.fox { object-fit: contain; background: transparent; }
 .grammar-feedback.is-correct { background:#f1faeb; color:#214918; }
 .grammar-more { margin-top:1rem; }
 .lesson-block textarea { display:block; width:100%; margin:.65rem 0; padding:.7rem; border:2px solid #b9a5df; border-radius:.6rem; font:inherit; resize:vertical; }
+
+.grammar-models { display:grid; gap:.75rem; }
+.grammar-model { padding:.75rem .9rem; border:1px solid #ded4f3; border-radius:.65rem; background:#faf7ff; }
+.grammar-model h3 { color:#38276e; margin:0 0 .4rem; }
+.grammar-model ol { margin:0; }
+.grammar-model li + li { margin-top:.35rem; }
+.grammar-model strong { color:#372477; }
