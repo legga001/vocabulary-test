@@ -28,13 +28,13 @@ function App() {
 
   // Transition effect for smooth navigation
   useEffect(() => {
-    if (currentScreen !== 'splash') {
-      setIsTransitioning(true);
-      const timer = setTimeout(() => {
-        setIsTransitioning(false);
-      }, 300);
-      return () => clearTimeout(timer);
+    if (currentScreen === 'splash') {
+      setIsTransitioning(false);
+      return;
     }
+    setIsTransitioning(true);
+    const timer = setTimeout(() => setIsTransitioning(false), 300);
+    return () => clearTimeout(timer);
   }, [currentScreen]);
 
   // Navigation functions
