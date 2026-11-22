@@ -92,6 +92,26 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
             console.log('✅ Loaded zooplankton questions:', questionData.length);
             break;
             
+          case 'killer-whale-quiz': {
+            const { getKillerWhaleVocabularyQuestions } = await import('../killerWhaleVocabularyData');
+            questionData = getKillerWhaleVocabularyQuestions();
+            break;
+          }
+          case 'octopus-quiz': {
+            const { getReadingVocabularyQuestions } = await import('../readingVocabularyData');
+            questionData = getReadingVocabularyQuestions();
+            break;
+          }
+          case 'air-india-quiz': {
+            const { getAirIndiaVocabularyQuestions } = await import('../airIndiaVocabularyData');
+            questionData = getAirIndiaVocabularyQuestions();
+            break;
+          }
+          case 'water-treatment-quiz': {
+            const { getWaterTreatmentVocabularyQuestions } = await import('../waterTreatmentVocabularyData');
+            questionData = getWaterTreatmentVocabularyQuestions();
+            break;
+          }
           case 'smuggling-quiz':
           case 'default':
           default:

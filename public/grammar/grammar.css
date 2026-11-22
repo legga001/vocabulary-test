@@ -50,3 +50,18 @@ summary { cursor:pointer; font-weight:800; color:#49358a; min-height:44px; paddi
 .lesson h3 a { display:inline-flex; min-height:44px; align-items:center; }
 
 img.fox { object-fit: contain; background: transparent; }
+
+.teacher-note { padding:.8rem .9rem; border-left:4px solid #9370d9; border-radius:.45rem; background:#f7f2ff; }
+.teacher-note strong { display:block; color:#49358a; margin-bottom:.2rem; }
+.pattern u { text-underline-offset:.18em; text-decoration-thickness:.08em; }
+.grammar-check fieldset { min-inline-size:0; border:0; margin:0 0 1rem; padding:0; }
+.grammar-check legend { font-weight:800; padding:0; margin-bottom:.55rem; }
+.grammar-choice { display:flex; align-items:center; gap:.65rem; min-height:44px; padding:.55rem .75rem; margin:.4rem 0; border:2px solid #e5dff4; border-radius:.7rem; cursor:pointer; }
+.grammar-choice:focus-within { outline:2px solid #6843c1; outline-offset:1px; }
+.grammar-choice:has(input:checked) { background:#f3edff; border-color:#8965ce; }
+.grammar-choice input { flex:none; width:1.1rem; height:1.1rem; margin:0; accent-color:#6843c1; }
+.grammar-feedback:empty { margin:0; }
+.grammar-feedback:not(:empty) { margin:.9rem 0 0; padding:.7rem .85rem; border-radius:.6rem; background:#fff4da; color:#66430e; }
+.grammar-feedback.is-correct { background:#f1faeb; color:#214918; }
+.grammar-more { margin-top:1rem; }
+.lesson-block textarea { display:block; width:100%; margin:.65rem 0; padding:.7rem; border:2px solid #b9a5df; border-radius:.6rem; font:inherit; resize:vertical; }
