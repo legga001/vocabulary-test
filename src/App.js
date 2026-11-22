@@ -260,8 +260,10 @@ function App() {
     }
   };
 
+  const screenClass = { splash: 'splash-mode', landing: 'landing-mode' }[currentScreen] || '';
+
   return (
-    <div className={`App ${currentScreen === 'splash' ? 'splash-mode' : ''}`}>
+    <div className={`App ${screenClass}`}>
       {renderCurrentScreen()}
     </div>
   );
