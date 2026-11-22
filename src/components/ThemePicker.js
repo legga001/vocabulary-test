@@ -4,7 +4,7 @@ function ThemePicker() {
   return (
     <label className="theme-control">
       Theme
-      <select data-theme-picker defaultValue={document.documentElement.dataset.theme || 'classic'}>
+      <select aria-label="Theme" data-theme-picker defaultValue={document.documentElement.dataset.theme || 'classic'}>
         <option value="classic">Classic purple</option>
         <option value="light">Light</option>
       </select>
