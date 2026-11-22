@@ -11,12 +11,13 @@ function StudyMenu({ tests, onHome, onBack, onExercises, onTests, onProgress, on
   }, [tests]);
 
   const choices = tests ? [
+    { icon: '📝', label: 'Reading comprehension', description: 'Choose an A1–C1 text and answer eight questions.', action: () => onSelectTest('reading-comprehension') },
     { icon: '📖', label: 'Standard Vocabulary', description: 'Take a ten-word test that adapts as you answer.', action: () => onSelectTest('standard-vocabulary') },
     { icon: '📰', label: 'Article-Based Vocabulary', description: 'Pick a story and test the words you learnt from it.', action: () => onSelectTest('article-vocabulary') }
   ] : [
     { icon: '📘', label: 'Learn grammar', description: 'Explore step-by-step lessons from A1 to C1.', href: grammarUrl },
     { icon: '✏️', label: 'Practise exercises', description: 'Build your reading, listening, speaking and writing skills.', action: onExercises },
-    { icon: '🎯', label: 'Practise tests', description: 'See how you do in a vocabulary test.', action: onTests },
+    { icon: '🎯', label: 'Practise tests', description: 'Try a reading comprehension or vocabulary test.', action: onTests },
     { icon: '📊', label: 'Progress', description: 'See your scores, recent work and achievements.', action: onProgress }
   ];
 

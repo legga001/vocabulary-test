@@ -7,6 +7,7 @@ import SplashPage from './components/SplashPage';
 import LandingPage from './components/LandingPage';
 import ProgressPage from './components/ProgressPage';
 import StudyMenu from './components/StudyMenu';
+import ReadingComprehensionTest from './components/ReadingComprehensionTest';
 import Quiz from './components/Quiz';
 import Results from './components/Results';
 import ArticleSelection from './components/ArticleSelection';
@@ -131,6 +132,9 @@ function App() {
     setReturnScreen(source);
     switch(exerciseType) {
       // DIRECT quiz navigation - no intermediate steps
+      case 'reading-comprehension':
+        goToScreen('reading-comprehension');
+        break;
       case 'standard-vocabulary':
         goToScreen('standard-vocabulary-quiz');
         break;
@@ -212,6 +216,9 @@ function App() {
             isTransitioning={isTransitioning}
           />
         );
+
+      case 'reading-comprehension':
+        return <ReadingComprehensionTest onBack={goBack} onLogoClick={handleLogoClick} onProgress={() => goToProgress('tests')} />;
 
       case 'progress':
         return <ProgressPage onBack={goBack} onLogoClick={handleLogoClick} />;
