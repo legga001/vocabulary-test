@@ -1,5 +1,5 @@
 // src/App.js - COMPLETE FIXED VERSION
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 
 // Import all components
@@ -17,6 +17,8 @@ import WritingExercise from './components/WritingExercise';
 import ListeningExercise from './components/ListeningExercise';
 import ReadAndCompleteExercise from './components/ReadAndCompleteExercise';
 import InteractiveReadingExercise from './components/InteractiveReadingExercise';
+
+const PRACTICE_ENTRY = 'mrFoxPracticeEntry';
 
 function App() {
   // Core state management
@@ -42,30 +44,73 @@ function App() {
     return () => clearTimeout(timer);
   }, [currentScreen]);
 
+  const showStart = useCallback(() => {
+    setCurrentScreen('splash');
+    setSelectedArticleType(null);
+    setQuizResults(null);
+    setAnswerChecks(null);
+    setTestQuestions(null);
+  }, []);
+
+  useEffect(() => {
+    const onPopState = (event) => {
+      if (event.state?.[PRACTICE_ENTRY]) {
+        setCurrentScreen('study');
+      } else {
+        showStart();
+      }
+    };
+    // A static grammar page can return to this app from the browser's page cache.
+    const onPageShow = (event) => {
+      if (event.persisted) showStart();
+    };
+
+    window.addEventListener('popstate', onPopState);
+    window.addEventListener('pageshow', onPageShow);
+    return () => {
+      window.removeEventListener('popstate', onPopState);
+      window.removeEventListener('pageshow', onPageShow);
+    };
+  }, [showStart]);
+
+  function goToScreen(screen) {
+    const { history, location } = window;
+    if (!history.state?.[PRACTICE_ENTRY]) {
+      const startUrl = location.pathname + location.search;
+      if (location.hash === '#exercises' || location.hash === '#study') {
+        history.replaceState(history.state, '', startUrl);
+      }
+      // Keep one Back entry for the start screen across this in-app session.
+      history.pushState({ ...history.state, [PRACTICE_ENTRY]: true }, '', startUrl);
+    }
+    setCurrentScreen(screen);
+  }
+
   // Navigation functions
-  const goToStudy = () => setCurrentScreen('study');
-  const goToLanding = () => setCurrentScreen('landing');
+  const goToStudy = () => goToScreen('study');
+  const goToLanding = () => goToScreen('landing');
 
   const goToProgress = (source) => {
     setReturnScreen(source);
-    setCurrentScreen('progress');
+    goToScreen('progress');
   };
 
   const goBack = () => {
-    setCurrentScreen(returnScreen);
+    goToScreen(returnScreen);
     setQuizResults(null);
     setTestQuestions(null);
     setSelectedArticleType(null);
   };
 
   const handleLogoClick = () => {
+    if (window.history.state?.[PRACTICE_ENTRY]) {
+      window.history.back();
+      return;
+    }
     if (['#exercises', '#study'].includes(window.location.hash)) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
-    setCurrentScreen('splash');
-    setSelectedArticleType(null);
-    setQuizResults(null);
-    setTestQuestions(null);
+    showStart();
   };
 
   // Quiz completion handler
@@ -73,7 +118,7 @@ function App() {
     setAnswerChecks(checks);
     setQuizResults(userAnswers);
     setTestQuestions(questions);
-    setCurrentScreen('results');
+    goToScreen('results');
   };
 
   // Results completion handler
@@ -87,38 +132,38 @@ function App() {
     switch(exerciseType) {
       // DIRECT quiz navigation - no intermediate steps
       case 'standard-vocabulary':
-        setCurrentScreen('standard-vocabulary-quiz');
+        goToScreen('standard-vocabulary-quiz');
         break;
       case 'article-vocabulary':
-        setCurrentScreen('article-selection');
+        goToScreen('article-selection');
         break;
       case 'real-fake-words':
-        setCurrentScreen('real-fake-words');
+        goToScreen('real-fake-words');
         break;
       case 'listen-and-type':
-        setCurrentScreen('listen-and-type');
+        goToScreen('listen-and-type');
         break;
       case 'speak-and-record':
-        setCurrentScreen('speak-and-record');
+        goToScreen('speak-and-record');
         break;
       // Writing exercise navigation
       case 'writing':
-        setCurrentScreen('writing');
+        goToScreen('writing');
         break;
       // Read and Complete exercise navigation
       case 'read-and-complete':
-        setCurrentScreen('read-and-complete');
+        goToScreen('read-and-complete');
         break;
       // NEW: Interactive Reading exercise navigation
       case 'interactive-reading':
-        setCurrentScreen('interactive-reading');
+        goToScreen('interactive-reading');
         break;
       // Traditional navigation (for non-active exercises)
       case 'speaking':
-        setCurrentScreen('speaking');
+        goToScreen('speaking');
         break;
       case 'listening':
-        setCurrentScreen('listening');
+        goToScreen('listening');
         break;
       default:
         console.warn('Unknown exercise type:', exerciseType);
@@ -128,7 +173,7 @@ function App() {
   // Article selection handler - DIRECT to article quiz with type tracking
   const handleArticleSelect = (articleType) => {
     setSelectedArticleType(articleType);
-    setCurrentScreen('article-vocabulary-quiz');
+    goToScreen('article-vocabulary-quiz');
   };
 
   // Render current screen
@@ -142,7 +187,7 @@ function App() {
           <StudyMenu
             onHome={handleLogoClick}
             onExercises={goToLanding}
-            onTests={() => setCurrentScreen('tests')}
+            onTests={() => goToScreen('tests')}
             onProgress={() => goToProgress('study')}
           />
         );
