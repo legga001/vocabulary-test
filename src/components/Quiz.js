@@ -90,41 +90,6 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
               console.log('✅ Loaded zooplankton questions:', questionData.length);
               break;
               
-            case 'nft-quiz':
-              console.log('🖼️ Loading NFT questions...');
-              const nftModule = await import('../nftVocabularyData');
-              questionData = nftModule.getNftVocabularyQuestions();
-              console.log('✅ Loaded NFT questions:', questionData.length);
-              break;
-              
-            case 'nuclear-quiz':
-              console.log('⚛️ Loading nuclear questions...');
-              const nuclearModule = await import('../nuclearVocabularyData');
-              questionData = nuclearModule.getNuclearVocabularyQuestions();
-              console.log('✅ Loaded nuclear questions:', questionData.length);
-              break;
-              
-            case 'memory-quiz':
-              console.log('🧠 Loading memory questions...');
-              const memoryModule = await import('../memoryVocabularyData');
-              questionData = memoryModule.getMemoryVocabularyQuestions();
-              console.log('✅ Loaded memory questions:', questionData.length);
-              break;
-
-            case 'sleep-quiz':
-              console.log('😴 Loading sleep questions...');
-              const sleepModule = await import('../sleepVocabularyData');
-              questionData = sleepModule.getSleepVocabularyQuestions();
-              console.log('✅ Loaded sleep questions:', questionData.length);
-              break;
-
-            case 'ai-quiz':
-              console.log('🤖 Loading AI questions...');
-              const aiModule = await import('../aiVocabularyData');
-              questionData = aiModule.getAiVocabularyQuestions();
-              console.log('✅ Loaded AI questions:', questionData.length);
-              break;
-
             case 'smuggling-quiz':
             case 'default':
             default:
