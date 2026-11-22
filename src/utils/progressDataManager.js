@@ -89,7 +89,12 @@ const getProgressData = () => {
     console.error('Error loading progress data:', error);
   }
   
-  return { ...DEFAULT_PROGRESS_DATA };
+  return {
+    ...DEFAULT_PROGRESS_DATA,
+    testHistory: [],
+    dailyStats: {},
+    levelProgress: { ...DEFAULT_PROGRESS_DATA.levelProgress }
+  };
 };
 
 // Save progress data with error handling
