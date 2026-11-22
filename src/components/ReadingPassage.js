@@ -42,9 +42,9 @@ function ReadingPassage({ passage, format, glossary }) {
     const element = tooltip.current;
 
     function position() {
-      const rect = active.anchor.getBoundingClientRect();
+      const rect = [...active.anchor.getClientRects()].find(line => line.bottom >= 0 && line.top <= window.innerHeight);
       const box = element.getBoundingClientRect();
-      if (rect.bottom < 0 || rect.top > window.innerHeight) {
+      if (!rect) {
         element.style.visibility = 'hidden';
         return;
       }
@@ -102,7 +102,7 @@ function ReadingPassage({ passage, format, glossary }) {
           parts.push(text.slice(start, match.index));
           parts.push(
             <React.Fragment key={descriptionId}>
-              <button type="button" className="reading-glossary-word" aria-describedby={descriptionId}
+              <span role="button" tabIndex={0} className="reading-glossary-word" aria-describedby={descriptionId}
                 onPointerEnter={event => {
                   if (event.pointerType === 'mouse') open(event.currentTarget, word, meaning, 'hover');
                 }}
@@ -111,9 +111,15 @@ function ReadingPassage({ passage, format, glossary }) {
                   if (event.currentTarget.matches(':focus-visible')) open(event.currentTarget, word, meaning, 'focus');
                 }}
                 onBlur={() => { if (active?.mode === 'focus') close(); }}
-                onClick={event => open(event.currentTarget, word, meaning, 'tap')}>
+                onClick={event => open(event.currentTarget, word, meaning, 'tap')}
+                onKeyDown={event => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    open(event.currentTarget, word, meaning, 'tap');
+                  }
+                }}>
                 {word}
-              </button>
+              </span>
               <span id={descriptionId} hidden>{meaning}</span>
             </React.Fragment>
           );

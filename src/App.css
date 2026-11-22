@@ -302,13 +302,7 @@ body { background:var(--site-background) fixed; }
   margin:0 0 .75rem;
 }
 .reading-glossary-word {
-  display:inline;
-  margin:0;
-  padding:0;
-  border:0;
-  background:none;
-  color:#493589;
-  font:inherit;
+  color:inherit;
   text-decoration:underline dotted;
   text-decoration-thickness:.1em;
   text-underline-offset:.2em;
