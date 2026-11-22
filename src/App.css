@@ -249,3 +249,28 @@
 .study-option strong { display:block; }
 .study-icon { font-size:1.4rem; line-height:1.3; flex:none; }
 .study-description { display:block; margin-top:.2rem; font-size:.9rem; color:#514b64; }
+
+.reading-page .reading-container { width:100%; max-width:52rem; padding:clamp(.8rem,4vw,2rem); margin-inline:auto; }
+.reading-container h1 { font-size:clamp(1.65rem,6vw,2.45rem); line-height:1.2; }
+.reading-container h2 { font-size:clamp(1.15rem,4vw,1.65rem); line-height:1.25; margin-bottom:.6rem; }
+.reading-filters { display:flex; flex-wrap:wrap; justify-content:center; gap:.75rem; margin:1rem 0; }
+.reading-filters label { display:block; font-weight:800; }
+.reading-filters select { min-height:44px; padding:.35rem .55rem; border:2px solid #d5c7ed; border-radius:.55rem; font:inherit; color:#38276e; }
+.reading-test-list,.reading-review { list-style:none; display:grid; gap:.75rem; padding:0; margin:1rem 0; }
+.reading-test-list { grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr)); }
+.reading-passage,.reading-questions,.reading-review,.reading-review-text { text-align:left; }
+.reading-passage,.reading-review-text { background:#f8f5ff; border:2px solid #e4dcf7; border-radius:.85rem; padding:clamp(.7rem,3vw,1.2rem); margin:1rem 0; }
+.reading-passage p,.reading-review-text p { color:#293143; margin:.7rem 0; }
+.reading-passage .reading-meta,.reading-meta { color:#514082; font-weight:800; }
+.reading-questions fieldset { border:0; min-inline-size:0; margin:1rem 0 1.4rem; padding:0; }
+.reading-questions legend { font-weight:800; margin-bottom:.4rem; }
+.reading-choice { display:flex; align-items:center; gap:.65rem; min-height:44px; margin:.35rem 0; padding:.5rem .7rem; border:2px solid #e4dcf7; border-radius:.6rem; cursor:pointer; }
+.reading-choice:focus-within { outline:2px solid #6843c1; outline-offset:2px; }
+.reading-choice:has(input:checked) { border-color:#8965ce; background:#f3edff; }
+.reading-choice input { flex:none; width:1.1rem; height:1.1rem; accent-color:#6843c1; }
+.reading-score { font-size:1.45rem; color:#38276e; }
+.reading-review li { border:2px solid #d5e8cb; border-radius:.75rem; background:#f0faec; padding:.75rem; }
+.reading-review li.reading-incorrect { background:#fff6e6; border-color:#eed8ad; }
+.reading-review p { margin:.35rem 0; color:#293143; }
+.reading-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:.55rem; margin:1rem 0 0; }
+.reading-review-text summary { cursor:pointer; font-weight:800; }

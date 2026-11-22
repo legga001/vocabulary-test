@@ -313,6 +313,7 @@ function ProgressPage({ onBack, onLogoClick }) {
                   <div className="test-type">
                     {test.quizTypeIcon} {test.quizTypeDisplay}
                   </div>
+                  {test.title && <div className="test-title">{test.title}</div>}
                   <div className="test-date">{formatDate(test.date)}</div>
                   <div className="test-details">
                     {test.totalQuestions} questions • {test.percentage}% correct
@@ -328,7 +329,7 @@ function ProgressPage({ onBack, onLogoClick }) {
                       {test.score}/{test.totalQuestions}
                     </span>
                   </div>
-                  <div className="score-level">{test.level}</div>
+                  <div className="score-level">{test.contentLevel || test.level}</div>
                 </div>
               </div>
             ))}

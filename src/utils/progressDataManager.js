@@ -5,6 +5,7 @@ const MAX_HISTORY_DAYS = 100;
 
 // Quiz type mappings for better UX
 const QUIZ_TYPE_MAPPINGS = {
+  'reading-comprehension': { display: 'Reading comprehension', icon: '📝' },
   'standard-vocabulary': { display: 'Standard Vocabulary', icon: '📖' },
   'article-vocabulary': { display: 'Article Vocabulary', icon: '📰' },
   'real-fake-words': { display: 'Real or Fake Words', icon: '🎯' },
@@ -37,6 +38,8 @@ const DEFAULT_PROGRESS_DATA = {
 
 // Get today's date string
 const getTodayString = () => new Date().toDateString();
+
+const normalizeScore = (score, totalQuestions = 10) => (score / totalQuestions) * 10;
 
 // Get user's estimated level based on score
 const getScoreLevel = (score, totalQuestions = 10) => {
@@ -185,6 +188,8 @@ export const recordTestResult = (testData) => {
     quizType,
     score,
     totalQuestions = 10,
+    title,
+    contentLevel,
     completedAt = new Date(),
     timeSpent = null,
     userAnswers = []
@@ -205,6 +210,8 @@ export const recordTestResult = (testData) => {
     quizType,
     quizTypeDisplay: quizTypeInfo.display,
     quizTypeIcon: quizTypeInfo.icon,
+    ...(title && { title }),
+    ...(contentLevel && { contentLevel }),
     score,
     totalQuestions,
     percentage: Math.round((score / totalQuestions) * 100),
@@ -241,7 +248,7 @@ export const recordTestResult = (testData) => {
   dailyStat.testsCompleted += 1;
   
   // Normalize score to 10-point scale for consistency
-  const normalizedScore = totalQuestions === 20 ? score / 2 : score;
+  const normalizedScore = normalizeScore(score, totalQuestions);
   dailyStat.totalScore += normalizedScore;
   dailyStat.averageScore = Math.round(dailyStat.totalScore / dailyStat.testsCompleted);
   
@@ -338,7 +345,7 @@ export const getExercisePerformance = () => {
     stat.attempts++;
     
     // Normalize to percentage for consistency
-    const normalizedScore = test.totalQuestions === 20 ? test.score / 2 : test.score;
+    const normalizedScore = normalizeScore(test.score, test.totalQuestions);
     const scorePercentage = Math.round((normalizedScore / 10) * 100);
     
     stat.totalScore += scorePercentage;
@@ -394,9 +401,9 @@ export const getProgressStats = () => {
   const progressData = getProgressData();
   const recentTests = progressData.testHistory.slice(0, 10);
   
-  // Calculate average score (normalize 20-question tests)
+  // Calculate average score on a ten-point scale
   const normalizedScores = recentTests.map(test => 
-    test.totalQuestions === 20 ? test.score / 2 : test.score
+    normalizeScore(test.score, test.totalQuestions)
   );
   
   const averageScore = normalizedScores.length > 0 
@@ -420,11 +427,11 @@ export const getProgressStats = () => {
     const older5 = recentTests.slice(5, 10);
     
     const recentAvg = recent5.reduce((sum, test) => 
-      sum + (test.totalQuestions === 20 ? test.score / 2 : test.score), 0
+      sum + (normalizeScore(test.score, test.totalQuestions)), 0
     ) / 5;
     
     const olderAvg = older5.reduce((sum, test) => 
-      sum + (test.totalQuestions === 20 ? test.score / 2 : test.score), 0
+      sum + (normalizeScore(test.score, test.totalQuestions)), 0
     ) / 5;
     
     if (recentAvg > olderAvg + 0.5) trend = 'improving';
@@ -496,7 +503,7 @@ export const getLearningInsights = () => {
   const recentTests = progressData.testHistory.slice(0, 10);
   if (recentTests.length >= 5) {
     const scores = recentTests.map(test => 
-      test.totalQuestions === 20 ? (test.score / 2) : test.score
+      normalizeScore(test.score, test.totalQuestions)
     );
     const avg = scores.reduce((sum, score) => sum + score, 0) / scores.length;
     const variance = scores.reduce((sum, score) => sum + Math.pow(score - avg, 2), 0) / scores.length;
