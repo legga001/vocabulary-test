@@ -9,7 +9,7 @@ export const READING_TESTS = [
     "topic": "Lost property",
     "format": "Conversation",
     "length": "Short",
-    "passage": "Mia: Excuse me. Is there a blue bag here?\nBen: Yes. Is it small?\nMia: Yes. My keys are in it.\nBen: Is this your bag?\nMia: No, mine has a white star.\nBen: Oh, there it is, next to the door.\nMia: Thank you. I need to catch my bus.",
+    "passage": "Mia: Excuse me. Is there a blue bag here?\nBen: Yes. Is it small?\nMia: Yes. My keys are in it.\nBen: Is this your bag?\nMia: No. My bag has a white star.\nBen: Here it is, next to the door.\nMia: Thank you. I need to catch my bus.",
     "questions": [
       {
         "prompt": "What colour is Mia’s bag?",
@@ -29,7 +29,7 @@ export const READING_TESTS = [
           "Large",
           "Very long"
         ],
-        "explanation": "Ben asks if it is small, and Mia says yes."
+        "explanation": "Ben asks, “Is it small?” Mia says yes."
       },
       {
         "prompt": "What is inside the bag?",
@@ -42,14 +42,14 @@ export const READING_TESTS = [
         "explanation": "Mia says, “My keys are in it.”"
       },
       {
-        "prompt": "Does the first bag Ben shows belong to Mia?",
+        "prompt": "Is the first bag Mia’s bag?",
         "answer": "No",
         "options": [
           "No",
           "Yes",
-          "We do not know"
+          "We don’t know"
         ],
-        "explanation": "Mia says no when Ben asks whether the first bag is hers."
+        "explanation": "Ben asks, “Is this your bag?” Mia says no."
       },
       {
         "prompt": "What is on Mia’s bag?",
@@ -82,14 +82,14 @@ export const READING_TESTS = [
         "explanation": "Mia says she needs to catch her bus."
       },
       {
-        "prompt": "What is Mia trying to do?",
-        "answer": "Find her bag",
+        "prompt": "Why is Mia talking to Ben?",
+        "answer": "To find her bag",
         "options": [
-          "Find her bag",
-          "Buy a new bag",
-          "Give Ben her keys"
+          "To find her bag",
+          "To buy a bag",
+          "To give him her keys"
         ],
-        "explanation": "She asks about a bag and describes it so Ben can find the right one."
+        "explanation": "Mia asks about a blue bag. She wants to find it."
       }
     ]
   },
@@ -100,7 +100,7 @@ export const READING_TESTS = [
     "topic": "A day out",
     "format": "Message",
     "length": "Longer",
-    "passage": "Hi Adam,\nCan you come to the park on Saturday? My sister Lily and I are going there at ten. Meet us at the gate near the bus stop. Please bring a ball. I have a big bag with sandwiches and apples. Lily has some water for us.\nIt is cold in the morning, so bring a jacket. We can eat at twelve, then play again. I need to go home at two because my dad is making a cake with me. If it rains, we can play games at my house.\nSee you soon,\nSam",
+    "passage": "Hi Adam,\nCome to the park on Saturday. Meet me and my sister Lily at ten. We can meet at the gate near the bus stop. Please bring a ball. I have sandwiches and apples. Lily has some water.\nIt is cold in the morning. Please bring a jacket. Lunch is at twelve. We can play after lunch. I need to go home at two. Dad and I want to make a cake.\nSee you soon,\nSam",
     "questions": [
       {
         "prompt": "Who writes the message?",
@@ -110,77 +110,77 @@ export const READING_TESTS = [
           "Adam",
           "Lily"
         ],
-        "explanation": "Sam signs the message at the end."
+        "explanation": "Sam puts his name at the end of the message."
       },
       {
-        "prompt": "What day do they plan to go to the park?",
+        "prompt": "What day is the trip to the park?",
         "answer": "Saturday",
         "options": [
           "Saturday",
           "Sunday",
           "Friday"
         ],
-        "explanation": "The first sentence asks if Adam can come on Saturday."
+        "explanation": "Sam says, “Come to the park on Saturday.”"
       },
       {
-        "prompt": "What time will they meet?",
-        "answer": "Ten",
+        "prompt": "What time do they meet?",
+        "answer": "At ten",
         "options": [
-          "Ten",
-          "Twelve",
-          "Two"
+          "At ten",
+          "At twelve",
+          "At two"
         ],
-        "explanation": "Sam and Lily are going there at ten. Twelve is lunch, and two is when Sam must leave."
+        "explanation": "Sam says to meet at ten. Lunch is at twelve."
       },
       {
-        "prompt": "Where should Adam meet them?",
+        "prompt": "Where do they meet?",
         "answer": "At the gate near the bus stop",
         "options": [
           "At the gate near the bus stop",
-          "By Sam’s front door",
+          "At Sam’s house",
           "At the café"
         ],
-        "explanation": "Sam says to meet them at the gate near the bus stop."
+        "explanation": "Sam says they can meet at the gate near the bus stop."
       },
       {
-        "prompt": "What does Sam ask Adam to bring to play with?",
+        "prompt": "What does Adam need for the game?",
         "answer": "A ball",
         "options": [
           "A ball",
-          "A game from home",
+          "A book",
           "A bike"
         ],
         "explanation": "Sam says, “Please bring a ball.”"
       },
       {
-        "prompt": "Who is bringing water?",
+        "prompt": "Who has water?",
         "answer": "Lily",
         "options": [
           "Lily",
           "Adam",
           "Sam’s dad"
         ],
-        "explanation": "Sam says Lily has water for the group."
+        "explanation": "The message says, “Lily has some water.”"
       },
       {
-        "prompt": "Why does Sam need to go home at two?",
-        "answer": "To make a cake with Dad",
+        "prompt": "What do Sam and Dad want to make?",
+        "answer": "A cake",
         "options": [
-          "To make a cake with Dad",
-          "To catch a bus",
-          "To buy lunch"
+          "A cake",
+          "A sandwich",
+          "A ball"
         ],
-        "explanation": "Sam explains that Dad is making a cake with him."
+        "explanation": "Sam says, “Dad and I want to make a cake.”"
       },
       {
-        "prompt": "Where can they play if it rains?",
-        "answer": "At Sam’s house",
+        "prompt": "What time is lunch?",
+        "answer": "At twelve",
         "options": [
-          "At Sam’s house",
-          "At Adam’s house",
-          "At the bus stop"
+          "At twelve",
+          "At ten",
+          "At two"
         ],
-        "explanation": "The message gives Sam’s house as the plan for rain."
+        "explanation": "The message says, “Lunch is at twelve.”"
       }
     ]
   },
@@ -191,7 +191,7 @@ export const READING_TESTS = [
     "topic": "Shopping and volunteering",
     "format": "Conversation",
     "length": "Short",
-    "passage": "Ella: Are you still helping at the school market tomorrow?\nNoah: Yes, but I can’t get there at nine. My swimming lesson ends at half past nine.\nElla: That’s fine. I’ll open our stall. Could you bring coins to give people change?\nNoah: Sure. What are we selling?\nElla: Second-hand books. Most books are a pound, but the big picture books cost two pounds.\nNoah: Do we need bags?\nElla: We have a few. We can ask shoppers to bring their own next time.\nNoah: Where does the money go?\nElla: It will pay for new plants in the school garden.\nNoah: Great. I’ll be there at ten.",
+    "passage": "Ella: Are you still helping at the school market tomorrow?\nNoah: Yes, but I can’t get there at nine. My swimming lesson ends at half past nine.\nElla: That’s fine. I’ll open our stall. Could you bring coins to give people change?\nNoah: Sure. What are we selling?\nElla: Second-hand books. Other people owned them before. Most books are a pound, but the big picture books cost two pounds.\nNoah: Do we need bags?\nElla: We have a few. We can ask shoppers to bring their own next time.\nNoah: Where does the money go?\nElla: It will pay for new plants in the school garden.\nNoah: Great. I’ll be there at ten.",
     "questions": [
       {
         "prompt": "What event are they helping with?",
@@ -201,7 +201,7 @@ export const READING_TESTS = [
           "A swimming race",
           "A garden show"
         ],
-        "explanation": "Ella asks if Noah is still helping at the school market."
+        "explanation": "Ella asks Noah about helping at the school market."
       },
       {
         "prompt": "Why can’t Noah arrive at nine?",
@@ -251,7 +251,7 @@ export const READING_TESTS = [
           "Every book has two parts",
           "A new copy costs twice as much"
         ],
-        "explanation": "Second-hand books are previously owned. It describes their condition, not their price."
+        "explanation": "Ella says other people owned the books before. That is what second-hand means here."
       },
       {
         "prompt": "What will the money pay for?",
@@ -282,7 +282,7 @@ export const READING_TESTS = [
     "topic": "Travel plans",
     "format": "Email",
     "length": "Longer",
-    "passage": "Hi class,\nOur visit to the City Museum is still on Tuesday, but we’ve changed the travel plan. The usual bus stop is closed this week, so we’ll meet at the railway station instead. Please be outside the ticket office by 8.45. I’ll buy tickets for everyone before we leave.\nBring a packed lunch and enough water for the day. You can buy a hot drink at the museum, but the café won’t serve meals while we are there. We’ll have lunch in the garden if the weather is fine. If it is wet, staff will show us a room indoors.\nIn the morning we’ll see old cameras. After lunch, a guide will help us take pictures without using phones. Please leave your phone in your bag during that activity. We expect to be back at the station at four. If we are late, I’ll send a message to the class group.\nMs Hall",
+    "passage": "Hi class,\nOur visit to the City Museum is still on Tuesday, but we changed the travel plan. The usual bus stop is closed this week, so we’ll meet at the railway station. Please be outside the ticket office by 8.45. I’ll buy train tickets for everyone at the station.\nBring a packed lunch and enough water for the day. You can buy a hot drink at the museum, but the café doesn’t serve meals on Tuesdays. In good weather, we’ll eat in the garden. On a rainy day, we’ll have lunch in a room inside the museum.\nIn the morning we’ll see old cameras. After lunch, a guide will show us how to take pictures without phones. Please keep your phone in your bag during the activity. We plan to be back at the station at four. I’ll send a message to the class group about any delay.\nMs Hall",
     "questions": [
       {
         "prompt": "Which part of the trip changed?",
@@ -316,13 +316,13 @@ export const READING_TESTS = [
       },
       {
         "prompt": "Why should students bring lunch?",
-        "answer": "The café won’t serve meals during the visit",
+        "answer": "The café doesn’t serve meals on Tuesdays",
         "options": [
-          "The café won’t serve meals during the visit",
+          "The café doesn’t serve meals on Tuesdays",
           "The museum forbids eating indoors",
           "The group returns before lunch"
         ],
-        "explanation": "The café sells hot drinks but will not serve meals while the class is there."
+        "explanation": "The café sells hot drinks but does not serve meals on the day of the visit."
       },
       {
         "prompt": "Where will the group eat on a wet day?",
@@ -332,7 +332,7 @@ export const READING_TESTS = [
           "In the garden",
           "At the railway station"
         ],
-        "explanation": "Museum staff will show them a room if it rains."
+        "explanation": "The email says the group will eat in a room inside the museum on a rainy day."
       },
       {
         "prompt": "What will students see before lunch?",
@@ -355,14 +355,14 @@ export const READING_TESTS = [
         "explanation": "The guide will show them how to take photos without phones, so Ms Hall asks them to keep phones in their bags."
       },
       {
-        "prompt": "How will students hear if the group is late returning?",
+        "prompt": "How will Ms Hall tell the students about a delay?",
         "answer": "Via the class group message",
         "options": [
           "Via the class group message",
           "From a notice in the café",
           "By calling the ticket office"
         ],
-        "explanation": "Ms Hall says she’ll send a message to the class group if they are late."
+        "explanation": "Ms Hall plans to send a message to the class group about any delay."
       }
     ]
   },
@@ -386,7 +386,7 @@ export const READING_TESTS = [
         "explanation": "The opening paragraph says they meet once a month in the library."
       },
       {
-        "prompt": "Which item would the café be most likely to accept?",
+        "prompt": "Which item can someone bring to the café?",
         "answer": "A small toy",
         "options": [
           "A small toy",
@@ -464,7 +464,7 @@ export const READING_TESTS = [
     "topic": "Town life and accessibility",
     "format": "Letter",
     "length": "Longer",
-    "passage": "Dear Community Centre team,\nLast autumn you asked for ideas to make the town easier to explore on foot. I’d like to tell you what happened when my neighbours and I tried making a walking map. The maps outside the station were useful for finding street names, but they didn’t show benches, public toilets or which hills were difficult to climb. When my aunt visited after an operation, those details mattered more to her than the shortest route.\nWe invited residents to walk with us in pairs and take notes. One pair knew where the crossings had dropped kerbs. Another found a quiet route to the market that avoided a steep bridge. We met over tea and marked what we had noticed. We also rang the library to check when its toilets were open, because the hours on an old notice were wrong.\nOur first map is already on the centre’s website. We’ve had several welcome corrections, so we plan to update it every season. Would the centre be able to print a small number of copies for visitors who don’t use the internet? We'd be happy to leave a box at reception and check it regularly. We can also offer a short walk next month to show people how to use the map.\nBest wishes,\nGrace",
+    "passage": "Dear Community Centre team,\nLast autumn you asked for ideas to make the town easier to explore on foot. I’d like to tell you what happened when my neighbours and I tried making a walking map. The maps outside the station were useful for finding street names, but they didn’t show benches, public toilets or which hills were difficult to climb. When my aunt visited after an operation, those details mattered more to her than the shortest route.\nWe invited residents to walk with us in pairs and take notes. One pair noted crossings with dropped kerbs, where the pavement slopes down to the road. Another found a quiet route to the market that avoided a steep bridge. We met over tea and marked what we had noticed. We also rang the library to check when its toilets were open, because the hours on an old notice were wrong.\nOur first map is already on the centre’s website. We’ve had several welcome corrections, so we plan to update it every season. Would the centre be able to print a small number of copies for visitors who don’t use the internet? We’d be happy to leave a box at reception and check it regularly. We can also offer a short walk next month to show people how to use the map.\nBest wishes,\nGrace",
     "questions": [
       {
         "prompt": "Why did Grace start thinking about a different map?",
@@ -487,7 +487,7 @@ export const READING_TESTS = [
         "explanation": "Grace says people walked in pairs and reported what they noticed."
       },
       {
-        "prompt": "What did one pair find near the way to the market?",
+        "prompt": "What did one pair find on the way to the market?",
         "answer": "A quiet route that avoided a steep bridge",
         "options": [
           "A quiet route that avoided a steep bridge",
