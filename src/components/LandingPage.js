@@ -36,6 +36,15 @@ const CATEGORIES = [
 const EXERCISES = [
   // READING EXERCISES
   {
+    type: 'reading-comprehension',
+    category: 'READING',
+    icon: '📝',
+    title: 'A1–C1 Reading Comprehension',
+    subtitle: 'Choose a text and answer eight questions',
+    dailyTarget: 1,
+    isActive: true
+  },
+  {
     type: 'real-fake-words',
     category: 'READING',
     icon: '🎯',
@@ -441,11 +450,6 @@ function LandingPage({ onSelectExercise, onProgress, onLogoClick, onStudyMenu, i
               </button>
             ))}
           </div>
-          {(selectedCategory === 'ALL' || selectedCategory === 'READING') && (
-            <button type="button" className="reading-test-badge" onClick={() => onSelectExercise('reading-comprehension')}>
-              A1–C1 Reading Comprehension
-            </button>
-          )}
           {selectedCategory !== 'ALL' && (
             <div className="category-info">
               <span className="category-description">
