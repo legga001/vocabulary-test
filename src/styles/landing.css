@@ -734,22 +734,3 @@
 .mobile-logo .landing-home-logo { min-width: 36px; min-height: 44px; }
 .mobile-logo .landing-home-logo img { width: 36px; height: 36px; object-fit: contain; }
 
-.reading-test-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  max-width: 100%;
-  margin: 0 auto .85rem;
-  padding: .55rem .95rem;
-  border: 2px solid #6544b0;
-  border-radius: 99px;
-  background: #4b37a1;
-  color: #fff;
-  font: inherit;
-  font-weight: 800;
-  line-height: 1.3;
-  cursor: pointer;
-}
-.reading-test-badge:hover { background: #39267d; }
-.reading-test-badge:focus-visible { outline: 3px solid #362473; outline-offset: 3px; }
