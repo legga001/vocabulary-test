@@ -19,7 +19,7 @@ import InteractiveReadingExercise from './components/InteractiveReadingExercise'
 
 function App() {
   // Core state management
-  const [currentScreen, setCurrentScreen] = useState('splash');
+  const [currentScreen, setCurrentScreen] = useState(() => window.location.hash === '#exercises' ? 'landing' : 'splash');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [quizResults, setQuizResults] = useState(null);
   const [testQuestions, setTestQuestions] = useState(null);
