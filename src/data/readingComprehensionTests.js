@@ -91,7 +91,12 @@ export const READING_TESTS = [
         ],
         "explanation": "Mia asks about a blue bag. She wants to find it."
       }
-    ]
+    ],
+    "glossary": {
+      "Excuse me": "Words you say to get someone’s attention politely.",
+      "next to": "Beside something, very close to it.",
+      "catch my bus": "Get to my bus in time to get on."
+    }
   },
   {
     "level": "A1",
@@ -182,7 +187,12 @@ export const READING_TESTS = [
         ],
         "explanation": "The message says, “Lunch is at twelve.”"
       }
-    ]
+    ],
+    "glossary": {
+      "gate": "A door in a fence or wall.",
+      "bus stop": "A place where a bus stops to pick up and drop off people.",
+      "jacket": "A short coat."
+    }
   },
   {
     "level": "A2",
@@ -273,7 +283,13 @@ export const READING_TESTS = [
         ],
         "explanation": "At the end Noah says he’ll come at ten. Half past nine is when his lesson ends."
       }
-    ]
+    ],
+    "glossary": {
+      "stall": "A small stand or table where people sell things.",
+      "coins": "Small round pieces of metal used as money.",
+      "change": "Money a seller gives back when you pay more than the price.",
+      "second-hand": "Owned or used by someone before."
+    }
   },
   {
     "level": "A2",
@@ -364,7 +380,14 @@ export const READING_TESTS = [
         ],
         "explanation": "Ms Hall plans to send a message to the class group about any delay."
       }
-    ]
+    ],
+    "glossary": {
+      "railway station": "A place where people get on and off trains.",
+      "ticket office": "The place where you buy tickets.",
+      "packed lunch": "Food you bring from home to eat at lunchtime.",
+      "guide": "A person who shows visitors around and explains things.",
+      "delay": "A period of waiting because something is later than planned."
+    }
   },
   {
     "level": "B1",
@@ -455,7 +478,14 @@ export const READING_TESTS = [
         ],
         "explanation": "The text describes a volunteer café that fixes small items and involves visitors in the process."
       }
-    ]
+    ],
+    "glossary": {
+      "zip": "Two rows of small teeth that slide together to close a bag or clothing.",
+      "volunteers": "People who offer to help without being paid.",
+      "equipment": "Tools and other things used for an activity.",
+      "charge": "An amount of money someone asks you to pay.",
+      "part": "A piece that fits into something bigger."
+    }
   },
   {
     "level": "B1",
@@ -546,7 +576,15 @@ export const READING_TESTS = [
         ],
         "explanation": "She describes them as welcome and uses them as a reason to keep the map up to date."
       }
-    ]
+    ],
+    "glossary": {
+      "explore": "Go around a place to learn what is there.",
+      "operation": "Medical treatment in which a doctor repairs or removes something inside the body.",
+      "residents": "People who live in a place.",
+      "dropped kerbs": "Sections of pavement edge that slope down to road level.",
+      "steep": "Going up or down sharply.",
+      "reception": "The desk where visitors first ask for help."
+    }
   },
   {
     "level": "B2",
@@ -637,7 +675,16 @@ export const READING_TESTS = [
         ],
         "explanation": "The organisers explicitly make success conditional on the work staying manageable."
       }
-    ]
+    ],
+    "glossary": {
+      "pressure washer": "A machine that cleans surfaces with a strong jet of water.",
+      "appliances": "Mains-powered machines used for jobs at home, such as a mixer or kettle.",
+      "modest": "Small or reasonable in amount.",
+      "waives": "Decides that someone does not have to pay a charge.",
+      "initially": "At the beginning.",
+      "demonstrations": "Events where people show how to do something.",
+      "manageable": "Possible to deal with using the time and help available."
+    }
   },
   {
     "level": "B2",
@@ -728,7 +775,16 @@ export const READING_TESTS = [
         ],
         "explanation": "The writer asks the council to consider whether a trip is possible as well as how often it currently happens."
       }
-    ]
+    ],
+    "glossary": {
+      "proposed": "Put forward an idea for other people to consider.",
+      "averaged": "Had a typical figure when the totals were divided across all trips.",
+      "alternative": "Another option you can use instead.",
+      "pavement": "The path at the side of a road for people walking.",
+      "shift": "A set period of time when someone works.",
+      "trial": "A temporary test to find out whether a plan works.",
+      "workable": "Practical enough to use."
+    }
   },
   {
     "level": "C1",
@@ -819,7 +875,17 @@ export const READING_TESTS = [
         ],
         "explanation": "The proposed second map would show shade at the hottest time and focus on where people need it."
       }
-    ]
+    ],
+    "glossary": {
+      "distribution": "The way things are spread across an area or divided among groups.",
+      "saplings": "Young trees.",
+      "relief": "A reduction in discomfort, such as a break from strong heat.",
+      "arrangement": "A plan for making something happen.",
+      "stretched": "Working close to the limit of the time or resources available.",
+      "exposed": "Unprotected from conditions such as the sun or wind.",
+      "commitment": "A promise or firm decision to do something.",
+      "stand in for": "Take the place of something else."
+    }
   },
   {
     "level": "C1",
@@ -910,6 +976,16 @@ export const READING_TESTS = [
         ],
         "explanation": "The essay values the accounts and the new methods while arguing that every method has trade-offs worth making visible."
       }
-    ]
+    ],
+    "glossary": {
+      "archive": "A collection of records kept so people can use them later.",
+      "in its entirety": "As a whole, with every part included.",
+      "invalidates": "Makes something no longer reliable or acceptable as evidence.",
+      "infer": "Reach a conclusion from clues, even when it is not stated directly.",
+      "imbalance": "A situation in which one group or viewpoint is represented more than another.",
+      "coherent": "Clear and connected, with parts that make sense together.",
+      "hesitant": "Showing that someone is unsure and pauses before speaking or acting.",
+      "vivid": "Clear and detailed enough to be easy to imagine."
+    }
   }
 ];

@@ -295,3 +295,42 @@ body { background:var(--site-background) fixed; }
   .App.menu-mode { box-shadow:none; padding:0; }
   .App.landing-mode { transition:none; }
 }
+
+.reading-passage .reading-glossary-help,.reading-review-text .reading-glossary-help {
+  color:#514082;
+  font-size:.9rem;
+  margin:0 0 .75rem;
+}
+.reading-glossary-word {
+  display:inline;
+  margin:0;
+  padding:0;
+  border:0;
+  background:none;
+  color:#493589;
+  font:inherit;
+  text-decoration:underline dotted;
+  text-decoration-thickness:.1em;
+  text-underline-offset:.2em;
+  cursor:help;
+}
+.reading-glossary-word:focus-visible { outline:2px solid #6843c1; outline-offset:3px; border-radius:.15rem; }
+.reading-glossary-tooltip {
+  position:fixed;
+  z-index:1100;
+  top:0;
+  left:0;
+  visibility:hidden;
+  width:min(17rem, calc(100vw - 24px));
+  padding:.65rem .8rem;
+  border:1px solid var(--site-outline, #ddd2f1);
+  border-radius:.65rem;
+  background:#382666;
+  color:#fff;
+  box-shadow:0 6px 20px #20104240;
+  font-size:.9rem;
+  line-height:1.45;
+  text-align:left;
+  overflow-wrap:anywhere;
+}
+.reading-glossary-tooltip strong { display:block; margin-bottom:.15rem; }

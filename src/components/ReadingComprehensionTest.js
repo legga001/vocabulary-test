@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ClickableLogo from './ClickableLogo';
+import ReadingPassage from './ReadingPassage';
 import { READING_LEVELS, READING_TESTS } from '../data/readingComprehensionTests';
 import { recordTestResult } from '../utils/progressDataManager';
 
@@ -122,10 +123,7 @@ function ReadingComprehensionTest({ onBack, onLogoClick, onProgress, backLabel }
             <section className="reading-passage" aria-labelledby="reading-passage-title">
               <p className="reading-meta">{test.level} · {test.format}</p>
               <h2 ref={passageHeading} id="reading-passage-title" tabIndex={-1}>{test.title}</h2>
-              {test.passage.split('\n').map((paragraph, index) => {
-                const speaker = test.format === 'Conversation' ? paragraph.match(/^([^:]+):\s*(.*)$/) : null;
-                return <p key={index}>{speaker ? <><strong>{speaker[1]}:</strong> {speaker[2]}</> : paragraph}</p>;
-              })}
+              <ReadingPassage passage={test.passage} format={test.format} glossary={test.glossary} />
             </section>
             <form className="reading-questions" onSubmit={submit}>
               <h2>Answer all eight questions</h2>
@@ -172,7 +170,7 @@ function ReadingComprehensionTest({ onBack, onLogoClick, onProgress, backLabel }
             </ol>
             <details className="reading-review-text">
               <summary>Read the passage again</summary>
-              {test.passage.split('\n').map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+              <ReadingPassage passage={test.passage} format={test.format} glossary={test.glossary} />
             </details>
             <div className="reading-actions">
               <button type="button" className="btn btn-primary" onClick={chooseAnother}>Try another reading test</button>
