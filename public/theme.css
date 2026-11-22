@@ -11,27 +11,19 @@
   --site-card: #fff;
   --site-outline: #ddd9e8;
 }
-.theme-control {
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  max-width: 100%;
-  padding: .2rem .45rem .2rem .65rem;
-  border: 1px solid var(--site-outline);
-  border-radius: .65rem;
-  background: var(--site-card);
-  color: var(--site-ink);
-  font: inherit;
-  font-size: .9rem;
-  font-weight: 800;
-}
-.theme-control select {
-  min-height: 44px;
-  padding: .2rem .45rem;
-  border: 0;
-  border-radius: .4rem;
-  background: var(--site-panel);
-  color: var(--site-ink);
-  font: inherit;
-}
-.theme-control select:focus-visible { outline: 3px solid #6843c1; outline-offset: 1px; }
+.theme-control { position: relative; z-index: 2; color: var(--site-ink); font: inherit; font-size: .75rem; font-weight: 800; }
+.theme-control > summary { display: grid; place-content: center; min-width: 44px; min-height: 44px; padding: 0 .35rem; list-style: none; cursor: pointer; }
+.theme-control > summary::-webkit-details-marker { display: none; }
+.theme-control > summary:hover { text-decoration: underline; }
+.theme-control > summary:focus-visible, .theme-options button:focus-visible { outline: 3px solid #6843c1; outline-offset: 1px; }
+.theme-options { position: absolute; top: 100%; right: 0; min-width: 9rem; padding: .25rem; border: 1px solid var(--site-outline); border-radius: .6rem; background: var(--site-card); box-shadow: 0 4px 16px #35256830; text-align: left; }
+.theme-options button { display: block; width: 100%; min-height: 44px; padding: .45rem .6rem; border: 0; border-radius: .35rem; background: transparent; color: var(--site-ink); font: inherit; text-align: left; white-space: nowrap; cursor: pointer; }
+.theme-options button:hover, .theme-options button[aria-pressed="true"] { background: #eee5ff; }
+.splash-page .splash-theme { position: absolute; inset: .4rem .8rem auto auto; margin: 0; }
+.splash-page .theme-control > summary { color: #fff; background: #39276f; border-radius: .35rem; }
+:root[data-theme="light"] .splash-page .theme-control > summary { color: var(--site-ink); background: transparent; }
+.study-menu, .landing-header, .site-header { position: relative; }
+.study-menu > .theme-control, .landing-header > .theme-control, .site-header > .theme-control { position: absolute; top: .25rem; right: .55rem; }
+.shell > .site-header { padding-right: 3.6rem; }
+.landing-header > .theme-control { z-index: 3; }
+.mobile-header-content > .theme-control { flex: 0 0 auto; }

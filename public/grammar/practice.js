@@ -15,17 +15,38 @@
   function applyTheme(value) {
     const theme = value === 'light' ? 'light' : 'classic';
     root.dataset.theme = theme;
-    document.querySelectorAll('select[data-theme-picker]').forEach(select => { select.value = theme; });
+    document.querySelectorAll('[data-theme-choice]').forEach(button => {
+      button.setAttribute('aria-pressed', String(button.dataset.themeChoice === theme));
+    });
   }
 
   applyTheme(readTheme());
-  document.addEventListener('change', event => {
-    if (!event.target.matches('select[data-theme-picker]')) return;
-    applyTheme(event.target.value);
-    try {
-      localStorage.setItem(key, root.dataset.theme);
-    } catch {
-      // The theme still works for this page when storage is unavailable.
+  function closeMenu(menu, restoreFocus) {
+    menu.open = false;
+    if (restoreFocus) menu.querySelector('summary').focus();
+  }
+
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-theme-choice]');
+    if (button) {
+      applyTheme(button.dataset.themeChoice);
+      try {
+        localStorage.setItem(key, root.dataset.theme);
+      } catch {
+        // The theme still works for this page when storage is unavailable.
+      }
+      closeMenu(button.closest('.theme-control'), true);
+    }
+    for (const menu of document.querySelectorAll('.theme-control[open]')) {
+      if (!menu.contains(event.target)) closeMenu(menu, false);
+    }
+  });
+
+  document.addEventListener('keydown', event => {
+    const menu = event.target.closest('.theme-control[open]');
+    if (event.key === 'Escape' && menu) {
+      event.preventDefault();
+      closeMenu(menu, true);
     }
   });
 
@@ -37,17 +58,22 @@
   function initialisePage() {
     const header = document.querySelector('.site-header');
     if (header) {
-      const label = document.createElement('label');
-      label.className = 'theme-control';
-      label.append('Theme');
-      const select = document.createElement('select');
-      select.dataset.themePicker = '';
-      select.setAttribute('aria-label', 'Theme');
-      select.add(new Option('Classic purple', 'classic'));
-      select.add(new Option('Light', 'light'));
-      select.value = root.dataset.theme;
-      label.append(select);
-      header.append(label);
+      const menu = document.createElement('details');
+      menu.className = 'theme-control';
+      const summary = document.createElement('summary');
+      summary.textContent = 'Theme';
+      const options = document.createElement('div');
+      options.className = 'theme-options';
+      for (const [value, label] of [['classic', 'Classic purple'], ['light', 'Light']]) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.themeChoice = value;
+        button.textContent = label;
+        options.append(button);
+      }
+      menu.append(summary, options);
+      header.append(menu);
+      applyTheme(root.dataset.theme);
     }
 
     for (const form of document.querySelectorAll('.grammar-check')) {

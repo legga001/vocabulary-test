@@ -1,14 +1,15 @@
 import React from 'react';
 
 function ThemePicker() {
+  const theme = document.documentElement.dataset.theme || 'classic';
   return (
-    <label className="theme-control">
-      Theme
-      <select aria-label="Theme" data-theme-picker defaultValue={document.documentElement.dataset.theme || 'classic'}>
-        <option value="classic">Classic purple</option>
-        <option value="light">Light</option>
-      </select>
-    </label>
+    <details className="theme-control">
+      <summary>Theme</summary>
+      <div className="theme-options">
+        <button type="button" data-theme-choice="classic" aria-pressed={theme === 'classic'}>Classic purple</button>
+        <button type="button" data-theme-choice="light" aria-pressed={theme === 'light'}>Light</button>
+      </div>
+    </details>
   );
 }
 

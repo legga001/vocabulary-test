@@ -395,7 +395,7 @@ function LandingPage({ onSelectExercise, onProgress, onLogoClick, onStudyMenu, i
               </button>
               <span className="mobile-logo-text">Mr. Fox English</span>
             </div>
-            <div className="mobile-header-spacer"></div>
+            <ThemePicker />
           </div>
         </header>
       )}
@@ -430,10 +430,11 @@ function LandingPage({ onSelectExercise, onProgress, onLogoClick, onStudyMenu, i
       <main className="main-content-area">
         {/* Header */}
         <section className="landing-header">
+          {!isMobile && <ThemePicker />}
           <div className="welcome-section">
             <h1 className="main-title">Practise exercises</h1>
             <p className="main-subtitle">Choose a skill and try an activity.</p>
-            <div className="landing-controls"><button type="button" className="btn btn-secondary" onClick={onStudyMenu}>← Study menu</button><ThemePicker /></div>
+            <div className="landing-controls"><button type="button" className="btn btn-secondary" onClick={onStudyMenu}>← Study menu</button></div>
           </div>
         </section>
 
