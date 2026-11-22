@@ -1,5 +1,6 @@
 // src/components/SplashPage.js
 import React from 'react';
+import ThemePicker from './ThemePicker';
 
 function SplashPage({ onStartPracticing, isTransitioning }) {
   return (
@@ -20,6 +21,7 @@ function SplashPage({ onStartPracticing, isTransitioning }) {
         >
           {isTransitioning ? 'Loading...' : 'Start Practicing'}
         </button>
+        <div className="splash-theme"><ThemePicker /></div>
       </div>
     </div>
   );

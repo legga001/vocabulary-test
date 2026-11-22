@@ -339,7 +339,7 @@ function App() {
     }
   };
 
-  const screenClass = { splash: 'splash-mode', landing: 'landing-mode' }[currentScreen] || '';
+  const screenClass = { splash: 'splash-mode', landing: 'landing-mode', study: 'menu-mode', tests: 'menu-mode' }[currentScreen] || '';
 
   return (
     <div className={`App ${screenClass}`}>

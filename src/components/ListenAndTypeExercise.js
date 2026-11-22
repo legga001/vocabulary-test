@@ -143,7 +143,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'var(--site-background)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -280,7 +280,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'var(--site-background)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -305,7 +305,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'var(--site-background)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -430,7 +430,7 @@ function ListenAndTypeExercise({ onBack, onLogoClick }) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'var(--site-background)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
