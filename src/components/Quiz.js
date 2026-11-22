@@ -125,69 +125,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
               console.log('✅ Loaded AI questions:', questionData.length);
               break;
 
-            case 'evolution-quiz':
-              console.log('🧬 Loading evolution questions...');
-              const evolutionModule = await import('../evolutionVocabularyData');
-              questionData = evolutionModule.getEvolutionVocabularyQuestions();
-              console.log('✅ Loaded evolution questions:', questionData.length);
-              break;
-
-            case 'volcano-quiz':
-              console.log('🌋 Loading volcano questions...');
-              const volcanoModule = await import('../volcanoVocabularyData');
-              questionData = volcanoModule.getVolcanoVocabularyQuestions();
-              console.log('✅ Loaded volcano questions:', questionData.length);
-              break;
-
-            case 'ocean-quiz':
-              console.log('🌊 Loading ocean questions...');
-              const oceanModule = await import('../oceanVocabularyData');
-              questionData = oceanModule.getOceanVocabularyQuestions();
-              console.log('✅ Loaded ocean questions:', questionData.length);
-              break;
-
-            case 'space-quiz':
-              console.log('🚀 Loading space questions...');
-              const spaceModule = await import('../spaceVocabularyData');
-              questionData = spaceModule.getSpaceVocabularyQuestions();
-              console.log('✅ Loaded space questions:', questionData.length);
-              break;
-
-            case 'climate-quiz':
-              console.log('🌍 Loading climate questions...');
-              const climateModule = await import('../climateVocabularyData');
-              questionData = climateModule.getClimateVocabularyQuestions();
-              console.log('✅ Loaded climate questions:', questionData.length);
-              break;
-
-            case 'renewable-quiz':
-              console.log('⚡ Loading renewable energy questions...');
-              const renewableModule = await import('../renewableVocabularyData');
-              questionData = renewableModule.getRenewableVocabularyQuestions();
-              console.log('✅ Loaded renewable energy questions:', questionData.length);
-              break;
-
-            case 'antarctica-quiz':
-              console.log('🐧 Loading Antarctica questions...');
-              const antarcticaModule = await import('../antarcticaVocabularyData');
-              questionData = antarcticaModule.getAntarcticaVocabularyQuestions();
-              console.log('✅ Loaded Antarctica questions:', questionData.length);
-              break;
-
-            case 'plastic-quiz':
-              console.log('♻️ Loading plastic pollution questions...');
-              const plasticModule = await import('../plasticVocabularyData');
-              questionData = plasticModule.getPlasticVocabularyQuestions();
-              console.log('✅ Loaded plastic pollution questions:', questionData.length);
-              break;
-
-            case 'deforestation-quiz':
-              console.log('🌳 Loading deforestation questions...');
-              const deforestationModule = await import('../deforestationVocabularyData');
-              questionData = deforestationModule.getDeforestationVocabularyQuestions();
-              console.log('✅ Loaded deforestation questions:', questionData.length);
-              break;
-
+            case 'smuggling-quiz':
             case 'default':
             default:
               console.log('📖 Loading default article questions...');
