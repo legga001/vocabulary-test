@@ -27,3 +27,7 @@
 .shell > .site-header { padding-right: 3.6rem; }
 .landing-header > .theme-control { z-index: 3; }
 .mobile-header-content > .theme-control { flex: 0 0 auto; }
+
+.mobile-header .mobile-header-content { width: 100%; min-width: 0; padding-inline: .4rem; gap: .35rem; }
+.mobile-header .mobile-logo { min-width: 0; }
+.mobile-header .mobile-logo-text { overflow-wrap: anywhere; }
