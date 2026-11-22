@@ -96,7 +96,7 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
               articleInfo = octopusModule.getReadingArticleInfo();
               break;
             case 'smuggling-quiz':
-              const smugglingModule = require('../smugglingVocabularyData');
+              const smugglingModule = require('../articleQuestions');
               articleInfo = smugglingModule.getArticleInfo();
               break;
             case 'air-india-quiz':
@@ -149,8 +149,8 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
             articleInfo = octopusModule.getReadingArticleInfo();
             break;
           case 'smuggling-quiz':
-            const smugglingModule = require('../smugglingVocabularyData');
-            questionsList = smugglingModule.getSmugglingVocabularyQuestions();
+            const smugglingModule = require('../articleQuestions');
+            questionsList = smugglingModule.getArticleQuestions();
             articleInfo = smugglingModule.getArticleInfo();
             break;
           case 'air-india-quiz':
