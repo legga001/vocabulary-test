@@ -109,7 +109,7 @@ function ProgressPage({ onBack, onLogoClick }) {
     }
   };
 
-  if (!stats) return <div>Loading progress...</div>;
+  if (!stats || !learningInsights) return <div>Loading progress...</div>;
 
   return (
     <div className="progress-page">
@@ -233,13 +233,13 @@ function ProgressPage({ onBack, onLogoClick }) {
         <h2>🏆 Achievements</h2>
         {achievements.length > 0 ? (
           <div className="achievements-grid">
-            {achievements.map((achievement, index) => (
+            {achievements.map(achievement => (
               <div key={achievement.id} className="achievement-badge">
                 <div className="achievement-icon">{achievement.icon}</div>
                 <div className="achievement-content">
                   <h4>{achievement.title}</h4>
                   <p>{achievement.description}</p>
-                  <small>Earned: {formatDate(achievement.earnedDate)}</small>
+                  {achievement.earnedAt && <small>Earned: {formatDate(achievement.earnedAt)}</small>}
                 </div>
               </div>
             ))}
@@ -263,8 +263,8 @@ function ProgressPage({ onBack, onLogoClick }) {
               <div className="insight-content">
                 <span className="insight-icon">{learningInsights.strongestSkill.icon}</span>
                 <div>
-                  <strong>{learningInsights.strongestSkill.displayName}</strong>
-                  <p>Average: {learningInsights.strongestSkill.average}%</p>
+                  <strong>{learningInsights.strongestSkill.name}</strong>
+                  <p>Average: {learningInsights.strongestSkill.score}%</p>
                 </div>
               </div>
             </div>
@@ -276,7 +276,7 @@ function ProgressPage({ onBack, onLogoClick }) {
               <div className="insight-content">
                 <span className="insight-icon">{learningInsights.mostImproved.icon}</span>
                 <div>
-                  <strong>{learningInsights.mostImproved.displayName}</strong>
+                  <strong>{learningInsights.mostImproved.name}</strong>
                   <p>Great progress!</p>
                 </div>
               </div>
@@ -285,31 +285,18 @@ function ProgressPage({ onBack, onLogoClick }) {
 
           <div className="insight-card large">
             <h4>🎯 Recommended Challenge</h4>
-            <div className="insight-content">
-              <span className="insight-icon">{learningInsights.recommendedChallenge.icon}</span>
-              <div>
-                <strong>{learningInsights.recommendedChallenge.displayName}</strong>
-                <p>{learningInsights.recommendedChallenge.reason}</p>
+            {learningInsights.needsWork ? (
+              <div className="insight-content">
+                <span className="insight-icon">{learningInsights.needsWork.icon}</span>
+                <div>
+                  <strong>{learningInsights.needsWork.name}</strong>
+                  <p>Try another round and see if you can beat your average of {learningInsights.needsWork.score}%.</p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <p>Complete an exercise to get a practice suggestion here.</p>
+            )}
           </div>
-
-          {learningInsights.wordsToReview.length > 0 && (
-            <div className="insight-card words-review">
-              <h4>📝 Words to Review</h4>
-              <div className="words-list">
-                {learningInsights.wordsToReview.map((wordData, index) => (
-                  <div key={index} className="word-item">
-                    <span className="word-text">"{wordData.word}"</span>
-                    <span className="word-count">Missed {wordData.count} times</span>
-                    <span className="word-exercises">
-                      in {wordData.exercises.join(', ')}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
