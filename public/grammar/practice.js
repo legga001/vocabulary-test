@@ -42,6 +42,7 @@
       label.append('Theme');
       const select = document.createElement('select');
       select.dataset.themePicker = '';
+      select.setAttribute('aria-label', 'Theme');
       select.add(new Option('Classic purple', 'classic'));
       select.add(new Option('Light', 'light'));
       select.value = root.dataset.theme;
