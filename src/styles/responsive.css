@@ -163,6 +163,10 @@
     background: transparent;
   }
   
+  #root:has(> .App.landing-mode) {
+    width: 100%;
+  }
+
   .App.landing-mode {
     max-width: none;
     padding: 0;
