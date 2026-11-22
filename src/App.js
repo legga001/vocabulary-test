@@ -22,6 +22,7 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState(() => window.location.hash === '#exercises' ? 'landing' : 'splash');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [quizResults, setQuizResults] = useState(null);
+  const [answerChecks, setAnswerChecks] = useState(null);
   const [testQuestions, setTestQuestions] = useState(null);
   const [selectedArticleType, setSelectedArticleType] = useState(null);
 
@@ -53,13 +54,18 @@ function App() {
   };
 
   const handleLogoClick = () => {
-    setCurrentScreen('landing');
+    if (window.location.hash === '#exercises') {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+    setCurrentScreen('splash');
+    setSelectedArticleType(null);
     setQuizResults(null);
     setTestQuestions(null);
   };
 
   // Quiz completion handler
-  const handleQuizFinish = (userAnswers, questions) => {
+  const handleQuizFinish = (userAnswers, questions, checks) => {
+    setAnswerChecks(checks);
     setQuizResults(userAnswers);
     setTestQuestions(questions);
     setCurrentScreen('results');
@@ -130,6 +136,7 @@ function App() {
           <LandingPage
             onSelectExercise={handleSelectExercise}
             onProgress={goToProgress}
+            onLogoClick={handleLogoClick}
             isTransitioning={isTransitioning}
           />
         );
@@ -173,7 +180,9 @@ function App() {
           <Results
             userAnswers={quizResults}
             questions={testQuestions}
-            quizType={currentScreen.includes('article') ? 'article' : 'standard'}
+            quizType={selectedArticleType ? 'article' : 'standard'}
+            answerChecks={answerChecks}
+            onLogoClick={handleLogoClick}
             articleType={selectedArticleType}
             onRestart={handleResultsFinish}
           />

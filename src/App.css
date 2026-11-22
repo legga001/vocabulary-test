@@ -230,3 +230,12 @@
     break-inside: avoid;
   }
 }
+
+.vocabulary-mode { text-align: center; }
+.vocabulary-mode-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: 1rem; margin-block: 1.25rem; }
+.vocabulary-mode-options .btn { min-width: 8rem; }
+.vocabulary-mode-options p { margin-top: .5rem; }
+.vocabulary-definition { margin: .75rem 0; padding: .7rem 1rem; background: #ede8ff; border-radius: .65rem; color: #352675; }
+.vocabulary-definition strong { display: block; }
+.vocabulary-level { white-space: nowrap; }
+.quiz-container .letter-input-container { flex-wrap: wrap; max-width: 100%; }

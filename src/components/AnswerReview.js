@@ -120,7 +120,7 @@ const isAnswerCorrect = (partialUserAnswer, correctAnswer) => {
          userAnswerAlternatives.includes(correctAnswerNormalized);
 };
 
-function AnswerReview({ questions, userAnswers, title = "Your Answers" }) {
+function AnswerReview({ questions, userAnswers, answerChecks, title = "Your Answers" }) {
   if (!questions || !userAnswers) {
     return (
       <div className="answer-review">
@@ -136,8 +136,8 @@ function AnswerReview({ questions, userAnswers, title = "Your Answers" }) {
       <div className="answers-list">
         {questions.map((q, index) => {
           const partialUserAnswer = userAnswers[index] || '';
-          const completeUserAnswer = reconstructCompleteAnswer(partialUserAnswer, q.answer);
-          const isCorrect = isAnswerCorrect(partialUserAnswer, q.answer);
+          const completeUserAnswer = answerChecks ? partialUserAnswer : reconstructCompleteAnswer(partialUserAnswer, q.answer);
+          const isCorrect = answerChecks?.[index] ?? isAnswerCorrect(partialUserAnswer, q.answer);
           
           console.log(`📝 REVIEW Q${index + 1}:`, {
             partialUserAnswer,

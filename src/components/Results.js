@@ -1,5 +1,6 @@
 // src/components/Results.js - FINAL FIXED VERSION
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import ClickableLogo from './ClickableLogo';
 import AnswerReview from './AnswerReview';
 import { recordTestResult } from '../utils/progressDataManager';
 import { getNewQuestions } from '../questionsData';
@@ -15,7 +16,8 @@ const getLettersToShow = (word) => {
   return 6;
 };
 
-function Results({ userAnswers, questions, testQuestions, quizType, articleType, onRestart }) {
+function Results({ userAnswers, questions, testQuestions, quizType, articleType, onRestart, answerChecks, onLogoClick }) {
+  const hasRecorded = useRef(false);
   console.log('📊 Results component rendering with:', { 
     userAnswers, 
     questions, 
@@ -188,6 +190,7 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
 
   // Calculate score
   const score = finalQuestions.reduce((total, question, index) => {
+    if (answerChecks) return total + Number(answerChecks[index]);
     const userAnswer = userAnswers[index];
     if (!userAnswer || !question.answer) return total;
 
@@ -208,28 +211,29 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
 
   // Record test result
   useEffect(() => {
+    if (hasRecorded.current) return;
+    hasRecorded.current = true;
     try {
       const formattedUserAnswers = userAnswers.map((userAnswer, index) => {
         const question = finalQuestions[index];
         if (!question) return { userAnswer: '', correctAnswer: '', isCorrect: false, level: 'B1' };
         
-        const completeUserAnswer = reconstructCompleteAnswer(userAnswer, question.answer);
-        const isCorrect = completeUserAnswer.toLowerCase().trim() === question.answer.toLowerCase().trim();
+        const completeUserAnswer = answerChecks ? userAnswer : reconstructCompleteAnswer(userAnswer, question.answer);
+        const isCorrect = answerChecks?.[index] ?? (completeUserAnswer.toLowerCase().trim() === question.answer.toLowerCase().trim());
         
         return {
-          userAnswer: completeUserAnswer,
-          correctAnswer: question.answer,
-          isCorrect: isCorrect ? 1 : 0,
+          answer: completeUserAnswer,
+          correct: isCorrect,
           level: question.level || 'B1'
         };
       });
 
       const testResult = {
-        type: quizType === 'article' ? 'article-vocabulary' : 'standard-vocabulary',
+        quizType: quizType === 'article' ? 'article-vocabulary' : 'standard-vocabulary',
         score: score,
         totalQuestions: 10,
         userAnswers: formattedUserAnswers,
-        completedAt: new Date().toISOString(),
+        completedAt: new Date(),
         timeSpent: null,
         articleInfo: articleInfo
       };
@@ -239,7 +243,7 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
     } catch (error) {
       console.error('Error recording test result:', error);
     }
-  }, [score, userAnswers, finalQuestions, quizType, articleInfo]);
+  }, [score, userAnswers, finalQuestions, quizType, articleInfo, answerChecks]);
 
   // Get level information based on score
   const getLevelInfo = (score) => {
@@ -281,6 +285,7 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
 
   return (
     <div className="exercise-page">
+      <ClickableLogo onLogoClick={onLogoClick} />
       <div className="quiz-container results-container">
         {/* Results Header */}
         <div className="results-header">
@@ -294,7 +299,11 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
 
         {/* Level Information */}
         <div className="level-section">
-          <div className="level-badge-large">{levelInfo.level}</div>
+          <div className="level-badge-large">
+            {quizType === 'standard' && answerChecks
+              ? 'Highest word level reached · ' + finalQuestions.map(question => question.level).sort().at(-1)
+              : levelInfo.level}
+          </div>
           <div className="level-description">{levelInfo.description}</div>
           <div className="level-feedback">{levelInfo.feedback}</div>
         </div>
@@ -321,7 +330,7 @@ function Results({ userAnswers, questions, testQuestions, quizType, articleType,
           <AnswerReview 
             userAnswers={userAnswers}
             questions={finalQuestions}
-            reconstructCompleteAnswer={reconstructCompleteAnswer}
+            answerChecks={answerChecks}
           />
         </div>
 
