@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ClickableLogo from './ClickableLogo';
 import LetterInput from './LetterInput';
+import { nextVocabularyLevel, pickVocabularyQuestion } from '../data/vocabularyPool';
 
 // Correct feedback messages
 const correctMessages = [
@@ -59,6 +60,8 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
   console.log('🏗️ Quiz component rendering with:', { quizType, articleType });
   
   // State management
+  const [mode, setMode] = useState(null);
+  const [correctAnswers, setCorrectAnswers] = useState(new Array(10).fill(false));
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState(new Array(10).fill(''));
   const [checkedQuestions, setCheckedQuestions] = useState(new Array(10).fill(false));
@@ -71,49 +74,42 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackType, setFeedbackType] = useState('');
 
-  const QUIZ_STATE_KEY = `quiz_state_${quizType}_${articleType || 'standard'}`;
-
   // Load questions based on quiz type - FIXED WITH ALL ARTICLE TYPES
   useEffect(() => {
+    if (quizType !== 'article') return;
+    let active = true;
     const loadQuestions = async () => {
       try {
         let questionData = [];
         
-        if (quizType === 'article') {
-          console.log('📚 Loading article questions for type:', articleType);
-          
-          switch (articleType) {
-            case 'zooplankton-quiz':
-              console.log('🌊 Loading zooplankton questions...');
-              const zooplanktonModule = await import('../zooplanktonVocabularyData');
-              questionData = zooplanktonModule.getZooplanktonVocabularyQuestions();
-              console.log('✅ Loaded zooplankton questions:', questionData.length);
-              break;
-              
-            case 'smuggling-quiz':
-            case 'default':
-            default:
-              console.log('📖 Loading default article questions...');
-              const defaultModule = await import('../articleQuestions');
-              questionData = defaultModule.getArticleQuestions();
-              console.log('✅ Loaded default article questions:', questionData.length);
-              break;
-          }
-        } else {
-          console.log('📝 Loading standard questions...');
-          const { getNewQuestions } = await import('../questionsData');
-          questionData = getNewQuestions();
-          console.log('✅ Loaded standard questions:', questionData.length);
+        console.log('📚 Loading article questions for type:', articleType);
+        
+        switch (articleType) {
+          case 'zooplankton-quiz':
+            console.log('🌊 Loading zooplankton questions...');
+            const zooplanktonModule = await import('../zooplanktonVocabularyData');
+            questionData = zooplanktonModule.getZooplanktonVocabularyQuestions();
+            console.log('✅ Loaded zooplankton questions:', questionData.length);
+            break;
+            
+          case 'smuggling-quiz':
+          case 'default':
+          default:
+            console.log('📖 Loading default article questions...');
+            const defaultModule = await import('../articleQuestions');
+            questionData = defaultModule.getArticleQuestions();
+            console.log('✅ Loaded default article questions:', questionData.length);
+            break;
         }
 
         console.log('📋 Final questions loaded:', questionData);
-        setQuestions(questionData);
+        if (active) setQuestions(questionData);
       } catch (error) {
         console.error('❌ Error loading questions:', error);
         // Fallback to default questions
         try {
           const { getNewQuestions } = await import('../questionsData');
-          setQuestions(getNewQuestions());
+          if (active) setQuestions(getNewQuestions());
         } catch (fallbackError) {
           console.error('❌ Error loading fallback questions:', fallbackError);
         }
@@ -121,74 +117,22 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     };
 
     loadQuestions();
+    return () => { active = false; };
   }, [quizType, articleType]);
 
-  // **FIXED**: Helper function to process sentences WITHOUT showing underscores
-  const processSentence = (sentence, answer) => {
-    if (!sentence || !answer) return { beforeGap: '', afterGap: '' };
-    
-    console.log('🔧 PROCESSING SENTENCE:', { sentence, answer });
-    
-    // Handle various gap patterns and remove ALL underscore remnants
-    let cleanSentence = sentence;
-    
-    // List of all possible gap patterns we need to handle
-    const gapPatterns = [
-      /_____/g,                    // Simple underscores: _____
-      /\b\w*_+\w*\b/g,            // Word with underscores: dev_____ or _____tion
-      /\b[A-Za-z]*_+[A-Za-z]*\b/g, // Letter-underscore combinations
-      /__+/g,                      // Any sequence of underscores
-      /_+/g                        // Any single or multiple underscores
-    ];
-    
-    let beforeGap = '';
-    let afterGap = '';
-    let gapFound = false;
-    
-    // Try each pattern until we find a match
-    for (const pattern of gapPatterns) {
-      const matches = cleanSentence.match(pattern);
-      if (matches && matches.length > 0) {
-        console.log('🎯 Found gap pattern:', matches[0], 'with pattern:', pattern);
-        
-        // Split on the first match
-        const gapWord = matches[0];
-        const gapIndex = cleanSentence.indexOf(gapWord);
-        
-        beforeGap = cleanSentence.substring(0, gapIndex).trim();
-        afterGap = cleanSentence.substring(gapIndex + gapWord.length).trim();
-        
-        // Clean up any remaining underscores from the parts
-        beforeGap = beforeGap.replace(/_+/g, '').trim();
-        afterGap = afterGap.replace(/_+/g, '').trim();
-        
-        gapFound = true;
-        break;
-      }
-    }
-    
-    // If no pattern found, try a simple approach
-    if (!gapFound) {
-      const parts = cleanSentence.split(/\s+/);
-      const gapIndex = parts.findIndex(part => part.includes('_'));
-      
-      if (gapIndex !== -1) {
-        beforeGap = parts.slice(0, gapIndex).join(' ').trim();
-        afterGap = parts.slice(gapIndex + 1).join(' ').trim();
-      } else {
-        // Fallback: put gap at the end
-        beforeGap = cleanSentence.trim();
-        afterGap = '';
-      }
-    }
-    
-    console.log('✅ PROCESSED RESULT:', { beforeGap, afterGap });
-    
+  function startVocabulary(selectedMode) {
+    setQuestions([pickVocabularyQuestion('A2', [])]);
+    setMode(selectedMode);
+  }
+
+  function processSentence(sentence) {
+    const gap = /\b[a-z]*_+[a-z]*\b|_+/i.exec(sentence);
+    if (!gap) return { beforeGap: sentence, afterGap: '' };
     return {
-      beforeGap: beforeGap,
-      afterGap: afterGap
+      beforeGap: sentence.slice(0, gap.index),
+      afterGap: sentence.slice(gap.index + gap[0].length)
     };
-  };
+  }
 
   const getArticleInfo = () => {
     // This would return article information if needed
@@ -197,8 +141,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
 
   // Get current question
   const question = questions[currentQuestion];
-  const processedData = quizType === 'article' && question ? 
-    processSentence(question.sentence, question.answer) : { beforeGap: '', afterGap: '' };
+  const processedData = question ? processSentence(question.sentence) : null;
   const articleInfo = getArticleInfo();
 
   console.log('📰 Article info:', articleInfo);
@@ -214,22 +157,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
   const checkAnswer = useCallback((userInput, correctAnswer) => {
     if (!userInput || !correctAnswer) return false;
 
-    // For article quizzes, reconstruct the complete word from user input
-    let completeUserAnswer = userInput;
-    
-    if (quizType === 'article') {
-      const lettersShown = getLettersToShow(correctAnswer);
-      const preFilledPart = correctAnswer.substring(0, lettersShown);
-      completeUserAnswer = preFilledPart + userInput; // Reconstruct complete word
-      
-      console.log('🔧 RECONSTRUCTING ANSWER FOR FEEDBACK:', {
-        userInput,
-        correctAnswer,
-        lettersShown,
-        preFilledPart,
-        completeUserAnswer
-      });
-    }
+    const completeUserAnswer = correctAnswer.slice(0, getLettersToShow(correctAnswer)) + userInput;
 
     const normalizeText = (text) => text.toLowerCase().trim().replace(/[^a-z]/g, '');
     const normalizedUser = normalizeText(completeUserAnswer);
@@ -241,7 +169,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     // Check alternative spellings
     const alternatives = getAlternativeSpellings(correctAnswer);
     return alternatives.some(alt => normalizeText(alt) === normalizedUser);
-  }, [quizType]);
+  }, []);
 
   // Update answer function
   const updateAnswer = useCallback((value) => {
@@ -257,6 +185,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     const userAnswer = userAnswers[currentQuestion];
     const correctAnswer = question.answer;
     const isCorrect = checkAnswer(userAnswer, correctAnswer);
+    setCorrectAnswers(previous => previous.map((correct, index) => index === currentQuestion ? isCorrect : correct));
 
     console.log('✅ CHECKING ANSWER:', {
       userInput: userAnswer,
@@ -286,7 +215,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     setShowFeedback(true);
     
     // NO auto-hide timeout - feedback stays until next question
-  }, [currentQuestion, userAnswers, checkedQuestions, question, checkAnswer, showHints]);
+  }, [currentQuestion, userAnswers, checkedQuestions, question, checkAnswer, showHints, quizType]);
 
   // **NEW**: Skip question function
   const skipQuestion = useCallback(() => {
@@ -316,7 +245,14 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
     setFeedbackType('');
     
     if (currentQuestion < 9) {
-      setCurrentQuestion(prev => prev + 1);
+      if (quizType === 'standard' && questions.length === currentQuestion + 1) {
+        const level = nextVocabularyLevel(
+          questions[currentQuestion], correctAnswers[currentQuestion],
+          questions[currentQuestion - 1], correctAnswers[currentQuestion - 1]
+        );
+        setQuestions([...questions, pickVocabularyQuestion(level, questions)]);
+      }
+      setCurrentQuestion(currentQuestion + 1);
     } else {
       // Quiz complete - pass complete answers to Results
       const completeAnswers = userAnswers.map((userAnswer, index) => {
@@ -326,19 +262,14 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
           return ''; // Empty for skipped questions
         }
         
-        if (quizType === 'article') {
-          const lettersShown = getLettersToShow(correctAnswer);
-          const preFilledPart = correctAnswer.substring(0, lettersShown);
-          return preFilledPart + userAnswer; // Complete word
-        } else {
-          return userAnswer; // Standard quiz - user types complete word
-        }
+        if (!userAnswer) return '';
+        return correctAnswer.slice(0, getLettersToShow(correctAnswer)) + userAnswer;
       });
       
       console.log('🏁 Quiz finished with complete answers:', completeAnswers);
-      onFinish(completeAnswers, questions);
+      onFinish(completeAnswers, questions, correctAnswers);
     }
-  }, [currentQuestion, userAnswers, questions, onFinish, quizType, skippedQuestions]);
+  }, [currentQuestion, userAnswers, questions, onFinish, quizType, skippedQuestions, correctAnswers]);
 
   const goToPreviousQuestion = useCallback(() => {
     // Clear feedback when moving to previous question
@@ -360,6 +291,29 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
       goToNextQuestion();
     }
   }, [userAnswers, currentQuestion, checkedQuestions, checkCurrentAnswer, goToNextQuestion]);
+
+  if (quizType === 'standard' && !mode) {
+    return (
+      <div className="exercise-page">
+        <ClickableLogo onLogoClick={onLogoClick} />
+        <section className="quiz-container vocabulary-mode" aria-labelledby="vocabulary-mode-title">
+          <h1 id="vocabulary-mode-title">Standard Vocabulary</h1>
+          <p>Get two answers right in a row at the same level to unlock harder words.</p>
+          <div className="vocabulary-mode-options">
+            <div>
+              <button className="btn btn-primary" onClick={() => startVocabulary('easy')}>Easy</button>
+              <p>See the definition before you answer.</p>
+            </div>
+            <div>
+              <button className="btn btn-primary" onClick={() => startVocabulary('hard')}>Hard</button>
+              <p>Use the sentence and starting letters to solve the word.</p>
+            </div>
+          </div>
+          <button onClick={onBack} className="btn btn-secondary">← Back to Exercises</button>
+        </section>
+      </div>
+    );
+  }
 
   // Show loading if questions not loaded
   if (questions.length === 0) {
@@ -409,6 +363,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
           </div>
           <div className="question-counter">
             Question {currentQuestion + 1} of 10
+            {mode && <span className="vocabulary-level"> · {question.level} · {mode === 'easy' ? 'Easy' : 'Hard'}</span>}
           </div>
           <div className="progress-bar">
             <div 
@@ -438,10 +393,15 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
             </div>
           )}
           
-          {/* Question Text - NO MORE UNDERSCORES! */}
+          {mode === 'easy' && (
+            <p className="vocabulary-definition"><strong>Definition</strong> {question.hint}</p>
+          )}
+
+          {/* Question Text */}
           <div className="question-text">
             <span>{processedData.beforeGap}</span>
             <LetterInput
+              key={currentQuestion}
               word={question.answer}
               value={userAnswers[currentQuestion]}
               onChange={updateAnswer}
@@ -454,7 +414,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
         </div>
 
         {/* **NEW**: Conditional Hint Section - Only show after wrong answer */}
-        {showHints[currentQuestion] && (
+        {mode !== 'easy' && showHints[currentQuestion] && (
           <div className="hint-section">
             <div className="hint-icon">💡</div>
             <div className="hint-text">{question.hint}</div>
@@ -508,7 +468,7 @@ function Quiz({ onFinish, quizType = 'standard', articleType, onBack, onLogoClic
         {/* Navigation Help */}
         <div className="navigation-help">
           <p>💡 Press Enter to check your answer or move to the next question</p>
-          <p>🔍 Hints will appear if you get an answer wrong</p>
+          {mode !== 'easy' && <p>🔍 Hints will appear if you get an answer wrong</p>}
         </div>
 
         {/* Back Button */}

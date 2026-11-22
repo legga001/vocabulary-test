@@ -2,8 +2,28 @@
 // Each sentence is carefully crafted so the missing word is the ONLY logical choice
 
 export const VOCABULARY_POOL = {
-  // A2 Level - 25 exercises (elementary)
+  // A2 (elementary)
   A2: [
+    {"answer":"borrow","sentence":"Can I ___ your pen for a minute? I’ll give it back.","hint":"To use something that belongs to someone else and return it later."},
+    {"answer":"receipt","sentence":"Keep the ___ in case you need to return the shirt.","hint":"A piece of paper or email that shows what you paid for."},
+    {"answer":"empty","sentence":"The bottle is ___. There’s no water left.","hint":"With nothing inside."},
+    {"answer":"neighbour","sentence":"Our next-door ___ brought our parcel round.","hint":"A person who lives near you."},
+    {"answer":"journey","sentence":"The train ___ from London took two hours.","hint":"An occasion when you travel from one place to another."},
+    {"answer":"daughter","sentence":"Leo’s ___ calls him Dad.","hint":"A person’s female child."},
+    {"answer":"hungry","sentence":"I haven’t eaten since breakfast, so I’m ___.","hint":"Wanting to eat."},
+    {"answer":"umbrella","sentence":"Take an ___ so you can stay dry in the rain.","hint":"Something you hold over your head to keep off the rain."},
+    {"answer":"ceiling","sentence":"The lamp hangs from the ___.","hint":"The inside surface above your head in a room."},
+    {"answer":"repair","sentence":"The zip has broken. Can you ___ it?","hint":"To make something work again after it breaks."},
+    {"answer":"enough","sentence":"We have ten plates for ten people, so we have ___.","hint":"As much or as many as you need."},
+    {"answer":"library","sentence":"I borrowed two novels from the ___.","hint":"A place where people can read or borrow books."},
+    {"answer":"necklace","sentence":"She wore a gold ___ around her neck.","hint":"Jewellery worn around the neck."},
+    {"answer":"blanket","sentence":"Put a ___ over your knees if you’re cold.","hint":"A thick cover that keeps you warm."},
+    {"answer":"whisper","sentence":"Please ___ so you don’t wake the baby.","hint":"To speak very quietly, usually without using your voice fully."},
+    {"answer":"stairs","sentence":"The lift is broken, so take the ___ to the second floor.","hint":"A set of steps inside or outside a building."},
+    {"answer":"invite","sentence":"Shall we ___ Jo to our birthday party?","hint":"To ask someone to come to an event."},
+    {"answer":"ticket","sentence":"Show your ___ to the driver before you get on the bus.","hint":"A document that lets you travel or attend an event."},
+    {"answer":"healthy","sentence":"Cycling and eating well can help you stay ___.","hint":"Well and free from illness."},
+    {"answer":"pocket","sentence":"I put my keys in my coat ___.","hint":"A small part of clothing that holds things."},
     {
       sentence: "I don't have enough money, so I can't b__ that expensive jacket.",
       answer: "buy",
@@ -131,8 +151,28 @@ export const VOCABULARY_POOL = {
     }
   ],
 
-  // B1 Level - 35 exercises (intermediate)
+  // B1 (intermediate)
   B1: [
+    {"answer":"achieve","sentence":"She trained all year to ___ her goal of running a marathon.","hint":"To succeed in doing something you wanted to do."},
+    {"answer":"bargain","sentence":"The coat was half price, so it was a ___.","hint":"Something bought for less than its usual price."},
+    {"answer":"cancel","sentence":"They had to ___ the match because the pitch was flooded.","hint":"To decide that a planned event will not happen."},
+    {"answer":"deadline","sentence":"The ___ for applying is Friday at noon.","hint":"The latest time or date by which something must be done."},
+    {"answer":"embarrassed","sentence":"I felt ___ when I called the teacher by the wrong name.","hint":"Uncomfortable because you think you have done something foolish."},
+    {"answer":"familiar","sentence":"That tune sounds ___, but I can’t remember its name.","hint":"Easy to recognise because you have heard, seen or experienced it before."},
+    {"answer":"generous","sentence":"It was ___ of you to pay for everyone’s meal.","hint":"Willing to give more than people expect."},
+    {"answer":"hesitate","sentence":"Don’t ___ to ask if you need help.","hint":"To pause or hold back because you are unsure."},
+    {"answer":"improve","sentence":"Reading a little each day can ___ your vocabulary.","hint":"To make something better or become better."},
+    {"answer":"manage","sentence":"Did you ___ to open the jar after all?","hint":"To succeed in doing something difficult."},
+    {"answer":"notice","sentence":"Did anyone ___ that the clocks were an hour slow?","hint":"To see or become aware of something."},
+    {"answer":"ordinary","sentence":"It looked like an ___ rock until we cut it open.","hint":"Normal and without anything special."},
+    {"answer":"prevent","sentence":"Fitting a smoke alarm can help ___ a small fire from going unnoticed.","hint":"To stop something from happening."},
+    {"answer":"refund","sentence":"I returned the boots and asked for a ___.","hint":"Money given back after you return something or a service is cancelled."},
+    {"answer":"schedule","sentence":"The school published the exam ___ with dates and times.","hint":"A plan that lists activities and the times they will happen."},
+    {"answer":"temporary","sentence":"The library has moved to a ___ building while its roof is repaired.","hint":"Lasting for only a limited time."},
+    {"answer":"unfair","sentence":"It seems ___ to give Ben two turns and everyone else one.","hint":"Treating people in a way that is not equal or reasonable."},
+    {"answer":"volunteer","sentence":"You can ___ at the shelter on Saturdays if you have spare time.","hint":"To offer to do work without being paid."},
+    {"answer":"warn","sentence":"Please ___ the walkers about the loose stones on the path.","hint":"To tell someone about a possible danger or problem."},
+    {"answer":"avoid","sentence":"Take the side road to ___ the traffic near the stadium.","hint":"To keep away from something or stop it from happening."},
     {
       sentence: "When her pet died, she felt very s__ for several weeks.",
       answer: "sad",
@@ -310,8 +350,28 @@ export const VOCABULARY_POOL = {
     }
   ],
 
-  // B2 Level - 30 exercises (upper-intermediate)
+  // B2 (upper-intermediate)
   B2: [
+    {"answer":"acknowledge","sentence":"The manager had to ___ that the team had made a mistake.","hint":"To accept or admit that something is true."},
+    {"answer":"ambiguous","sentence":"The phrase “next Friday” was ___, so we agreed on an exact date.","hint":"Having more than one possible meaning."},
+    {"answer":"assess","sentence":"Engineers will ___ the damage before reopening the bridge.","hint":"To judge the quality, size or importance of something."},
+    {"answer":"coherent","sentence":"After editing, the report became a ___ account of what happened.","hint":"Clear and logical, with parts that fit together."},
+    {"answer":"compromise","sentence":"They wanted different things, so they reached a ___.","hint":"An agreement in which each side gives up something it wanted."},
+    {"answer":"constraint","sentence":"Time is our biggest ___, so we can only test two designs.","hint":"Something that limits what you can do."},
+    {"answer":"deteriorate","sentence":"Without repairs, the condition of the roof will ___.","hint":"To get worse over time."},
+    {"answer":"distribute","sentence":"The organisers will ___ maps to everyone at the entrance.","hint":"To give things out to several people or places."},
+    {"answer":"emerge","sentence":"New details began to ___ after witnesses came forward.","hint":"To become known or come into view."},
+    {"answer":"evaluate","sentence":"We surveyed learners to ___ whether the new lessons were useful.","hint":"To judge how good, effective or useful something is."},
+    {"answer":"flexible","sentence":"We can change the meeting time because the schedule is ___.","hint":"Able to change easily to suit a new situation."},
+    {"answer":"implement","sentence":"The council will ___ the new parking rules next month.","hint":"To put a decision or plan into effect."},
+    {"answer":"incentive","sentence":"The shop offered a small discount as an ___ to bring your own bag.","hint":"Something that encourages someone to do something."},
+    {"answer":"justify","sentence":"Can you ___ the extra cost with evidence that it saves time?","hint":"To give a good reason for something."},
+    {"answer":"maintain","sentence":"The gardeners ___ the public paths throughout the year.","hint":"To keep something working or in good condition."},
+    {"answer":"negotiate","sentence":"The buyers tried to ___ a lower price before signing.","hint":"To discuss something in order to reach an agreement."},
+    {"answer":"overlook","sentence":"It’s easy to ___ a small typo when you read too quickly.","hint":"To fail to notice something."},
+    {"answer":"plausible","sentence":"Her explanation sounded ___, though nobody could confirm it.","hint":"Seeming reasonable or likely to be true."},
+    {"answer":"reluctant","sentence":"He was ___ to lend his camera after it came back broken last time.","hint":"Unwilling or unsure about doing something."},
+    {"answer":"sustainable","sentence":"The island needs a ___ supply of water that will last for generations.","hint":"Able to continue over time without using up important resources."},
     {
       sentence: "The archaeological discovery was highly sig________ for historians.",
       answer: "significant",
@@ -464,8 +524,28 @@ export const VOCABULARY_POOL = {
     }
   ],
 
-  // C1 Level - 10 exercises (advanced)
+  // C1 (advanced)
   C1: [
+    {"answer":"alleviate","sentence":"The changes should ___ pressure on the busiest bus routes.","hint":"To make a problem or unpleasant feeling less severe."},
+    {"answer":"arbitrary","sentence":"The cutoff seemed ___ because no evidence supported that exact figure.","hint":"Chosen without a clear reason or consistent rule."},
+    {"answer":"bolster","sentence":"The team collected more evidence to ___ its argument.","hint":"To support something and make it stronger."},
+    {"answer":"concede","sentence":"After seeing the figures, the director had to ___ that the plan was too costly.","hint":"To admit that something is true, often unwillingly."},
+    {"answer":"conjecture","sentence":"Without a recording, their explanation is only ___.","hint":"A guess based on incomplete information."},
+    {"answer":"discern","sentence":"Through the fog, we could just ___ the outline of the lighthouse.","hint":"To notice or recognise something that is hard to see or understand."},
+    {"answer":"discrepancy","sentence":"The auditor found a ___ between the invoice and the amount paid.","hint":"A difference between two figures or accounts that should agree."},
+    {"answer":"elicit","sentence":"The interviewer asked an open question to ___ a fuller response.","hint":"To draw out an answer, reaction or piece of information."},
+    {"answer":"exacerbate","sentence":"Closing the only crossing would ___ congestion at rush hour.","hint":"To make an existing problem worse."},
+    {"answer":"feasible","sentence":"The study tested whether an hourly rural bus was financially ___.","hint":"Possible and practical to do."},
+    {"answer":"inadvertent","sentence":"The omission was ___ and was corrected as soon as it was noticed.","hint":"Happening by accident, without being intended."},
+    {"answer":"inherent","sentence":"Some uncertainty is ___ in any forecast that looks years ahead.","hint":"Naturally part of something and difficult to separate from it."},
+    {"answer":"meticulous","sentence":"The conservator kept ___ records of every repair to the painting.","hint":"Very careful about every small detail."},
+    {"answer":"mitigate","sentence":"Trees and shaded spaces can ___ some effects of extreme heat.","hint":"To reduce the seriousness or harm of something."},
+    {"answer":"nuance","sentence":"The translation captured the facts but missed a ___ of the speaker’s tone.","hint":"A small but meaningful difference in expression or meaning."},
+    {"answer":"pragmatic","sentence":"She took a ___ approach and chose the option they could afford this week.","hint":"Focused on what works in practice."},
+    {"answer":"preclude","sentence":"The limited budget may ___ a full replacement this year.","hint":"To make an action impossible or rule it out."},
+    {"answer":"reconcile","sentence":"It was hard to ___ the two witness accounts because each gave a different time.","hint":"To make two apparently conflicting ideas or accounts fit together."},
+    {"answer":"scrutiny","sentence":"The proposal came under close ___ after the costs doubled.","hint":"Careful and detailed examination."},
+    {"answer":"tenuous","sentence":"The link between the two events was ___ and based on one coincidence.","hint":"Weak or uncertain, especially a connection or argument."},
     {
       sentence: "The philosopher's theory lacks emp_______ evidence to support it.",
       answer: "empirical",
@@ -568,3 +648,22 @@ export const getPoolStatistics = () => {
     total: Object.values(VOCABULARY_POOL).reduce((sum, level) => sum + level.length, 0)
   };
 };
+
+const vocabularyLevels = STANDARD_TEST_STRUCTURE.map(({ level }) => level);
+
+// Only two correct answers in a row at the same level unlock the next level.
+export function nextVocabularyLevel(question, correct, previousQuestion, previousCorrect) {
+  const index = vocabularyLevels.indexOf(question.level);
+  if (!correct) return vocabularyLevels[Math.max(0, index - 1)];
+  if (previousCorrect && previousQuestion?.level === question.level) {
+    return vocabularyLevels[Math.min(index + 1, vocabularyLevels.length - 1)];
+  }
+  return question.level;
+}
+
+export function pickVocabularyQuestion(level, usedQuestions) {
+  const usedAnswers = new Set(usedQuestions.map(question => question.answer.toLowerCase()));
+  const available = VOCABULARY_POOL[level].filter(question => !usedAnswers.has(question.answer.toLowerCase()));
+  const question = available[Math.floor(Math.random() * available.length)];
+  return { ...question, level };
+}

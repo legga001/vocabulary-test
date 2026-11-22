@@ -48,3 +48,5 @@ summary { cursor:pointer; font-weight:800; color:#49358a; min-height:44px; paddi
 .lesson-block details .example { margin-bottom:0; }
 .pattern { background:#ede8ff; color:#49358a; padding:.7rem .85rem; border-radius:.6rem; font-weight:750; }
 .lesson h3 a { display:inline-flex; min-height:44px; align-items:center; }
+
+img.fox { object-fit: contain; background: transparent; }

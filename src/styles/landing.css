@@ -690,7 +690,8 @@
   }
   
   .category-name {
-    display: none; /* Show only icons on very small screens */
+    display: inline;
+    letter-spacing: 0;
   }
   
   .exercises-list {
@@ -721,3 +722,14 @@
     padding: 18px;
   }
 }
+
+.landing-home-logo {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.landing-home-logo img { display: block; }
+.mobile-logo { display: flex; align-items: center; gap: 6px; }
+.mobile-logo .landing-home-logo { min-width: 36px; min-height: 44px; }
+.mobile-logo .landing-home-logo img { width: 36px; height: 36px; object-fit: contain; }

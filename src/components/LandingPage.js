@@ -201,7 +201,7 @@ const MENU_ITEMS = [
   }
 ];
 
-function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
+function LandingPage({ onSelectExercise, onProgress, onLogoClick, isTransitioning }) {
   // State management
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [showExercises, setShowExercises] = useState(false);
@@ -374,14 +374,9 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
         <aside className="desktop-sidebar">
           <div className="sidebar-content">
             <div className="sidebar-logo">
-              <img 
-                src="/logo192.png" 
-                alt="Mr. Fox English" 
-                className="sidebar-logo-img"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
+              <button type="button" className="landing-home-logo" onClick={onLogoClick} aria-label="Mr Fox English home">
+                <img src="/purple_fox_transparent.png" alt="" className="sidebar-logo-img" />
+              </button>
               <div className="sidebar-title">Mr. Fox English</div>
             </div>
             <nav className="sidebar-nav">
@@ -403,6 +398,9 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
               <span className="hamburger-icon">☰</span>
             </button>
             <div className="mobile-logo">
+              <button type="button" className="landing-home-logo" onClick={onLogoClick} aria-label="Mr Fox English home">
+                <img src="/purple_fox_transparent.png" alt="" />
+              </button>
               <span className="mobile-logo-text">Mr. Fox English</span>
             </div>
             <div className="mobile-header-spacer"></div>
@@ -416,14 +414,9 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
           <nav className="mobile-menu" onClick={(e) => e.stopPropagation()}>
             <div className="mobile-menu-header">
               <div className="mobile-menu-logo">
-                <img 
-                  src="/logo192.png" 
-                  alt="Mr. Fox English" 
-                  className="mobile-menu-logo-img"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
-                />
+                <button type="button" className="landing-home-logo" onClick={onLogoClick} aria-label="Mr Fox English home">
+                <img src="/purple_fox_transparent.png" alt="" className="mobile-menu-logo-img" />
+              </button>
                 <span className="mobile-menu-title">Mr. Fox English</span>
               </div>
               <button 
@@ -463,7 +456,7 @@ function LandingPage({ onSelectExercise, onProgress, isTransitioning }) {
                 className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
                 onClick={() => handleCategoryChange(category.id)}
               >
-                <span className="category-icon">{category.icon}</span>
+                <span className="category-icon" aria-hidden="true">{category.icon}</span>
                 <span className="category-name">{category.name}</span>
               </button>
             ))}
