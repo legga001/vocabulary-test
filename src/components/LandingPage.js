@@ -36,24 +36,6 @@ const CATEGORIES = [
 const EXERCISES = [
   // READING EXERCISES
   {
-    type: 'standard-vocabulary',
-    category: 'READING',
-    icon: '📖',
-    title: 'Standard Vocabulary',
-    subtitle: 'Fill in the gaps',
-    dailyTarget: 3,
-    isActive: true
-  },
-  {
-    type: 'article-vocabulary', 
-    category: 'READING', 
-    icon: '📰',
-    title: 'Article-Based Vocab',
-    subtitle: 'Real news stories',
-    dailyTarget: 1,
-    isActive: true
-  },
-  {
     type: 'real-fake-words',
     category: 'READING',
     icon: '🎯',
@@ -201,7 +183,7 @@ const MENU_ITEMS = [
   }
 ];
 
-function LandingPage({ onSelectExercise, onProgress, onLogoClick, isTransitioning }) {
+function LandingPage({ onSelectExercise, onProgress, onLogoClick, onStudyMenu, isTransitioning }) {
   // State management
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [showExercises, setShowExercises] = useState(false);
@@ -439,11 +421,9 @@ function LandingPage({ onSelectExercise, onProgress, onLogoClick, isTransitionin
         {/* Header */}
         <section className="landing-header">
           <div className="welcome-section">
-            <h1 className="main-title">Welcome to Mr. Fox English</h1>
-            <p className="main-subtitle">Master English with interactive exercises designed for success</p>
-            <a className="btn btn-primary" href={GRAMMAR_URL} style={{ display: 'inline-block', marginTop: '1rem', textDecoration: 'none' }}>
-              Explore grammar courses
-            </a>
+            <h1 className="main-title">Practise exercises</h1>
+            <p className="main-subtitle">Choose a skill and try an activity.</p>
+            <button type="button" className="btn btn-secondary" onClick={onStudyMenu}>← Study menu</button>
           </div>
         </section>
 

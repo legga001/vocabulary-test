@@ -6,6 +6,7 @@ import './App.css';
 import SplashPage from './components/SplashPage';
 import LandingPage from './components/LandingPage';
 import ProgressPage from './components/ProgressPage';
+import StudyMenu from './components/StudyMenu';
 import Quiz from './components/Quiz';
 import Results from './components/Results';
 import ArticleSelection from './components/ArticleSelection';
@@ -19,7 +20,11 @@ import InteractiveReadingExercise from './components/InteractiveReadingExercise'
 
 function App() {
   // Core state management
-  const [currentScreen, setCurrentScreen] = useState(() => window.location.hash === '#exercises' ? 'landing' : 'splash');
+  const [currentScreen, setCurrentScreen] = useState(() => {
+    const directScreens = { '#exercises': 'landing', '#study': 'study' };
+    return directScreens[window.location.hash] || 'splash';
+  });
+  const [returnScreen, setReturnScreen] = useState('landing');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [quizResults, setQuizResults] = useState(null);
   const [answerChecks, setAnswerChecks] = useState(null);
@@ -38,23 +43,23 @@ function App() {
   }, [currentScreen]);
 
   // Navigation functions
-  const goToLanding = () => {
-    setCurrentScreen('landing');
-  };
+  const goToStudy = () => setCurrentScreen('study');
+  const goToLanding = () => setCurrentScreen('landing');
 
-  const goToProgress = () => {
+  const goToProgress = (source) => {
+    setReturnScreen(source);
     setCurrentScreen('progress');
   };
 
   const goBack = () => {
-    setCurrentScreen('landing');
+    setCurrentScreen(returnScreen);
     setQuizResults(null);
     setTestQuestions(null);
     setSelectedArticleType(null);
   };
 
   const handleLogoClick = () => {
-    if (window.location.hash === '#exercises') {
+    if (['#exercises', '#study'].includes(window.location.hash)) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
     setCurrentScreen('splash');
@@ -77,7 +82,8 @@ function App() {
   };
 
   // Main exercise selection handler - DIRECT NAVIGATION
-  const handleSelectExercise = (exerciseType) => {
+  const handleSelectExercise = (exerciseType, source = 'landing') => {
+    setReturnScreen(source);
     switch(exerciseType) {
       // DIRECT quiz navigation - no intermediate steps
       case 'standard-vocabulary':
@@ -129,13 +135,34 @@ function App() {
   const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'splash':
-        return <SplashPage onStartPracticing={goToLanding} isTransitioning={isTransitioning} />;
+        return <SplashPage onStartPracticing={goToStudy} isTransitioning={isTransitioning} />;
+
+      case 'study':
+        return (
+          <StudyMenu
+            onHome={handleLogoClick}
+            onExercises={goToLanding}
+            onTests={() => setCurrentScreen('tests')}
+            onProgress={() => goToProgress('study')}
+          />
+        );
+
+      case 'tests':
+        return (
+          <StudyMenu
+            tests
+            onHome={handleLogoClick}
+            onBack={goToStudy}
+            onSelectTest={(type) => handleSelectExercise(type, 'tests')}
+          />
+        );
 
       case 'landing':
         return (
           <LandingPage
             onSelectExercise={handleSelectExercise}
-            onProgress={goToProgress}
+            onProgress={() => goToProgress('landing')}
+            onStudyMenu={goToStudy}
             onLogoClick={handleLogoClick}
             isTransitioning={isTransitioning}
           />
