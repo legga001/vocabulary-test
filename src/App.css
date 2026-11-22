@@ -274,3 +274,23 @@
 .reading-review p { margin:.35rem 0; color:#293143; }
 .reading-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:.55rem; margin:1rem 0 0; }
 .reading-review-text summary { cursor:pointer; font-weight:800; }
+
+body { background:var(--site-background) fixed; }
+.splash-page,.landing-duolingo,.listen-type-container,.interactive-reading-exercise { background:var(--site-background); }
+.splash-theme { margin-top:1.15rem; }
+:root[data-theme="light"] .splash-title { color:var(--site-ink); text-shadow:none; }
+.landing-controls { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:.6rem; margin-top:.7rem; }
+.landing-duolingo .desktop-sidebar,.landing-duolingo .mobile-header,.landing-duolingo .mobile-menu { background:var(--site-panel); }
+.landing-duolingo .landing-header,.landing-duolingo .category-section { padding:.8rem; border:1px solid var(--site-outline); border-radius:.85rem; background:var(--site-panel); }
+.landing-duolingo .main-title { color:var(--site-ink); }
+.landing-duolingo .main-subtitle,.landing-duolingo .category-description,.landing-duolingo .exercise-subtitle { color:#4b435e; }
+.landing-duolingo .exercises-list { background:var(--site-panel); }
+.landing-duolingo .exercise-item { background:var(--site-card); border:1px solid var(--site-outline); }
+.landing-duolingo .exercise-item.disabled:hover { background:var(--site-card); }
+.App.menu-mode { background:transparent; }
+.study-menu { margin-block:1rem; background:var(--site-panel); border:1px solid var(--site-outline); border-radius:1rem; }
+.study-option { background:var(--site-card); border-color:var(--site-outline); }
+.reading-passage,.reading-review-text { background:var(--site-panel); border-color:var(--site-outline); }
+@media (max-width:1024px) {
+  .App.menu-mode { box-shadow:none; padding:0; }
+}

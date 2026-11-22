@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import ThemePicker from './ThemePicker';
 import ClickableLogo from './ClickableLogo';
 
 const grammarUrl = `${process.env.PUBLIC_URL}/grammar/index.html`;
@@ -24,6 +25,7 @@ function StudyMenu({ tests, onHome, onBack, onExercises, onTests, onProgress, on
   return (
     <main className="study-menu">
       <ClickableLogo onLogoClick={onHome} />
+      <ThemePicker />
       <h1 ref={heading} tabIndex={-1}>{tests ? 'Practise tests' : 'What would you like to do?'}</h1>
       <ul className="study-options">
         {choices.map(({ label, description, icon, href, action }) => {

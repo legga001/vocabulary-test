@@ -1,5 +1,6 @@
 // src/components/LandingPage.js - Updated to include Interactive Reading exercise
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import ThemePicker from './ThemePicker';
 
 // Since getDailyTargetData is not exported, we'll create a simple version
 const getDailyTargetData = () => {
@@ -432,7 +433,7 @@ function LandingPage({ onSelectExercise, onProgress, onLogoClick, onStudyMenu, i
           <div className="welcome-section">
             <h1 className="main-title">Practise exercises</h1>
             <p className="main-subtitle">Choose a skill and try an activity.</p>
-            <button type="button" className="btn btn-secondary" onClick={onStudyMenu}>← Study menu</button>
+            <div className="landing-controls"><button type="button" className="btn btn-secondary" onClick={onStudyMenu}>← Study menu</button><ThemePicker /></div>
           </div>
         </section>
 
